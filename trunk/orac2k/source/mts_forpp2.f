@@ -2,9 +2,8 @@
      &     ,nbtype,type,ma,nato,atomg,xpcm,ypcm,zpcm,groupp,atomp,co
      &     ,alphal,mapnl,ngrp,grppt,ucoul_slt,ucoul_slv,ucoul_ss
      &     ,uconf_slt,uconf_slv,uconf_ss,U_thole,ULJ,fpx,fpy,fpz,do_LJ
-     &     ,fLJ_x,fLJ_y,fLJ_z,ecc12,ecc6,Rcut_EL,Rcut_LJ
-     &     ,npp_loc,ncount1,worka,nstart,nend ,iret,errmsg,plrzbij,Edx
-     &     ,Edy,Edz,dipole,skip_direct)
+     &     ,fLJ_x,fLJ_y,fLJ_z,ecc12,ecc6,Rcut_EL,Rcut_LJ,worka,nstart
+     &     ,nend ,iret,errmsg,plrzbij,Edx,Edy,Edz,dipole,skip_direct)
 
 *****MultipleTimeScale Version*****P.Procacci-CECAM*********************
 *                                                                      *
@@ -89,6 +88,7 @@ C------------------ DEFINITION OF A SCRATCH COMMON ---------------------
      &     ),ymap1(:),zmap1(:)
       
       REAL*8 D1,D2,d_D1,d_D2,Radius
+      INTEGER, SAVE :: pippo=0
       
       DATA a1,a2,a3/0.2548296d0,-0.28449674d0,1.4214137d0/
       DATA a4,a5/-1.453152d0,1.0614054d0/
@@ -133,7 +133,12 @@ c---       take EWALD SUM ONLY FOR ELECTRIC FIELD
 c========================================================================
 c==== start outer loop on groups
 
-      twrtpi=1.0d0/DSQRT(pi)/alphal
+      
+      IF(alphal == 0) THEN
+         twrtpi=0.0D0
+      ELSE
+         twrtpi=1.0d0/DSQRT(pi)/alphal
+      END IF
       fac=2.0D0*alphal*alphal
 
       epol=0.0D0
@@ -236,6 +241,7 @@ c----       compute forces
                      yc=           co(2,2)*yg+co(2,3)*zg
                      zc=                      co(3,3)*zg
                      rsq=xc*xc+yc*yc+zc*zc
+
                      IF(Radius .LT. Rcut_EL2 .AND. ok) THEN
                         INCLUDE 'dipole_interaction.f'
                      END IF
@@ -339,7 +345,7 @@ c----       compute forces
       DEALLOCATE(xmap0,ymap0,zmap0)
       DEALLOCATE(xmap1,ymap1,zmap1)
       DEALLOCATE(rgg)
-
+      pippo=pippo+1
       RETURN
       END
 C=======================================================================

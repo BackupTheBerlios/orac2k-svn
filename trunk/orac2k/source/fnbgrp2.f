@@ -73,7 +73,11 @@
       uconf_slt=0.0D0
       uconf_slv=0.0D0
       IF(ingrpp.EQ.0) RETURN
-      twrtpi=1.0d0/DSQRT(pi)/alphal
+      IF(alphal == 0) THEN
+         twrtpi=0.0D0
+      ELSE
+         twrtpi=1.0d0/DSQRT(pi)/alphal
+      END IF
       fac=2.0D0*alphal*alphal
       
 *=======================================================================

@@ -89,7 +89,7 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   CHARACTER(7) :: dummy_c
   REAL(8) :: dummy_r,chi,PARAS,paras0,pol_max,U_total
   REAL(8) :: xc,yc,zc,xv,yv,zv,xd,yd,zd,sum_cha,Urecip_old
-  REAL(8), allocatable, save :: Etotal(:,:),Etotal0(:,:)
+  REAL(8), allocatable, save :: Etotal(:,:),Etotal0(:,:),Etotal_rec0(:,:)
   REAL(8), DIMENSION(:,:), allocatable, save :: dip_new,dip_old,Dipoles,dip_zero
   REAL(8), dimension(:), allocatable, save :: Edx,Edy,Edz,charge
   REAL(8), dimension(:), allocatable, save :: Grad_x,Grad_y,Grad_z
@@ -132,6 +132,7 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   Times_of_Calls=Times_of_Calls+1
   if( first_step ) then
      Max_Shell=IDINT(0.5D0*Shell/Bins)+1
+!!$     Max_Shell=0
      fac_dip=(4.0/3.0)*alphal**3/dsqrt(pi)
      maxdiff = 1.0d-6
      
@@ -164,8 +165,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
         READ(strngs(2),fmt) pol_au(i)
         IF(mesos) THEN
            pol_au(i)=pol_au(i)/Mesos_rho
-           WRITE(*,'(''Polarization in AU '',a7,2x,e15.9)'),&
-                & type_aux(i),pol_au(i)/au_to_aa 
+           WRITE(*,'(''Polarization in Ang. '',a7,2x,f15.9)'),&
+                & type_aux(i),pol_au(i)
         ELSE
            pol_au(i)=pol_au(i)*au_to_aa
         END IF
@@ -223,6 +224,7 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      allocate(dip_new(1:3,1:ntap))
      allocate(Etotal(1:3,1:ntap))
      allocate(Etotal0(1:3,1:ntap))
+     allocate(Etotal_rec0(1:3,1:ntap))
      
      allocate(Ex_rec(1:ntap))
      allocate(Ey_rec(1:ntap))
@@ -332,7 +334,11 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      Etotal0(1,i) = Etotal0(1,i) + Ex_rec(i) + Ex_Cor(i)
      Etotal0(2,i) = Etotal0(2,i) + Ey_rec(i) + Ey_Cor(i)
      Etotal0(3,i) = Etotal0(3,i) + Ez_rec(i) + Ez_Cor(i)
+     Etotal_rec0(1,i) = Ex_rec(i) + Ex_Cor(i)
+     Etotal_rec0(2,i) = Ey_rec(i) + Ey_Cor(i)
+     Etotal_rec0(3,i) = Ez_rec(i) + Ez_Cor(i)
   END DO
+
 
   IF(Old_Dipoles .OR. (.NOT. first_step)) THEN
      Dip_old=Dipoles
@@ -483,8 +489,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      U_solv=0.0D0
   END IF
   CALL Do_Field_Histo0(Etotal0,hist_E0,No_hist_E0)
-  CALL Do_Field_Histo(Etotal,hist_E,No_hist_E)
-  CALL Do_Field_Histo(Dipoles,hist_Dip,No_hist_Dip)
+  CALL Do_Field_Histo0(Etotal,hist_E,No_hist_E)
+  CALL Do_Field_Histo0(Dipoles,hist_Dip,No_hist_Dip)
   CALL Do_GR_Histo(hist_GR,No_hist_GR)
 
   IF(MOD(Times_of_Calls,1) .EQ. 0) THEN
@@ -582,7 +588,7 @@ CONTAINS
           Ex=E(1,j)
           Ey=E(2,j)
           Ez=E(3,j)
-          EE=Ex*ver(1)+Ey*ver(2)+Ez*ver(3)
+          EE=DSQRT(Ex**2+Ey**2+Ez**2)
           hist(i_dex)=hist(i_dex)+EE
           no_hist(i_dex)=no_hist(i_dex)+1
        END IF
@@ -623,9 +629,9 @@ CONTAINS
           Ex=E(1,j)
           Ey=E(2,j)
           Ez=E(3,j)
-          EE=Ex*ver(1)+Ey*ver(2)+Ez*ver(3)
-          Start=-Max_Shell
-          End=Max_shell
+          EE=DSQRT(Ex**2+Ey**2+Ez**2)
+          Start=-Max_Shell+1
+          End=Max_shell+1
           IF(i_dex+Start .LE. 0) Start=-i_dex+1
           IF(i_dex+End .GT. Max_Bin) End=Max_Bin-i_dex
           DO k=Start,End

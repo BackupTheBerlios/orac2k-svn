@@ -71,9 +71,8 @@
      &     ,type_table,m6,ntap,atomg,xpcm,ypcm,zpcm,groupp,atomp,co
      &     ,aalphal,mapnl,ngrp,grppt,ucoul_slt,ucoul_slv,ucoul_ss
      &     ,uconf_slt,uconf_slv,uconf_ss,U_Thole,ELJ,fpx,fpy,fpz,do_LJ
-     &     ,flj_x,flj_y,flj_z,ecc12,ecc6,Rcut_El,Rcut_LJ
-     &     ,npp_loc,npp_o,worka,nstart,nend,iret,errmsg,plrzbij,Edx,Edy
-     &     ,Edz,dipole,skip_direct)
+     &     ,flj_x,flj_y,flj_z,ecc12,ecc6,Rcut_El,Rcut_LJ,worka,nstart
+     &     ,nend,iret,errmsg,plrzbij,Edx,Edy,Edz,dipole,skip_direct)
 
       Utotal=Utotal+ucoul_slt+ucoul_slv+ucoul_ss
       CALL timer(vfcp_ff,tfcp_ff,elapse)

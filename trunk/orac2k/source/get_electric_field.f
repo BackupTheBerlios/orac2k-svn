@@ -53,12 +53,11 @@
 *------------------------- LOCAL VARIABLES ----------------------------*
 
       REAL*8  urcs,urcp,urcsp,fudgec,ene_rec(m1)
-      INTEGER nnlppaux(sitslu+1)
       INTEGER i,j,k,npp
       REAL*8  unb14_slt,cnb14_slt,ungrp_slt,cngrp_slt,uptors_slt
      &       ,unb14_slv,cnb14_slv,ungrp_slv,cngrp_slv,uptors_slv
      &     ,self_slt,self_slv,coulgrp_slt,coulgrp_slv
-     &     ,confgrp_slt,confgrp_slv,Ucos,Ucop,Ucosp,ene,enedip
+     &     ,confgrp_slt,confgrp_slv,Ucos,Ucop,Ucosp,ene,enedip,alphalb
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 *=======================================================================
@@ -88,23 +87,23 @@ c------------ initialize some variables
          ucoul_slt=0.0D0
          ucoul_slv=0.0D0
          ucoul_ss=0.0D0
+         uself=0.0D0
+         uself_dip=0.0D0
          CALL zeroa(fpx,fpy,fpz,ntap,1)
          CALL zeroa(Edx,Edy,Edz,ntap,1)
          CALL zeroa(Ex_rec,Ey_rec,Ez_rec,ntap,1)
          CALL zeroa(Ex_Cor,Ey_Cor,Ez_Cor,ntap,1)
       END IF
-
 !=======================================================================
 !     get forces: mts_forpp2 fnbgrp2
 !=======================================================================
       IF(.NOT. Gauss_Mode) THEN
          CALL mts_forces2('m',xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &        ,ypcma,zpcma,mapnl,U_Thole,ELJ,fpx,fpy,fpz,do_LJ,flj_x
-     &        ,flj_y,flj_z,worka,cpu,ncpu
-     &        ,nstart,nend,nstart_a,nend_a,nlocal_a,node,nprocs,ncube
-     &        ,' ',Udirect,ucoul_slt,ucoul_slv,ucoul_ss,uconf_slt
-     &        ,uconf_slv,uconf_ss,Edx,Edy,Edz,charges,dipole,alphal
-     &        ,skip_direct)
+     &        ,flj_y,flj_z,worka,cpu,ncpu,nstart,nend,nstart_a,nend_a
+     &        ,nlocal_a,node,nprocs,ncube,' ',Udirect,ucoul_slt
+     &        ,ucoul_slv,ucoul_ss,uconf_slt,uconf_slv,uconf_ss,Edx,Edy
+     &        ,Edz,charges,dipole,alphal,skip_direct)
          CALL fnbgrp2(ss_index,xp0,yp0,zp0,charges,ecc12,ecc6,nbtype
      &        ,type_table,m6,alphal,ingrp_ef,ingrpp_ef,ingrp_ef_x,fpx
      &        ,fpy,fpz,do_LJ,flj_x,flj_y,flj_z,coulgrp_slt,coulgrp_slv
@@ -173,15 +172,16 @@ c------------ initialize some variables
 ! With pme for dipoles call always furier2
 
       IF(.NOT. Direct_Only) THEN
-         CALL mts_furier2(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
-     &        ,nprocs,ncube,nstart_a,nend_a,nlocal_a,nstart_a,nend_a
-     &        ,nlocal_a,xp0,yp0,zp0,xpa,ypa,zpa,xpcma,ypcma,zpcma,urcsp
-     &        ,urcs,urcp,fpx,fpy,fpz,Ex_rec,Ey_rec,Ez_rec,Ex_Cor,Ey_Cor
-     &        ,Ez_Cor,ene_rec,eer,fudgec,tag_bndg,ene_ferrf,charges
-     &        ,dipole)
-         eer = eer + ene_ferrf
-         CALL cself_dipole(ntap,alphal,alphal,charges,dipole,volume
-     &        ,uself,uself_dip)
+         IF(.NOT. (alphal == 0.0D0)) THEN
+            CALL mts_furier2(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
+     &           ,nprocs,ncube,nstart_a,nend_a,nlocal_a,nstart_a,nend_a
+     &           ,nlocal_a,xp0,yp0,zp0,xpa,ypa,zpa,xpcma,ypcma,zpcma
+     &           ,urcsp,urcs,urcp,fpx,fpy,fpz,Ex_rec,Ey_rec,Ez_rec
+     &           ,Ex_Cor,Ey_Cor,Ez_Cor,ene_rec,eer,fudgec,tag_bndg
+     &           ,ene_ferrf,charges,dipole)
+            eer = eer + ene_ferrf
+            CALL cself_dipole(ntap,alphal,alphal,charges,dipole,volume
+     &           ,uself,uself_dip)
 c$$$      ELSE
 c$$$         CALL zeroa(fdx,fdy,fdz,ntap,1)
 c$$$         CALL mts_furier2(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
@@ -193,8 +193,8 @@ c$$$     &        ,dipole)
 c$$$         eer = eer + ene_ferrf
 c$$$         CALL cself_dipole(ntap,alphal,alphal,charges,dipole,volume
 c$$$     &        ,uself,uself_dip)
+         END IF
       END IF
-
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
       RETURN

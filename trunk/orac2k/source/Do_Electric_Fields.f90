@@ -212,7 +212,6 @@ SUBROUTINE Do_Electric_Fields(xp0,yp0,zp0,xpa,ypa,zpa,xpga,ypga,zpga&
      WRITE(*,*) 'Don''t know what to do!'
      STOP
   END SELECT
-  
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
