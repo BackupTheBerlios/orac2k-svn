@@ -1,0 +1,54 @@
+&SETUP
+   RESET_CM
+   CRYSTAL    500.0 500.0 500.0 90.0 90.0 60.0
+   READ_PDB   1AAY_initial.pdb
+&END
+&PARAMETERS
+   WRITE_TPGPRM_BIN  dna-zincfinger.prmtpg
+   READ_TPG_ASCII top_all22_prot_na.inp
+   READ_PRM_ASCII par_all22_prot_na.inp
+   JOIN SOLUTE
+      arg-h pro tyr ala cys pro val glu ser cys asp
+      arg arg phe ser arg ser asp glu leu thr arg hsd ile
+      arg ile hsd thr gly gln lys pro phe gln cys arg ile
+      cys met arg asn phe ser arg ser asp hsd leu thr thr
+      hsd ile arg thr hsd thr gly glu lys pro phe ala cys
+      asp ile cys gly arg lys phe ala arg ser asp glu arg
+      lys arg hsd thr lys ile hsd leu arg-o  zn zn zn
+      ade-5h gua cyt gua thy gua gua gua cyt gua thy-3h
+      thy-5h ade cyt gua cyt cyt cyt ade cyt gua cyt-3h
+      tip3f x  148
+   END
+&END
+&SIMULATION
+   MDSIM
+   TEMPERATURE 0.01  5.0
+&END
+&INTEGRATOR 
+   TIMESTEP          1.0e-2
+   MTS_RESPA
+     step intra      3
+     step  intra     2
+     step  nonbond   1  40.2   0.3   0.4  reciprocal
+   END
+&END
+&POTENTIAL
+   EWALD          OFF PME 0.43 64 64 64 4
+   UPDATE         40.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+&END
+&RUN
+   CONTROL      0
+   PROPERTY     100.0
+   REJECT       12.0e-2
+   TIME         0.0
+   PRINT        1.0e-2
+&END
+&INOUT
+   RESTART
+     write  12.0e-2  OPEN    4bna.1.rst
+   END
+#   ASCII_WSC   120.0  OPEN    4bna.1.pdb
+&END

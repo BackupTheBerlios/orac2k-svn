@@ -1,0 +1,104 @@
+##############################################################
+# equilibration cion 
+##############################################################
+#
+
+&SETUP
+   CRYSTAL   56.7 56.7 56.7 109.47122 109.47122 109.47122
+&END
+
+
+
+&PARAMETERS
+#   PRINT_TOPOLOGY
+#     p-torsions
+#   END
+   WRITE_TPGPRM_BIN protein_noions_water.prmtpg
+   READ_TPG_ASCII  ./top_all22_prot.inp
+   READ_PRM_ASCII  ./par_all22_prot.inp
+   ADD_TPG SOLUTE
+    bond 1fe1 2sg residue 99 41
+    bond 1fe2 2sg residue 99 49
+    bond 1fe1 2sg residue 99 46
+    bond 1fe2 2sg residue 99 79
+   END
+   JOIN SOLUTE
+  ala-h thr phe lys val thr leu ile asn glu ala glu gly
+  thr lys hsd glu ile glu val pro asp asp glu tyr ile
+  leu asp ala ala glu glu gln gly tyr asp leu pro phe
+  ser cys1r arg ala gly ala cys2r ser thr cys3r ala gly lys
+  leu val ser gly thr val asp gln ser asp gln ser phe
+  leu asp asp asp gln ile glu ala gly tyr val leu thr
+  cys4r val ala tyr pro thr ser asp val val ile gln thr
+  hsd lys glu glu asp leu tyr-o fe2s2red 
+   END
+
+    JOIN SOLVENT
+      tip3
+    END
+    STOP_RUN
+&END
+
+&SOLVENT
+  ADD_UNITS 4086
+&END
+
+&SIMULATION
+   MDSIM
+   TEMPERATURE   400.0 50.0
+   ISOSTRESS PRESS-EXT 0.1  BARO-MASS 40.0
+   SCALING GROUP
+   THERMOS
+       solute  30.0
+       solvent 30.0
+       cofm    30.0
+       temp_limit 8000.0
+   END
+&END
+
+
+#
+#
+&INTEGRATOR
+   TIMESTEP       12.0
+   MTS_RESPA
+      step intra 2
+      step intra 2
+      step nonbond 2  4.7
+      step nonbond 3  7.3   reciprocal
+      step nonbond 1  9.7
+      test_times OPEN equil.cion.tt
+   END
+&END
+
+
+&POTENTIAL
+   EWALD       PME    0.45  64 64 64 5
+   UPDATE      40.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   LINKED_CELL 8 8 8
+&END
+
+
+#
+#
+&RUN
+   CONTROL      0
+   PROPERTY     3000.0
+   REJECT       0.0
+   TIME         12000.0
+   MAXRUN       12000.0
+   PRINT        12.0
+&END
+
+
+#
+&INOUT
+   RESTART
+    write  12.0  OPEN 0.rst
+   END
+   ASCII_WSC  12.0 OPEN 0.pdb
+&END
+                                                              

@@ -1,0 +1,71 @@
+&SETUP
+   RESET_CM
+   CRYSTAL     65.7 65.7 65.7 109.47122 109.47122 109.47122
+&END
+&SOLVENT 
+   GENERATE 19 20 19 
+   CELL  SC 
+   INSERT 0.7
+   COORDINATES  h2o.pdb 
+&END 
+&SOLUTE
+   COORDINATES 1AAY_minimized.pdb
+   SCALE_CHARGES 6 1 2 3 4 5 6
+&END
+&PARAMETERS
+   WRITE_TPGPRM_BIN  dna-zincfinger_hyd.prmtpg
+   READ_TPG_ASCII top_all22_prot_na.inp
+   READ_PRM_ASCII par_all22_prot_na.inp
+   JOIN SOLUTE
+      arg-h pro tyr ala cys pro val glu ser cys asp
+      arg arg phe ser arg ser asp glu leu thr arg hsd ile
+      arg ile hsd thr gly gln lys pro phe gln cys arg ile
+      cys met arg asn phe ser arg ser asp hsd leu thr thr
+      hsd ile arg thr hsd thr gly glu lys pro phe ala cys
+      asp ile cys gly arg lys phe ala arg ser asp glu arg
+      lys arg hsd thr lys ile hsd leu arg-o  zn zn zn
+      ade-5h gua cyt gua thy gua gua gua cyt gua thy-3h
+      thy-5h ade cyt gua cyt cyt cyt ade cyt gua cyt-3h
+      tip3f x  148
+   END
+   JOIN SOLVENT
+      tip3 
+   END
+&END
+&SIMULATION
+   MDSIM
+   TEMPERATURE 300.0  5.0
+   WRITE_PRESSURE
+&END
+&INTEGRATOR 
+   TIMESTEP          12.0
+   MTS_RESPA
+     step intra      3
+     step  intra     2
+     step  nonbond   2   4.2   0.3   0.4
+     step  nonbond   3   7.4   0.3   0.4   reciprocal
+     step  nonbond   1   9.7   0.3   1.5
+   END
+&END
+&POTENTIAL
+   EWALD          PME 0.43 64 64 64 4
+   UPDATE         40.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   ERFC_SPLINE  0.01
+   EWALD REMOVE_MOMENTUM
+&END
+&RUN
+   CONTROL      0
+   PROPERTY     100.0
+   REJECT       120.0
+   TIME         0.0
+   PRINT        2.0
+&END
+&INOUT
+   RESTART
+     write  120.0  OPEN    dna_znfinger_slv.1.rst
+   END
+   ASCII_WSC   120.0  OPEN    dna_znfinger_slv.1.pdb
+&END
