@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-03-16 15:39:54 marchi>                             *
+*   Time-stamp: <2005-03-18 12:10:02 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -342,6 +342,9 @@ c$$$====================================================================
       END IF
 
       ALLOCATE(wca(ntap),whe(ntap),wbc(ntap))
+      wca=0.0D0
+      whe=0.0D0
+      wbc=0.0D0
       CALL asng_xrmsw(ss_point,m1+1,wca,whe,wbc,beta,mback,nbone)
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
