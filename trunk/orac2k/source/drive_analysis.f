@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-03-05 20:58:25 marchi>                             *
+*   Time-stamp: <2005-03-16 15:29:43 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -346,6 +346,14 @@ c$$$====================================================================
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
      &        ,drpca(ntap),drpbc(ntap),drphe(ntap),drpal(ntap))
+         errca=0.0D0
+         errhe=0.0D0
+         errbc=0.0D0
+         erral=0.0D0
+         drpca=0.0D0
+         drpbc=0.0D0
+         drphe=0.0D0
+         drpal=0.0D0
       END IF
       IF(anxrms_cell) THEN
          anprot=.TRUE.
