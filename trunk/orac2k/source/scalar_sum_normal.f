@@ -3,7 +3,7 @@
      &     ,nfftdim2,nfftdim3,eer,vir,rkcut)
 
 ************************************************************************
-*   Time-stamp: <2005-02-16 14:32:20 marchi>                             *
+*   Time-stamp: <2005-03-07 19:39:04 marchi>                             *
 *                                                                      *
 *   Old fashioned scalar. Does work with FFT_NORMAL_ORDER.             *
 *                                                                      *
@@ -38,7 +38,7 @@
       REAL*8  pi,fac,denom,eterm,vterm,energy,fact
       INTEGER  k,k1,k2,k3,m1,m2,m3,nff,ind,jnd,indtop
       INTEGER  nf1,nf2,nf3,ka3,ka2,i1,i2,i,ja,ka,kstart
-      REAL*8  mhat1,mhat2,mhat3,msq,struc2,rkcut2,fac_2,Rc_2,aux_2
+      REAL*8  mhat1,mhat2,mhat3,msq,struc2,rkcut2
       LOGICAL k_c1,k_c2,j_c1,j_c2,i_c1,ok_1,ok_2,ok_3
       
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
@@ -47,10 +47,6 @@
       pi = 3.14159265358979323846
       rkcut2=0.25*rkcut*rkcut/pi**2
       fac = pi**2/ewaldcof**2
-
-      Rc_2=13.0D0
-      Rc_2=Rc_2**2
-      fac_2=2.0D0*Rc_2*pi**2
 
       nff = nfft1*nfft2
       nf1 = nfft1/2
@@ -94,7 +90,6 @@
                mhat2 = recip(2,1)*m1+recip(2,2)*m2+recip(2,3)*m3
                mhat3 = recip(3,1)*m1+recip(3,2)*m2+recip(3,3)*m3
                msq = mhat1*mhat1+mhat2*mhat2+mhat3*mhat3
-               aux_2=DEXP(-fac_2*msq)
                IF(ok_1 .OR. ok_2 .OR. ok_3) THEN
                   IF(msq .GT. rkcut2 .OR. msq .EQ. 0.0D0) THEN 
                      eterm = 0.d0 
@@ -118,8 +113,8 @@
                      vir(3,3) = vir(3,3) + eterm * struc2 * (vterm
      &                    *mhat3*mhat3 -1.d0)
                   END IF
-                  Q(i1,ka2,ka3) = eterm * Q(i1,ka2,ka3) * aux_2
-                  Q(i2,ka2,ka3) = eterm * Q(i2,ka2,ka3) * aux_2
+                  Q(i1,ka2,ka3) = eterm * Q(i1,ka2,ka3) 
+                  Q(i2,ka2,ka3) = eterm * Q(i2,ka2,ka3) 
                ELSE
                   IF(msq .GT. rkcut2 .OR. msq .EQ. 0.0D0) THEN 
                      eterm = 0.d0 
@@ -128,8 +123,8 @@
      &                    *bsp_mod3(k3)*msq
                      eterm = dexp(-fac*msq)/denom
                   END IF
-                  Q(i1,ka2,ka3) = eterm * Q(i1,ka2,ka3) * aux_2
-                  Q(i2,ka2,ka3) = eterm * Q(i2,ka2,ka3) * aux_2
+                  Q(i1,ka2,ka3) = eterm * Q(i1,ka2,ka3) 
+                  Q(i2,ka2,ka3) = eterm * Q(i2,ka2,ka3) 
                END IF
             END DO
          END DO
