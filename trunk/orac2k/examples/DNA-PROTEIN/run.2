@@ -1,0 +1,68 @@
+&SETUP
+   RESET_CM
+   CRYSTAL     65.7 65.7 65.7 109.47122 109.47122 109.47122
+   TEMPLATE 1A1I_template.pdb
+&END
+#&SOLUTE
+#   SCALE_CHARGES 6 1 2 3 4 5 6
+#&END
+&PARAMETERS
+   READ_TPGPRM_BIN  dna-zincfinger_hyd_new.prmtpg
+&END
+&SIMULATION
+   MDSIM
+   TEMPERATURE 300.0  50.0
+#   ISOSTRESS PRESS-EXT 0.1 BARO-MASS 40.0
+   THERMOS
+      cofm 30.0
+      solute 30.0
+      solvent 30.0
+      temp_limit 8000.0
+   END
+&END
+&INTEGRATOR 
+   TIMESTEP          12.0
+   MTS_RESPA
+     step intra      3
+     step  intra     2
+     step  nonbond   2   4.2   0.3   0.4
+     step  nonbond   3   7.4   0.3   0.4   reciprocal
+     step  nonbond   1   9.7   0.3   1.5
+   END
+&END
+&POTENTIAL
+   EWALD          PME 0.43 64 64 64 5
+   UPDATE         40.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   LINKED_CELL  8 8 8
+&END
+&RUN
+   CONTROL      1
+   PROPERTY     5000.0
+   REJECT        0.0
+   TIME        1000000.0
+   MAXRUN     10000000.0
+   PRINT        24.0
+&END
+&INOUT
+   RESTART
+     read run.1b.rst
+     write  1200.0  OPEN    run.2.rst
+   END
+   DUMP
+     atom_record 100
+     write 240.0 OPEN run_a.aux
+   END
+   ASCII_WSC   5000.0  OPEN    run.2.pdb
+&END
+&PROPERTIES
+   STRUCTURES
+     print averaged  240.0  OPEN run_avg.2.pdb
+     print avg_xrms   12.0  OPEN run_avg.2.xrms
+     print inst_xrms  12.0  OPEN run_inst.2.xrms
+     inst_xrms ca heavy
+     averaged ca
+   END
+&END 
