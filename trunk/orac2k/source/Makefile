@@ -473,11 +473,11 @@ $(OBJLIB): %.LIB.o: %.f
 
 
 PGI :
-	${MAKE} obj_PGI "FFLAGS = -O3 "
-	${MAKE} prepro_PGI "FFLAGS = -fast" 
-	${MAKE} prepronkl_PGI "FFLAGS = -O0 "
-	${MAKE} eigr_PGI "FFLAGS = -O2"
-	${MAKE} recur_PGI "FFLAGS =  "
+	${MAKE} obj_PGI "FFLAGS = -Mvect -Mipa=fast -fastsse "
+	${MAKE} prepro_PGI "FFLAGS = -Mvect -Mipa=fast -fastsse" 
+	${MAKE} prepronkl_PGI "FFLAGS = -Mipa=fast -O0 "
+	${MAKE} eigr_PGI "FFLAGS = -Mipa=fast -O2"
+	${MAKE} recur_PGI "FFLAGS = -Mipa=fast "
 	${MAKE} orac_PGI
 
 INTEL :
@@ -562,7 +562,7 @@ prepronkl_PGI: $(OBJPRE_NKL)
 
 orac_PGI : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -o orac_PGI $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(LD) -Mvect -Mipa=fast -fastsse  -o orac_PGI $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
 	-L$(FFTW_LIB) $(LLFLAGS)
 

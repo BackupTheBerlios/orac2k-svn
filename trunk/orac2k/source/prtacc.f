@@ -861,144 +861,144 @@ c$$$     &        -ucek/1000.0D0-pecek,U_Thole*efact/1000.0D0
       END IF
 
 12000 FORMAT(
-     &     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' NonBond  = ',f11.3,' Coloumb  = ',f11.3
-     &     ,' Bonded   = ',f11.3,/10x,' Stretch  = ',f11.3
-     &     ,' Angle    = ',f11.3,' P-Tors   = ',f11.3,
-     &     /10x,' I-Tors   = ',f11.3,' TraTemp  = ',f11.3,' ResTemp  = '
-     &     ,f11.3,/10x,' TotTemp  = ',f11.3/)
+     &     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' NonBond  = ',f12.3,' Coloumb  = ',f12.3
+     &     ,' Bonded   = ',f12.3,/7x,' Stretch  = ',f12.3
+     &     ,' Angle    = ',f12.3,' P-Tors   = ',f12.3,
+     &     /7x,' I-Tors   = ',f12.3,' TraTemp  = ',f12.3,' ResTemp  = '
+     &     ,f12.3,/10x,' TotTemp  = ',f12.3/)
 12010 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' NonBond  = ',f11.3,' Coloumb  = ',f11.3
-     &     ,' Bonded   = ',f11.3,/10x,' Stretch  = ',f11.3
-     &     ,' Angle    = ',f11.3,' P-Tors   = ',f11.3,
-     &     /10x,' I-Tors   = ',f11.3
-     &     ,' TraTemp  = ',f11.3,' ResTemp  = ',f11.3,/10x
-     &     ,' TotTemp  = ',f11.3,' THoover  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' NonBond  = ',f12.3,' Coloumb  = ',f12.3
+     &     ,' Bonded   = ',f12.3,/7x,' Stretch  = ',f12.3
+     &     ,' Angle    = ',f12.3,' P-Tors   = ',f12.3,
+     &     /7x,' I-Tors   = ',f12.3
+     &     ,' TraTemp  = ',f12.3,' ResTemp  = ',f12.3,/7x
+     &     ,' TotTemp  = ',f12.3,' THoover  = ',f12.3/)
 13000 FORMAT(
-     &     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' NonBond  = ',f11.3,' Coloumb  = ',f11.3
-     &     ,' Bonded   = ',f11.3,/10x,' Stretch  = ',f11.3
-     &     ,' Angle    = ',f11.3,' P-Tors   = ',f11.3,
-     &     /10x,' I-Tors   = ',f11.3,' TraTemp  = ',f11.3,' ResTemp  = '
-     &     ,f11.3,/10x,' TotTemp  = ',f11.3,' VarABMD  = ',f11.3,
-     &     ' VarBABMD = ',f11.3/10x,' EnrABMD  = ',f11.3)
+     &     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' NonBond  = ',f12.3,' Coloumb  = ',f12.3
+     &     ,' Bonded   = ',f12.3,/7x,' Stretch  = ',f12.3
+     &     ,' Angle    = ',f12.3,' P-Tors   = ',f12.3,
+     &     /7x,' I-Tors   = ',f12.3,' TraTemp  = ',f12.3,' ResTemp  = '
+     &     ,f12.3,/7x,' TotTemp  = ',f12.3,' VarABMD  = ',f12.3,
+     &     ' VarBABMD = ',f12.3/7x,' EnrABMD  = ',f12.3)
 13010 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' NonBond  = ',f11.3,' Coloumb  = ',f11.3
-     &     ,' Bonded   = ',f11.3,/10x,' Stretch  = ',f11.3
-     &     ,' Angle    = ',f11.3,' P-Tors   = ',f11.3,
-     &     /10x,' I-Tors   = ',f11.3
-     &     ,' TraTemp  = ',f11.3,' ResTemp  = ',f11.3,/10x
-     &     ,' TotTemp  = ',f11.3,' THoover  = ',f11.3,' VarABMD  = '
-     &     ,f11.3/10x,' VarBABMD = ',f11.3,' EnrABMD  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' NonBond  = ',f12.3,' Coloumb  = ',f12.3
+     &     ,' Bonded   = ',f12.3,/7x,' Stretch  = ',f12.3
+     &     ,' Angle    = ',f12.3,' P-Tors   = ',f12.3,
+     &     /7x,' I-Tors   = ',f12.3
+     &     ,' TraTemp  = ',f12.3,' ResTemp  = ',f12.3,/7x
+     &     ,' TotTemp  = ',f12.3,' THoover  = ',f12.3,' VarABMD  = '
+     &     ,f12.3/7x,' VarBABMD = ',f12.3,' EnrABMD  = ',f12.3/)
 12001 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' NonBond  = ',f11.3
-     &     ,' Ener14   = ',f11.3,/10x,' Bonded   = ',f11.3
-     &     ,' Stretch  = ',f11.3,' Angle    = ',f11.3,/10x
-     &     ,' I-Tors   = ',f11.3,' P-Tors   = ',f11.3,' TotTemp  = ',f11
-     &     .3,/10x,' ResTemp  = ',f11.3,' TraTemp  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' NonBond  = ',f12.3
+     &     ,' Ener14   = ',f12.3,/7x,' Bonded   = ',f12.3
+     &     ,' Stretch  = ',f12.3,' Angle    = ',f12.3,/7x
+     &     ,' I-Tors   = ',f12.3,' P-Tors   = ',f12.3,' TotTemp  = ',f11
+     &     .3,/7x,' ResTemp  = ',f12.3,' TraTemp  = ',f12.3/)
 12004 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' NonBond  = ',f11.3
-     &     ,' Ener14   = ',f11.3,/10x,' Bonded   = ',f11.3
-     &     ,' Stretch  = ',f11.3,' Angle    = ',f11.3,/10x
-     &     ,' I-Tors   = ',f11.3,' P-Tors   = ',f11.3,' TotTemp  = ',f11
-     &     .3,/10x,' ResTemp  = ',f11.3,' TraTemp  = ',f11.3
-     &     ,' VarABMD  = ',f11.4,/10x,' VarBABMD = ',f11.4,
-     &     ' EnrABMD  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' NonBond  = ',f12.3
+     &     ,' Ener14   = ',f12.3,/7x,' Bonded   = ',f12.3
+     &     ,' Stretch  = ',f12.3,' Angle    = ',f12.3,/7x
+     &     ,' I-Tors   = ',f12.3,' P-Tors   = ',f12.3,' TotTemp  = ',f11
+     &     .3,/7x,' ResTemp  = ',f12.3,' TraTemp  = ',f12.3
+     &     ,' VarABMD  = ',f11.4,/7x,' VarBABMD = ',f11.4,
+     &     ' EnrABMD  = ',f12.3/)
 12050 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' NonBond  = ',f11.3
-     &     ,' Ener14   = ',f11.3,/10x,' Bonded   = ',f11.3
-     &     ,' Stretch  = ',f11.3,' Angle    = ',f11.3,/10x
-     &     ,' I-Tors   = ',f11.3,' P-Tors   = ',f11.3,' TotTemp  = ',f11
-     &     .3,/10x,' Hoover   = ',f11.3,' ResTemp  = ',f11.3
-     &     ,' TraTemp  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' NonBond  = ',f12.3
+     &     ,' Ener14   = ',f12.3,/7x,' Bonded   = ',f12.3
+     &     ,' Stretch  = ',f12.3,' Angle    = ',f12.3,/7x
+     &     ,' I-Tors   = ',f12.3,' P-Tors   = ',f12.3,' TotTemp  = ',f11
+     &     .3,/7x,' Hoover   = ',f12.3,' ResTemp  = ',f12.3
+     &     ,' TraTemp  = ',f12.3/)
 12054 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' NonBond  = ',f11.3
-     &     ,' Ener14   = ',f11.3,/10x,' Bonded   = ',f11.3
-     &     ,' Stretch  = ',f11.3,' Angle    = ',f11.3,/10x
-     &     ,' I-Tors   = ',f11.3,' P-Tors   = ',f11.3,' TotTemp  = ',f11
-     &     .3,/10x,' Hoover   = ',f11.3,' ResTemp  = ',f11.3
-     &     ,' TraTemp  = ',f11.3,/10x,' VarABMD  = ',f11.4
-     &     ,' VarBABMD = ',f11.4,' EnrABMD  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' NonBond  = ',f12.3
+     &     ,' Ener14   = ',f12.3,/7x,' Bonded   = ',f12.3
+     &     ,' Stretch  = ',f12.3,' Angle    = ',f12.3,/7x
+     &     ,' I-Tors   = ',f12.3,' P-Tors   = ',f12.3,' TotTemp  = ',f11
+     &     .3,/7x,' Hoover   = ',f12.3,' ResTemp  = ',f12.3
+     &     ,' TraTemp  = ',f12.3,/7x,' VarABMD  = ',f11.4
+     &     ,' VarBABMD = ',f11.4,' EnrABMD  = ',f12.3/)
 12006 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' Recipr   = ',f11.3
-     &     ,' NonBond  = ',f11.3,/10x,' Ener14   = ',f11.3
-     &     ,' Bonded   = ',f11.3,' Stretch  = ',f11.3,/10x
-     &     ,' Angle    = ',f11.3,' I-Tors   = ',f11.3,' P-Tors   = ',f11
-     &     .3,/10x,' TotTemp  = ',f11.3,' ResTemp  = ',f11.3
-     &     ,' TraTemp  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' Recipr   = ',f12.3
+     &     ,' NonBond  = ',f12.3,/7x,' Ener14   = ',f12.3
+     &     ,' Bonded   = ',f12.3,' Stretch  = ',f12.3,/7x
+     &     ,' Angle    = ',f12.3,' I-Tors   = ',f12.3,' P-Tors   = ',f11
+     &     .3,/7x,' TotTemp  = ',f12.3,' ResTemp  = ',f12.3
+     &     ,' TraTemp  = ',f12.3/)
 12051 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' TotPot   = '
-     &     ,f11.3,/10x,' Coulomb  = ',f11.3,' Recipr   = ',f11.3
-     &     ,' NonBond  = ',f11.3,/10x,' Ener14   = ',f11.3
-     &     ,' Bonded   = ',f11.3,' Stretch  = ',f11.3,/10x
-     &     ,' Angle    = ',f11.3,' I-Tors   = ',f11.3,' P-Tors   = ',f11
-     &     .3,/10x,' TotTemp  = ',f11.3,' Hoover   = ',f11.1
-     &     ,' ResTemp  = ',f11.3,/10x,' TraTemp  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' TotPot   = '
+     &     ,f12.3,/7x,' Coulomb  = ',f12.3,' Recipr   = ',f12.3
+     &     ,' NonBond  = ',f12.3,/7x,' Ener14   = ',f12.3
+     &     ,' Bonded   = ',f12.3,' Stretch  = ',f12.3,/7x
+     &     ,' Angle    = ',f12.3,' I-Tors   = ',f12.3,' P-Tors   = ',f11
+     &     .3,/7x,' TotTemp  = ',f12.3,' Hoover   = ',f11.1
+     &     ,' ResTemp  = ',f12.3,/7x,' TraTemp  = ',f12.3/)
 12002 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' SlvPot   = '
-     &     ,f11.3,/10x,' SlvNonbd = ',f11.3,' SlvCoul  = ',f11.3
-     &     ,' SlvBnded = ',f11.3,/10x,' SlvStr   = ',f11.3
-     &     ,' SlvBend  = ',f11.3,' SlvPtor  = ',f11.3,/10x
-     &     ,' SlvItor  = ',f11.3,' SltTot   = ',f11.3,' SltPot   = ',f11
-     &     .3,/10x,' SltCoul  = ',f11.3,' SltL-J   = ',f11.3
-     &     ,' SltHyd   = ',f11.3,/10x,' SltBond  = ',f11.3
-     &     ,' SltStr   = ',f11.3,' SltBen   = ',f11.3,/10x
-     &     ,' SltItor  = ',f11.3,' SltPtor  = ',f11.3,' S-SPot   = ',f11
-     &     .3,/10x,' S-SCoul  = ',f11.3,' Erecip   = ',f11.3,
-     &     ' SltTemp  = ',f11.3/10x,' TrasTem  = ',f11.3,
-     &     ' RestTemp = ',f11.3,' TotTemp  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' SlvPot   = '
+     &     ,f12.3,/7x,' SlvNonbd = ',f12.3,' SlvCoul  = ',f12.3
+     &     ,' SlvBnded = ',f12.3,/7x,' SlvStr   = ',f12.3
+     &     ,' SlvBend  = ',f12.3,' SlvPtor  = ',f12.3,/7x
+     &     ,' SlvItor  = ',f12.3,' SltTot   = ',f12.3,' SltPot   = ',f11
+     &     .3,/7x,' SltCoul  = ',f12.3,' SltL-J   = ',f12.3
+     &     ,' SltHyd   = ',f12.3,/7x,' SltBond  = ',f12.3
+     &     ,' SltStr   = ',f12.3,' SltBen   = ',f12.3,/7x
+     &     ,' SltItor  = ',f12.3,' SltPtor  = ',f12.3,' S-SPot   = ',f11
+     &     .3,/7x,' S-SCoul  = ',f12.3,' Erecip   = ',f12.3,
+     &     ' SltTemp  = ',f12.3/7x,' TrasTem  = ',f12.3,
+     &     ' RestTemp = ',f12.3,' TotTemp  = ',f12.3/)
 12003 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' SlvPot   = '
-     &     ,f11.3,/10x,' SlvNonbd = ',f11.3,' SlvCoul  = ',f11.3
-     &     ,' SlvBnded = ',f11.3,/10x,' SlvStr   = ',f11.3
-     &     ,' SlvBend  = ',f11.3,' SlvPtor  = ',f11.3,/10x
-     &     ,' SlvItor  = ',f11.3,' SltTot   = ',f11.3,' SltPot   = ',f11
-     &     .3,/10x,' SltCoul  = ',f11.3,' SltL-J   = ',f11.3
-     &     ,' SltHyd   = ',f11.3,/10x,' SltBond  = ',f11.3
-     &     ,' SltStr   = ',f11.3,' SltBen   = ',f11.3,/10x
-     &     ,' SltItor  = ',f11.3,' SltPtor  = ',f11.3,' S-SPot   = ',f11
-     &     .3,/10x,' S-SCoul  = ',f11.3,' Erecip   = ',f11.3
-     &     ,' SltTemp  = ',f11.3/10x,' TrasTem  = ',f11.3
-     &     ,' RestTemp = ',f11.3,' TotTemp  = ',f11.3
-     &     /10x,' Hoover   = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' SlvPot   = '
+     &     ,f12.3,/7x,' SlvNonbd = ',f12.3,' SlvCoul  = ',f12.3
+     &     ,' SlvBnded = ',f12.3,/7x,' SlvStr   = ',f12.3
+     &     ,' SlvBend  = ',f12.3,' SlvPtor  = ',f12.3,/7x
+     &     ,' SlvItor  = ',f12.3,' SltTot   = ',f12.3,' SltPot   = ',f11
+     &     .3,/7x,' SltCoul  = ',f12.3,' SltL-J   = ',f12.3
+     &     ,' SltHyd   = ',f12.3,/7x,' SltBond  = ',f12.3
+     &     ,' SltStr   = ',f12.3,' SltBen   = ',f12.3,/7x
+     &     ,' SltItor  = ',f12.3,' SltPtor  = ',f12.3,' S-SPot   = ',f11
+     &     .3,/7x,' S-SCoul  = ',f12.3,' Erecip   = ',f12.3
+     &     ,' SltTemp  = ',f12.3/7x,' TrasTem  = ',f12.3
+     &     ,' RestTemp = ',f12.3,' TotTemp  = ',f12.3
+     &     /7x,' Hoover   = ',f12.3/)
 13002 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' SlvPot   = '
-     &     ,f11.3,/10x,' SlvNonbd = ',f11.3,' SlvCoul  = ',f11.3
-     &     ,' SlvBnded = ',f11.3,/10x,' SlvStr   = ',f11.3
-     &     ,' SlvBend  = ',f11.3,' SlvPtor  = ',f11.3,/10x
-     &     ,' SlvItor  = ',f11.3,' SltTot   = ',f11.3,' SltPot   = ',f11
-     &     .3,/10x,' SltCoul  = ',f11.3,' SltL-J   = ',f11.3
-     &     ,' SltHyd   = ',f11.3,/10x,' SltBond  = ',f11.3
-     &     ,' SltStr   = ',f11.3,' SltBen   = ',f11.3,/10x
-     &     ,' SltItor  = ',f11.3,' SltPtor  = ',f11.3,' S-SPot   = ',f11
-     &     .3,/10x,' S-SCoul  = ',f11.3,' Erecip   = ',f11.3
-     &     ,' SltTemp  = ',f11.3/10x,' TrasTem  = ',f11.3
-     &     ,' RestTemp = ',f11.3,' TotTemp  = ',f11.3/10x
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' SlvPot   = '
+     &     ,f12.3,/7x,' SlvNonbd = ',f12.3,' SlvCoul  = ',f12.3
+     &     ,' SlvBnded = ',f12.3,/7x,' SlvStr   = ',f12.3
+     &     ,' SlvBend  = ',f12.3,' SlvPtor  = ',f12.3,/7x
+     &     ,' SlvItor  = ',f12.3,' SltTot   = ',f12.3,' SltPot   = ',f11
+     &     .3,/7x,' SltCoul  = ',f12.3,' SltL-J   = ',f12.3
+     &     ,' SltHyd   = ',f12.3,/7x,' SltBond  = ',f12.3
+     &     ,' SltStr   = ',f12.3,' SltBen   = ',f12.3,/7x
+     &     ,' SltItor  = ',f12.3,' SltPtor  = ',f12.3,' S-SPot   = ',f11
+     &     .3,/7x,' S-SCoul  = ',f12.3,' Erecip   = ',f12.3
+     &     ,' SltTemp  = ',f12.3/7x,' TrasTem  = ',f12.3
+     &     ,' RestTemp = ',f12.3,' TotTemp  = ',f12.3/7x
      &     ,' VarABMD  = ',f11.4,' VarBABMD = ',f11.4
-     &     ,' EnrABMD  = ',f11.3/)
+     &     ,' EnrABMD  = ',f12.3/)
 13003 FORMAT( 
-     x     10x,' Tstep    = ',f11.3,' Total    = ',f11.3,' SlvPot   = '
-     &     ,f11.3,/10x,' SlvNonbd = ',f11.3,' SlvCoul  = ',f11.3
-     &     ,' SlvBnded = ',f11.3,/10x,' SlvStr   = ',f11.3
-     &     ,' SlvBend  = ',f11.3,' SlvPtor  = ',f11.3,/10x
-     &     ,' SlvItor  = ',f11.3,' SltTot   = ',f11.3,' SltPot   = ',f11
-     &     .3,/10x,' SltCoul  = ',f11.3,' SltL-J   = ',f11.3
-     &     ,' SltHyd   = ',f11.3,/10x,' SltBond  = ',f11.3
-     &     ,' SltStr   = ',f11.3,' SltBen   = ',f11.3,/10x
-     &     ,' SltItor  = ',f11.3,' SltPtor  = ',f11.3,' S-SPot   = ',f11
-     &     .3,/10x,' S-SCoul  = ',f11.3,' Erecip   = ',f11.3
-     &     ,' SltTemp  = ',f11.3/10x,' TrasTem  = ',f11.3
-     &     ,' RestTemp = ',f11.3,' TotTemp  = ',f11.3/10x
-     &     ,' Hoover   = ',f11.3,' VarABMD  = ',f11.4
-     &     ,' VarBABMD = ',f11.4/10x,' EnrABMD  = ',f11.3/)
-16000 FORMAT(10x,' SolvEne  = ',f11.3/)
+     x     7x,' Tstep    = ',f12.3,' Total    = ',f12.3,' SlvPot   = '
+     &     ,f12.3,/7x,' SlvNonbd = ',f12.3,' SlvCoul  = ',f12.3
+     &     ,' SlvBnded = ',f12.3,/7x,' SlvStr   = ',f12.3
+     &     ,' SlvBend  = ',f12.3,' SlvPtor  = ',f12.3,/7x
+     &     ,' SlvItor  = ',f12.3,' SltTot   = ',f12.3,' SltPot   = ',f11
+     &     .3,/7x,' SltCoul  = ',f12.3,' SltL-J   = ',f12.3
+     &     ,' SltHyd   = ',f12.3,/7x,' SltBond  = ',f12.3
+     &     ,' SltStr   = ',f12.3,' SltBen   = ',f12.3,/7x
+     &     ,' SltItor  = ',f12.3,' SltPtor  = ',f12.3,' S-SPot   = ',f11
+     &     .3,/7x,' S-SCoul  = ',f12.3,' Erecip   = ',f12.3
+     &     ,' SltTemp  = ',f12.3/7x,' TrasTem  = ',f12.3
+     &     ,' RestTemp = ',f12.3,' TotTemp  = ',f12.3/7x
+     &     ,' Hoover   = ',f12.3,' VarABMD  = ',f11.4
+     &     ,' VarBABMD = ',f11.4/7x,' EnrABMD  = ',f12.3/)
+16000 FORMAT(7x,' SolvEne  = ',f12.3/)
 22000 FORMAT( 
      &     /10x,' Total    = ',f11.3,'+/-',f9.3,' TotPot   = ',f11.3
      &     ,'+/-',f9.3,

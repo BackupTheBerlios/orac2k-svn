@@ -2,7 +2,7 @@
 
 /* Effective number of molecules of the solute.  */
 
-#define  _N_PROT_MAX_    24000
+#define  _N_PROT_MAX_    45600
 
 /* Sites of the solvent molecules */
 
@@ -10,7 +10,7 @@
 
 /* Total sites of the solute molecules */
 
-#define  _SIT_SOLU_    110000
+#define  _SIT_SOLU_    119000
 
 /* Number of types of the solvent molecule*/
 
@@ -22,7 +22,7 @@
 
 /* Total Number of residues in the molecule */ 
 
-#define  _NRES_		22700
+#define  _NRES_		27300
 
 /* Total Number of residues in the solvent molecule */ 
 
@@ -30,9 +30,9 @@
 
 /* Total number of groups */
 
-#define  _TGROUP_	34000
+#define  _TGROUP_	38500
 
-#define  _SOLV_GROUP_	100
+#define  _SOLV_GROUP_	30
 
 /* Maximum bin dimension of the G(r) */
 
@@ -248,10 +248,10 @@ number of atoms for each field */
 #define _CHEB_ORDER_       2
 
 /* Grid points for PME */
-#define _MAX_GRID_  144
-#define _FFT1_      144
-#define _FFT2_      144
-#define _FFT3_      144
+#define _MAX_GRID_  160
+#define _FFT1_      160
+#define _FFT2_      160
+#define _FFT3_      160
 
 /* B-spline order for PME */
 #define _MORD_ 7

@@ -646,7 +646,7 @@ c===     add the S*V term to the atomic forces
       END IF
       DEALLOCATE(xmap0,ymap0,zmap0,xmap1,ymap1,zmap1,xmap2,ymap2,zmap2
      &     ,xmap3,ymap3,zmap3,cmap2,swrs,dswrs,index0,index1,maplg,mapag
-     &     ,fppx,fppy,fppz,ind_a)
+     &     ,fppx,fppy,fppz,ind_a,p_index_jj,p_index_j)
       IF(iz .EQ. 0) THEN
          p_nn=0
          DO i=nstart,nend
@@ -1036,7 +1036,7 @@ c===     add the S*V term to the atomic forces
       END IF
       DEALLOCATE(xmap0,ymap0,zmap0,xmap1,ymap1,zmap1,xmap2,ymap2,zmap2
      &     ,xmap3,ymap3,zmap3,cmap2,swrs,dswrs,index0,index1,maplg,mapag
-     &     ,fppx,fppy,fppz,ind_a)
+     &     ,fppx,fppy,fppz,ind_a,p_index_jj,p_index_j)
       IF(iz .EQ. 0) THEN
          p_nn=0
          DO i=nstart,nend
