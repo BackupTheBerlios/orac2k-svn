@@ -46,7 +46,7 @@ OBJ_NP = ElecPotential_Mod.o xerror_mod.o Gauss_Overlap_Mod.o \
 	Module_Topology.o Module_Neighbors.o\
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
-	Module_Stress.o \
+	Module_Stress.o Module_Thole.o\
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
