@@ -183,7 +183,7 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
         READ(strngs(2),fmt) pol_au(i)
         IF(mesos) THEN
            pol_au(i)=pol_au(i)/Mesos_rho
-           WRITE(*,'(''Polarization in Ang. '',a7,2x,f15.9)'),&
+           WRITE(*,'(''Polarization in Ang. '',a7,2x,f15.9)') &
                 & type_aux(i),pol_au(i)
         ELSE
            pol_au(i)=pol_au(i)*au_to_aa

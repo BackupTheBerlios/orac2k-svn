@@ -598,7 +598,7 @@
          CALL P_get_iret(iret,node,nprocs,ncube,nbyte)
          CALL P_get_errmsg(iret,errmsg,80,node,nprocs,ncube,nbyte)
 #endif
-         IF(iret .EQ. 1) RETURN
+        IF(iret .EQ. 1) RETURN
          IF(occupy_space .AND. (.NOT. analys) .AND. node .EQ. 0) THEN
             WRITE(kprint,50000)
             DO i=1,3*ntap

@@ -47,7 +47,7 @@
          zp0(iatom)=zp0(iatom)+h
       END IF
 
-      CALL get_total_energy(.TRUE.,mapnl,mapdn,nmapdn,,tag_bndg,1,fudgec
+      CALL get_total_energy(.TRUE.,mapnl,mapdn,nmapdn,tag_bndg,1,fudgec
      &     ,xp0,yp0,zp0,fpx,fpy,fpz,stressd,stressr,utotal,ucns,ucos
      &     ,urcs,coul_bnd_slv,conf_bnd_slv_n1,coul_bnd_slv_n1,self_slv
      &     ,fsbond,fsbend,fsin14,unb14,cnb14,uslvbon,uslvben,uslvtor

@@ -1,7 +1,7 @@
       SUBROUTINE verify_variables(iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <96/06/20 19:24:48 marchi>                             *
+*   Time-stamp: <2005-03-13 22:17:32 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -36,25 +36,6 @@
 
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
-
-
-      IF(ngrp.GT.32768) THEN 
-         WRITE(kprint,100) ngrp
-         STOP
-      END IF   
-      IF(nmol.GT.32768) THEN 
-         WRITE(kprint,200) nmol
-         STOP
-      END IF   
-      
-      IF(ngrp.GT.32768) THEN 
-         WRITE(kprint,100) ngrp
-         STOP
-      END IF   
-      IF(nmol.GT.32768) THEN 
-         WRITE(kprint,200) nmol
-         STOP
-      END IF   
       
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*

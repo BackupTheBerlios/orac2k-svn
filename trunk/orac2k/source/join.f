@@ -33,7 +33,6 @@
 
 *======================= DECLARATIONS ==================================
 
-      USE Module_Topology
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -393,13 +392,14 @@ c---        see if type has been printed already
 *---- Find all possible 1-4 interactions -------------------------------
 *---- Copy the 1-4 interactions to an array ----------------------------
 *=======================================================================
-
       CALL chnpr(protl,2*m1,npm,nprot,concta,mm1,mask,mask2,ntap
      &     ,iret,errmsg)
+
       IF(iret .EQ. 1) call xerror(errmsg,80,1,222)
 
       WRITE(kprint,'(5x,2a)')
      &     mesg,'Find All Possible 1-4 Interactions ---->'
+      
       CALL clt14(concta,MM1,MM10,ntap,lbndg,lbend,int14,int14p,MM3,ltor,
      x           ltors,nprot,protl,adihed)
 

@@ -1,7 +1,7 @@
       RECURSIVE SUBROUTINE perc_bondh(index,concth,m1,mask)
 
 ************************************************************************
-*   Time-stamp: <2004-11-13 16:50:48 marchi>                             *
+*   Time-stamp: <2005-03-13 20:41:28 marchi>                             *
 *                                                                      *
 *   Percolate through a bond network including only connections        *
 *   with hydrogens                                                     *

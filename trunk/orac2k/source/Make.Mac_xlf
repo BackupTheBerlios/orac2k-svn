@@ -1,0 +1,19 @@
+########################################################################
+#                                                                      #
+#                    Cluster amd dual processors                       #
+#                                                                      #
+########################################################################
+
+ifeq ($(MODE), SEQUENTIAL)
+TARGET0 = 'XLF'
+TARGET1 = 'MAC'
+FFTS = _GPFFT_
+FC = xlf
+LD = xlf
+F90 = f90
+CC = cc
+CPP = /usr/bin/cpp
+CFLAGS = -O3 -DXLF
+FFTW_LIB = /usr/local/fftw_cc/lib
+LLFLAGS = -lrfftw -lfftw 
+endif

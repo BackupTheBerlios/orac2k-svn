@@ -66,7 +66,6 @@
       LOGICAL ok
       CHARACTER*80 errmsg
 
-
 *==== EXECUTABLE STATEMENTS: ==========================================*
 
 *---- INITIALIZATION: -------------------------------------------------*

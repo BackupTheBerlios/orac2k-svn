@@ -2,7 +2,7 @@
      &     ,zp0,potbo,ma,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <99/02/12 11:58:19 marchi>                             *
+*   Time-stamp: <2005-03-13 23:33:47 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -35,8 +35,8 @@
      &     ,yp1(m1),zp1(m1),gpx(m1),gpy(m1),gpz(m1),hpx(m1),hpy(m1)
      &     ,hpz(m1)
       INTEGER sp(m1)
-c$$$      COMMON /rag1/ gpx,gpy,gpz,hpx,hpy,hpz,fpx,fpy,fpz,fpx1,fpy1,fpz1
-c$$$     &     ,xp1,yp1,zp1,sp
+      COMMON /rag1/ gpx,gpy,gpz,hpx,hpy,hpz,fpx,fpy,fpz,fpx1,fpy1,fpz1
+     &     ,xp1,yp1,zp1,sp
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -48,16 +48,18 @@ c$$$     &     ,xp1,yp1,zp1,sp
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+      sp(1)=lconstr
       DO i=1,lconstr
          sp(1+i)=i
       END DO
-      sp(1)=lconstr
       tol2=tol*tol
       DO i=1,ntap
          fpx(i)=0.0D0
          fpy(i)=0.0D0
          fpz(i)=0.0D0
       END DO
+      ubond_slt=0.0D0
+      ubond_slv=0.0D0
       CALL fpbond(ss_index,lcnstr,lconstr,sp,xp0,yp0,zp0,potbo(1,2)
      &     ,potbo(1,1),ubond_slt,ubond_slv,fpx,fpy,fpz)
       ubond=ubond_slt+ubond_slv
@@ -82,9 +84,9 @@ c$$$     &     ,xp1,yp1,zp1,sp
             RETURN
          END IF
          count=count+1
+         fret=0.0D0
          CALL linmin_adjust_bonds(xp0,yp0,zp0,xp1,yp1,zp1,fpx,fpy,fpz
      &     ,fpx1,fpy1,fpz1,ntap,fret)
-
          DO i=1,ntap
             fpx(i)=0.0D0
             fpy(i)=0.0D0
@@ -114,7 +116,6 @@ c$$$     &     ,xp1,yp1,zp1,sp
             fpz(i)=hpz(i)
          END DO
       END DO
-
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

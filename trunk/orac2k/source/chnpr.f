@@ -35,9 +35,10 @@
       LOGICAL mask1(*),mask2(*)
       CHARACTER*80 errmsg
 
-      INTEGER ncount,m,i,nstart
+      INTEGER ncount,m,i,nstart,k
       LOGICAL ok
  
+      iret=0
       ncount=1
       DO i=1,nato
           mask1(i)=.TRUE.

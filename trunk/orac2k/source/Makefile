@@ -43,7 +43,7 @@ INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
 
 OBJ_NP = ElecPotential_Mod.o xerror_mod.o Gauss_Overlap_Mod.o \
 	Neighbors_Mod.o Class_Connect.o Class_Bending.o \
-	Module_Topology.o Module_Neighbors.o\
+	Module_Neighbors.o\
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o\
@@ -496,6 +496,15 @@ OSF1 :
 	${MAKE} recur_OSF "FFLAGS = -recursive "
 	${MAKE} orac_OSF 
 
+XLF :
+	${MAKE} obj_XLF "FFLAGS = -O5 -qnosave -qhot -qipa" 
+	${MAKE} prepro_XLF "FFLAGS = -O5 -qnosave -qhot -qipa" 
+	${MAKE} prepronkl_XLF "FFLAGS = -O0 -qsave -qstrict "
+	${MAKE} eigr_XLF "FFLAGS = -O5 -qsave -qipa "
+	${MAKE} recur_XLF "FFLAGS = -O4 -qnosave -qipa"
+	${MAKE} orac_XLF 
+
+
 #========================================================================
 
 DISTRIBUTION : 
@@ -575,6 +584,27 @@ prepronkl_INTEL: $(OBJPRE_NKL)
 orac_INTEL: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
 	$(LD) -o orac_INTEL $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
+	-L$(FFTW_LIB) $(LLFLAGS)
+
+#==========================================================================
+# Compile and load ORAC on XLF compiler
+#==========================================================================
+
+obj_XLF : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+
+recur_XLF: $(OBJREC)
+
+eigr_XLF: $(EIGRS)
+
+prepro_XLF: $(OBJPRE) $(OBJPRE_F90) 
+
+prepronkl_XLF: $(OBJPRE_NKL)
+
+orac_XLF: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
+	$(LD) -O5 -qnosave -qhot -qipa -o orac_XLF $(OBJ) $(OBJREC)\
+	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
 	-L$(FFTW_LIB) $(LLFLAGS)
 
