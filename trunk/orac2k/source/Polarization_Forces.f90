@@ -110,12 +110,15 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   REAL(8), allocatable, save :: xyz(:,:),xyz0(:,:),xyzfit(:,:)&
        &,wca2(:),work(:)
   REAL(8), SAVE :: gg,Utot_0,fac_dip,Udirect0,Urecip0
-  REAL(8) :: fac_dip2,Tot_Dip_x,Tot_Dip_y,Tot_Dip_z,U_Tot_Dip,Polzed
+  REAL(8) :: fac_dip2,Tot_Dip_x,Tot_Dip_y,Tot_Dip_z,U_Tot_Dip,Polzed&
+       &,aux_pol,Emod,sat_dip
+  REAL(8), SAVE :: dip_sat=2.85D0
   INTEGER :: No_Polzed
   INTEGER, SAVE :: No_of_Calls=0,Call_GR=0
   INTEGER :: nword
   CHARACTER(80) :: What_To_Do
   LOGICAL :: do_LJ,do_All,do_Gauss,do_CC,do_CD,do_DD
+  LOGICAL, SAVE :: Saturation=.TRUE.
   INTEGER :: mapnl0(10000),ingrpp0,ingrp0(2,30000),ingrp0_x(30000)
   CHARACTER(80) :: line,strngs(40)
   CHARACTER(8) :: fmt
@@ -125,9 +128,14 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   INTEGER, DIMENSION(:),ALLOCATABLE, SAVE :: No_hist_E0,No_hist_E&
        &,No_Hist_GR,No_Hist_Dip
   REAL(8), SAVE :: Bins=0.05,Rmax=20.0D0,Max_Dip,Shell=2.5D0
+  REAL(8), SAVE :: Debey_to_elang=0.208194346224757D0
   INTEGER, SAVE :: Max_Bin,Max_Shell
   INTEGER, SAVE :: Times_of_Calls=0
 
+
+  sat_dip=dip_sat
+  sat_dip=sat_dip*Debey_to_Elang/DSQRT(unitc)
+  
 ! initialize
   Times_of_Calls=Times_of_Calls+1
   if( first_step ) then
@@ -135,7 +143,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
 !!$     Max_Shell=0
      fac_dip=(4.0/3.0)*alphal**3/dsqrt(pi)
      maxdiff = 1.0d-6
-     
+
+
      au_to_aa=lbohr**3
      read(kpol_inp,*) apara
      read(kpol_inp,*) gamma0
@@ -346,8 +355,14 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      do i=1,ntap
         ddot = 0.0d0
         nbti = nbtype(i)
+        aux_pol=pol(nbti)
+        IF(Saturation) THEN
+           Emod=DSQRT(Etotal0(1,i)**2+Etotal0(2,i)**2+Etotal0(3,i)**2)
+           aux_pol=(sat_dip/Emod)*langevin(3.0D0*pol(nbti)*Emod&
+                &/sat_dip)
+        END IF
         do k=1,3
-           dip_old(k,i) = pol(nbti) * (Etotal0(k,i)+Ext(k))
+           dip_old(k,i) = aux_pol * (Etotal0(k,i)+Ext(k))
         end do
      END DO
      U_conf=ELJ
@@ -411,9 +426,16 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
              & fac_dip*dip_old(3,i) + fac_dip2*Tot_dip_z + Ext(3)
         Ued=Ued-Ext(1)*dip_old(1,i)-Ext(2)*dip_old(2,i)-Ext(3)*dip_old(3,i)
         gamma=gamma0
+
+        aux_pol=pol(nbti)
+        IF(Saturation) THEN
+           Emod=DSQRT(Etotal(1,i)**2+Etotal(2,i)**2+Etotal(3,i)**2)
+           aux_pol=(sat_dip/Emod)*langevin(3.0D0*pol(nbti)*Emod&
+                &/sat_dip) 
+        END IF
         DO k=1,3
            ddot = ddot + dip_old(k,i)*dip_old(k,i)
-           dip_new(k,i) = gamma * pol(nbti) * Etotal(k,i)
+           dip_new(k,i) = gamma * aux_pol * Etotal(k,i)
            dip_new(k,i) = dip_new(k,i) + (1.0d0-gamma) * dip_old(k,i)
         END DO
         Uind = Uind + 0.50d0*ddot/pol(nbti)
@@ -421,7 +443,6 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
         Grad_y(i)=dip_old(2,i)/pol(nbti)-Etotal(2,i)
         Grad_z(i)=dip_old(3,i)/pol(nbti)-Etotal(3,i)
      END DO
-
      U_Tot_Dip=0.0D0
 !!$     U_Tot_Dip=0.5D0*fac_dip2*(Tot_Dip_x**2+Tot_Dip_y**2+Tot_Dip_z**2)
 
@@ -479,8 +500,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   Polzed=DSQRT(Tot_Dip_x**2+Tot_Dip_y**2+Tot_Dip_z**2)
 
   CALL Get_Max_Dip(Dipoles,Max_Dip)
-  WRITE(*,'(''Maximum Dipole = '',f14.5,e16.9)') Max_Dip*DSQRT(unitc)*1.602D-29&
-       &/3.336D-30,Max_dip
+  WRITE(*,'(''Maximum Dipole = '',f14.5,e16.9)') Max_Dip*DSQRT(unitc)&
+       &/Debey_to_elang,Max_dip
   WRITE(*,*) 'Sails ',U_conf*efact/1000.0D0,(U_ele+U_conf)*efact/1000.0D0
   first_step=.FALSE.
   IF(MOD(No_of_Calls,10) == 0) THEN
@@ -510,6 +531,12 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
 
 CONTAINS
 !!$=======================================================================
+  REAL(8) function langevin(x)
+    implicit none
+    REAL(8) :: x
+    langevin=(1.0D0/tanh(x))-1.0D0/x
+  end function langevin
+
 
   REAL(8) function diff_dipole(ntap,dip_new,dip_old)
     implicit none
@@ -660,8 +687,8 @@ CONTAINS
        yg=ypi-ypa(j)
        zg=zpi-zpa(j)
        xmap=-2.0D0*PBC(xg)
-       ymap=-2.0D0*PBC(xg)
-       zmap=-2.0D0*PBC(xg)
+       ymap=-2.0D0*PBC(yg)
+       zmap=-2.0D0*PBC(zg)
        xg=xg+xmap
        yg=yg+ymap
        zg=zg+zmap
