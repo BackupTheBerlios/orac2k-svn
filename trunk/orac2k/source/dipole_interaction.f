@@ -67,67 +67,68 @@
 c$$$========================================================================
 c$$$--- Do Thole correction 
 c$$$========================================================================
-               
-               arg = rsp/plrzbij(lij)
-               fact = 1.0d0 + arg + 0.50d0*arg**2
-               cexp = exp(-arg)
-               D1=fact*cexp
-               D2=(fact+arg**3/6.0d0)*cexp
-               
-               BB1=B1
-               BB2=B2
-               BB3=B3
 
-               B1=B1*D1
-               B2=B2*D2
-
-               Gij11 =  dotij
-
-               
-               termj=-dotjr*B2
-               termi=-dotir*B2
-
-               dphii_dx = termj*xc + B1*muj_x
-               dphii_dy = termj*yc + B1*muj_y
-               dphii_dz = termj*zc + B1*muj_z
-               dphij_dx = termi*xc + B1*mui_x
-               dphij_dy = termi*yc + B1*mui_y
-               dphij_dz = termi*zc + B1*mui_z
-
-               Edx(i1)=Edx(i1)+dphii_dx
-               Edy(i1)=Edy(i1)+dphii_dy
-               Edz(i1)=Edz(i1)+dphii_dz
-               Edx(j)=Edx(j)+dphij_dx
-               Edy(j)=Edy(j)+dphij_dy
-               Edz(j)=Edz(j)+dphij_dz
-
-
-
-               Uddd=Uddd-Gij11*B1-Gij2*B2
-
-               fact=arg+arg**2
-               d_D1=-(fact*cexp-arg*D1)*rsqi
-               fact=fact+0.5D0*arg**3
-               d_D2=-(fact*cexp-arg*D2)*rsqi
-
-               d_B3=BB3*D2+BB2*d_D2
-               d_B2=BB2*D1+BB1*d_D1
-
-
-               term=Gij11*d_B2+Gij2*d_B3
-
-
-               dphii_dx = term*xc-termj*mui_x-termi*muj_x
-               dphii_dy = term*yc-termj*mui_y-termi*muj_y
-               dphii_dz = term*zc-termj*mui_z-termi*muj_z
-               
-               fpx(i1)=fpx(i1)-dphii_dx
-               fpy(i1)=fpy(i1)-dphii_dy
-               fpz(i1)=fpz(i1)-dphii_dz
-               fpx(j)=fpx(j)+dphii_dx
-               fpy(j)=fpy(j)+dphii_dy
-               fpz(j)=fpz(j)+dphii_dz
-
+               IF(Thole) THEN
+                  arg = rsp/plrzbij(lij)
+                  fact = 1.0d0 + arg + 0.50d0*arg**2
+                  cexp = exp(-arg)
+                  D1=fact*cexp
+                  D2=(fact+arg**3/6.0d0)*cexp
+                  
+                  BB1=B1
+                  BB2=B2
+                  BB3=B3
+                  
+                  B1=B1*D1
+                  B2=B2*D2
+                  
+                  Gij11 =  dotij
+                  
+                  
+                  termj=-dotjr*B2
+                  termi=-dotir*B2
+                  
+                  dphii_dx = termj*xc + B1*muj_x
+                  dphii_dy = termj*yc + B1*muj_y
+                  dphii_dz = termj*zc + B1*muj_z
+                  dphij_dx = termi*xc + B1*mui_x
+                  dphij_dy = termi*yc + B1*mui_y
+                  dphij_dz = termi*zc + B1*mui_z
+                  
+                  Edx(i1)=Edx(i1)+dphii_dx
+                  Edy(i1)=Edy(i1)+dphii_dy
+                  Edz(i1)=Edz(i1)+dphii_dz
+                  Edx(j)=Edx(j)+dphij_dx
+                  Edy(j)=Edy(j)+dphij_dy
+                  Edz(j)=Edz(j)+dphij_dz
+                  
+                  
+                  
+                  Uddd=Uddd-Gij11*B1-Gij2*B2
+                  
+                  fact=arg+arg**2
+                  d_D1=-(fact*cexp-arg*D1)*rsqi
+                  fact=fact+0.5D0*arg**3
+                  d_D2=-(fact*cexp-arg*D2)*rsqi
+                  
+                  d_B3=BB3*D2+BB2*d_D2
+                  d_B2=BB2*D1+BB1*d_D1
+                  
+                  
+                  term=Gij11*d_B2+Gij2*d_B3
+                  
+                  
+                  dphii_dx = term*xc-termj*mui_x-termi*muj_x
+                  dphii_dy = term*yc-termj*mui_y-termi*muj_y
+                  dphii_dz = term*zc-termj*mui_z-termi*muj_z
+                  
+                  fpx(i1)=fpx(i1)-dphii_dx
+                  fpy(i1)=fpy(i1)-dphii_dy
+                  fpz(i1)=fpz(i1)-dphii_dz
+                  fpx(j)=fpx(j)+dphii_dx
+                  fpy(j)=fpy(j)+dphii_dy
+                  fpz(j)=fpz(j)+dphii_dz
+               END IF
 
 c$$$               IF(rsp .LT. 3.0D0) THEN
 c$$$             

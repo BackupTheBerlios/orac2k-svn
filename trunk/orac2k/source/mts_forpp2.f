@@ -40,7 +40,7 @@
 *                                                                      *
 ************************************************************************
 C======================= DECLARATIONS ==================================
-      USE Module_Neighbors, ONLY: neigh=>neigha
+      USE Module_Neighbors, ONLY: neigh=>neigha; USE Module_Thole
       IMPLICIT none
 C----------------------- ARGUMENTS -------------------------------------
       INTEGER nato,ngrp,ma,nstart,nend
@@ -340,7 +340,7 @@ c----       compute forces
          uconf_ss =uconf(2)
          uconf_slv=uconf(3)
       END IF
-
+      
       DEALLOCATE(index0,maplg,mapag,mapppa)
       DEALLOCATE(xmap0,ymap0,zmap0)
       DEALLOCATE(xmap1,ymap1,zmap1)

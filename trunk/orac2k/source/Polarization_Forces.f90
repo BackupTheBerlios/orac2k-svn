@@ -111,8 +111,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
        &,wca2(:),work(:)
   REAL(8), SAVE :: gg,Utot_0,fac_dip,Udirect0,Urecip0
   REAL(8) :: fac_dip2,Tot_Dip_x,Tot_Dip_y,Tot_Dip_z,U_Tot_Dip,Polzed&
-       &,aux_pol,Emod,sat_dip
-  REAL(8), SAVE :: dip_sat=2.85D0
+       &,aux_pol,Emod
+  REAL(8), SAVE :: dip_sat,sat_dip
   INTEGER :: No_Polzed
   INTEGER, SAVE :: No_of_Calls=0,Call_GR=0
   INTEGER :: nword
@@ -133,14 +133,11 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   INTEGER, SAVE :: Times_of_Calls=0
 
 
-  sat_dip=dip_sat
-  sat_dip=sat_dip*Debey_to_Elang/DSQRT(unitc)
-  
 ! initialize
   Times_of_Calls=Times_of_Calls+1
   if( first_step ) then
-     Max_Shell=IDINT(0.5D0*Shell/Bins)+1
-!!$     Max_Shell=0
+!!$     Max_Shell=IDINT(0.5D0*Shell/Bins)+1
+     Max_Shell=0
      fac_dip=(4.0/3.0)*alphal**3/dsqrt(pi)
      maxdiff = 1.0d-6
 
@@ -148,6 +145,8 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      au_to_aa=lbohr**3
      read(kpol_inp,*) apara
      read(kpol_inp,*) gamma0
+     read(kpol_inp,*) dip_sat
+
      read(kpol_inp,*) maxdiff
      npol=0
      DO 
@@ -164,7 +163,17 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
      REWIND(kpol_inp)
      read(kpol_inp,*) apara
      read(kpol_inp,*) gamma0
+     read(kpol_inp,*) dip_sat
      read(kpol_inp,*) maxdiff
+     
+     IF(dip_sat > 0.0D0) THEN
+        Saturation=.TRUE.
+        sat_dip=dip_sat
+        sat_dip=sat_dip*Debey_to_Elang/DSQRT(unitc)
+     ELSE
+        Saturation=.FALSE.
+     END IF
+  
      pol_max=-1.0d10
      DO i=1,npol
         READ(kpol_inp,'(a78)') line(1:78)
@@ -209,6 +218,12 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
            STOP
         END IF
      END DO
+     IF(Saturation) THEN
+        WRITE(*,'(''Dipoles *with* saturation threshold ='',f12.4)') dip_sat
+     ELSE
+        WRITE(*,'(''Dipoles *without* saturation threshold'')')
+     END IF
+
      DO i=1,ntap
         nbti = nbtype(i)
         pol_atom(i)=pol(nbti)

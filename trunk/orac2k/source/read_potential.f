@@ -1,7 +1,7 @@
       SUBROUTINE read_potential(fupdte,fabmd,err_args,err_unr,err_end)
 
 ************************************************************************
-*   Time-stamp: <2005-02-28 14:03:49 marchi>                             *
+*   Time-stamp: <2005-03-08 16:13:53 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -19,7 +19,7 @@
 
 *======================== DECLARATIONS ================================*
 
-      USE Module_Extra_Forces
+      USE Module_Extra_Forces; USE Module_Thole
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -845,6 +845,11 @@ c==== Command  EXTERNAL ==============================================
                   CALL xerror(errmsg,80,1,30)
                   nsevere = nsevere + 1
                END IF
+c==== Command  THOLE =================================================
+
+            ELSE IF(strngs(1) .EQ. 'THOLE') THEN
+               Thole=.TRUE.
+
 c==== Command  EXTERNAL ==============================================
 
             ELSE IF(strngs(1) .EQ. 'MODEL') THEN
