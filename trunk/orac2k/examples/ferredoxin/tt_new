@@ -1,0 +1,2 @@
+cd /home/marchi/workdir/Tantale/ferredoxin/
+prun -v -n 4 sh -c ' /workdir/marchi/Tantale/source_massimo_new/orac_OSF < test.1 '
