@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-03-16 15:29:43 marchi>                             *
+*   Time-stamp: <2005-03-16 15:39:54 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
