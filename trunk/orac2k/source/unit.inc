@@ -13,7 +13,7 @@
      &     ,knative,knative_tpl,kdiff,kfreq,kequi,kout_ef,kout_dp
      &     ,kout_dp_sta,kout_dp_tot,kpol_inp,kxslt,kfit,kcalc_cofm
      &     ,klda_inst,klda_eend,klda_rmin,klda_flu,klda_hyd,kprot_hyd
-     &     ,kprot_rest,kprot_lda,klda_rest,KElecPot
+     &     ,kprot_rest,kprot_lda,klda_rest,KElecPot,khydration
       CHARACTER*80 file_names_i(nfile_dump),file_names_o(nfile_dump)
      &     ,FileElecPot
       REAL*8 pi,efact,avogad,boltz,gascon,planck,elechg,epso,twopi,boxl
@@ -36,5 +36,6 @@
      &     ,file_names_o,FileElecPot,kout_ef,kout_dp,kout_dp_sta
      &     ,kout_dp_tot,kpol_inp,kxslt,kfit,kcalc_cofm,klda_inst
      &     ,klda_eend,klda_rmin,klda_flu,klda_hyd,kprot_hyd,kprot_rest
-     &     ,kprot_lda,klda_rest,KElecPot
+     &     ,kprot_lda,klda_rest,KElecPot,khydration
+
 
