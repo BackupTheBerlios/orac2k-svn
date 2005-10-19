@@ -25,6 +25,19 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE HYDRATION_Mod, ONLY: HYD_coeff=>coeff, HYD_cutoff=>cutoff_max,
+     &     HYD_Initialize=>Initialize, hydration, HYD_n_neighbors
+     &     =>n_neighbors,HYD_ncx=>ncx,HYD_ncy=>ncy,HYD_ncz=>ncz,
+     &     HYD_n_write=>n_write
+      USE RMS_Matrix_Mod, ONLY: krms_matrix, rms_matrix, Write_Freq,
+     &     rms_matrix_avg,RMS_Navg=>Navg,rms_matrix_plot
+     &     ,krms_matrix_plot
+      USE EUL_Mod, ONLY: EUL_Create=> Create
+     &     ,eul_angles,EUL_index_l=>index_l, EUL_add=>Add, EUL_kdump
+     &     =>kdump
+      USE DENSITY_Mod, ONLY: DEN_input=>Read_it
+      USE PDBs_Mod, ONLY: PDB_input=>Read_it
+
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -36,7 +49,7 @@
      &     ,ftop_print,ffragm_dist,fhbonds,fhhisto,frms,fgyr,sofk_fprint
      &     ,sofk_fcomp
       REAL*8 freq_ef,freq_dp,finst_fit,fcalc_cofm,finst_lda
-     &     ,fxslt,flda_flu,flda_hyd,fprot_hyd,fprot_lda
+     &     ,fxslt,flda_flu,flda_hyd,fprot_hyd,fprot_lda,dummy
       CHARACTER*22 err_open
       CHARACTER*37 err_args(*)
       CHARACTER*20 err_end 
@@ -52,6 +65,8 @@
 
       INTEGER nword,i,j,m,nsevere,nwarning,n_res,n_bonds,NSec
      &     ,n_bendings,n_ptors,n_itors,n_atoms,naux1,naux2,pmol_efp
+     &     ,n_st_dummy,n_sv_dummy,read_err
+      INTEGER, DIMENSION(:), ALLOCATABLE :: st_dummy,sv_dummy
       CHARACTER*80 line,strngs(40),lined
       CHARACTER*8 fmt
       CHARACTER*1 sep(2),comm(2)
@@ -74,6 +89,8 @@ c=======================================================================
       n_ptors=0
       n_itors=0
       n_atoms=0
+      n_st_dummy=0
+      n_sv_dummy=0
       NSecStruct=1
       SecStructTotal=0
 
@@ -769,86 +786,90 @@ c==== Command FIELD_COFACTOR==========================================
 
 c==== Command HYDRATION  ==============================================
                                                                        
-         ELSE IF(strngs(1).EQ. 'HYDRATION' ) THEN                      
-            not_time_corr=.TRUE.                                       
+         ELSE IF(strngs(1).EQ. 'HYDRATION' ) THEN
+            hydration=.TRUE.
+            strngs(2)='HYDRATION_FILE'
+            INQUIRE(FILE=strngs(2),EXIST=exist)
+            IF(exist) THEN
+               CALL openf(khydration,strngs(2),'FORMATTED',
+     &              'OLD',0)
+            ELSE
+               CALL openf(khydration,strngs(2),'FORMATTED'
+     &              ,'NEW',0)
+            END IF
+            not_time_corr=.TRUE.
+            ALLOCATE(st_dummy(nores+1),sv_dummy(nores+1))
 4100        READ(knlist,'(a78)',END=600) line(1:78)                    
-            CALL wrenc(kprint,line)                                    
+            CALL wrenc(kprint,line)
             IF(line(1:1) .EQ. '#') GOTO 4100                           
                                                                        
             CALL parse(line,sep,2,comm,strngs,40,nword,iret,errmsg)    
                                                                        
-c==== Subcommand hydration (protein) ================================  
-            IF(strngs(1).EQ. 'hydration' .AND.                         
-     &         strngs(2) .EQ. 'coeff' ) THEN                           
-               IF(nword .LT. 3) THEN                                   
+c==== Subcommand hydration coeff ======================================  
+
+            IF(strngs(1).EQ. 'coeff') THEN
+               IF(nword .LT. 2) THEN
                   errmsg=err_args(1)//'3'                              
                   CALL xerror(errmsg,80,1,30)                          
                   nsevere=nsevere+1                                    
                ELSE                                                    
-                  CALL fndfmt(2,strngs(3),fmt)                         
-                  READ(strngs(3),fmt) coeff_hyd                        
+                  CALL fndfmt(2,strngs(2),fmt)                         
+                  READ(strngs(2),fmt) HYD_coeff
                END IF                                                  
-c---------------                                                       
-            ELSE IF(strngs(1).EQ. 'hydration' .AND.                    
-     &         strngs(2) .EQ. 'residues' ) THEN                        
-               IF(nword .LT. 4) THEN                                   
-                  errmsg=err_args(1)//'4'                              
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere=nsevere+1                                    
-               ELSE                                                    
-                  CALL fndfmt(1,strngs(3),fmt)                         
-                  READ(strngs(3),fmt) min_hyd                          
-                  CALL fndfmt(1,strngs(4),fmt)                         
-                  READ(strngs(4),fmt) max_hyd                          
-               END IF                                                  
-c==== subcommand CUTOFF =============================================  
-                                                                       
-            ELSE IF(strngs(1).EQ. 'CUTOFF' ) THEN                      
+
+c==== subcommand cutoff =============================================  
+
+            ELSE IF(strngs(1).EQ. 'cutoff' ) THEN
                IF(nword.ne.1) THEN                                     
                   CALL fndfmt(2,strngs(2),fmt)                         
-                  READ(strngs(2),fmt,err=20) rspoff                    
+                  READ(strngs(2),fmt,err=20) HYD_cutoff
                END IF                                                  
-                                                                       
-c==== Subcommand print hydration ====================================  
-            ELSE IF(strngs(1).EQ. 'residence_times') THEN              
-                    res_time=.TRUE.                                    
-            ELSE IF(strngs(1).EQ. 'print' .AND.                        
-     &         strngs(2) .EQ. 'hydration') THEN                        
-               IF(nword .LT. 5) THEN                                   
-                  errmsg=err_args(1)//'4'                              
+
+c==== subcommand solute =============================================  
+
+            ELSE IF(strngs(1).EQ. 'solute') THEN
+               CALL parse_numbers(err_unr,strngs,nword,st_dummy
+     &              ,n_st_dummy,nsevere)
+
+c==== subcommand solvent ============================================  
+
+            ELSE IF(strngs(1).EQ. 'solvent') THEN
+               CALL parse_numbers(err_unr,strngs,nword,sv_dummy
+     &              ,n_sv_dummy,nsevere)
+
+c==== subcommand neighbors ============================================  
+
+            ELSE IF(strngs(1).EQ. 'neighbors') THEN
+               IF(nword.ne.1) THEN                                     
+                  CALL fndfmt(2,strngs(2),fmt)
+                  READ(strngs(2),fmt,err=20) dummy
+                  HYD_n_neighbors=IDINT(dummy)
+               END IF
+
+c==== subcommand box_grid =============================================  
+
+            ELSE IF(strngs(1).EQ. 'box_grid') THEN
+               IF(nword .LT. 4) THEN
+                  errmsg=err_args(1)//'3'
                   CALL xerror(errmsg,80,1,30)                          
-                  nsevere=nsevere+1                                    
+                  nsevere=nsevere+1
+               END IF
+               CALL fndfmt(1,strngs(2),fmt)
+               READ(strngs(2),fmt,err=20) HYD_ncx
+               CALL fndfmt(1,strngs(3),fmt)
+               READ(strngs(3),fmt,err=20) HYD_ncy
+               CALL fndfmt(1,strngs(4),fmt)
+               READ(strngs(4),fmt,err=20) HYD_ncz
+
+c==== subcommand write ==============================================  
+
+            ELSE IF(strngs(1).EQ. 'write' ) THEN
+               IF(nword.ne.1) THEN                                     
+                  CALL fndfmt(2,strngs(2),fmt)
+                  READ(strngs(2),fmt,err=20) dummy
+                  HYD_n_write=IDINT(dummy)
                END IF                                                  
-               IF(strngs(4) .EQ. 'OPEN') THEN                          
-                  prot_hyd=.TRUE.                                      
-                  CALL fndfmt(2,strngs(3),fmt)                         
-                  READ(strngs(3),fmt) fprot_hyd                        
-                  CALL uscrpl(strngs(5),80)                            
-                  INQUIRE(FILE=strngs(5),EXIST=exist)                  
-                  IF(exist) THEN                                       
-                     CALL openf(kprot_hyd,strngs(5),'FORMATTED',       
-     &                    'OLD',0)                                     
-                  ELSE                                                 
-                     CALL openf(kprot_hyd,strngs(5),'FORMATTED'        
-     &                    ,'NEW',0)                                    
-                  END IF                                               
-                                                                       
-                  CALL add_str(strngs(5),80,'_rest',5,lined)           
-                  INQUIRE(FILE=lined,EXIST=exist)                      
-                  IF(exist) THEN                                       
-                     CALL openf(kprot_rest,lined,'FORMATTED',          
-     &                    'OLD',0)                                     
-                  ELSE                                                 
-                     CALL openf(kprot_rest,lined,'FORMATTED'           
-     &                    ,'NEW',0)                                    
-                  END IF                                               
-                                                                       
-               ELSE                                                    
-                  errmsg=err_open                                      
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere = nsevere + 1                                
-               END IF                                                  
-                                                                       
+
 c--------------------------------------------------------------------  
                                                                        
             ELSE IF(strngs(1) .EQ. ' ') THEN                           
@@ -867,6 +888,23 @@ c--------------------------------------------------------------------
                                                                        
                                                                        
 c==== END Command HYDRATION ===========================================
+
+         ELSE IF(strngs(1).EQ. 'PDB' ) THEN
+            not_time_corr=.TRUE.
+            CALL PDB_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== Command DENSITY  ================================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'DENSITY' ) THEN
+            not_time_corr=.TRUE.
+            CALL DEN_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== END Command DENSITY  ============================================
+
 c==== Command POLARIZATION ============================================
                                                                        
          ELSE IF(strngs(1).EQ. 'POLARIZATION' ) THEN                   
@@ -1777,6 +1815,66 @@ c==== Subcommand averaged ===========================================
                   nsevere = nsevere + 1
                END IF
 
+            ELSE IF(strngs(1).EQ. 'eul_angles') THEN
+               eul_angles=.TRUE.
+               CALL EUL_Create(nores)
+               strngs(2)='EUL_DATA'
+               INQUIRE(FILE=strngs(2),EXIST=exist)
+               IF(exist) THEN
+                  CALL openf(EUL_kdump,strngs(2),'FORMATTED',
+     &                 'OLD',0)
+               ELSE
+                  CALL openf(EUL_kdump,strngs(2),'FORMATTED'
+     &                 ,'NEW',0)
+               END IF
+
+            ELSE IF(strngs(1) .EQ. 'eul_domain') THEN
+               eul_angles=.TRUE.
+               m=0
+               CALL parse_numbers(err_unr,strngs,nword,EUL_index_l,m
+     &              ,nsevere)
+               EUL_index_l(1)=m
+               CALL EUL_Add
+
+c==== Subcommand print rms ==========================================
+
+            ELSE IF(strngs(1).EQ. 'rms_matrix') THEN
+               rms_matrix=.TRUE.
+               avg_ca=.TRUE.
+               strngs(2)='RMS_MATRIX'
+               INQUIRE(FILE=strngs(2),EXIST=exist)
+               IF(exist) THEN
+                  CALL openf(krms_matrix,strngs(2),'FORMATTED',
+     &                 'OLD',0)
+               ELSE
+                  CALL openf(krms_matrix,strngs(2),'FORMATTED'
+     &                 ,'NEW',0)
+               END IF
+
+            ELSE IF(strngs(1).EQ. 'rms_matrix_plot') THEN
+               rms_matrix=.TRUE.
+               rms_matrix_plot=.TRUE.
+               strngs(2)='RMS_MATRIX.pdb'
+               INQUIRE(FILE=strngs(2),EXIST=exist)
+               IF(exist) THEN
+                  CALL openf(krms_matrix_plot,strngs(2),'FORMATTED',
+     &                 'OLD',0)
+               ELSE
+                  CALL openf(krms_matrix_plot,strngs(2),'FORMATTED'
+     &                 ,'NEW',0)
+               END IF
+               
+            ELSE IF(strngs(1).EQ. 'rms_matrix_avg') THEN
+               rms_matrix=.TRUE.
+               rms_matrix_avg=.TRUE.
+
+            ELSE IF(strngs(1).EQ. 'rms_matrix_freq') THEN
+               rms_matrix=.TRUE.
+               CALL fndfmt(2,strngs(2),fmt)
+               READ(strngs(2),fmt,err=20) dummy
+               Write_Freq=INT(dummy)
+               RMS_Navg=INT(dummy)
+
 c==== Subcommand print rms ==========================================
 
             ELSE IF(strngs(1).EQ. 'print' .AND. strngs(2) .EQ. 'rms')
@@ -2021,7 +2119,13 @@ c--   syntax errors: abort without verifying input
       top_ptors(1)=n_ptors
       top_itors(1)=n_itors
       corr_atoms(1)=n_atoms
-
+      IF(hydration) THEN
+         st_dummy(1)=n_st_dummy
+         sv_dummy(1)=n_sv_dummy
+         CALL HYD_Initialize(st_dummy,sv_dummy,khydration)
+         DEALLOCATE(st_dummy,sv_dummy)
+      END IF
+      
       RETURN
 
 c==============================================================================

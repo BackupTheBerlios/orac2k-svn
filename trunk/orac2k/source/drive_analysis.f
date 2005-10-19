@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-03-18 12:10:02 marchi>                             *
+*   Time-stamp: <2005-10-19 10:14:55 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -42,6 +42,29 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
+     &     HYD_Initialize_P=>Initialize_P,
+     &     HYD_Initialize_Array=>Initialize_Array,
+     &     HYD_Compute=>Compute,
+     &     HYD_Compute_Neighbors=>Compute_Neighbors,
+     &     HYD_n_write=>n_write,HYD_write_it=>write_it
+
+      USE RMS_Matrix_Mod, ONLY: RMS_Initialize=>Initialize,
+     &     RMS_Compute=>Compute,RMS_Write_it=>Write_it, RMS_Compute_avg
+     &     =>Compute_avg,RMS_Write_it_avg=>Write_it_avg, rms_matrix
+     &     ,rms_matrix_avg, rms_matrix_plot,RMS_Rotate=>Rotate, RMS_plot
+     &     =>plot
+      USE EUL_Mod, ONLY: EUL_Initialize=>Initialize, eul_angles,
+     &     EUL_Compute=>Compute
+      USE DENSITY_Mod, ONLY: DEN_write=>n_write,Density_Calc
+     &     ,DEN_Initialize=>Initialize,DEN_Initialize_Ar=>Initialize_Ar
+     &     ,DEN_compute=>Compute,DEN_write_it=>write_it
+      USE CENTER_SOL_Mod, ONLY: CEN_Center=>Center_Object, CEN_Compute
+     &     =>Compute,CEN_Initialize=>Initialize
+      USE PDBs_Mod, ONLY: PDB_pdbs=>PDBs, PDB_Initialize=>Initialize
+     &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
+     &     ,PDB_ncompute=>n_compute
+ 
       IMPLICIT none
       
       include 'parst.h'
@@ -202,6 +225,20 @@ c$$$====================================================================
       ELSE
          mmb=m1/(nprocs-1)
       END IF
+      IF(hydration) THEN
+         CALL HYD_Initialize_P(node,nprocs,ngrp,nbun)
+         CALL HYD_Initialize_Array(grppt,mres,resg)
+      END IF
+      IF(Density_Calc) THEN
+         CALL DEN_Initialize(prsymb,nres(1,2),mass,ntap)
+         CALL DEN_Initialize_Ar
+      END IF
+      IF(CEN_Center) THEN
+         CALL CEN_Initialize(prsymb,beta,nres(1,2),ss_index,ntap)
+      END IF
+      IF(PDB_pdbs) THEN
+         CALL PDB_Initialize(chrge,prsymb,beta,nres(1,1),nres(1,2),ntap)
+      END IF
 
 *===  Check if the dimension of the work array are sufficient 
 
@@ -239,7 +276,7 @@ c$$$====================================================================
       IF(efield) THEN
  
          call zero(ecc6,ecc12,m5,m5)
-         call zero0(mapnl0,m1)
+         mapnl0(1:m1)=0
          CALL igmap(ngrp,grppt,ingrpp0,ingrp0,3*m11,mapnl0,errmsg,iret)
          IF(iret.EQ.1) CALL xerror(errmsg,80,1,2)
          CALL mapnl_divide(node,nstart_h,nend_h,grppt,mapnl0)
@@ -346,6 +383,12 @@ c$$$====================================================================
       whe=0.0D0
       wbc=0.0D0
       CALL asng_xrmsw(ss_point,m1+1,wca,whe,wbc,beta,mback,nbone)
+      IF(rms_matrix) THEN
+         CALL RMS_Initialize(wca,xpt0,ypt0,zpt0)
+      END IF
+      IF(EUL_angles) THEN
+         CALL EUL_Initialize(wca,xpt0,ypt0,zpt0)
+      END IF
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
      &        ,drpca(ntap),drpbc(ntap),drphe(ntap),drpal(ntap))
@@ -527,6 +570,7 @@ c$$$====================================================================
       CALL timer(vfcp,tfcp,elapse)
       gcpu=tfcp
 
+      WRITE(*,*) start_anl,stop_anl
       IF(ndipole .GT. 0) THEN
          CALL get_memory_iobuffer(start_anl,stop_anl,start_time
      &        ,end_time,length_run,atom_record,length_tot,length_fft)
@@ -912,10 +956,15 @@ c$$$====================================================================
                      END IF
                   END IF
 
+                  IF(CEN_Center) THEN
+                     CALL CEN_Compute(xp0,yp0,zp0,xpa,ypa,zpa,co,oc
+     &                    ,mass,ntap)
+                  END IF
+
 *=======================================================================
 *-------- Calculate group position  ------------------------------------
 *=======================================================================
-                  
+
                   CALL appbou(xp0,yp0,zp0,xpg,ypg,zpg,pmass,1,ngrp,grppt
      &                 )
                   
@@ -1277,7 +1326,8 @@ c--------------------------
                   
                   CALL check_zero_coord(xp0,yp0,zp0,ntap,iret,errmsg)
                   IF(iret .NE. 0) call xerror(errmsg,80,1,21)
-                  
+                  IF(iret .EQ. 1) CYCLE
+
 *=======================================================================
 *--- Compute the volume of the system ----------------------------------
 *=======================================================================
@@ -1291,11 +1341,15 @@ c--------------------------
 *=======================================================================
                   
                   WRITE(kprint,90000) fstep
-                  
 *=======================================================================
 *-------- Calculate group position  ------------------------------------
 *=======================================================================
                   
+                  IF(CEN_Center) THEN
+                     CALL CEN_Compute(xp0,yp0,zp0,xpa,ypa,zpa,co,oc
+     &                    ,mass,ntap)
+                  END IF
+
                   CALL appbou(xp0,yp0,zp0,xpg,ypg,zpg,pmass,1,ngrp,grppt
      &                 )
                   
@@ -1321,9 +1375,51 @@ c--------------------------
 *---- Compute instantaneous X-rms --------------------------------------
 *=======================================================================
 
-                  IF(node .EQ. 0) THEN
-                     IF(anxrms) THEN
+                  IF(hydration) THEN
+                     IF(MOD(nstep,HYD_n_neighbors) == 0) THEN
+                        CALL HYD_Compute_Neighbors(xpga,ypga,zpga,co)
+                     END IF
+                     CALL HYD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
+                     IF(MOD(nstep,HYD_n_write) == 0) THEN
+                        CALL HYD_Write_it(fstep)
+                     END IF
+                  END IF
 
+                  IF(node .EQ. 0) THEN
+                     IF(Density_Calc) THEN                     
+                        CALL DEN_Compute(xpa,ypa,zpa,co)
+                        IF(MOD(nstep,DEN_write) == 0) THEN
+                           CALL DEN_write_it(Volume,co)
+                        END IF
+                     END IF
+                  END IF
+                  IF(node .EQ. 0) THEN
+                     IF(PDB_pdbs) THEN
+                        IF(MOD(nstep,PDB_ncompute) == 0) THEN
+                           CALL PDB_Compute(xp0,yp0,zp0)
+                        END IF
+                        IF(MOD(nstep,PDB_nwrite) == 0) THEN
+                           CALL PDB_write(fstep)
+                        END IF
+                     END IF
+                  END IF
+
+                  IF(node .EQ. 0) THEN
+                     IF(rms_matrix) THEN
+                        CALL RMS_Rotate(xp0,yp0,zp0)
+                        IF(rms_matrix_avg) THEN
+                           CALL RMS_Compute_avg(xp0,yp0,zp0)
+                           CALL RMS_Write_it_avg
+                        ELSE
+                           CALL RMS_Compute(xp0,yp0,zp0)
+                           CALL RMS_Write_it
+                           IF(rms_matrix_plot) CALL RMS_plot
+                        END IF
+                     END IF
+                     IF(eul_angles) THEN
+                        CALL EUL_Compute(xp0,yp0,zp0)
+                     END IF
+                     IF(anxrms) THEN
                         CALL CalcXrmsSecStruct(anxca,anxbc,anxhe,anxal
      &                       ,SecStructure,SecStructTotal,SecPointer
      &                       ,grppt,mres,protl,wca,whe,wbc,xp0,yp0,zp0
@@ -1331,7 +1427,7 @@ c--------------------------
      &                       ,erral,drpca,drpbc,drphe,drpal)
                         
                         IF(nxrms .NE. 0 .AND.
-     &                     MOD(nstep,nxrms) .EQ. 0) THEN
+     &                       MOD(nstep,nxrms) .EQ. 0) THEN
                            IF(SecStructure) THEN
                               WRITE(kxrms,50000) fstep
                               IF(anxca) CALL write_xrms(kxrms
@@ -1385,7 +1481,7 @@ c--------------------------
                                  IF(anxhe) CALL write_xrms(kxslt,annpro
      &                                ,'HE',errhe)
                                  IF(anxal) CALL write_xrms(kxslt,annpro
-     &                             ,'AL',erral)
+     &                                ,'AL',erral)
                               ELSE
                                  WRITE(kxslt,50000) fstep
                                  IF(anxca) CALL write_xrms(kxslt,nprot,'
@@ -1407,56 +1503,59 @@ c--------------------------
 
                      IF(ncalc_cofm .NE. 0) THEN
                         IF(MOD(nstep,ncalc_cofm) .EQ.0) THEN
-
-                  IF(avg_ca) CALL calccofm(kcalc_cofm,latms,natms,patms
-     &                       ,wca,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
-                  IF(avg_bc) CALL calccofm(kcalc_cofm,latms,natms,patms
-     &                       ,wbc,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
-                  IF(avg_he) CALL calccofm(kcalc_cofm,latms,natms,patms
-     &                       ,whe,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
+                           
+                           IF(avg_ca) CALL calccofm(kcalc_cofm,latms
+     &                          ,natms,patms,wca,xpt0,ypt0,zpt0,qt0,xp0
+     &                          ,yp0,zp0,mass,nato_slt,fstep)
+                           IF(avg_bc) CALL calccofm(kcalc_cofm,latms
+     &                          ,natms,patms,wbc,xpt0,ypt0,zpt0,qt0,xp0
+     &                          ,yp0,zp0,mass,nato_slt,fstep)
+                           IF(avg_he) CALL calccofm(kcalc_cofm,latms
+     &                          ,natms,patms,whe,xpt0,ypt0,zpt0,qt0,xp0
+     &                          ,yp0,zp0,mass,nato_slt,fstep)
                         END IF
                      END IF
-
+                     
 *=======================================================================
 *---- Compute lda properties -------------------------------------------
 *=======================================================================
-
+                     
                      IF(ninst_lda.NE. 0) THEN
                         IF(MOD(nstep,ninst_lda) .EQ.0) THEN
-
-                  IF(avg_ca) CALL calc_lda(klda_inst
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,wca,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
-                  IF(avg_bc) CALL calc_lda(klda_inst
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,wbc,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
-                  IF(avg_he) CALL calc_lda(klda_inst
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,whe,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
-     &                       ,nato_slt,fstep)
-                     IF(avg_lda) THEN
-
-                        IF(avg_ca) CALL calc_lda_avg(klda_rmin,klda_eend
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,wca,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0
-     &                       ,nato_slt,nstep,ninst_lda,fstep)
-                        IF(avg_bc) CALL calc_lda_avg(klda_rmin,klda_eend
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,wbc,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0
-     &                       ,nato_slt,nstep,ninst_lda,fstep)
-                        IF(avg_he) CALL calc_lda_avg(klda_rmin,klda_eend
-     &                       ,nlda_mol,nlda_atm,nlda_zero
-     &                       ,whe,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0
-     &                       ,nato_slt,nstep,ninst_lda,fstep)
-                     END IF
-
+                           
+                           IF(avg_ca) CALL calc_lda(klda_inst
+     &                          ,nlda_mol,nlda_atm,nlda_zero
+     &                          ,wca,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
+     &                          ,nato_slt,fstep)
+                           IF(avg_bc) CALL calc_lda(klda_inst
+     &                          ,nlda_mol,nlda_atm,nlda_zero
+     &                          ,wbc,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
+     &                          ,nato_slt,fstep)
+                           IF(avg_he) CALL calc_lda(klda_inst
+     &                          ,nlda_mol,nlda_atm,nlda_zero
+     &                          ,whe,xpt0,ypt0,zpt0,qt0,xp0,yp0,zp0,mass
+     &                          ,nato_slt,fstep)
+                           IF(avg_lda) THEN
+                              
+                              IF(avg_ca) CALL calc_lda_avg(klda_rmin
+     &                             ,klda_eend,nlda_mol,nlda_atm
+     &                             ,nlda_zero,wca,xpt0,ypt0,zpt0,qt0,xp0
+     &                             ,yp0,zp0,nato_slt,nstep,ninst_lda
+     &                             ,fstep)
+                              IF(avg_bc) CALL calc_lda_avg(klda_rmin
+     &                             ,klda_eend,nlda_mol,nlda_atm
+     &                             ,nlda_zero,wbc,xpt0,ypt0,zpt0,qt0,xp0
+     &                             ,yp0,zp0,nato_slt,nstep,ninst_lda
+     &                             ,fstep)
+                              IF(avg_he) CALL calc_lda_avg(klda_rmin
+     &                             ,klda_eend,nlda_mol,nlda_atm
+     &                             ,nlda_zero,whe,xpt0,ypt0,zpt0,qt0,xp0
+     &                             ,yp0,zp0,nato_slt,nstep,ninst_lda
+     &                             ,fstep)
+                           END IF
+                           
                         END IF
-
+                        
                      END IF
 c----------
                      IF(lda_hyd) THEN
@@ -1464,7 +1563,7 @@ c----------
      &                       ,nlda_mol,nlda_atm,nlda_zero,co,xpa,ypa,zpa
      &                       ,nato_slt,nato_slv,nmol)
                      END IF
-
+                     
                      IF(lda_flu) THEN
                         CALL calc_lda_flu(klda_flu,nlda_flu,nstep,fstep
      &                       ,nlda_mol,nlda_atm,nlda_zero,xp0,yp0,zp0)
@@ -1472,10 +1571,10 @@ c----------
 *=======================================================================
 *---- Compute instantaneous fit  ---------------------------------------
 *=======================================================================
-
+                     
                      IF(ninst_fit .NE. 0) THEN
                         IF(MOD(nstep,ninst_fit) .EQ.0) THEN
-
+                           
                            IF(avg_ca) WRITE(kfit,80000)
                            IF(avg_he) WRITE(kfit,80100)
                            IF(avg_bc) WRITE(kfit,80101)
@@ -1483,38 +1582,38 @@ c----------
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
-                  IF(avg_ca) CALL calc_inst_fit(anprot,annpro,anpoint
-     &                       ,protl,wca,xpt0,ypt0,zpt0,xpo,ypo,zpo
-     &                       ,qt0,xp0,yp0,zp0,nato_slt)
-                  IF(avg_he) CALL calc_inst_fit(anprot,annpro,anpoint
-     &                       ,protl,whe,xpt0,ypt0,zpt0,xpo,ypo,zpo
-     &                       ,qt0,xp0,yp0,zp0,nato_slt)
-                  IF(avg_bc) CALL calc_inst_fit(anprot,annpro,anpoint
-     &                       ,protl,wbc,xpt0,ypt0,zpt0,xpo,ypo,zpo
-     &                       ,qt0,xp0,yp0,zp0,nato_slt)
-                     CALL plotd(fstep,kfit,beta,xpt0,ypt0,zpt0,xpo,ypo
-     &                          ,zpo,nato_slt,nres,m1,prsymb)
+                           IF(avg_ca) CALL calc_inst_fit(anprot,annpro
+     &                          ,anpoint,protl,wca,xpt0,ypt0,zpt0,xpo
+     &                          ,ypo,zpo,qt0,xp0,yp0,zp0,nato_slt)
+                           IF(avg_he) CALL calc_inst_fit(anprot,annpro
+     &                          ,anpoint,protl,whe,xpt0,ypt0,zpt0,xpo
+     &                          ,ypo,zpo,qt0,xp0,yp0,zp0,nato_slt)
+                           IF(avg_bc) CALL calc_inst_fit(anprot,annpro
+     &                          ,anpoint,protl,wbc,xpt0,ypt0,zpt0,xpo
+     &                          ,ypo,zpo,qt0,xp0,yp0,zp0,nato_slt)
+                           CALL plotd(fstep,kfit,beta,xpt0,ypt0,zpt0,xpo
+     &                          ,ypo,zpo,nato_slt,nres,m1,prsymb)
                         END IF
                      END IF
-
+                     
 *=======================================================================
 *---- Compute averaged structure ---------------------------------------
 *=======================================================================
                      
                      IF(avg_str .OR. avg_rms) THEN
                         IF(avg_ca) CALL calc_avg_str(anprot,annpro
-     &                      ,anpoint,protl,wca,xpt0,ypt0,zpt0,xp_avg
-     &                      ,yp_avg,zp_avg
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
+     &                       ,anpoint,protl,wca,xpt0,ypt0,zpt0,xp_avg
+     &                       ,yp_avg,zp_avg
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
                         IF(avg_he) CALL calc_avg_str(anprot,annpro
-     &                      ,anpoint,protl,whe,xpt0,ypt0,zpt0,xp_avg
-     &                      ,yp_avg,zp_avg
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
+     &                       ,anpoint,protl,whe,xpt0,ypt0,zpt0,xp_avg
+     &                       ,yp_avg,zp_avg
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
                         IF(avg_bc) CALL calc_avg_str(anprot,annpro
-     &                      ,anpoint,protl,wbc,xpt0,ypt0,zpt0,xp_avg
-     &                      ,yp_avg,zp_avg
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
-
+     &                       ,anpoint,protl,wbc,xpt0,ypt0,zpt0,xp_avg
+     &                       ,yp_avg,zp_avg
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg)
+                        
                      END IF
                      
                      IF(navg_str .NE. 0) THEN
@@ -1556,17 +1655,17 @@ c----------
                      
                      IF(avg_rms) THEN
                         IF(avg_ca) CALL calc_avg2_str(anprot,annpro
-     &                      ,anpoint,protl,wca,xpt0,ypt0,zpt0,xp_avg2
-     &                      ,yp_avg2,zp_avg2
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
+     &                       ,anpoint,protl,wca,xpt0,ypt0,zpt0,xp_avg2
+     &                       ,yp_avg2,zp_avg2
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
                         IF(avg_he) CALL calc_avg2_str(anprot,annpro
-     &                      ,anpoint,protl,whe,xpt0,ypt0,zpt0,xp_avg2
-     &                      ,yp_avg2,zp_avg2
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
+     &                       ,anpoint,protl,whe,xpt0,ypt0,zpt0,xp_avg2
+     &                       ,yp_avg2,zp_avg2
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
                         IF(avg_bc) CALL calc_avg2_str(anprot,annpro
-     &                      ,anpoint,protl,wbc,xpt0,ypt0,zpt0,xp_avg2
-     &                      ,yp_avg2,zp_avg2
-     &                      ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
+     &                       ,anpoint,protl,wbc,xpt0,ypt0,zpt0,xp_avg2
+     &                       ,yp_avg2,zp_avg2
+     &                       ,qt0,xp0,yp0,zp0,nato_slt,iter_avg2)
                      END IF
                      IF(nrms .NE. 0) THEN
                         IF(MOD(nstep,nrms) .EQ.0) THEN
@@ -1675,8 +1774,8 @@ c                           aux=elechg*unitl/3.336D-30
      &                       ,xp0,yp0,zp0)
                      END IF
                      
-                  ELSE
-                     nstep=nstep-1
+c$$$                  ELSE
+c$$$                     nstep=nstep-1
                   END IF
                END IF
             END DO

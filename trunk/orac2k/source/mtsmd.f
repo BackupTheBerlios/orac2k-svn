@@ -1056,7 +1056,7 @@
       if(polar) then
          fact = polar_scale
          CALL dscal(ntap,fact,chrge,1)
-         call zero0(mapnl0,m1)
+         mapnl(1:m1)=0
          CALL igmap(ngrp,grppt,ingrpp0,ingrp0,3*m11,mapnl0,errmsg,iret)
          IF(What_to_do_Pol .EQ. ' ') THEN
             What_to_do_Pol='Full'

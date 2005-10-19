@@ -193,6 +193,13 @@
             enrg=sig*enrg
             qforce=(32.0D0*coa**3-16.0D0*coa)*potb(i)
             qforce=sig*qforce
+         ELSE IF(ntph.EQ.5) THEN
+            sig=DFLOAT(tmp/ntph)
+            enrg=DABS(potb(i))-
+     x           (16.0D0*coa**5-20.0D0*coa**3+5.0D0*coa)*potb(i)
+            enrg=sig*enrg
+            qforce=(80.0D0*coa**4-60.0D0*coa**2+5.0D0)*potb(i)
+            qforce=sig*qforce
          ELSE IF(ntph.EQ.6) THEN
             sig=DFLOAT(tmp/ntph)
             enrg=DABS(potb(i))-potb(i)*

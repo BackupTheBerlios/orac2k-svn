@@ -1,7 +1,7 @@
       SUBROUTINE read_analysis(err_args,err_unr,err_end,err_open)
 
 ************************************************************************
-*   Time-stamp: <2005-01-31 10:18:37 marchi>                             *
+*   Time-stamp: <2005-10-16 17:48:36 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -18,7 +18,9 @@
 
 
 *======================== DECLARATIONS ================================*
-
+      
+      USE CENTER_SOL_Mod, ONLY: CEN_Center=>Center_Object,CEN_target
+     &     =>Target
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -138,6 +140,16 @@ c==== Command SCAN ====================================================
                nsevere = nsevere + 1
                errmsg=err_args(1) //'1'
                CALL xerror(errmsg,80,1,30)
+            END IF
+
+c==== Command CENTER =================================================
+
+         ELSE IF(strngs(1).EQ. 'CENTER') THEN
+            CEN_Center=.TRUE.
+            IF(nword == 2) THEN
+               CEN_Target=strngs(2)(1:7)
+            ELSE
+               CEN_Target='   '
             END IF
 
 c==== Command CONTINUE ================================================

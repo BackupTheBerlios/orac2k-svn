@@ -65,9 +65,10 @@
       INTEGER  nmax,mmax,lenwa
       PARAMETER( nmax=3*mb,mmax = 17)
       PARAMETER(lenwa = 2*mmax*nmax +  4*nmax + 11*mmax*mmax + 8*mmax)
-      REAL*8  rp(*),fp(*),wa(*),dsave(29),factr,low,up
-      INTEGER nbd(*),iwa(*),isave(44),iprint,kbfgs,len1,len2
-      POINTER (ip_rp,rp),(ip_fp,fp),(ip_iwa,iwa),(ip_wa,wa),(ip_nbd,nbd)
+      REAL*8  dsave(29),factr,low,up
+      REAL(8), DIMENSION(:), POINTER :: rp,fp,wa
+      INTEGER isave(44),iprint,kbfgs,len1,len2
+      INTEGER, DIMENSION(:), POINTER :: nbd,iwa
 
       CHARACTER*60 task, csave
       LOGICAL lsave(4),bfgs_restart
@@ -191,8 +192,7 @@
 
       INTEGER ngrp_old,nprot_old,nind(2),indxyz,ind_a
 
-      INTEGER  indxi(*),indxj(*),indxk(*)
-      POINTER (ip_indxi,indxi),(ip_indxj,indxj),(ip_indxk,indxk)
+      INTEGER, DIMENSION(:), POINTER ::  indxi,indxj,indxk
 
       REAL*8  gpx(mb),gpy(mb),gpz(mb),hpx(mb),hpy(mb),hpz(mb),fpx(mb)
      &     ,fpy(mb),fpz(mb),fpx1(mb),fpy1(mb),fpz1(mb),vpx(mb),vpy(mb)
@@ -214,11 +214,11 @@
 *--- DYNAM is a scratch common block: here to save storage; not passed
 *    to any of the external
 
-      COMMON /dynam/ _RP_,_FP_,_WA_,dsave,xp1,yp1,zp1,xpa,ypa
+      COMMON /dynam/ rp,fp,wa,dsave,xp1,yp1,zp1,xpa,ypa
      &     ,zpa,xpcma,ypcma,zpcma,xpga,ypga,zpga,gpx,gpy,gpz,hpx,hpy,hpz
      &     ,fpx,fpy,fpz,fpx1,fpy1,fpz1,vpx,vpy,vpz,vpx1,vpy1,vpz1,fpx2
      &     ,fpy2,fpz2,d_mat,wk,eigvl,eigvc,mapdn,nmapdn,worka,cnstp
-     &     ,_NBD_,_IWA_,isave,cnstpp,cnstpp_slv,cnst_protl
+     &     ,nbd,iwa,isave,cnstpp,cnstpp_slv,cnst_protl
      &     ,cnst_protl_1,cnst_protl_ex,mapnl_save,nmapnl,cnst_protp
      &     ,cnst_protp_1,cnst_protp_ex,krdf
 
@@ -301,10 +301,7 @@
 
       IF(linked_cell) THEN
          indxyz=(2*(ncx-1)+1)*(2*(ncy-1)+1)*(2*(ncz-1)+1)
-         ind_a=M_get_length(indxyz,4)
-         CALL M_memory(ip_indxi,ind_a)
-         CALL M_memory(ip_indxj,ind_a)
-         CALL M_memory(ip_indxk,ind_a)
+         ALLOCATE(indxi(indxyz),indxj(indxyz),indxk(indxyz))
       END IF
 
       CALL comp_molmass(nprot,protl,mass,tmass)
@@ -739,18 +736,11 @@ c$$$
 *=======================================================================
 
          len1=bfgs_nf
-         len1=M_get_length(len1,8)
-         CALL M_memory(ip_rp,len1)
-         CALL M_memory(ip_fp,len1)
-         len1=bfgs_nf
-         len1=M_get_length(len1,4)
-         CALL M_memory(ip_nbd,len1)
+         ALLOCATE(rp(len1),fp(len1),nbd(len1))
          len1=3*bfgs_nf
-         len1=M_get_length(len1,4)
-         CALL M_memory(ip_iwa,len1)
+         ALLOCATE(iwa(len1))
          len1=2*bfgs_nf*bfgs_m+4*bfgs_nf+11*bfgs_m*bfgs_m+8*bfgs_m
-         len1=M_get_length(len1,8)
-         CALL M_memory(ip_wa,len1)
+         ALLOCATE(wa(len1))
 
          IF(task(1:5) .EQ. 'START') THEN
             CALL zero0(fp,bfgs_nf)

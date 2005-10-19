@@ -1,12 +1,5 @@
-#if defined DYNAMIC_MEM
-#define _NNLPP0_ ip_nnlpp0
-#define _NNLPP_  ip_nnlpp
-#else
-#define _NNLPP0_ nnlpp0
-#define _NNLPP_  nnlpp
-#endif
       DOUBLE PRECISION FUNCTION brent_total(mapnl,mapdn,nmapdn
-     &     ,_NNLPP0_,_NNLPP_,tag_bndg,fudgec,ax,bx,cx,f,tol,xmin
+     &     ,nnlpp0,nnlpp,tag_bndg,fudgec,ax,bx,cx,f,tol,xmin
      &     ,xp0,yp0,zp0,fpx,fpy,fpz)
 
 *======================= DECLARATIONS ==================================
@@ -16,10 +9,7 @@
 *----------------------- ARGUMENTS -------------------------------------
 
       INTEGER mapnl(*),mapdn(2,*),nmapdn(*),tag_bndg(*)
-#if defined DYNAMIC_MEM
-      POINTER (ip_nnlpp0,nnlpp0),(ip_nnlpp,nnlpp)
-#endif
-      INTEGER nnlpp0(*),nnlpp(*)
+      INTEGER, DIMENSION(:), POINTER :: nnlpp0,nnlpp
       REAL*8  fudgec
       EXTERNAL f
       REAL*8  xp0(*),yp0(*),zp0(*),fpx(*),fpy(*),fpz(*)
@@ -42,7 +32,7 @@
       w=v
       x=v
       e=0.0D0
-      fx=f(mapnl,mapdn,nmapdn,_NNLPP0_,_NNLPP_,tag_bndg,fudgec,x,xp0
+      fx=f(mapnl,mapdn,nmapdn,nnlpp0,nnlpp,tag_bndg,fudgec,x,xp0
      &     ,yp0,zp0,fpx,fpy,fpz)
       fv=fx
       fw=fx
@@ -78,7 +68,7 @@
           ELSE
               u=x+DSIGN(tol1,d)
           END IF
-          fu=f(mapnl,mapdn,nmapdn,_NNLPP0_,_NNLPP_,tag_bndg,fudgec,u
+          fu=f(mapnl,mapdn,nmapdn,nnlpp0,nnlpp,tag_bndg,fudgec,u
      &         ,xp0,yp0,zp0,fpx,fpy,fpz)
           IF(fu.le.fx) then
               IF(u.ge.x) then

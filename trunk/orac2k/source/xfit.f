@@ -14,10 +14,8 @@
       END DO
 
       CALL rigfit(0,ntap,xyz,xyz0,w1,w2,q,dcm,xyzfit,error,iret,msg)
-
       DO i=1,4
          qt(i)=q(i-1)
       END DO
-
       RETURN
       END

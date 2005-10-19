@@ -37,7 +37,6 @@ C-------------------- LOCAL VARIABLES ----------------------------------
       INTEGER i,j,l,m,n,k,ii,jj
       REAL*8  rk,ik,gmn_r,gmn_i,ri,xc,yc,zc,cthi,phi,kr,plgndr,sj,sy,sjp
      &     ,temp,syp,yrnm,yinm,weight,eps,gmn,delski,sqpi,jn,xpi,ypi,zpi
-      EXTERNAL jn
       INTEGER kbox,nmax,nkcut,nweight,map
       INTEGER*8 n_a
       LOGICAL near0

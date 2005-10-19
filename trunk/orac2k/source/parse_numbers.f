@@ -1,7 +1,7 @@
       SUBROUTINE parse_numbers(err_unr,string,nword,list,n_res,nsevere)
 
 ************************************************************************
-*   Time-stamp: <97/07/08 22:04:39 marchi>                             *
+*   Time-stamp: <2005-06-07 16:21:33 marchi>                             *
 *                                                                      *
 *   Read a list of numbers and recognizes token '-': n1 - n2           *
 *   meaning that all numbers from n1 to n2 are included in the         *

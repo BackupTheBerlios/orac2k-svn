@@ -1,7 +1,7 @@
       SUBROUTINE P_open_input(myid,numprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <2005-01-28 16:38:51 marchi>                             *
+*   Time-stamp: <2005-08-03 15:03:14 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -50,7 +50,6 @@
 2000     CONTINUE
          iret=0
          CLOSE(99)
-         REWIND(5)
       END IF
 
       CALL MPI_BCAST(iret,1,MPI_INTEGER4,0,MPI_COMM_WORLD,ierr)

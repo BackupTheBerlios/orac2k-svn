@@ -4,7 +4,7 @@
      &     ,iret,errmsg,node,nprocs,ncube,ibyte)
 
 ************************************************************************
-*   Time-stamp: <2005-01-31 11:36:08 marchi>                             *
+*   Time-stamp: <2005-03-25 16:05:11 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -198,11 +198,11 @@
          WRITE(unit,*)
          j=strblk(file_names(1),80)
          naux=0
-         WRITE(unit,'(a,4x,3i7)') file_names(1)(1:j),no_records(1)
+         WRITE(unit,'(a,4x,i9,2i7)') file_names(1)(1:j),no_records(1)
      &        ,naux,naux
          DO i=2,nwrite_dump
             j=strblk(file_names(i),80)
-            WRITE(unit,'(a,4x,3i7)') file_names(i)(1:j)
+            WRITE(unit,'(a,4x,i9,2i7)') file_names(i)(1:j)
      &           ,no_records(i),divide_records,atom_record
          END DO
       END IF
