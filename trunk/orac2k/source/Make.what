@@ -4,8 +4,8 @@
 #                                                                      #
 ########################################################################
 
-#include Make.parallel
-include Make.sequential
+include Make.parallel
+#include Make.sequential
 export MODE
 
 ########################################################################
@@ -14,15 +14,9 @@ export MODE
 #                                                                      #
 ########################################################################
 
-<<<<<<< Make.what
-include Make.Mac_g95
 #include Make.Mac_g95_dbg
 #include Make.Mac_xlf
 #include Make.Lx_intel
-=======
-#include Make.Mac_xlf
-include Make.Lx_intel
->>>>>>> 1.3
-#include Make.Lx_pgi_64
+include Make.Lx_pgi_64
 #include Make.OSF_f90
 
