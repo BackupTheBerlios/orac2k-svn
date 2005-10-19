@@ -1,17 +1,20 @@
 ########################################################################
 #                                                                      #
-#                    Cluster AMD Opteron "Tantale "                    #
+#                    Cluster amd dual processors                       #
 #                                                                      #
 ########################################################################
 
-TARGET0 = PGI
-TARGET1 = 'OPTERON'
+ifeq ($(MODE), SEQUENTIAL)
+TARGET0 = 'G95'
+TARGET1 = 'MAC'
 FFTS = _GPFFT_
-##FFTS = _PDFFT_
-FC = mpif90 
-LD = mpif90
-F90 = mpif90 
-CC = mpicc
-CFLAGS = -O3 -DPGI
-FFTW_LIB = /workdir/marchi/fftw/lib
-LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw 
+FFLAGS = -g
+FC = g95
+LD = g95
+F90 = g95
+CC = cc
+CPP = /usr/bin/cpp
+CFLAGS = -O3 -DG95
+FFTW_LIB = /sw/lib
+LLFLAGS = -lrfftw -lfftw 
+endif

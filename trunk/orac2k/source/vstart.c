@@ -191,6 +191,10 @@ return(OK);
 
 #define AUX
 
+#ifdef G95
+#undef AUX
+#endif
+
 #ifdef IRIX 
 #undef AUX
 #endif
