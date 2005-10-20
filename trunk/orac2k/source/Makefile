@@ -47,7 +47,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
-	INPUT_Mod.o PDBs_Mod.o\
+	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
@@ -740,7 +740,7 @@ cself_dipole.o: unit.h
 delrfg.o: parst.h
 drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
 	parst.h iobuffer.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
-	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o 
+	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o
 dspat.o: parst.h pbc.h
 dumptp.o: cpropar.h parst.h
 erf_corr_cutoff.o: unit.h
@@ -867,11 +867,12 @@ read_setup.o: parst.h cpropar.h unit.h
 read_integrator.o: parst.h cpropar.h unit.h
 read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
-	PDBs_Mod.o 
+	PDBs_Mod.o RMS_Subtract_Mod.o
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
 DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o
+RMS_Subtract_Mod.o: RMS_Subtract_Read.f90
 read_parameters.o: parst.h parameters.h 
 read_parallel.CPP.o: parst.h cpropar.h unit.h
 rigfit.o: parst.h

@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-10-19 10:14:55 marchi>                             *
+*   Time-stamp: <2005-10-20 13:55:57 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -64,7 +64,9 @@
       USE PDBs_Mod, ONLY: PDB_pdbs=>PDBs, PDB_Initialize=>Initialize
      &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
      &     ,PDB_ncompute=>n_compute
- 
+      USE RMS_Subtract_Mod, ONLY: SUB_Initialize=>Initialize
+     &     ,SUB_Subtract=>RMS_Subtract,SUB_write=>n_write
+      
       IMPLICIT none
       
       include 'parst.h'
@@ -388,6 +390,10 @@ c$$$====================================================================
       END IF
       IF(EUL_angles) THEN
          CALL EUL_Initialize(wca,xpt0,ypt0,zpt0)
+      END IF
+      IF(SUB_Subtract) THEN
+         CALL SUB_Initialize(mres,nbun,nres(1,2),prsymb,beta,ntap)
+         STOP
       END IF
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)

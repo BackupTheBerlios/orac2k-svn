@@ -37,6 +37,7 @@
      &     =>kdump
       USE DENSITY_Mod, ONLY: DEN_input=>Read_it
       USE PDBs_Mod, ONLY: PDB_input=>Read_it
+      USE RMS_Subtract_Mod, ONLY: SUB_input=>Read_it
 
       IMPLICIT none
 
@@ -900,6 +901,15 @@ c==== Command DENSITY  ================================================
          ELSE IF(strngs(1).EQ. 'DENSITY' ) THEN
             not_time_corr=.TRUE.
             CALL DEN_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== END Command DENSITY  ============================================
+c==== Command RMS_SUBTRACT ============================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'RMS_SUBTRACT' ) THEN
+            not_time_corr=.TRUE.
+            CALL SUB_input(knlist,kprint,nsevere,nword,strngs,iret
      &           ,errmsg,read_err)
             IF(read_err == 1) GOTO 20
 
