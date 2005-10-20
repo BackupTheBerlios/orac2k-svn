@@ -968,4 +968,4 @@ rattle_verlet_co.o: Module_Stress.o
 rattle_correc_co.o: Module_Stress.o
 kinetic.o: Module_Stress.o
 Module_Extra_Forces.o: unit.h
-HYDRATION_Mod.CPP.o: HYDRATION_Mod.CPP.f90
+HYDRATION_Mod.CPP.o: HYDRATION_Mod.CPP.f90 mpi_size.h
