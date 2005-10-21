@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-10-20 13:55:57 marchi>                             *
+*   Time-stamp: <2005-10-21 15:00:53 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -65,7 +65,8 @@
      &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
      &     ,PDB_ncompute=>n_compute
       USE RMS_Subtract_Mod, ONLY: SUB_Initialize=>Initialize
-     &     ,SUB_Subtract=>RMS_Subtract,SUB_write=>n_write
+     &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
+     &     =>n_write,SUB_Write_it=>Write_it
       
       IMPLICIT none
       
@@ -392,8 +393,9 @@ c$$$====================================================================
          CALL EUL_Initialize(wca,xpt0,ypt0,zpt0)
       END IF
       IF(SUB_Subtract) THEN
-         CALL SUB_Initialize(mres,nbun,nres(1,2),prsymb,beta,ntap)
-         STOP
+         CALL get_atres(atres,nres(1,1),nato_slt,nbun_slt)
+         CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
+     &        ,nato_slt)
       END IF
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
@@ -1396,6 +1398,14 @@ c--------------------------
                         CALL DEN_Compute(xpa,ypa,zpa,co)
                         IF(MOD(nstep,DEN_write) == 0) THEN
                            CALL DEN_write_it(Volume,co)
+                        END IF
+                     END IF
+                  END IF
+                  IF(node .EQ. 0) THEN
+                     IF(SUB_Subtract) THEN                     
+                        CALL SUB_Compute(xp0,yp0,zp0)
+                        IF(MOD(nstep,SUB_write) == 0) THEN
+                           CALL SUB_write_it(fstep)
                         END IF
                      END IF
                   END IF
