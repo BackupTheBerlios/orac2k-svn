@@ -91,13 +91,8 @@ c STACK STORAGE: These arrays can be tossed after leaving this routine
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-      nfft2a=nfft2
-      nfft3a=nfft3
-      npya=npy
-      npza=npz
       nay=nfft2
       naz=nfft3
-      nay=nfft2a
       naz=nfft3_local
 
       kstart=nfft3_start
