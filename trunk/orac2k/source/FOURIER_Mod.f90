@@ -1,7 +1,7 @@
-<MODULE FOURIER_Mod
+MODULE FOURIER_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-25 18:55:26 marchi>                           *
+!!$   Time-stamp: <2005-10-25 23:15:28 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -26,10 +26,10 @@
   
   INTEGER, SAVE :: nfft1=0,nfft2=0,nfft3=0,nfft3_start=0,nfft3_local&
        &=0,nfft2_start=0,nfft2_local=0,order=0
-  REAL(8), SAVE :: alpha,oca(3,3)
+  REAL(8), SAVE :: alphal,oca(3,3)
   INTEGER, SAVE :: sizfftab,sizffwrk,siztheta,siz_Q,sizheap,sizstack
   INTEGER, SAVE :: mfft1,mfft2,mfft3,maxord,maxt,mth,max_atm,maxn,maxtw
-  INTEGER, SAVE :: nax,nay,naz
+  INTEGER, SAVE :: nax,nay,naz,nd1,nd2,nd3
   
   REAL(8), DIMENSION(:,:,:), ALLOCATABLE, SAVE :: Ex0,Ey0,Ez0
   REAL(8), DIMENSION(:,:,:), ALLOCATABLE, SAVE :: Ex,Ey,Ez
@@ -72,6 +72,13 @@ CONTAINS
     npza=npz
     nay=nfft2a
     naz=nfft3_local
+    nd1=nax
+    nd2=nay
+    nd3=naz
+    ALLOCATE(phi(nax,nay,naz))
+    ALLOCATE( Ex(nax,nay,naz))
+    ALLOCATE( Ey(nax,nay,naz))
+    ALLOCATE( Ez(nax,nay,naz))
 
     CALL load_bsp_moduli(bsp_mod1,bsp_mod2,bsp_mod3,nfft1,nfft2,nfft3&
          &,order)
@@ -93,7 +100,7 @@ CONTAINS
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
     INTEGER :: naay,naaz
-    REAL(8), DIMENSION (:), ALLOCATABLE :: Q,x,y,z,fx,fy,fz,ffwork
+    REAL(8), DIMENSION (:), ALLOCATABLE :: x,y,z,fx,fy,fz,ffwork
     REAL(8), DIMENSION (:,:), ALLOCATABLE :: theta1,dtheta1,theta2&
          &,dtheta2,theta3,dtheta3,d2theta1,d2theta2,d2theta3
     INTEGER, DIMENSION (:,:), ALLOCATABLE :: indk1,indk2,indj1,indj2
@@ -102,7 +109,6 @@ CONTAINS
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-    ALLOCATE(phi(nax,nay,naz))
     ALLOCATE(theta1(order,numatoms),theta2(order,numatoms)&
          &,theta3(order,numatoms),dtheta1(order,numatoms)&
          &,dtheta2(order,numatoms),dtheta3(order,numatoms))
@@ -135,16 +141,14 @@ CONTAINS
 
     CALL fill_charge_grid(node,nodey,nodez,jstart,kstart,numatoms&
          &,charge,theta1,theta2,theta3,x,y,z,order,nfft1,nfft2&
-         &,nfft3,nax,nay,naz,phi,indk1,indk2,indj1,indj2,mk,mj)
-
+         &,nfft3,naax,naay,naaz,phi,indk1,indk2,indj1,indj2,mk,mj)
 
 !!$=======================================================================
 !!$--- Use FFTW_TRANSPOSED_ORDER
 !!$========================================================================
 
-      CALL do_rfft3d(idir,Q)
-      CALL timer(vfcp,time3,elapse)
-      Time4=time3-time2
+    idir=1
+    CALL do_rfft3d(idir,phi)
 
 #if defined PARALLEL 
 
@@ -152,17 +156,17 @@ CONTAINS
 !!$--- Use transposed Q matrix with FFTW_TRANSPOSED_ORDER
 !!$========================================================================
 
-      nc1=nd1
-      nc2=nfft3
-      nc3=nfft2_local
-      nb1=nfft1
-      nb2=nfft3
-      nb3=nfft2
-      nb3_start=nfft2_start
-      nb3_local=nfft2_local
-      CALL scalar_sum_transp(node,nb3_start,nb3_local,Q,ewald_coeff
-     &     ,volume,recip,bsp_mod1,bsp_mod2,bsp_mod3,nb1,nb2,nb3,nc1,nc2
-     &     ,nc3,eer,virial,rkcut)
+    nc1=nd1
+    nc2=nfft3
+    nc3=nfft2_local
+    nb1=nfft1
+    nb2=nfft3
+    nb3=nfft2
+    nb3_start=nfft2_start
+    nb3_local=nfft2_local
+    CALL transpose(phi,Ex,Ey,Ez,node,nb3_start,nb3_local,alphal&
+         &,volume,oca,bsp_mod1,bsp_mod2,bsp_mod3,nb1,nb2,nb3,nc1,nc2&
+         &,nc3,eer,rkcut) 
 #else
       nc1=nd1
       nc2=nfft2
@@ -172,22 +176,20 @@ CONTAINS
       nb3=nfft3
       nb3_start=nfft3_start
       nb3_local=nfft3_local
-      CALL scalar_sum_normal(node,nb3_start,nb3_local,Q,ewald_coeff
+      CALL Normal(node,nb3_start,nb3_local,Q,ewald_coeff
      &     ,volume,recip,bsp_mod1,bsp_mod2,bsp_mod3,nb1,nb2,nb3,nc1,nc2
      &     ,nc3,eer,virial,rkcut)      
 #endif
-      idir=-1
-      CALL timer(vfcp,time2,elapse)
 
 !!$=======================================================================
 !!$--- Use FFTW_TRANSPOSED_ORDER
 !!$========================================================================
 
-      CALL do_rfft3d(idir,Q)
-
-
-    
-
+     idir=-1
+     CALL do_rfft3d(idir,phi)
+     CALL do_rfft3d(idir,Ex)
+     CALL do_rfft3d(idir,Ey)
+     CALL do_rfft3d(idir,Ez)
 
   END SUBROUTINE Compute
 
