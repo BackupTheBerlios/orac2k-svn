@@ -121,8 +121,6 @@
          CALL DGEMM('N','N',3,3,3,1.0D0,co,3,st,3,0.0D0,stressd,3)
       END IF
 #if defined PARALLEL
-      WRITE(60+node,*) unb14,cngrp,uptors,conf_bnd_slt,conf_bnd_slv
-     &     ,coul_bnd_slt,coul_bnd_slv
       IF(nprocs .GT. 1) THEN
          CALL P_merge_r8(unb14)
          CALL P_merge_r8(cngrp)

@@ -483,11 +483,11 @@ PGI :
 	${MAKE} orac_PGI
 
 INTEL :
-	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
-	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
-	${MAKE} prepronkl_INTEL "FFLAGS = -warn noalignments -O0 "
-	${MAKE} eigr_INTEL "FFLAGS = -w95 -O1 "
-	${MAKE} recur_INTEL "FFLAGS = -w95  "
+	${MAKE} obj_INTEL 
+	${MAKE} prepro_INTEL 
+	${MAKE} prepronkl_INTEL
+	${MAKE} eigr_INTEL 
+	${MAKE} recur_INTEL
 	${MAKE} orac_INTEL 
 
 OSF1 :
