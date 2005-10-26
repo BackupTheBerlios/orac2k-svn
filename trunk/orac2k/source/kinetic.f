@@ -155,10 +155,10 @@
       END IF
 
       tcm=ttcm(1)+ttcm(2)
-      tcm=2.0D0*tcm*efact/(gascon*3.0D0*DFLOAT(nprot))
+      tcm=2.0D0*tcm*efact/(gascon*3.0D0*DBLE(nprot))
       IF(nstart .EQ. 1 .AND. nend .EQ. ntap) THEN
          IF(nf-3*nprot .NE. 0) THEN
-            rcm=2.0D0*rcm*efact/(gascon*DFLOAT(nf-3*nprot))
+            rcm=2.0D0*rcm*efact/(gascon*DBLE(nf-3*nprot))
          END IF
       END IF
       tempt=tcm

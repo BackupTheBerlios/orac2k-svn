@@ -57,7 +57,7 @@
       delrgi=1.0D+0/delrg
       facrdf=1.0D0/(4.0d0*pi*delrg)
       max=MIN0(IDINT(delrgi*DSQRT(xcut)+0.5d0),(maxint-1))
-      vol=(4.0D0*pi/3.0D0)*(DFLOAT(max)*delrg)**3
+      vol=(4.0D0*pi/3.0D0)*(DBLE(max)*delrg)**3
       sumca=0.0D0
       sumhe=0.0D0
       DO i=1,ntap
@@ -76,13 +76,13 @@
       numa=nca
       numb=nca
       IF(nca .NE. 0) THEN
-         rcon=2.0D0/DFLOAT(ngrdon*numa)
+         rcon=2.0D0/DBLE(ngrdon*numa)
          WRITE(kgofr_sk,1000) 
          qr=0.0d0
          gint=0.0d0
          DO i=1,max
             qr=qr+delrg
-            fns=rcon*DFLOAT(igr(i,1+offset))
+            fns=rcon*DBLE(igr(i,1+offset))
             gint=gint+fns
             gr=facrdf*fns/(qr*qr)
             gor(i)=gr
@@ -90,7 +90,7 @@
          END DO
          WRITE(kgofr_sk,1500) 
          DO k=1,kmax
-            rk=2.0D0*pi*DFLOAT(k)/kmax
+            rk=2.0D0*pi*DBLE(k)/kmax
             ssk=0.0D0
             aux=0.0D0
             DO j=1,max
@@ -105,13 +105,13 @@
       numa=nhe
       numb=nhe
       IF( nhe .NE. 0) THEN
-         rcon=2.0D0/DFLOAT(ngrdon*numa)
+         rcon=2.0D0/DBLE(ngrdon*numa)
          WRITE(kgofr_sk,2000) 
          qr=0.0d0
          gint=0.0d0
          DO i=1,max
             qr=qr+delrg
-            fns=rcon*DFLOAT(igr(i,2+offset))
+            fns=rcon*DBLE(igr(i,2+offset))
             gint=gint+fns
             gr=facrdf*fns/(qr*qr)
             gor(i)=gr
@@ -119,7 +119,7 @@
          END DO
          WRITE(kgofr_sk,2500) 
          DO k=1,kmax
-            rk=2.0D0*pi*DFLOAT(k)/kmax
+            rk=2.0D0*pi*DBLE(k)/kmax
             ssk=0.0D0
             DO j=1,max
                rp=j*delrg
@@ -132,13 +132,13 @@
 
       numa=ntap
       numb=ntap
-      rcon=2.0D0/DFLOAT(ngrdon*numa)
+      rcon=2.0D0/DBLE(ngrdon*numa)
       WRITE(kgofr_sk,3000) 
       qr=0.0d0
       gint=0.0d0
       DO i=1,max
          qr=qr+delrg
-         fns=rcon*DFLOAT(igr(i,3+offset))
+         fns=rcon*DBLE(igr(i,3+offset))
          gint=gint+fns
          gr=facrdf*fns/(qr*qr)
          gor(i)=gr
@@ -146,7 +146,7 @@
       END DO
       WRITE(kgofr_sk,3500) 
       DO k=1,kmax
-         rk=2.0D0*pi*DFLOAT(k)/kmax
+         rk=2.0D0*pi*DBLE(k)/kmax
          ssk=0.0D0
          DO j=1,max
             rp=j*delrg
@@ -158,13 +158,13 @@
       END DO
       numa=ntap
       numb=ntap
-      rcon=2.0D0/DFLOAT(ngrdon*numa)
+      rcon=2.0D0/DBLE(ngrdon*numa)
       WRITE(kgofr_sk,4000) 
       qr=0.0d0
       gint=0.0d0
       DO i=1,max
          qr=qr+delrg
-         fns=rcon*DFLOAT(igr(i,4+offset))
+         fns=rcon*DBLE(igr(i,4+offset))
          gint=gint+fns
          gr=facrdf*fns/(qr*qr)
          gor(i)=gr

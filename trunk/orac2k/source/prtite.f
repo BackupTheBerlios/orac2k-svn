@@ -171,9 +171,9 @@
       END IF
 
       IF(md_respa) THEN
-         WRITE(kprint,525) time/DFLOAT(n0respa*n1respa*mrespa*lrespa),
-     &        time/DFLOAT(n1respa*mrespa*lrespa),time/DFLOAT(mrespa
-     &        *lrespa),time/DFLOAT(lrespa),time
+         WRITE(kprint,525) time/DBLE(n0respa*n1respa*mrespa*lrespa),
+     &        time/DBLE(n1respa*mrespa*lrespa),time/DBLE(mrespa
+     &        *lrespa),time/DBLE(lrespa),time
          WRITE(kprint,526) rcutm,rtolm,rneim,rcutl,rtoll,rneil,rcuth
      &        ,rtolh,rneih
          IF(clewld) THEN

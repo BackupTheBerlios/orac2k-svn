@@ -80,9 +80,9 @@
 *--- 2*bin_size of side are included                              ------ 
 *=======================================================================
 
-      binx=2.0D0/DFLOAT(nx)
-      biny=2.0D0/DFLOAT(ny)
-      binz=2.0D0/DFLOAT(nz)
+      binx=2.0D0/DBLE(nx)
+      biny=2.0D0/DBLE(ny)
+      binz=2.0D0/DBLE(nz)
 
       xc=co(1,1)*binx+co(1,2)*biny+co(1,3)*binz
       yc=             co(2,2)*biny+co(2,3)*binz
@@ -159,9 +159,9 @@ c$$$         END DO
             DO ia=idx-idxm,idx+idxm
                DO ib=idy-idym,idy+idym
                   DO ic=idz-idzm,idz+idzm
-                     xd=xpi-binx*DFLOAT(ia)
-                     yd=ypi-biny*DFLOAT(ib)
-                     zd=zpi-binz*DFLOAT(ic)
+                     xd=xpi-binx*DBLE(ia)
+                     yd=ypi-biny*DBLE(ib)
+                     zd=zpi-binz*DBLE(ic)
                      xmap=2.0D0*PBC(xd)
                      ymap=2.0D0*PBC(yd)
                      zmap=2.0D0*PBC(zd)
@@ -174,9 +174,9 @@ c$$$         END DO
                      rs=xc*xc+yc*yc+zc*zc
                      IF(rs .GT. sigi) THEN
                         map=map+1
-                        xmap0(map)=binx*DFLOAT(ia)
-                        ymap0(map)=biny*DFLOAT(ib)
-                        zmap0(map)=binz*DFLOAT(ic)
+                        xmap0(map)=binx*DBLE(ia)
+                        ymap0(map)=biny*DBLE(ib)
+                        zmap0(map)=binz*DBLE(ic)
                         xmap1(map)=xc
                         ymap1(map)=yc
                         zmap1(map)=zc
@@ -309,7 +309,7 @@ c$$$         END DO
                IF(ibin .GT. 0)     cavity_h(1+ibin,j)=cavity_h(1+ibin,j)
      &              +1.0D0
             END DO
-            cavity_h(1,j)=cavity_h(1,j)+DFLOAT(tot_map)
+            cavity_h(1,j)=cavity_h(1,j)+DBLE(tot_map)
          END IF
          count=count+mapp
       END DO
@@ -330,7 +330,7 @@ c$$$         END DO
                IF(ibin .GT. 0) cavity_h(1+ibin,jmax)=cavity_h(1+ibin
      &              ,jmax)+1.0D0
             END DO
-            cavity_h(1,jmax)=cavity_h(1,jmax)+DFLOAT(tot_map)
+            cavity_h(1,jmax)=cavity_h(1,jmax)+DBLE(tot_map)
          END IF
          count=count+mapp
       END DO

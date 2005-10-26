@@ -66,18 +66,18 @@
       yknock=(oc(1,1)+oc(1,2)+oc(1,3))*0.3D0
       zknock=(oc(1,1)+oc(1,2)+oc(1,3))*0.3D0
 
-      shiftl=1.0d0/DFLOAT(icl)
-      shiftm=1.0d0/DFLOAT(icm)
-      shiftn=1.0d0/DFLOAT(icn)
+      shiftl=1.0d0/DBLE(icl)
+      shiftm=1.0d0/DBLE(icm)
+      shiftn=1.0d0/DBLE(icn)
       shifti=boxl
 
       i=0
       DO l=1,icl
-         dl=DFLOAT(l)-0.5D0
+         dl=DBLE(l)-0.5D0
          DO m=1,icm
-            dm=DFLOAT(m)-0.5D0
+            dm=DBLE(m)-0.5D0
             DO n=1,icn
-               dn=DFLOAT(n)-0.5D0
+               dn=DBLE(n)-0.5D0
                DO j=1,nform
                   i=i+1
                   x0i=shifti*(shiftl*(rmol(1,j) + dl)-0.5D0)

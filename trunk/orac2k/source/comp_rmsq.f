@@ -39,7 +39,7 @@
 
       mwt=0
       DO i=1,time
-         tnormb(i) = 1.0D0/DFLOAT(time-i+1)
+         tnormb(i) = 1.0D0/DBLE(time-i+1)
       END DO
       sumsq=0.0D0
       DO i=1,time

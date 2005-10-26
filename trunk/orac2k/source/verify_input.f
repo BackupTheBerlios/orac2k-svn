@@ -67,9 +67,9 @@
       nwarning = 0
       nsevere  = 0
       IF(.NOT. replicate) THEN
-         aaxis=aaxis/DFLOAT(icl)
-         baxis=baxis/DFLOAT(icm)
-         caxis=caxis/DFLOAT(icn)
+         aaxis=aaxis/DBLE(icl)
+         baxis=baxis/DBLE(icm)
+         caxis=caxis/DBLE(icn)
       END IF
          
       IF(slt_exist .AND. slv_create) THEN
@@ -214,7 +214,7 @@ c$$$            nsevere = nsevere + 1
          nsave=IDINT(fsave/time)
          nupdte=IDNINT(fupdte/time)
          nheating=NINT(fscale/time)
-         n_timestep=time/DFLOAT(mrespa*lrespa)
+         n_timestep=time/DBLE(mrespa*lrespa)
          maxrun=IDINT(fmaxrun/n_timestep)
          nprint=IDNINT(fprint/n_timestep)
          nconf=IDNINT(fconf/n_timestep)

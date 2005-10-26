@@ -126,7 +126,7 @@ C----------------------- PARAMETERS ------------------------------------
 10    CONTINUE
       DO 60 loff=1,lmaxt
           l=loff-lofset
-          rl=tworcl*DFLOAT(l)
+          rl=tworcl*DBLE(l)
           IF(loff.NE.1) THEN
               mmint=1
               nmint=1
@@ -134,14 +134,14 @@ C----------------------- PARAMETERS ------------------------------------
           DO 70 moff=mmint,mmaxt
               m=moff-mofset
               mp=IABS(m)+1
-              rm=tworcm*dfloat(m)
+              rm=tworcm*DBLE(m)
               rolm1=ro(1,1)*rl+ro(1,2)*rm
               rolm2=ro(2,1)*rl+ro(2,2)*rm
               rolm3=ro(3,1)*rl+ro(3,2)*rm
               DO 90 noff=nmint,nmaxt
                   n=noff-nofset
                   np=iabs(n)+1
-                  rn=tworcn*dfloat(n)
+                  rn=tworcn*DBLE(n)
                   gl=rolm1+ro(1,3)*rn
                   gm=rolm2+ro(2,3)*rn
                   gn=rolm3+ro(3,3)*rn

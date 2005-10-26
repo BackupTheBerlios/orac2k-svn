@@ -49,7 +49,7 @@
             factor(i)=0.0D0
          END DO
       ELSE
-         suma=suma/DFLOAT(nprocs)
+         suma=suma/DBLE(nprocs)
          DO i=1,nprocs
             factor(i)=(suma-cpu(i))/suma
          END DO

@@ -55,7 +55,7 @@ C================ EXECUTABLE STATEMENTS ================================
          END IF
          nweight=nweight+IDINT(whe(i))
       END DO
-      weight=1.0D0/DFLOAT(nweight)
+      weight=1.0D0/DBLE(nweight)
       sqpi=DSQRT(pi)
       
       DO ii=1,map
@@ -70,7 +70,7 @@ C================ EXECUTABLE STATEMENTS ================================
       END DO
 
       DO k=1,nkcut
-         rk=DFLOAT(k)*delsk
+         rk=DBLE(k)*delsk
          ik=0.0D0
          nmax=2.0D0*pi*rk+4
          DO n=0,nmax

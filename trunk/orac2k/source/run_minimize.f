@@ -929,7 +929,7 @@ c               dgg=dgg+fpx(i)**2+fpy(i)**2+fpz(i)**2
                   END IF
                   CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo,xpo
      &                    ,ypo,zpo)
-                  fstep=time*DFLOAT(nstep)
+                  fstep=time*DBLE(nstep)
                   CALL plotc(co,abmd,gr,gra,fstep,beta,xpo,ypo,zpo,ntap
      &                 ,nres,m1,prsymb,chrge)
                END IF
@@ -1075,7 +1075,7 @@ c               dgg=dgg+fpx(i)**2+fpy(i)**2+fpz(i)**2
             END IF 
             CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo,xpo 
      &           ,ypo,zpo) 
-            fstep=time*DFLOAT(nstep) 
+            fstep=time*DBLE(nstep) 
             CALL plotc(co,abmd,gr,gra,fstep,beta,xpo,ypo,zpo,ntap,nres
      &           ,m1,prsymb,chrge) 
          END IF 
@@ -1137,8 +1137,8 @@ c               dgg=dgg+fpx(i)**2+fpy(i)**2+fpz(i)**2
       write(kprint,60030)
       write(kprint,17000) gcpu
       write(kprint,18000) elaps
-      IF(nstep .NE. 0) write(kprint,60200) gcpu/DFLOAT(nstep)
-      IF(nstep .NE. 0) write(kprint,60300) elaps/DFLOAT(nstep)
+      IF(nstep .NE. 0) write(kprint,60200) gcpu/DBLE(nstep)
+      IF(nstep .NE. 0) write(kprint,60300) elaps/DBLE(nstep)
       write(kprint,60030)
 
       IF(wrtgyr) THEN

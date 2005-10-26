@@ -625,7 +625,7 @@ c---        see if bond has been printed
 
       DO 90 j1=1,lptor
           ptor(j1,1)=ptor1(j1)
-          ptor(j1,2)=DFLOAT(ntor2(j1))
+          ptor(j1,2)=DBLE(ntor2(j1))
 90    CONTINUE
 
 *=======================================================================

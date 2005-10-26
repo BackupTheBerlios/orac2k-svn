@@ -40,14 +40,14 @@
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
       WRITE(kvaf,100) 
-      nub=1.0D0/(DFLOAT(nstep)*2.0D0*fstep*c*1.0D-15)
+      nub=1.0D0/(DBLE(nstep)*2.0D0*fstep*c*1.0D-15)
       DO j=1,2
          IF(DABS(vacf(1,j)) .GT. 1.0D-6) THEN
             IF(j .EQ. 1) WRITE(kvaf,200)
             IF(j .EQ. 2) WRITE(kvaf,300)
             DO i=1,nstep
-               tstep=DFLOAT(i-1)*fstep
-               wd=DFLOAT(i-1)*nub
+               tstep=DBLE(i-1)*fstep
+               wd=DBLE(i-1)*nub
                WRITE(kvaf,400) tstep,vacf(i,j),wd,phi(i,j)
             END DO
          END IF

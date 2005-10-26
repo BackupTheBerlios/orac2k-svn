@@ -154,7 +154,7 @@ c use clunky but reliable gamma_sum
         else
          m = k-1
          if ( k .gt. nf )m = k - 1 - nfft
-         x = pi*dfloat(m)/nfft
+         x = pi*DBLE(m)/nfft
          order2 = 2*order
          if ( m .eq. 0)then
            lambda = 1.d0
@@ -179,7 +179,7 @@ c use clunky but reliable gamma_sum
         gsum = 1.d0
         return
       endif
-      frac = dfloat(m)/nfft 
+      frac = DBLE(m)/nfft 
       x = pi*frac
       gsum = 1.d0
       do k = 1,kcut

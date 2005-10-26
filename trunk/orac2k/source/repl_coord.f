@@ -52,9 +52,9 @@
             xd=cg(1,1,n)*xa(m)+cg(2,1,n)*ya(m)+cg(3,1,n)*za(m)
             yd=cg(1,2,n)*xa(m)+cg(2,2,n)*ya(m)+cg(3,2,n)*za(m)
             zd=cg(1,3,n)*xa(m)+cg(2,3,n)*ya(m)+cg(3,3,n)*za(m)
-            xa(l)=xd+boxl*tg(1,n)/DFLOAT(icl)
-            ya(l)=yd+boxl*tg(2,n)/DFLOAT(icm)
-            za(l)=zd+boxl*tg(3,n)/DFLOAT(icn)
+            xa(l)=xd+boxl*tg(1,n)/DBLE(icl)
+            ya(l)=yd+boxl*tg(2,n)/DBLE(icm)
+            za(l)=zd+boxl*tg(3,n)/DBLE(icn)
          END DO
          count=count+natoa
          countm=countm+1
@@ -62,11 +62,11 @@
       nmol=0
       nts=0
       DO l=1,icl
-         dl=DFLOAT(l-1)/DFLOAT(icl)
+         dl=DBLE(l-1)/DBLE(icl)
          DO m=1,icm
-            dm=DFLOAT(m-1)/DFLOAT(icm)
+            dm=DBLE(m-1)/DBLE(icm)
             DO n=1,icn
-               dn=DFLOAT(n-1)/DFLOAT(icn)
+               dn=DBLE(n-1)/DBLE(icn)
                DO j=1,count
                   nts=nts+1
                   i=nts

@@ -177,7 +177,7 @@
      .                    + (xyzfit(2,i)-xyz(2,i))**2
      .                    + (xyzfit(3,i)-xyz(3,i))**2
 410      continue
-         error = error/DFLOAT(n)
+         error = error/DBLE(n)
  
       endif
  

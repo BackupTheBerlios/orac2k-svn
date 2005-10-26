@@ -54,7 +54,7 @@
       CALL twofft(f,g,w1,w2,wsave1,nt2)
 
       DO i=1,nt2
-         w2(i)=w1(i)*DCONJG(w2(i))/DFLOAT(nt2)
+         w2(i)=w1(i)*DCONJG(w2(i))/DBLE(nt2)
       END DO
 
 *======================================================================*

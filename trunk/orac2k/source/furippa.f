@@ -238,7 +238,7 @@ C     cartesian coordinates
       END DO
       DO 50 loff=1,lmaxt
           l=loff-lofset
-          rl=tworcl*dfloat(l)
+          rl=tworcl*DBLE(l)
           IF(loff.NE.1) THEN
               mmint=1
               nmint=1
@@ -246,7 +246,7 @@ C     cartesian coordinates
           DO 60 moff=mmint,mmaxt
               m=moff-mofset
               mp=IABS(m)+1
-              rm=tworcm*dfloat(m)
+              rm=tworcm*DBLE(m)
               rolm1=ro(1,1)*rl+ro(1,2)*rm
               rolm2=ro(2,1)*rl+ro(2,2)*rm
               rolm3=ro(3,1)*rl+ro(3,2)*rm
@@ -259,7 +259,7 @@ C     cartesian coordinates
               DO 80 noff=nmint,nmaxt
                   n=noff-nofset
                   np=IABS(n)+1
-                  rn=tworcn*dfloat(n)
+                  rn=tworcn*DBLE(n)
                   gl=rolm1+ro(1,3)*rn
                   gm=rolm2+ro(2,3)*rn
                   gn=rolm3+ro(3,3)*rn

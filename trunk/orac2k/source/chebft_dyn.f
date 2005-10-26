@@ -6,7 +6,7 @@
       INTEGER j,k
       REAL*8 fac,y,sum
 
-      fac=2.0D0/DFLOAT(n)
+      fac=2.0D0/DBLE(n)
       do 13 j=1,n
          sum=0.d0
          do 12 k=1,n

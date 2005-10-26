@@ -1,6 +1,6 @@
 MODULE RMS_Matrix_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2005-08-11 09:10:46 marchi>                           *
+!!$   Time-stamp: <2005-10-26 23:56:02 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -107,7 +107,7 @@ CONTAINS
     IF(.NOT. ALLOCATED(xi_s)) THEN
        ALLOCATE(xi_s(3,N_rms,Navg))
     END IF
-    f_avg=1.0D0/DFLOAT(Navg)
+    f_avg=1.0D0/DBLE(Navg)
     IF(N_Calls < Navg) THEN
        N_Calls=N_calls+1
        DO i=1,N_rms
@@ -205,7 +205,7 @@ CONTAINS
     IF(MOD(N_Calls,Write_Freq) == 0) THEN
        REWIND(krms_matrix)
        ALLOCATE(xxii(N_rms))
-       f_Calls=1.0D0/DFLOAT(N_Calls)
+       f_Calls=1.0D0/DBLE(N_Calls)
        WRITE(krms_matrix,'(''Averages After '',i7,'' Calls '')') N_Calls
        DO i=1,N_rms
           xpi=rms_xi(1,i)*f_Calls
@@ -243,7 +243,7 @@ CONTAINS
 
     IF(N_Calls_avg /=0 .AND. MOD(N_Calls_avg,Write_Freq) == 0) THEN
        REWIND(krms_matrix)
-       f_Calls=1.0D0/DFLOAT(N_Calls_avg)
+       f_Calls=1.0D0/DBLE(N_Calls_avg)
        WRITE(krms_matrix,'(''Averages After '',i7,'' Calls '')') N_Calls_avg
        ALLOCATE(xxii(N_rms))
        DO i=1,N_rms
@@ -293,7 +293,7 @@ CONTAINS
     REAL(8) :: xpi,ypi,zpi,dr,f_Calls
 
     IF(N_Calls /=0 .AND. MOD(N_Calls,Write_Freq) == 0) THEN
-       f_Calls=1.0D0/DFLOAT(N_Calls)
+       f_Calls=1.0D0/DBLE(N_Calls)
        REWIND(krms_matrix_plot)
        dr=0.0D0
        k=0
@@ -302,7 +302,7 @@ CONTAINS
           ypi=rms_xi(2,i)*f_Calls
           zpi=rms_xi(3,i)*f_Calls
           WRITE(krms_matrix_plot,1)'ATOM  ',i,'CA   ','ALA',i,xpi,ypi&
-               &,zpi,dr,DFLOAT(k)
+               &,zpi,dr,DBLE(k)
        END DO
        WRITE(krms_matrix_plot,'(''TER'')')
        DO i=1,N_rms
@@ -310,7 +310,7 @@ CONTAINS
           ypi=xyz0(2,index(i))
           zpi=xyz0(3,index(i))
           WRITE(krms_matrix_plot,1)'ATOM  ',i,' CA  ','ALA',i,xpi,ypi&
-               &,zpi,dr,DFLOAT(k)
+               &,zpi,dr,DBLE(k)
        END DO
     END IF
 1   FORMAT(a6,i5,1x,a5,a3,2x,i4,4x,3f8.3,f8.4,f4.1)

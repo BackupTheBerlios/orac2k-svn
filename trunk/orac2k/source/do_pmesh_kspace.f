@@ -192,8 +192,8 @@ c$$$========================================================================
       CALL P_merge_r8(time1,node,nprocs,ncube,rbyte)
       CALL P_merge_r8(time2,node,nprocs,ncube,rbyte)
 #endif
-c$$$      WRITE(*,*) 'other =',time1/DFLOAT(ntime_avg*nprocs)
-c$$$      WRITE(*,*) 'fft =',time2/DFLOAT(ntime_avg*nprocs)
+c$$$      WRITE(*,*) 'other =',time1/DBLE(ntime_avg*nprocs)
+c$$$      WRITE(*,*) 'fft =',time2/DBLE(ntime_avg*nprocs)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

@@ -147,6 +147,6 @@ SUBROUTINE Correct_Ewald(alphal,charge,dipole,xp0,yp0,zp0,list,nlist&
       REAL(8) :: FACTOR
       INTEGER :: i
       REAL(8), SAVE :: half=0.5D0
-      FACTOR=(1.0D0+DFLOAT(i/IABS(i)))*half
+      FACTOR=(1.0D0+DBLE(i/IABS(i)))*half
     END FUNCTION FACTOR
 END SUBROUTINE Correct_Ewald

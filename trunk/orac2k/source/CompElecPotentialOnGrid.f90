@@ -225,7 +225,7 @@ SUBROUTINE CompElecPotentialOnGrid(co,xp0,yp0,zp0,AChargeIon,ASigmaIon   &
   IF(MOD(CallsToRoutine,10) == 0) THEN
      OPEN(unit=UnitPhi,file=FileNamePhi,access='DIRECT' &
           ,form='UNFORMATTED',status='UNKNOWN',recl=RecordLength)
-     TempFact=1.0D0/DFLOAT(CallsToRoutine)
+     TempFact=1.0D0/DBLE(CallsToRoutine)
      DO k0=1,naz
         k=node*naz+k0
         WRITE(UnitPhi,rec=k) HardSphere(:,:,k)*Tempfact &
@@ -280,11 +280,11 @@ CONTAINS
     REAL(8) :: FreeEnergy,EnergyInVacuum
     REAL(8) :: FreeEnergyOnNode,EnergyInVacuumOnNode,dv
 
-    dv=volume/DFLOAT(nfft1*nfft2*nfft3)
+    dv=volume/DBLE(nfft1*nfft2*nfft3)
     FreeEnergyOnNode=SUM(Rho0(:,:,kstart:kend)*Phi(:,:,kstart:kend)) &
-         /DFLOAT(CallsToRoutine**2)
+         /DBLE(CallsToRoutine**2)
     EnergyInVacuumOnNode=SUM(Rho0(:,:,kstart:kend)*Phi0(:,:,kstart:kend)) &
-         /DFLOAT(CallsToRoutine**2)
+         /DBLE(CallsToRoutine**2)
     IF(nprocs > 1) THEN
        CALL P_merge_r8(FreeEnergyOnNode)
        CALL P_merge_r8(EnergyInVacuumOnNode)

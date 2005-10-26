@@ -210,7 +210,7 @@
                b=pbond(ia,2)
                tmp=IDNINT(pbond(ia,2))
                ntph=IABS(tmp)
-               sig=DFLOAT(tmp/ntph)
+               sig=DBLE(tmp/ntph)
                IF(a .GT. 0.0D0) c=180.0D0
                IF(a .LT. 0.0D0) c=0.0D0
                a=DABS(a)*sig
@@ -233,7 +233,7 @@
             b=pbond(ia,2)
             tmp=IDNINT(b)
             ntph=IABS(tmp)
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             IF(a .GT. 0.0D0) c=180.0D0
             IF(a .LT. 0.0D0) c=0.0D0
             a=DABS(a)*sig

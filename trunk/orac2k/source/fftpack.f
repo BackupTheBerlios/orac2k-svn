@@ -836,7 +836,7 @@ c*-*
       double precision wsave(*), dt, fk, pih
       data pih /  1.570796326 7948966192 3132169163 975 d0 /
 c
-      dt = pih/dfloat(n)
+      dt = pih/DBLE(n)
       fk = 0.d0
       do 101 k=1,n
          fk = fk+1.d0
@@ -856,7 +856,7 @@ c
       nm1 = n-1
       np1 = n+1
       ns2 = n/2
-      dt = pi/dfloat(nm1)
+      dt = pi/DBLE(nm1)
       fk = 0.d0
       do 101 k=2,ns2
          kc = np1-k
@@ -1127,7 +1127,7 @@ c
      2  ar2h, arg, dc2, dcp, ds2, dsp, tpi
       data tpi   /  6.2831853071 7958647692 5286766559 00577d0/
 c
-      arg = tpi/dfloat(ip)
+      arg = tpi/DBLE(ip)
       dcp = dcos(arg)
       dsp = dsin(arg)
       idp2 = ido+2
@@ -1495,7 +1495,7 @@ c
      2  ar2h, arg, dc2, dcp, ds2, dsp, tpi
       data tpi   /  6.2831853071 7958647692 5286766559 00577d0/
 c
-      arg = tpi/dfloat(ip)
+      arg = tpi/DBLE(ip)
       dcp = dcos(arg)
       dsp = dsin(arg)
       ipph = (ip+1)/2
@@ -1862,7 +1862,7 @@ c
       ifac(1) = n
       ifac(2) = nf
 c
-      argh = tpi/dfloat(n)
+      argh = tpi/DBLE(n)
       is = 0
       nfm1 = nf-1
       l1 = 1
@@ -1876,7 +1876,7 @@ c
          do 109 j=1,ipm
             ld = ld+l1
             i = is
-            argld = dfloat(ld)*argh
+            argld = DBLE(ld)*argh
             fi = 0.d0
             do 108 ii=3,ido,2
                i = i+2
@@ -1938,7 +1938,7 @@ c
       ifac(1) = n
       ifac(2) = nf
 c
-      argh = tpi/dfloat(n)
+      argh = tpi/DBLE(n)
       i = 2
       l1 = 1
       do 110 k1=1,nf
@@ -1955,7 +1955,7 @@ c
             wa(i) = 0.d0
             ld = ld+l1
             fi = 0.d0
-            argld = dfloat(ld)*argh
+            argld = DBLE(ld)*argh
             do 108 ii=4,idot,2
                i = i+2
                fi = fi+1.d0

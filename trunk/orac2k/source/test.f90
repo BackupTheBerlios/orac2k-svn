@@ -40,10 +40,10 @@ PROGRAM main
   n=20
   count=0
   DO i=1,n
-     m=INT(DFLOAT(o)*duni())
+     m=INT(DBLE(o)*duni())
      nnlpp(count+1)=m
      DO j=1,m
-        nnlpp(count+1+j)=INT(DFLOAT(o)*duni())
+        nnlpp(count+1+j)=INT(DBLE(o)*duni())
      END DO
      IF(i==5) WRITE(*,*) (nnlpp(count+1+j),j=1,4)
      count=count+1+m

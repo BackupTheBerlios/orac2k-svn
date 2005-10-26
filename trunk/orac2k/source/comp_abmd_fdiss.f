@@ -43,8 +43,8 @@
 *=======================================================================
 
       uconf=0.0D0
-      aux1=1.0D0/DFLOAT(diss_list(1,1))
-      aux2=1.0D0/DFLOAT(diss_list(2,1))
+      aux1=1.0D0/DBLE(diss_list(1,1))
+      aux2=1.0D0/DBLE(diss_list(2,1))
       xd1=0.0D0
       yd1=0.0D0
       zd1=0.0D0

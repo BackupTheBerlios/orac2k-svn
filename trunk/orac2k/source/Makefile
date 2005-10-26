@@ -514,6 +514,14 @@ G95 :
 	${MAKE} recur_G95
 	${MAKE} orac_G95 
 
+NAG :
+	${MAKE} obj_NAG 
+	${MAKE} prepro_NAG
+	${MAKE} prepronkl_NAG
+	${MAKE} eigr_NAG
+	${MAKE} recur_NAG
+	${MAKE} orac_NAG 
+
 
 #========================================================================
 
@@ -638,6 +646,28 @@ orac_G95: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
 	-L$(FFTW_LIB) $(LLFLAGS)
+
+#==========================================================================
+# Compile and load ORAC on NAG compiler
+#==========================================================================
+
+obj_NAG : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+
+recur_NAG: $(OBJREC)
+
+eigr_NAG: $(EIGRS)
+
+prepro_NAG: $(OBJPRE) $(OBJPRE_F90) 
+
+prepronkl_NAG: $(OBJPRE_NKL)
+
+orac_NAG: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
+	$(LD) -O3 -o orac_NAG $(OBJ) $(OBJREC)\
+	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
+	-L$(FFTW_LIB) $(LLFLAGS)
+
 #==========================================================================
 # Clean Objects
 #==========================================================================

@@ -45,7 +45,7 @@
             ypfi=ypfi+ypa(i1)
             zpfi=zpfi+zpa(i1)
          END DO
-         aux=1.0D0/DFLOAT(fragm(2,i)-fragm(1,i)+1)
+         aux=1.0D0/DBLE(fragm(2,i)-fragm(1,i)+1)
          xpfi=xpfi*aux
          ypfi=ypfi*aux
          zpfi=zpfi*aux
@@ -58,7 +58,7 @@
                ypfj=ypfj+ypa(j1)
                zpfj=zpfj+zpa(j1)
             END DO
-            aux=1.0D0/DFLOAT(fragm(2,j)-fragm(1,j)+1)
+            aux=1.0D0/DBLE(fragm(2,j)-fragm(1,j)+1)
             xpfj=xpfj*aux
             ypfj=ypfj*aux
             zpfj=zpfj*aux

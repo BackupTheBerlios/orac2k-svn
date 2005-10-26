@@ -158,7 +158,7 @@ c         write(kprot_rest) (occ(k),k=1,idx_occ)
 *=======================================================================
             
       IF( MOD(nstep,ninst) .EQ. 0) THEN
-          norma = 1.0d0/DFLOAT(sumt)
+          norma = 1.0d0/DBLE(sumt)
           WRITE(kout,'('' Tstep = '',f12.2)') fstep
           WRITE(kout,'('' Residue   Hydration number'')')
           DO j=min_hyd,max_hyd

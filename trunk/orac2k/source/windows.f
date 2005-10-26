@@ -39,7 +39,7 @@
 
       nt=nmax
       DO i=1,nt
-          r=pi2*DFLOAT(i+nt)/DFLOAT(2*nt)
+          r=pi2*DBLE(i+nt)/DBLE(2*nt)
           w=a0-a1*DCOS(r)+a2*DCOS(2.0D0*r)-a3*DCOS(3.0D0*r)
           f(i)=f(i)*w
       END DO

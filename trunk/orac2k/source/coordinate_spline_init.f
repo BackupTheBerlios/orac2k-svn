@@ -33,7 +33,7 @@
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
       DO i=1,length
-         time(i)=fstep*DFLOAT(i-1)
+         time(i)=fstep*DBLE(i-1)
       END DO
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*

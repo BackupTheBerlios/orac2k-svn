@@ -94,11 +94,11 @@
       END IF
       IF(md_respa) THEN
          mrject=nrject*lrespa*mrespa
-         fstep=time*DFLOAT(mstep)/DFLOAT(mrespa*lrespa)
+         fstep=time*DBLE(mstep)/DBLE(mrespa*lrespa)
          nprop1=nprop*lrespa*mrespa
       ELSE
          mrject=nrject
-         fstep=time*DFLOAT(mstep)
+         fstep=time*DBLE(mstep)
          nprop1=nprop
       END IF
 
@@ -450,7 +450,7 @@ c$$$     &        -ucek/1000.0D0-pecek,U_Thole*efact/1000.0D0
             ssm_gr=ssm_gr+gr**2
             
             IF(MOD(mstep,nprop1).EQ.0)THEN
-               fnstep=DFLOAT(mstep)
+               fnstep=DBLE(mstep)
                avg_temp=sum_temp/fnstep
                avg_temph=sum_temph/fnstep
                avg_pecek=sum_pecek/fnstep
@@ -535,7 +535,7 @@ c$$$     &        -ucek/1000.0D0-pecek,U_Thole*efact/1000.0D0
             ssm_tempr=ssm_tempr+tempr**2
             ssm_temph=ssm_temph+temph**2
             IF(MOD(mstep,nprop1).EQ.0)THEN
-               fnstep=DFLOAT(mstep)
+               fnstep=DBLE(mstep)
                avg_econf=sum_econf/fnstep
                avg_ecoul=sum_ecoul/fnstep
                avg_etotpot=sum_etotpot/fnstep
@@ -651,7 +651,7 @@ c$$$     &        -ucek/1000.0D0-pecek,U_Thole*efact/1000.0D0
             ssm_epconf=ssm_epconf+epconf**2
             ssm_epcoul=ssm_epcoul+epcoul**2
             IF(MOD(mstep,nprop1).EQ.0)THEN
-               fnstep=DFLOAT(mstep)
+               fnstep=DBLE(mstep)
                avg_econf=sum_econf/fnstep
                avg_ecoul=sum_ecoul/fnstep
                avg_enbnd=sum_enbnd/fnstep

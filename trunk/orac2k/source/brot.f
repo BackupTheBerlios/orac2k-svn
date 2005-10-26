@@ -83,9 +83,9 @@
          co(3,3)=cz
       END IF
       DO 10 m=1,3
-          co(m,1)=DFLOAT(i)*co(m,1)/boxl
-          co(m,2)=DFLOAT(j)*co(m,2)/boxl
-          co(m,3)=DFLOAT(k)*co(m,3)/boxl
+          co(m,1)=DBLE(i)*co(m,1)/boxl
+          co(m,2)=DBLE(j)*co(m,2)/boxl
+          co(m,3)=DBLE(k)*co(m,3)/boxl
 10    CONTINUE
       CALL matinv(3,3,co,oc,volume)
       DO 20 m=1,3

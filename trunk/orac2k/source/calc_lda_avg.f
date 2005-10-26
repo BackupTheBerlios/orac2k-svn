@@ -182,7 +182,7 @@ c
             CALL dcopy(npoint,gr_tt,1,v5,1)
             CALL dcopy(npoint,gr_hm,1,v6,1)
             CALL dcopy(npoint,gr_xy,1,v7,1)
-            fact=1.0D0/DFLOAT(iter_lda*nlda_mol)
+            fact=1.0D0/DBLE(iter_lda*nlda_mol)
             CALL dscal(npoint,fact,va1,1)
             CALL dscal(npoint*12,fact,vcp,1)
             CALL dscal(npoint,fact,v4,1)

@@ -66,7 +66,7 @@
       REAL*8 fact,quarter,half,factor,pi,quasi_zero
       DATA quasi_zero/1.0D-12/
       DATA quarter,half/0.25D0,0.5D0/
-      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
       
@@ -171,37 +171,37 @@
          tmp=IDNINT(pota(i))
          ntph=IABS(tmp)
          IF(ntph.EQ.1) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=sig*(DABS(potb(i))-coa*potb(i))
             qforce=sig*potb(i)
          ELSE IF(ntph.EQ.2) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=DABS(potb(i))-(2.0d0*coa**2-1.0d0)*potb(i)
             enrg=sig*enrg
             qforce=4.0d0*potb(i)*coa
             qforce=sig*qforce
          ELSE IF(ntph.EQ.3) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=DABS(potb(i))-(4.0d0*coa**3-3.0d0*coa)*potb(i)
             enrg=sig*enrg
             qforce=(12.0d0*coa**2-3.0d0)*potb(i)
             qforce=sig*qforce
          ELSE IF(ntph.EQ.4) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=DABS(potb(i))-
      x           (8.0D0*coa**4-8.0D0*coa**2+1.0D0)*potb(i)
             enrg=sig*enrg
             qforce=(32.0D0*coa**3-16.0D0*coa)*potb(i)
             qforce=sig*qforce
          ELSE IF(ntph.EQ.5) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=DABS(potb(i))-
      x           (16.0D0*coa**5-20.0D0*coa**3+5.0D0*coa)*potb(i)
             enrg=sig*enrg
             qforce=(80.0D0*coa**4-60.0D0*coa**2+5.0D0)*potb(i)
             qforce=sig*qforce
          ELSE IF(ntph.EQ.6) THEN
-            sig=DFLOAT(tmp/ntph)
+            sig=DBLE(tmp/ntph)
             enrg=DABS(potb(i))-potb(i)*
      x           (32.0D0*coa**6-48.0D0*coa**4+18.0D0*coa**2-1)
             enrg=sig*enrg

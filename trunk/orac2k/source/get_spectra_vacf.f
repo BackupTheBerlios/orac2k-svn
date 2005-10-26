@@ -46,7 +46,7 @@
          CALL windows(phi(1,j),nstep,nmax)
          CALL dcost(nstep,phi(1,j),wsave)
          DO i=1,nstep
-            phi(i,j)=phi(i,j)/DFLOAT(2*nstep-2)
+            phi(i,j)=phi(i,j)/DBLE(2*nstep-2)
          END DO
       END DO
 

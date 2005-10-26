@@ -889,13 +889,13 @@ c$$$====================================================================
 *----- Write information about the processed trajectory ----------------
 *=======================================================================
 
-                  IF(fstep .NE. ffstep*DFLOAT(nstep)) THEN
+                  IF(fstep .NE. ffstep*DBLE(nstep)) THEN
                      Regular=.FALSE.
-                     fstep=ffstep*DFLOAT(nstep)
+                     fstep=ffstep*DBLE(nstep)
                   END IF
                   IF(volume .EQ. 0.0D0 .OR. iret .NE. 0) THEN
                      Regular=.FALSE.
-                     fstep=ffstep*DFLOAT(nstep)
+                     fstep=ffstep*DBLE(nstep)
                   END IF
                   IF((gofr .OR. voronoi) .AND. update_anl .NE. 0) THEN
                      WRITE(kprint,90000) fstep
@@ -1220,7 +1220,7 @@ c$$$     &                       ,nsofk_data,maxsk)
                   
                   IF(gofr) THEN
                      IF(MOD(nstep,gofr_nprint) .EQ. 0)THEN
-c                  vol_gofr=sum_volume/DFLOAT(nstep)
+c                  vol_gofr=sum_volume/DBLE(nstep)
                         vol_gofr=volume
 #ifdef PARALLEL 
                         CALL P_get_gofr(krdf,krdfa,worka,maxint
@@ -1637,7 +1637,7 @@ c----------
                            CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                            CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                            CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                           fact=1.0D0/DFLOAT(iter_avg)
+                           fact=1.0D0/DBLE(iter_avg)
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
@@ -1654,7 +1654,7 @@ c----------
                            CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                            CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                            CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                           fact=1.0D0/DFLOAT(iter_avg)
+                           fact=1.0D0/DBLE(iter_avg)
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
@@ -1838,7 +1838,7 @@ c$$$                     nstep=nstep-1
      &        ,ffstep,w1,w2)
          WRITE(kdipole,'('' Correlation Solute-Solute'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,vacf_data(i)
-     &        /DFLOAT(nstep-i),i=0,nstep-1)
+     &        /DBLE(nstep-i),i=0,nstep-1)
          CALL zero0(vacf_data,length_fft)
 
          CALL time_correlation(length_fft,vxpc,vxpd,wsave1,vacf_data
@@ -1850,7 +1850,7 @@ c$$$                     nstep=nstep-1
 
          WRITE(kdipole,'('' Correlation Solute-Solvent'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,2.0D0*(vacf_data(i)
-     &        /DFLOAT(nstep-i)),i=0,nstep-1)
+     &        /DBLE(nstep-i)),i=0,nstep-1)
          CALL zero0(vacf_data,length_fft)
 
          CALL time_correlation(length_fft,vxpd,vxpd,wsave1,vacf_data
@@ -1862,7 +1862,7 @@ c$$$                     nstep=nstep-1
 
          WRITE(kdipole,'('' Correlation Solvent-Solvent'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,vacf_data(i)
-     &        /DFLOAT(nstep-i),i=0,nstep-1)
+     &        /DBLE(nstep-i),i=0,nstep-1)
       END IF
 
       CALL timer(vfcp,tfcp,elapse)
@@ -1876,12 +1876,12 @@ c$$$                     nstep=nstep-1
       WRITE(kprint,60030)
       WRITE(kprint,17000) gcpu
       IF(time_corr) THEN
-         WRITE(kprint,60300) gcpu/DFLOAT(ntap)
+         WRITE(kprint,60300) gcpu/DBLE(ntap)
       ELSE
-         WRITE(kprint,60200) gcpu/DFLOAT(nnstep)
+         WRITE(kprint,60200) gcpu/DBLE(nnstep)
       END IF
       IF(polar) THEN
-         WRITE(kprint,60400) polar_counter/DFLOAT(nnstep)
+         WRITE(kprint,60400) polar_counter/DBLE(nnstep)
       END IF
       WRITE(kprint,60030)
 
