@@ -1,0 +1,51 @@
+&SETUP
+   RESET_CM
+   CRYSTAL     65.7 65.7 65.7 109.47122 109.47122 109.47122
+&END
+&SOLUTE
+   SCALE_CHARGES 6 1 2 3 4 5 6
+&END
+&PARAMETERS
+   READ_TPGPRM_BIN  dna-zincfinger_hyd_new.prmtpg
+&END
+&SIMULATION
+   MDSIM
+   TEMPERATURE 0.01  5.0
+   HEAT 200000.0
+   WRITE_PRESSURE
+   ISOSTRESS PRESS-EXT 0.1 BARO-MASS 40.0
+&END
+&INTEGRATOR 
+   TIMESTEP          12.0
+   MTS_RESPA
+     step intra      3
+     step  intra     2
+     step  nonbond   2   4.2   0.3   0.4
+     step  nonbond   3   7.4   0.3   0.4   reciprocal
+     step  nonbond   1   9.7   0.3   1.5
+   END
+&END
+&POTENTIAL
+   EWALD          PME 0.43 64 64 64 5
+   UPDATE         40.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   ERFC_SPLINE  0.01
+   EWALD REMOVE_MOMENTUM
+   LINKED_CELL  8 8 8
+&END
+&RUN
+   CONTROL      2
+   PROPERTY     5000.0
+   REJECT       200000.0
+   TIME         20000.0
+   PRINT        24.0
+&END
+&INOUT
+   RESTART
+     read dna_znfinger_slv.2.rst
+     write  120.0  OPEN    dna_znfinger_slv.3.rst
+   END
+   ASCII_WSC   2000.0  OPEN    dna_znfinger_slv.3.pdb
+&END
