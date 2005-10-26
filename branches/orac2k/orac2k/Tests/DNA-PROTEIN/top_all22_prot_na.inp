@@ -1,0 +1,2386 @@
+RESIDUE  gua ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n9     nn2    -0.1400
+c4     cn5     0.1400
+group
+n3     nn3a   -0.6600
+c2     cn2     0.7600
+n1     nn2g   -0.3800
+h1     hn2     0.2800
+group
+n2     nn1    -0.6400
+h21    hn1     0.3100
+h22    hn1     0.3300
+group
+c6     cn1     0.5500
+o6     on1    -0.4700
+c5     cn5    -0.0800
+group
+n7     nn4    -0.6900
+c8     cn4     0.4100
+h8     hn3     0.2800
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n9     c1'  c2'    n9   c4     n9   c8     c4   n3     
+c2   n2     c2   n1     n2   h21    
+n2   h22    n1   h1     n1   c6     c6   c5     
+c5   n7     c2'  c3'    c3'  o3'    
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c8   h8     
+c2  n3     c4   c5        n7   c8        c6   o6
+end
+
+imphd
+n2   n3   n1   c2     h1   c2   c6   n1     o6   n1   c5   c6     
+h8   n7   n9   c8     h22  h21  c2   n2     
+end
+
+don n2   h21  
+don n2   h22  
+don n1   h1   
+acc c6   o6   
+acc      n3   
+acc      n7   
+acc p    o1p  
+acc p    o2p  
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom p  o3'
+RESIDUE_END
+
+
+RESIDUE  ade ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+c5     cn5     0.2300
+n7     nn4    -0.6300
+c8     cn4     0.3800
+h8     hn3     0.1800
+n9     nn2    -0.1600
+group
+n1     nn3a   -0.7400
+c2     cn4     0.5300
+h2     hn3     0.1600
+n3     nn3a   -0.6900
+c4     cn5     0.3100
+c6     cn2     0.4300
+group
+n6     nn1    -0.8000
+h61    hn1     0.4000
+h62    hn1     0.4000
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n9     c1'  c2'    n9   c4     n9   c8     c4   n3     
+c2   n1     c6   n6     
+n6   h61    n6   h62    c6   c5     c5   n7     
+c2'  c3'    c2'  h2'    c3'  o3'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c8   h8     c2   h2     
+n1  c6      c2   n3        c4   c5        n7   c8
+end
+
+imphd
+h62  c6   h61  n6     n6   n1   c5   c6     h2   n1   n3   c2     
+h8   n7   n9   c8     
+end
+
+don n6   h61  
+don n6   h62  
+acc      n3   
+acc      n7   
+acc      n1   
+acc p    o1p  
+acc p    o2p  
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom p o3'
+RESIDUE_END
+
+
+RESIDUE  cyt ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n1     nn2    -0.1600
+c6     cn3     0.1100
+h6     hn3     0.0500
+group
+c2     cn1     0.5300
+o2     on1c   -0.4800
+n3     nn3    -0.6700
+c4     cn2     0.6200
+group
+n4     nn1    -0.5800
+h41    hn1     0.3100
+h42    hn1     0.2700
+group
+c5     cn3    -0.1000
+h5     hn3     0.1000
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n1     c1'  c2'    n1   c2     n1   c6     
+c2   n3     c4   n4     n4   h41    n4   h42    
+c4   c5     c2'  c3'    c3'  o3'    
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c5   h5     c6   h6     
+c2   o2    c5   c6        n3   c4
+end
+
+imphd
+o2   n1   n3   c2     n4   n3   c5   c4     
+h5   c4   c6   c5     h6   c5   n1   c6     
+h42  c4   h41  n4     
+end
+
+don n4   h42  
+don n4   h41  
+acc c2   o2   
+acc      n3   
+acc p    o1p  
+acc p    o2p  
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom p o3'
+RESIDUE_END
+
+
+RESIDUE  thy ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n1     nn2    -0.3000
+c6     cn3     0.1700
+h6     hn3     0.1300
+group
+c2     cn1     0.5700
+o2     on1    -0.4700
+n3     nn2u   -0.4600
+h3     hn2     0.3600
+group
+c4     cn1     0.5400
+o4     on1    -0.4900
+c5     cn3    -0.1500
+c5m    cn9    -0.1100
+h51    hn7     0.0700
+h52    hn7     0.0700
+h53    hn7     0.0700
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n1     c1'  c2'    n1   c2     n1   c6     
+c2   n3     n3   h3     n3   c4     c4   c5     
+c5   c5m    c2'  c3'    c3'  o3'    
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c6   h6     c5m  h51    c5m  h52    c5m  h53    
+c2   o2     c4   o4        c5   c6
+end
+
+imphd
+o2   n1   n3   c2     h3   c2   c4   n3     
+o4   n3   c5   c4     h6   n1   c5   c6     
+c5m  c4   c6   c5     
+end
+
+don n3   h3   
+acc c2   o2   
+acc c4   o4   
+acc p    o1p  
+acc p    o2p  
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom p o3'
+RESIDUE_END
+
+RESIDUE  thy-3h ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n1     nn2    -0.3000
+c6     cn3     0.1700
+h6     hn3     0.1300
+group
+c2     cn1     0.5700
+o2     on1    -0.4700
+n3     nn2u   -0.4600
+h3     hn2     0.3600
+group
+c4     cn1     0.5400
+o4     on1    -0.4900
+c5     cn3    -0.1500
+c5m    cn9    -0.1100
+h51    hn7     0.0700
+h52    hn7     0.0700
+h53    hn7     0.0700
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.1400
+h3'    hn6     0.0900
+o3'    on5    -0.6600
+h3t    hn5     0.4300
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n1     c1'  c2'    n1   c2     n1   c6     
+c2   n3     n3   h3     n3   c4     c4   c5     
+c5   c5m    c2'  c3'    c3'  o3'    o3'  h3t
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c6   h6     c5m  h51    c5m  h52    c5m  h53    
+c2   o2     c4   o4        c5   c6
+end
+
+imphd
+o2   n1   n3   c2     h3   c2   c4   n3     
+o4   n3   c5   c4     h6   n1   c5   c6     
+c5m  c4   c6   c5     
+end
+
+don n3   h3   
+don o3'  h3t  
+acc c2   o2   
+acc c4   o4   
+acc p    o1p  
+acc p    o2p  
+acc      o4'  
+acc      o5'  
+termatom p *
+RESIDUE_END
+
+RESIDUE  thy-5h ( Total Charge =  -1.0 )
+atoms
+group
+h5t    hn5     0.4300
+o5'    on5    -0.6600
+c5'    cn8     0.0500
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n1     nn2    -0.3000
+c6     cn3     0.1700
+h6     hn3     0.1300
+group
+c2     cn1     0.5700
+o2     on1    -0.4700
+n3     nn2u   -0.4600
+h3     hn2     0.3600
+group
+c4     cn1     0.5400
+o4     on1    -0.4900
+c5     cn3    -0.1500
+c5m    cn9    -0.1100
+h51    hn7     0.0700
+h52    hn7     0.0700
+h53    hn7     0.0700
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+h5t  o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n1     c1'  c2'    n1   c2     n1   c6     
+c2   n3     n3   h3     n3   c4     c4   c5     
+c5   c5m    c2'  c3'    c3'  o3'    
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c6   h6     c5m  h51    c5m  h52    c5m  h53    
+c2   o2     c4   o4        c5   c6
+end
+
+imphd
+o2   n1   n3   c2     h3   c2   c4   n3     
+o4   n3   c5   c4     h6   n1   c5   c6     
+c5m  c4   c6   c5     
+end
+
+don n3   h3
+don o5'  h5t
+acc c2   o2   
+acc c4   o4   
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom * o3'
+RESIDUE_END
+
+RESIDUE  cyt-3h ( Total Charge =  -1.0 )
+atoms
+group
+p      p       1.5000
+o1p    on3    -0.8000
+o2p    on3    -0.8000
+o5'    on2    -0.5500
+c5'    cn8    -0.0800
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+n1     nn2    -0.1600
+c6     cn3     0.1100
+h6     hn3     0.0500
+group
+c2     cn1     0.5300
+o2     on1c   -0.4800
+n3     nn3    -0.6700
+c4     cn2     0.6200
+group
+n4     nn1    -0.5800
+h41    hn1     0.3100
+h42    hn1     0.2700
+group
+c5     cn3    -0.1000
+h5     hn3     0.1000
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.1400
+h3'    hn6     0.0900
+o3'    on5    -0.6600
+h3t    hn5     0.4300
+end
+
+bonds
+p    o1p    p    o2p    p    o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n1     c1'  c2'    n1   c2     n1   c6     
+c2   n3     c4   n4     n4   h41    n4   h42    
+c4   c5     c2'  c3'    c3'  o3'    o3'  h3t
+c2'  h2'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c5   h5     c6   h6     
+c2   o2    c5   c6        n3   c4
+end
+
+imphd
+o2   n1   n3   c2     n4   n3   c5   c4     
+h5   c4   c6   c5     h6   c5   n1   c6     
+h42  c4   h41  n4     
+end
+
+don n4   h42  
+don n4   h41  
+don o3'  h3t  
+acc c2   o2   
+acc      n3   
+acc p    o1p  
+acc p    o2p  
+acc      o4'  
+acc      o5'  
+termatom p *
+RESIDUE_END
+
+
+RESIDUE  ade-5h ( Total Charge =  -1.0 )
+atoms
+group
+h5t    hn5     0.43
+o5'    on5    -0.6600
+c5'    cn8     0.0500
+h5'    hn7     0.0900
+h5''   hn7     0.0900
+group
+c4'    cn6     0.1100
+h4'    hn6     0.0900
+o4'    on6    -0.4000
+c1'    cn6b    0.1100
+h1'    hn6     0.0900
+group
+c5     cn5     0.2300
+n7     nn4    -0.6300
+c8     cn4     0.3800
+h8     hn3     0.1800
+n9     nn2    -0.1600
+group
+n1     nn3a   -0.7400
+c2     cn4     0.5300
+h2     hn3     0.1600
+n3     nn3a   -0.6900
+c4     cn5     0.3100
+c6     cn2     0.4300
+group
+n6     nn1    -0.8000
+h61    hn1     0.4000
+h62    hn1     0.4000
+group
+c2'    cn6c   -0.1800
+h2''   hn6     0.0900
+h2'    hn6     0.0900
+group
+c3'    cn6     0.0100
+h3'    hn6     0.0900
+o3'    on2    -0.5500
+end
+
+bonds
+h5t  o5'    
+o5'  c5'    c5'  c4'    c4'  o4'    c4'  c3'    o4'  c1'    
+c1'  n9     c1'  c2'    n9   c4     n9   c8     c4   n3     
+c2   n1     c6   n6     
+n6   h61    n6   h62    c6   c5     c5   n7     
+c2'  c3'    c2'  h2'    c3'  o3'    
+c1'  h1'    c2'  h2''   c3'  h3'    c4'  h4'    c5'  h5'    
+c5'  h5''   c8   h8     c2   h2     
+n1  c6      c2   n3        c4   c5        n7   c8
+end
+
+imphd
+h62  c6   h61  n6     n6   n1   c5   c6     h2   n1   n3   c2     
+h8   n7   n9   c8     
+end
+
+don n6   h61  
+don n6   h62  
+don o5'  h5t  
+acc      n3   
+acc      n7   
+acc      n1   
+acc      o3'  
+acc      o4'  
+acc      o5'  
+termatom * o3'
+RESIDUE_END
+
+RESIDUE  ala ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct3    -0.2700
+hb1    ha      0.0900
+hb2    ha      0.0900
+hb3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     n    hn     n    ca     o    c      
+c    ca     ca   ha     cb   hb1    cb   hb2    cb   hb3    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  arg ( Total Charge =   1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     ct2     0.2000
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+ne     nc2    -0.7000
+he     hc      0.4400
+group
+cz     c       0.6400
+nh1    nc2    -0.8000
+hh11   hc      0.4600
+hh12   hc      0.4600
+group
+nh2    nc2    -0.8000
+hh21   hc      0.4600
+hh22   hc      0.4600
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     ne   cd     cz   ne     
+nh1  cz     nh2  cz     n    hn     n    ca     
+o    c      c    ca     ca   ha     cb   hb1    
+cb   hb2    cg   hg1    cg   hg2    cd   hd1    cd   hd2    
+ne   he     nh1  hh11   nh1  hh12   nh2  hh21   nh2  hh22   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+cz   nh1  nh2  ne     
+end
+
+don n    hn   
+don ne   he   
+don nh1  hh11 
+don nh1  hh12 
+don nh2  hh21 
+don nh2  hh22 
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  asn ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cc      0.5500
+od1    o      -0.5500
+group
+nd2    nh2    -0.6200
+hd21   h       0.3200
+hd22   h       0.3000
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     od1  cg     nd2  cg     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    nd2  hd21   nd2  hd22   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+cg   nd2  cb   od1    cg   cb   nd2  od1    
+nd2  cg   hd21 hd22   nd2  cg   hd22 hd21   
+end
+
+don n    hn   
+don nd2  hd21 
+don nd2  hd22 
+acc cg   od1  
+acc c    o    
+
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  asp ( Total Charge =  -1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.2800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cc      0.6200
+od1    oc     -0.7600
+od2    oc     -0.7600
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     od1  cg     od2  cg     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+od1  cb   od2  cg     
+end
+
+don n    hn   
+acc cg   od1  
+acc cg   od2  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  cysh ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1100
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+sg     s      -0.2300
+hg1    hs      0.1600
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     sg   cb     n    hn     n    ca     
+o    c      c    ca     ca   ha     cb   hb1    
+cb   hb2    sg   hg1    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don sg   hg1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  cys ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1000
+hb1    ha      0.0900
+hb2    ha      0.0900
+sg     sm     -0.0800
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     sg   cb     n    hn     n    ca     
+o    c      c    ca     ca   ha     cb   hb1    
+cb   hb2       
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  gln ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     cc      0.5500
+oe1    o      -0.5500
+group
+ne2    nh2    -0.6200
+he21   h       0.3200
+he22   h       0.3000
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     oe1  cd     ne2  cd     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg1    
+cg   hg2    ne2  he21   ne2  he22   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+cd   ne2  cg   oe1    cd   cg   ne2  oe1    
+ne2  cd   he21 he22   ne2  cd   he22 he21   
+end
+
+don n    hn   
+don ne2  he21 
+don ne2  he22 
+acc cd   oe1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  glu ( Total Charge =  -1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.2800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     cc      0.6200
+oe1    oc     -0.7600
+oe2    oc     -0.7600
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     oe1  cd     oe2  cd     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg1    
+cg   hg2    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+oe1  cg   oe2  cd     
+end
+
+don n    hn   
+acc cd   oe1  
+acc cd   oe2  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  gly ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct2    -0.0200
+ha1    hb      0.0900
+ha2    hb      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+n    hn     n    ca     o    c      c    ca     
+ca   ha1    ca   ha2    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  hsd ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+nd1    nr1    -0.3600
+hd1    h       0.3200
+cg     cph1   -0.0500
+group
+cb     ct2    -0.0900
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+ne2    nr2    -0.7000
+cd2    cph1    0.2200
+hd2    hr3     0.1000
+group
+ce1    cph2    0.2500
+he1    hr1     0.1300
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     nd1  cg     cd2  cg     ce1  nd1    
+ne2  cd2    n    hn     n    ca     o    c      
+c    ca     ne2  ce1    ca   ha     cb   hb1    
+cb   hb2    nd1  hd1    cd2  hd2    ce1  he1    
+end
+
+imphd
+nd1  cg   ce1  hd1    cd2  cg   ne2  hd2    ce1  nd1  ne2  he1    
+nd1  ce1  cg   hd1    cd2  ne2  cg   hd2    ce1  ne2  nd1  he1    
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don nd1  hd1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  hse ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+ne2    nr1    -0.3600
+he2    h       0.3200
+cd2    cph1   -0.0500
+hd2    hr3     0.0900
+group
+nd1    nr2    -0.7000
+cg     cph1    0.2200
+ce1    cph2    0.2500
+he1    hr1     0.1300
+group
+cb     ct2    -0.0800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     nd1  cg     cd2  cg     ce1  nd1    
+ne2  cd2    n    hn     n    ca     o    c      
+c    ca     ne2  ce1    ca   ha     cb   hb1    
+cb   hb2    ne2  he2    cd2  hd2    ce1  he1    
+end
+
+imphd
+ne2  cd2  ce1  he2    cd2  cg   ne2  hd2    ce1  nd1  ne2  he1    
+ne2  ce1  cd2  he2    cd2  ne2  cg   hd2    ce1  ne2  nd1  he1    
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don ne2  he2  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  hsp ( Total Charge =   1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+nd1    nr3    -0.5100
+hd1    h       0.4400
+group
+ne2    nr3    -0.5100
+he2    h       0.4400
+group
+ce1    cph2    0.3200
+he1    hr2     0.1800
+group
+cd2    cph1    0.1900
+hd2    hr1     0.1300
+cg     cph1    0.1900
+group
+cb     ct2    -0.0500
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     nd1  cg     cd2  cg     ce1  nd1    
+ne2  cd2    n    hn     n    ca     o    c      
+c    ca     ne2  ce1    ca   ha     cb   hb1    
+cb   hb2    nd1  hd1    ne2  he2    cd2  hd2    ce1  he1    
+end
+
+imphd
+hd1  cg   ce1  nd1    
+hd1  ce1  cg   nd1    
+he2  cd2  ce1  ne2    he2  ce1  cd2  ne2    
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don nd1  hd1  
+don ne2  he2  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  ile ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct1    -0.0900
+hb     ha      0.0900
+group
+cg2    ct3    -0.2700
+hg21   ha      0.0900
+hg22   ha      0.0900
+hg23   ha      0.0900
+group
+cg1    ct2    -0.1800
+hg11   ha      0.0900
+hg12   ha      0.0900
+group
+cd1    ct3    -0.2700
+hd1    ha      0.0900
+hd2    ha      0.0900
+hd3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg1  cb     cg2  cb     cd1  cg1    
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb     cg1  hg11   cg1  hg12   cg2  hg21   
+cg2  hg22   cg2  hg23   cd1  hd1    cd1  hd2    cd1  hd3    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  leu ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct1    -0.0900
+hg     ha      0.0900
+group
+cd1    ct3    -0.2700
+hd11   ha      0.0900
+hd12   ha      0.0900
+hd13   ha      0.0900
+group
+cd2    ct3    -0.2700
+hd21   ha      0.0900
+hd22   ha      0.0900
+hd23   ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg     cd1  hd11   
+cd1  hd12   cd1  hd13   cd2  hd21   cd2  hd22   cd2  hd23   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  lys ( Total Charge =   1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     ct2    -0.1800
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+ce     ct2     0.2100
+he1    ha      0.0500
+he2    ha      0.0500
+group
+nz     nh3    -0.3000
+hz1    hc      0.3300
+hz2    hc      0.3300
+hz3    hc      0.3300
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     ce   cd     nz   ce     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg1    
+cg   hg2    cd   hd1    cd   hd2    ce   he1    ce   he2    
+nz   hz1    nz   hz2    nz   hz3    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don nz   hz1  
+don nz   hz2  
+don nz   hz3  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  met ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1400
+hg1    ha      0.0900
+hg2    ha      0.0900
+sd     s      -0.0900
+group
+ce     ct3    -0.2200
+he1    ha      0.0900
+he2    ha      0.0900
+he3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     sd   cg     ce   sd     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg1    cg   hg2    
+ce   he1    ce   he2    ce   he3    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  phe ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ca      0.0000
+group
+cd1    ca     -0.1150
+hd1    hp      0.1150
+group
+cd2    ca     -0.1150
+hd2    hp      0.1150
+group
+ce1    ca     -0.1150
+he1    hp      0.1150
+group
+ce2    ca     -0.1150
+he2    hp      0.1150
+group
+cz     ca     -0.1150
+hz     hp      0.1150
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     ce1  cd1    
+ce2  cd2    cz   ce1    cz   ce2    n    hn     
+n    ca     o    c      c    ca     ca   ha     
+cb   hb1    cb   hb2    cd1  hd1    cd2  hd2    ce1  he1    
+ce2  he2    cz   hz     
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  pro ( Total Charge =   0.0 )
+atoms
+group
+n      n      -0.2900
+ca     cp1     0.0200
+ha     hb      0.0900
+group
+cd     cp3     0.0000
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+cb     cp2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cp2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+o    c      c    ca     
+n    ca     ca   cb     cb   cg     cg   cd     n    cd     
+ha   ca     hg1  cg     hg2  cg     hd1  cd     hd2  cd     hb1  cb
+hb2  cb
+end
+
+imphd
+n    -c   ca   cd     
+c    ca   +n   o      
+end
+
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  ser ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2     0.0500
+hb1    ha      0.0900
+hb2    ha      0.0900
+og     oh1    -0.6600
+hg1    h       0.4300
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     og   cb     n    hn     n    ca     
+o    c      c    ca     ca   ha     cb   hb1    
+cb   hb2    og   hg1    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don og   hg1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  thr ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct1     0.1400
+hb     ha      0.0900
+og1    oh1    -0.6600
+hg1    h       0.4300
+group
+cg2    ct3    -0.2700
+hg21   ha      0.0900
+hg22   ha      0.0900
+hg23   ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     og1  cb     cg2  cb     n    hn     
+n    ca     o    c      c    ca     ca   ha     
+cb   hb     og1  hg1    cg2  hg21   cg2  hg22   cg2  hg23   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don og1  hg1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  trp ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cy     -0.0300
+cd1    ca      0.0350
+hd1    hp      0.1150
+group
+ne1    ny     -0.6100
+he1    h       0.3800
+group
+cd2    cpt    -0.0200
+ce3    ca     -0.1150
+he3    hp      0.1150
+group
+ce2    cpt     0.1300
+cz2    ca     -0.1150
+hz2    hp      0.1150
+group
+cz3    ca     -0.1150
+hz3    hp      0.1150
+group
+ch2    ca     -0.1150
+hh2    hp      0.1150
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     ne1  cd1    
+ce2  cd2    cz2  ce2    cz3  ce3    ch2  cz2    
+n    hn     n    ca     o    c      c    ca     
+cz3  ch2    cd2  ce3    ne1  ce2    ca   ha     cb   hb1    
+cb   hb2    cd1  hd1    ne1  he1    ce3  he3    cz2  hz2    
+cz3  hz3    ch2  hh2    
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don ne1  he1  
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  tyr ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ca      0.0000
+group
+cd1    ca     -0.1150
+hd1    hp      0.1150
+group
+cd2    ca     -0.1150
+hd2    hp      0.1150
+group
+ce1    ca     -0.1150
+he1    hp      0.1150
+group
+ce2    ca     -0.1150
+he2    hp      0.1150
+group
+cz     ca      0.1100
+oh     oh1    -0.5400
+hh     h       0.4300
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     ce1  cd1    
+ce2  cd2    cz   ce1    cz   ce2    oh   cz     
+n    hn     n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cd1  hd1    cd2  hd2    
+ce1  he1    ce2  he2    oh   hh     
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+don oh   hh   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  val ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct1    -0.0900
+hb     ha      0.0900
+group
+cg1    ct3    -0.2700
+hg11   ha      0.0900
+hg12   ha      0.0900
+hg13   ha      0.0900
+group
+cg2    ct3    -0.2700
+hg21   ha      0.0900
+hg22   ha      0.0900
+hg23   ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg1  cb     cg2  cb     n    hn     
+n    ca     o    c      c    ca     ca   ha     
+cb   hb     cg1  hg11   cg1  hg12   cg1  hg13   cg2  hg21   
+cg2  hg22   cg2  hg23   
+end
+
+imphd
+n    -c   ca   hn     c    ca   +n   o      
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  tip3 ( Total Charge =   0.0 )
+atoms
+group
+o      ot      -0.8340
+h1     ht      0.4170
+h2     ht      0.4170
+end
+
+bonds
+o   h1     o   h2     h1   h2     
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  tip3f ( Total Charge =   0.0 )
+atoms
+group
+o      ot      -0.8340
+h1     ht      0.4170
+h2     ht      0.4170
+end
+
+bonds
+o   h1     o   h2  
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  arg-h ( Total Charge =   1.0 )
+atoms
+group
+n      nh3    -0.3000
+ht1    hc      0.3300
+ht2    hc      0.3300
+ht3    hc      0.3300
+group
+ca     ct1     0.2100
+ha     hb      0.1000
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     ct2     0.2000
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+ne     nc2    -0.7000
+he     hc      0.4400
+group
+cz     c       0.6400
+nh1    nc2    -0.8000
+hh11   hc      0.4600
+hh12   hc      0.4600
+group
+nh2    nc2    -0.8000
+hh21   hc      0.4600
+hh22   hc      0.4600
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     ne   cd     cz   ne     
+nh1  cz     nh2  cz     n    ht1    n    ht2    n    ht3     n    ca     
+o    c      c    ca     ca   ha     cb   hb1    
+cb   hb2    cg   hg1    cg   hg2    cd   hd1    cd   hd2    
+ne   he     nh1  hh11   nh1  hh12   nh2  hh21   nh2  hh22   
+end
+
+imphd
+c    ca   +n   o      
+cz   nh1  nh2  ne     
+end
+
+don n    ht1
+don n    ht2
+don n    ht3
+don ne   he   
+don nh1  hh11 
+don nh1  hh12 
+don nh2  hh21 
+don nh2  hh22 
+acc c    o    
+termatom * c
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  met-h ( Total Charge =   0.0 )
+atoms
+group
+n      nh3    -0.3000
+ht1    hc      0.3300
+ht2    hc      0.3300
+ht3    hc      0.3300
+group
+ca     ct1     0.2100
+ha     hb      0.1000
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1400
+hg1    ha      0.0900
+hg2    ha      0.0900
+sd     s      -0.0900
+group
+ce     ct3    -0.2200
+he1    ha      0.0900
+he2    ha      0.0900
+he3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     cg   cb     sd   cg     ce   sd     
+n    ca     o    c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg1    cg   hg2    
+ce   he1    ce   he2    ce   he3    
+n    ht1    n    ht2    n    ht3
+end
+
+imphd
+c    ca   +n   o      
+end
+
+don n    ht1
+don n    ht2
+don n    ht3
+acc c    o    
+termatom * c
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  ala-h ( Total Charge =   1.0 )
+atoms
+group
+n      nh3    -0.3000
+ht1    hc      0.3300
+ht2    hc      0.3300
+ht3    hc      0.3300
+group
+ca     ct1     0.2100
+ha     hb      0.1000
+group
+cb     ct3    -0.2700
+hb1    ha      0.0900
+hb2    ha      0.0900
+hb3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     n    ht1    n    ht2    n    ht3    n    ca     o    c      
+c    ca     ca   ha     cb   hb1    cb   hb2    cb   hb3    
+end
+
+imphd
+c    ca   +n   o      
+end
+
+don n    ht1
+don n    ht2
+don n    ht3
+acc c    o    
+termatom * c
+backbone n ca c
+RESIDUE_END
+
+
+
+RESIDUE  ala-o ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct3    -0.2700
+hb1    ha      0.0900
+hb2    ha      0.0900
+hb3    ha      0.0900
+group
+c      cc      0.3400
+oct1   oc     -0.6700
+oct2   oc     -0.6700
+end
+
+bonds
+cb   ca     n    hn     n    ca     oct1 c      oct2 c
+c    ca     ca   ha     cb   hb1    cb   hb2    cb   hb3    
+end
+
+imphd
+n    -c   ca   hn     oct1  ca oct2  c
+end
+
+don n    hn   
+acc c    oct1
+acc c    oct2
+
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  phe-o ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ca      0.0000
+group
+cd1    ca     -0.1150
+hd1    hp      0.1150
+group
+cd2    ca     -0.1150
+hd2    hp      0.1150
+group
+ce1    ca     -0.1150
+he1    hp      0.1150
+group
+ce2    ca     -0.1150
+he2    hp      0.1150
+group
+cz     ca     -0.1150
+hz     hp      0.1150
+group
+c      cc      0.3400
+oct1   oc     -0.6700
+oct2   oc     -0.6700
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     ce1  cd1    
+ce2  cd2    cz   ce1    cz   ce2    n    hn     
+n    ca     c    ca     ca   ha     
+cb   hb1    cb   hb2    cd1  hd1    cd2  hd2    ce1  he1    
+ce2  he2    cz   hz     oct1 c      oct2 c
+end
+
+imphd
+n    -c   ca   hn     oct1  ca oct2  c  
+end
+
+don n    hn   
+acc c    oct1
+acc c    oct2
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  pro-h ( Total Charge =   0.0 )
+atoms
+group
+n      np     -0.0700
+hn1    hc      0.2400
+hn2    hc      0.2400
+ca     cp1     0.1600
+ha     hb      0.0900
+group
+cd     cp3     0.1600
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+cb     cp2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cp2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+o    c      c    ca     n    hn1    n    hn2
+n    ca     ca   cb     cb   cg     cg   cd     n    cd     
+ha   ca     hg1  cg     hg2  cg     hd1  cd     hd2  cd     hb1  cb
+hb2  cb
+end
+
+imphd
+c    ca   +n   o      
+end
+
+acc c    o    
+don n    hn1
+don n    hn2
+termatom * c
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  tyr-o ( Total Charge =   0.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ca      0.0000
+group
+cd1    ca     -0.1150
+hd1    hp      0.1150
+group
+cd2    ca     -0.1150
+hd2    hp      0.1150
+group
+ce1    ca     -0.1150
+he1    hp      0.1150
+group
+ce2    ca     -0.1150
+he2    hp      0.1150
+group
+cz     ca      0.1100
+oh     oh1    -0.5400
+hh     h       0.4300
+group
+c      c       0.3400
+ot1    oc     -0.6700
+ot2    oc     -0.6700
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     ce1  cd1    
+ce2  cd2    cz   ce1    cz   ce2    oh   cz     
+n    hn     n    ca     ot1    c      ot2  c    c    ca     
+ca   ha     cb   hb1    cb   hb2    cd1  hd1    cd2  hd2    
+ce1  he1    ce2  he2    oh   hh     
+end
+
+imphd
+n    -c   ca   hn     ot1  ca ot2 c
+end
+
+don n    hn   
+don oh   hh   
+acc c    ot1
+acc c    ot2
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  leu-o ( Total Charge =   -1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct1    -0.0900
+hg     ha      0.0900
+group
+cd1    ct3    -0.2700
+hd11   ha      0.0900
+hd12   ha      0.0900
+hd13   ha      0.0900
+group
+cd2    ct3    -0.2700
+hd21   ha      0.0900
+hd22   ha      0.0900
+hd23   ha      0.0900
+group
+c      cc      0.3400
+ot1    oc     -0.6700
+ot2    oc     -0.6700
+end
+
+bonds
+cb   ca     cg   cb     cd1  cg     cd2  cg     
+n    hn     n    ca     ot1  c      ot2  c      c    ca     
+ca   ha     cb   hb1    cb   hb2    cg   hg     cd1  hd11   
+cd1  hd12   cd1  hd13   cd2  hd21   cd2  hd22   cd2  hd23   
+end
+
+imphd
+n    -c   ca   hn     ot1 ca ot2 c     
+end
+
+don n    hn   
+acc c    ot1
+acc c    ot2
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  arg-o
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     ct2    -0.1800
+hg1    ha      0.0900
+hg2    ha      0.0900
+group
+cd     ct2     0.2000
+hd1    ha      0.0900
+hd2    ha      0.0900
+group
+ne     nc2    -0.7000
+he     hc      0.4400
+group
+cz     c       0.6400
+nh1    nc2    -0.8000
+hh11   hc      0.4600
+hh12   hc      0.4600
+group
+nh2    nc2    -0.8000
+hh21   hc      0.4600
+hh22   hc      0.4600
+group
+c      cc      0.3400
+ot1    oc     -0.6700
+ot2    oc     -0.6700
+end
+
+bonds
+cb   ca     cg   cb     cd   cg     ne   cd     cz   ne     
+nh1  cz     nh2  cz     n    hn     n    ca     
+ot1  c      ot2  c      c    ca     ca   ha     cb   hb1    
+cb   hb2    cg   hg1    cg   hg2    cd   hd1    cd   hd2    
+ne   he     nh1  hh11   nh1  hh12   nh2  hh21   nh2  hh22   
+end
+
+imphd
+n    -c   ca   hn     ot1  ca   ot2  c      
+cz   nh1  nh2  ne     
+end
+
+don n    hn   
+don ne   he   
+don nh1  hh11 
+don nh1  hh12 
+don nh2  hh21 
+don nh2  hh22 
+acc c    ot1  
+acc c    ot2  
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  asp-o ( Total Charge =  -1.0 )
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.2800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cc      0.6200
+od1    oc     -0.7600
+od2    oc     -0.7600
+group
+c      cc      0.34
+ot1   oc     -0.67
+ot2   oc     -0.67
+end
+
+bonds
+cb   ca     cg   cb     od1  cg     od2  cg     
+n    hn     n    ca     ot1 c      ot1 c     c    ca     
+ca   ha     cb   hb1    cb   hb2    
+end
+
+imphd
+n    -c   ca   hn     ot1    ca  ot2  c      
+od1  cb   od2  cg     
+end
+
+don n    hn   
+acc cg   od1
+acc cg   od2
+acc c    ot1
+acc c    ot2
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  asn-o
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct2    -0.1800
+hb1    ha      0.0900
+hb2    ha      0.0900
+group
+cg     cc      0.5500
+od1    o      -0.5500
+group
+nd2    nh2    -0.6200
+hd21   h       0.3200
+hd22   h       0.3000
+group
+c      cc      0.3400
+oct1   oc     -0.6700
+oct2   oc     -0.6700
+end
+
+bonds
+cb   ca     cg   cb     od1  cg     nd2  cg     
+n    hn     n    ca     oct1 c      oct2 c      c    ca     
+ca   ha     cb   hb1    cb   hb2    nd2  hd21   nd2  hd22   
+end
+
+imphd
+n    -c   ca   hn     oct1  ca oct2  c    
+cg   nd2  cb   od1    cg   cb   nd2  od1    
+nd2  cg   hd21 hd22   nd2  cg   hd22 hd21   
+end
+
+don n    hn   
+don nd2  hd21 
+don nd2  hd22 
+acc cg   od1  
+acc c    oct1
+acc c    oct2
+
+termatom n *
+backbone n ca c
+RESIDUE_END
+
+
+RESIDUE  ala-z ( Total Charge =   0.0 )
+atoms
+group
+n      nh3    -0.3000
+ht1    hc      0.3300
+ht2    hc      0.3300
+ht3    hc      0.3300
+group
+ca     ct1     0.2100
+ha     hb      0.1000
+group
+cb     ct3    -0.2700
+hb1    ha      0.0900
+hb2    ha      0.0900
+hb3    ha      0.0900
+group
+c      cc      0.3400
+oct1   oc     -0.6700
+oct2   oc     -0.6700
+end
+
+bonds
+cb   ca     n    ht1    n    ht2    n    ht3    n    ca     oct1 c   
+c    ca     ca   ha     cb   hb1    cb   hb2    cb   hb3    oct2 c
+end
+
+imphd
+oct1  ca oct2  c
+end
+
+don n    ht1
+don n    ht2
+don n    ht3
+acc c    oct1
+acc c    oct2
+termatom * *
+backbone n ca oct1
+RESIDUE_END
+
+RESIDUE  ala-nz 
+atoms
+group
+n      nh1    -0.4700
+hn     h       0.3100
+group
+ca     ct1     0.0700
+ha     hb      0.0900
+group
+cb     ct3    -0.2700
+hb1    ha      0.0900
+hb2    ha      0.0900
+hb3    ha      0.0900
+group
+c      c       0.5100
+o      o      -0.5100
+end
+
+bonds
+cb   ca     n    hn     n    ca     o    c      
+c    ca     ca   ha     cb   hb1    cb   hb2    cb   hb3    
+end
+
+don n    hn   
+acc c    o    
+termatom n c
+backbone n ca c
+RESIDUE_END
+
+RESIDUE  nacn
+atoms
+group
+cay    ct3    -0.27
+hy1    ha      0.09
+hy2    ha      0.09
+hy3    ha      0.09
+group
+cy     c       0.51
+oy     o      -0.51
+group
+n      nh1    -0.47
+hn     h       0.31
+group
+ca     ct1     0.07
+ha     hb      0.09
+group
+cb     ct3    -0.27
+hb1    ha      0.09
+hb2    ha      0.09
+hb3    ha      0.09
+group
+c      c       0.51
+o      o      -0.51
+group
+nt     nh1    -0.47
+hnt    h       0.31
+group
+cat    ct3    -0.11
+ht1    ha      0.09
+ht2    ha      0.09
+ht3    ha      0.09
+end
+
+bonds
+cay  hy1    cay  hy2    cay  hy3    cay  cy     cy   oy
+cy   n      n    hn     n    ca     ca   c      ca   ha
+ca   cb     cb   hb1    cb   hb2    cb   hb3    c    o
+c    nt     nt   hnt    nt   cat    cat  ht1    cat  ht2
+cat  ht3
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  one-
+atoms
+group
+ca1    caa    -0.50
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  one+
+atoms
+group
+ca1    caa    +0.50
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  two
+atoms
+group
+ca1    caa    -0.50
+ca2    caa     0.50
+end
+
+bonds
+ca1  ca2
+end
+
+termatom * *
+RESIDUE_END
+RESIDUE  one-
+atoms
+group
+ca1    caa    -0.50
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  one+
+atoms
+group
+ca1    caa    0.50
+end
+
+termatom * *
+RESIDUE_END
+
+RESIDUE  zn
+atoms
+group
+zn     zn     2.00
+end
+
+termatom * *
+RESIDUE_END
