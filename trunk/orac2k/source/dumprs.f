@@ -44,11 +44,9 @@
 
       INQUIRE(FILE=restart_file,EXIST=exist)
       IF(exist) THEN
-         OPEN(unit=kdump,file=restart_file,form='UNFORMATTED',status
-     &        ='OLD')
+         CALL openf(kdump,restart_file,'UNFORMATTED','OLD',0)
       ELSE
-         OPEN(unit=kdump,file=restart_file,form='UNFORMATTED',status
-     &        ='NEW')
+         CALL openf(kdump,restart_file,'UNFORMATTED','NEW',0)
       END IF
       REWIND kdump
       WRITE(kdump) ((co(i,j),j=1,3),i=1,3),((oc(i,j),j=1,3),i=1,3)
