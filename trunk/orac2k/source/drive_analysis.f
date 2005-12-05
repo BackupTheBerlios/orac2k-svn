@@ -3,7 +3,11 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
+<<<<<<< drive_analysis.f
+*   Time-stamp: <2005-11-28 21:15:03 marchi>                             *
+=======
 *   Time-stamp: <2005-10-21 15:00:53 marchi>                             *
+>>>>>>> 1.8
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -65,8 +69,14 @@
      &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
      &     ,PDB_ncompute=>n_compute
       USE RMS_Subtract_Mod, ONLY: SUB_Initialize=>Initialize
+<<<<<<< drive_analysis.f
+     &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
+     &     =>n_write,SUB_Write_it=>Write_it,SUB_Rotate=>Rotate,SUB_Start
+     &     =>Start
+=======
      &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
      &     =>n_write,SUB_Write_it=>Write_it
+>>>>>>> 1.8
       
       IMPLICIT none
       
@@ -393,9 +403,15 @@ c$$$====================================================================
          CALL EUL_Initialize(wca,xpt0,ypt0,zpt0)
       END IF
       IF(SUB_Subtract) THEN
+<<<<<<< drive_analysis.f
+         CALL get_atres(atres,nres(1,1),nato_slt,nbun_slt)
+         CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
+     &        ,chrge,DSQRT(unitc),nato_slt)
+=======
          CALL get_atres(atres,nres(1,1),nato_slt,nbun_slt)
          CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
      &        ,nato_slt)
+>>>>>>> 1.8
       END IF
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
@@ -1402,6 +1418,18 @@ c--------------------------
                      END IF
                   END IF
                   IF(node .EQ. 0) THEN
+<<<<<<< drive_analysis.f
+                     IF(SUB_Subtract) THEN
+                        IF(nnstep == 1) CALL SUB_Start(xp0,yp0,zp0)
+                        CALL SUB_Rotate(xp0,yp0,zp0)
+                        CALL SUB_Compute(co,oc,xp0,yp0,zp0)
+                        IF(MOD(nstep,SUB_write) == 0) THEN
+                           CALL SUB_write_it(fstep)
+                        END IF
+                     END IF
+                  END IF
+                  IF(node .EQ. 0) THEN
+=======
                      IF(SUB_Subtract) THEN                     
                         CALL SUB_Compute(xp0,yp0,zp0)
                         IF(MOD(nstep,SUB_write) == 0) THEN
@@ -1410,6 +1438,7 @@ c--------------------------
                      END IF
                   END IF
                   IF(node .EQ. 0) THEN
+>>>>>>> 1.8
                      IF(PDB_pdbs) THEN
                         IF(MOD(nstep,PDB_ncompute) == 0) THEN
                            CALL PDB_Compute(xp0,yp0,zp0)
