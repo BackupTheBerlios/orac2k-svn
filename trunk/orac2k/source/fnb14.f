@@ -80,7 +80,7 @@
       DATA a4,a5/-1.453152d0,1.0614054d0/
       DATA qp/0.3275911d0/
       DATA quarter,half/0.25D0,0.5D0/
-      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
 

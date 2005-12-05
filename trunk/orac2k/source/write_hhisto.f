@@ -39,20 +39,20 @@
       REWIND(khhisto)
       WRITE(khhisto,11000)
       DO i=1,hhisto_dim
-         x=DBLE(i)*hhisto_bin
-         y=DBLE(hhisto_list(1,i))/DBLE(hhisto_count)/hhisto_bin
+         x=DFLOAT(i)*hhisto_bin
+         y=DFLOAT(hhisto_list(1,i))/DFLOAT(hhisto_count)/hhisto_bin
          WRITE(khhisto,10000) x,y
       END DO
       WRITE(khhisto,12000)
       DO i=1,hhisto_dim
-         x=DBLE(i)*hhisto_bin
-         y=DBLE(hhisto_list(2,i))/DBLE(hhisto_count)/hhisto_bin
+         x=DFLOAT(i)*hhisto_bin
+         y=DFLOAT(hhisto_list(2,i))/DFLOAT(hhisto_count)/hhisto_bin
          WRITE(khhisto,10000) x,y
       END DO
       WRITE(khhisto,13000)
       DO i=1,hhisto_dim
-         x=DBLE(i)*hhisto_bin
-         y=DBLE(hhisto_list(3,i))/DBLE(hhisto_count)/hhisto_bin
+         x=DFLOAT(i)*hhisto_bin
+         y=DFLOAT(hhisto_list(3,i))/DFLOAT(hhisto_count)/hhisto_bin
          WRITE(khhisto,10000) x,y
       END DO
 

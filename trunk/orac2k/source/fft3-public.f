@@ -180,7 +180,7 @@ C  3D FFTPUB
       IFAC(1) = N
       IFAC(2) = NF
       TPI = 6.28318530717959d0
-      ARGH = TPI/DBLE(N)
+      ARGH = TPI/DFLOAT(N)
       I = 2
       L1 = 1
       DO 110 K1=1,NF
@@ -196,7 +196,7 @@ C  3D FFTPUB
             WA(I) = 0.d0
             LD = LD+L1
             FI = 0.d0
-            ARGLD = DBLE(LD)*ARGH
+            ARGLD = DFLOAT(LD)*ARGH
             DO 108 II=4,IDOT,2
                I = I+2
                FI = FI+1.d0

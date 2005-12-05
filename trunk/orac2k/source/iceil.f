@@ -32,7 +32,7 @@
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-      a=DBLE(j)/DBLE(k)
+      a=DFLOAT(j)/DFLOAT(k)
       b=DINT(a)
       iceil=IDINT(a)
       IF(DABS(b-a) .GT. 1.0D-5) THEN

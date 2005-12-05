@@ -466,7 +466,7 @@
          count=count+cnstp+1
       END DO
 
-      dnit=dnit+DBLE(iter1)/DBLE(nprot)
+      dnit=dnit+DFLOAT(iter1)/DFLOAT(nprot)
       CALL timer(vfcp_mm,tfcp_mm,elapse)
       tdelta_mm=tfcp_mm-tdelta_mm
       gcpu=gcpu+tdelta_mm

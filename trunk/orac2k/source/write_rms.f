@@ -45,7 +45,7 @@
       WRITE(krms,'('' Tstep = '',f12.2,2x,a2)') fstep
       WRITE(krms,'(''                         SQRT(FLUCT(R))  FLUCT(X)  
      &  FLUCT(Y)    FLUCT(Z)'')') 
-      fnstep=DBLE(nstep)
+      fnstep=DFLOAT(nstep)
       DO j=1,ngrp
          DO i=grppt(1,j),grppt(2,j)
             xc=xp_avg(i)/fnstep

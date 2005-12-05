@@ -209,19 +209,19 @@
                   END DO
 
                   DO k=0,ncorr
-                      corr(k,l)=corr(k,l)/DBLE(ncc(k,l))
+                      corr(k,l)=corr(k,l)/DFLOAT(ncc(k,l))
                   END DO
 
 
                   DO k=1,ncorr
                       tcorr(k)=corr(k,l)/corr(0,l)
-                      tcorr(k)=-time*DBLE(k)/DLOG(tcorr(k))
+                      tcorr(k)=-time*DFLOAT(k)/DLOG(tcorr(k))
                   END DO
                   IF(ksol2 .NE. -1) THEN
                       WRITE(ksol2,2500) res(grppt(1,l),1),l
                       DO k=0,ncorr
                           IF(.NOT. near0(corr(k,l)))
-     x                        WRITE(ksol2,3000) time*DBLE(k),corr(k,l)
+     x                        WRITE(ksol2,3000) time*DFLOAT(k),corr(k,l)
                       END DO
                   END IF
 

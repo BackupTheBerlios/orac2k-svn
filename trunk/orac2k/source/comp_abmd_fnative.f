@@ -71,7 +71,7 @@
       count1=0
       count2=0
       cut2=native_dist**2
-      fnlistp=1.0D0/DBLE(listp)
+      fnlistp=1.0D0/DFLOAT(listp)
 
       listp_1=listp/nprocs
       nstart_1=listp_1*node+1

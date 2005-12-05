@@ -58,8 +58,8 @@
       END DO
       
       DO i=1,3
-         fth(i)=tto(i)-DBLE(ndf_thermos(i))*boltz*t/unite
-     &        /DBLE(nprocs)
+         fth(i)=tto(i)-DFLOAT(ndf_thermos(i))*boltz*t/unite
+     &        /DFLOAT(nprocs)
        END DO
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*

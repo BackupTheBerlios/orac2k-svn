@@ -91,8 +91,13 @@ c STACK STORAGE: These arrays can be tossed after leaving this routine
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+      nfft2a=nfft2
+      nfft3a=nfft3
+      npya=npy
+      npza=npz
       nay=nfft2
       naz=nfft3
+      nay=nfft2a
       naz=nfft3_local
 
       kstart=nfft3_start
@@ -192,8 +197,8 @@ c$$$========================================================================
       CALL P_merge_r8(time1,node,nprocs,ncube,rbyte)
       CALL P_merge_r8(time2,node,nprocs,ncube,rbyte)
 #endif
-c$$$      WRITE(*,*) 'other =',time1/DBLE(ntime_avg*nprocs)
-c$$$      WRITE(*,*) 'fft =',time2/DBLE(ntime_avg*nprocs)
+c$$$      WRITE(*,*) 'other =',time1/DFLOAT(ntime_avg*nprocs)
+c$$$      WRITE(*,*) 'fft =',time2/DFLOAT(ntime_avg*nprocs)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

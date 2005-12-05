@@ -44,9 +44,9 @@
          sumy=sumy+yp0(i)
          sumz=sumz+zp0(i)
       END DO
-      sumx=sumx/DBLE(m)
-      sumy=sumy/DBLE(m)
-      sumz=sumz/DBLE(m)
+      sumx=sumx/DFLOAT(m)
+      sumy=sumy/DFLOAT(m)
+      sumz=sumz/DFLOAT(m)
       DO i=1,nato
          xp0(i)=xp0(i)-sumx
          yp0(i)=yp0(i)-sumy

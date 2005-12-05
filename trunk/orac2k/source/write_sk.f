@@ -41,7 +41,7 @@
       DO i=1,kbox
          IF(nsofk(i,2) .NE. 0) THEN
             aux=sofk(i,2)/nsofk(i,2)
-            WRITE(ksofk,'(f10.4,e16.7)') DBLE(i)*sofk_delta,aux
+            WRITE(ksofk,'(f10.4,e16.7)') DFLOAT(i)*sofk_delta,aux
          END IF
       END DO
 

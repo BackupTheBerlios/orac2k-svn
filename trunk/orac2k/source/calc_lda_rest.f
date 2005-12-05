@@ -151,7 +151,7 @@ c---- write last residue
 *=======================================================================
             
       IF( MOD(nstep,ninst) .EQ. 0) THEN
-          norma = 1.0d0/DBLE(sumt)
+          norma = 1.0d0/DFLOAT(sumt)
           WRITE(kout,'('' Tstep = '',f12.2)') fstep
           WRITE(kout,'('' Residue   LDA-solvation number'')')
           DO j=min_hyd,max_hyd

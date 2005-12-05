@@ -44,7 +44,7 @@
       DATA a1,a2,a3/0.2548296d0,-0.28449674d0,1.4214137d0/
       DATA a4,a5/-1.453152d0,1.0614054d0/
       DATA qp/0.3275911d0/
-      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
 

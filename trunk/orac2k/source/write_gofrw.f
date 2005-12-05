@@ -76,30 +76,30 @@
       DO 20 jsp=1,nspec
          numa=nmol*itypes(jsp)
          numb=numa
-         rcon=2.0D0/DBLE(ngrdon*numa)
+         rcon=2.0D0/DFLOAT(ngrdon*numa)
          qr=0.0d0
          gint=0.0d0
          lpoint=jsp*(jsp-1)/2+jsp
          WRITE(kgofr_sk,1000) beta_slv(jsp),beta_slv(jsp)
          DO 30 i=1,max
             qr=qr+delrg
-            fns=rcon*DBLE(igr(i,lpoint+offset))
+            fns=rcon*DFLOAT(igr(i,lpoint+offset))
             gint=gint+fns
-            gr=boxvol*facrdf*fns/(qr*qr*DBLE(numb))
+            gr=boxvol*facrdf*fns/(qr*qr*DFLOAT(numb))
             gor(i)=gr
             WRITE(kgofr_sk,500) qr,gr,gint
 30       CONTINUE
 
          WRITE(kgofr_sk,1500) beta_slv(jsp),beta_slv(jsp)
          DO k=1,kmax
-            rk=2.0D0*pi*DBLE(k)/kmax
+            rk=2.0D0*pi*DFLOAT(k)/kmax
             ssk=0.0D0
             DO j=1,max
                rp=j*delrg
-               ssk=ssk+rp*rp*(gor(j)*DBLE(numb)/boxvol-(gint+1.0D0)
+               ssk=ssk+rp*rp*(gor(j)*DFLOAT(numb)/boxvol-(gint+1.0D0)
      &              /vol)*DSIN(rk*rp)*delrg/(rk*rp)
             END DO
-            ssk=(1.0D0+4.0D0*pi*ssk)*DBLE(numa)/DBLE(nts)
+            ssk=(1.0D0+4.0D0*pi*ssk)*DFLOAT(numa)/DFLOAT(nts)
             WRITE(kgofr_sk,700) rk,ssk
          END DO
 20    CONTINUE
@@ -107,7 +107,7 @@
       IF(nspec.ne.1) THEN
          DO 40 isp=1,nspec-1
             numa=nmol*itypes(isp)
-            rcon=1.0d0/DBLE(ngrdon*numa)
+            rcon=1.0d0/DFLOAT(ngrdon*numa)
             DO 50 jsp=isp+1,nspec
                itype=itype+1
                numb=itypes(jsp)*nmol 
@@ -118,23 +118,23 @@
                lpoint=jsp*(jsp-1)/2+isp
                DO 60 i=1,max
                   qr=qr+delrg
-                  fns=rcon*DBLE(igr(i,lpoint+offset))
+                  fns=rcon*DFLOAT(igr(i,lpoint+offset))
                   gint=gint+fns
-                  gr=boxvol*facrdf*fns/(DBLE(numb)*qr*qr)
+                  gr=boxvol*facrdf*fns/(DFLOAT(numb)*qr*qr)
                   gor(i)=gr
-                  ginr=ginr+fns*DBLE(numa)/DBLE(numb)
+                  ginr=ginr+fns*DFLOAT(numa)/DFLOAT(numb)
                   WRITE(kgofr_sk,600) qr,gr,gint,ginr
 60             CONTINUE
                WRITE(kgofr_sk,1500)beta_slv(isp),beta_slv(jsp)
                DO k=1,kmax
-                  rk=2.0D0*pi*DBLE(k)/kmax
+                  rk=2.0D0*pi*DFLOAT(k)/kmax
                   ssk=0.0D0
                   DO j=1,max
                      rp=j*delrg
-                     ssk=ssk+rp*rp*(gor(j)*DBLE(numb)/boxvol-gint/vol)
+                     ssk=ssk+rp*rp*(gor(j)*DFLOAT(numb)/boxvol-gint/vol)
      &                    *DSIN(rk*rp)*delrg/(rk*rp)
                   END DO
-                  fact=DBLE(numa)/DBLE(nts)
+                  fact=DFLOAT(numa)/DFLOAT(nts)
                   ssk=4.0D0*pi*ssk*fact
                   WRITE(kgofr_sk,700) rk,ssk
                END DO

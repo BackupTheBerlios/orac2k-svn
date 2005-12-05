@@ -38,8 +38,8 @@
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
       
-      weight(1)=DBLE(nato1)
-      weight(2)=DBLE(nato2)
+      weight(1)=DFLOAT(nato1)
+      weight(2)=DFLOAT(nato2)
 
       WRITE(kdiff,100)
       DO j=1,2
@@ -50,7 +50,7 @@
             IF(j .EQ. 1) WRITE(kdiff,200)
             IF(j .EQ. 2) WRITE(kdiff,300)
             DO i=1,nstep-1
-               tstep=DBLE(i-1)*fstep
+               tstep=DFLOAT(i-1)*fstep
                WRITE(kdiff,400) tstep,DSQRT(diff(i,j)*aux)
             END DO
          END IF

@@ -70,7 +70,7 @@
       REAL*8 fact,quarter,half,factor
       DATA quasi_zero/1.0D-12/
       DATA quarter,half/0.25D0,0.5D0/
-      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
 
@@ -180,7 +180,7 @@
          ELSE
             tmp=IDNINT(pota(i))
             ntph=IABS(tmp)
-            sig=DBLE(tmp/ntph)
+            sig=DFLOAT(tmp/ntph)
             IF(ntph.EQ.1) THEN
                enrg=sig*(DABS(potb(i))-coa*potb(i))
                qforce=sig*potb(i)

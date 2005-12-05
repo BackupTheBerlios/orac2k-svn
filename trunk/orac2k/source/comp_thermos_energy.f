@@ -41,7 +41,7 @@
       hpot=0.0D0
       uceh=0.0D0
       DO i=1,n
-         hpot=hpot+(DBLE(ntot(i))+1.0D0)*boltz*t*eta(i)
+         hpot=hpot+(DFLOAT(ntot(i))+1.0D0)*boltz*t*eta(i)
          uceh=uceh+0.5D0*qmass(i)*etap(i)**2
          IF(DABS(qmass(i)) .GT. 1.0D-5) m=m+1
       END DO
@@ -49,7 +49,7 @@
       hpot=hpot/unite
 
       uceh=uceh*efact
-      temph=2.0D0*uceh/(DBLE(m)*gascon)
+      temph=2.0D0*uceh/(DFLOAT(m)*gascon)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

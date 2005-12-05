@@ -1,6 +1,7 @@
-MODULE RMS_Matrix_Mod
+MODULE RMS_Subtract_Mod
+
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-24 19:01:07 marchi>                           *
+!!$   Time-stamp: <2005-11-28 21:15:27 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -9,277 +10,377 @@ MODULE RMS_Matrix_Mod
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Fri Jun  3 2005 -                                     *
+!!$              - Thu Oct 20 2005 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-  REAL(8), POINTER, SAVE :: rms_xi(:,:),rms_xixj(:,:),rms_sxi(:,:)&
-       &,rms_sxixj(:,:)
+!!$---- This subroutine is part of the program ORAC ----*
+  USE INPUT_Mod, ONLY: Read_String, Parser, err_open,err_end,err_unr&
+       &,err_fnf,err_args
+
+  TYPE subtract
+     CHARACTER(8) :: target
+     CHARACTER(7), DIMENSION(:), POINTER :: beta
+     INTEGER :: n0
+  END TYPE subtract
+  TYPE rms_units
+     INTEGER :: n0
+     CHARACTER(8) :: target
+     INTEGER, DIMENSION(:), POINTER :: ind
+  END TYPE rms_units
+
+!!$========================================================================
+!!$-- Statics 
+!!$========================================================================
+
+  LOGICAL, SAVE :: RMS_Subtract=.FALSE.,RMS_test=.FALSE.,RMS_Invert&
+       &=.TRUE.
+  INTEGER, SAVE :: n_write,krms_sub=0,krms_dip=0
+  CHARACTER(80), SAVE :: filename,filename_dip,rms_type='cm'
+  INTEGER, SAVE :: counter=0,natom,nbunits
+
+  INTEGER :: n_Res_u,n_Res
+  PARAMETER(n_Res_u=40,n_Res=100)
+  INTEGER, SAVE :: units,n_dip
+  TYPE(Subtract), DIMENSION(:), ALLOCATABLE, SAVE :: Res_u
+  TYPE(rms_units), DIMENSION(:), ALLOCATABLE, SAVE :: atoms
   REAL(8), ALLOCATABLE, SAVE :: wc(:),xyz0(:,:)
-  INTEGER, SAVE :: N_rms, krms_matrix,krms_matrix_plot,natom
-  LOGICAL, SAVE :: rms_matrix=.FALSE.,rms_matrix_avg=.FALSE.&
-       &,rms_matrix_plot=.FAlSE.
-  INTEGER, DIMENSION (:), POINTER, SAVE :: index
-  INTEGER, SAVE :: N_calls=0,N_Calls_avg=0
-  INTEGER, SAVE :: Write_Freq=100
-  INTEGER, SAVE :: Navg=4166
+
+!!$========================================================================
+!!$-- Allocatables
+!!$========================================================================
+
+  REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: charge
+  REAL(8), DIMENSION(:,:), ALLOCATABLE, SAVE :: dip
+  REAL(8), DIMENSION(:,:), ALLOCATABLE, SAVE :: dip_corr
+  REAL(8), DIMENSION(:,:), ALLOCATABLE, SAVE :: dists
+CONTAINS
 
 !!$======================== DECLARATIONS ================================*
 
-CONTAINS
-  SUBROUTINE Initialize(wca,xpt,ypt,zpt)
-    IMPLICIT NONE 
-    REAL(8) :: wca(:),xpt(:),ypt(:),zpt(:)
-    INTEGER :: i,count
-
-    natom=SIZE(wca)
-    ALLOCATE(wc(natom),xyz0(3,natom))
-    wc=wca/SUM(wca)
-    count=0
-    DO i=1,natom
-       IF(wca(i) /= 0.0D0) count=count+1
-       xyz0(1,i)=xpt(i)
-       xyz0(2,i)=ypt(i)
-       xyz0(3,i)=zpt(i)
-    END DO
-    ALLOCATE(index(count+1))
-
-    count=0
-    DO i=1,natom
-       IF(wca(i) /= 0.0D0) THEN
-          count=count+1
-          index(count)=i
-       END IF
-    END DO
-    N_rms=INT(SUM(wca))    
-    ALLOCATE(rms_xi(3,N_rms),rms_xixj(N_rms,N_rms))
-    ALLOCATE(rms_sxi(3,N_rms),rms_sxixj(N_rms,N_rms))
-    rms_xi=0.0D0
-    rms_xixj=0.0D0
-    rms_sxi=0.0D0
-    rms_sxixj=0.0D0
-  END SUBROUTINE Initialize
-  SUBROUTINE Compute(xp0,yp0,zp0)
+  SUBROUTINE Initialize(atres,nbun,res,prsymb,beta,charges,sunit,ntap)
+    
     IMPLICIT none
 
 !!$----------------------------- ARGUMENTS ------------------------------*
-  
-    REAL(8) :: xp0(*),yp0(*),zp0(*)
+
+    INTEGER :: atres(2,*),nbun,res(*),ntap
+    CHARACTER(8) :: prsymb(*)
+    CHARACTER(7) :: beta(*)
+    REAL(8) :: charges(*),sunit
 
 !!$----------------------- VARIABLES IN COMMON --------------------------*
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
-    INTEGER :: i,j
-    REAL(8) :: xpi,ypi,zpi,xpj,ypj,zpj
+    INTEGER :: i,k1,k2,n,nn
+    INTEGER :: count,count2,count_res,i_f,nlist
+    INTEGER, DIMENSION (:), ALLOCATABLE :: index,trace
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: mask
+    LOGICAL :: ok
 
-    N_Calls=N_calls+1
-    WRITE(*,*) N_Calls,N_rms
-    DO i=1,N_rms
-       xpi=xp0(index(i))
-       ypi=yp0(index(i))
-       zpi=zp0(index(i))
-       rms_xi(1,i)=rms_xi(1,i)+xpi
-       rms_xi(2,i)=rms_xi(2,i)+ypi
-       rms_xi(3,i)=rms_xi(3,i)+zpi
-       DO j=i,N_rms
-          xpj=xp0(index(j))
-          ypj=yp0(index(j))
-          zpj=zp0(index(j))
-          rms_xixj(i,j)=rms_xixj(i,j)+xpi*xpj+ypi*ypj+zpi*zpj
-       END DO
-    END DO
-  END SUBROUTINE Compute
-  SUBROUTINE Compute_avg(xp0,yp0,zp0)
-    IMPLICIT none
-
-!!$----------------------------- ARGUMENTS ------------------------------*
-  
-    REAL(8) :: xp0(*),yp0(*),zp0(*)
-
-!!$------------------------- LOCAL VARIABLES ----------------------------*
-
-    REAL(8), DIMENSION (:,:,:), ALLOCATABLE, SAVE :: xi_s
-    INTEGER :: i,j,k
-    REAL(8) :: xpi,ypi,zpi,xpj,ypj,zpj,f_avg,xixj,dxidxj
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-    IF(.NOT. ALLOCATED(xi_s)) THEN
-       ALLOCATE(xi_s(3,N_rms,Navg))
-    END IF
-    f_avg=1.0D0/DFLOAT(Navg)
-    IF(N_Calls < Navg) THEN
-       N_Calls=N_calls+1
-       DO i=1,N_rms
-          xpi=xp0(index(i))
-          ypi=yp0(index(i))
-          zpi=zp0(index(i))
-          xi_s(1,i,N_Calls)=xpi
-          xi_s(2,i,N_Calls)=ypi
-          xi_s(3,i,N_Calls)=zpi
-       END DO
-    ELSE
-       N_Calls_avg=N_Calls_avg+1
-       IF(N_Calls_avg == 1) THEN
-          DO k=1,Navg
-             DO i=1,N_rms
-                xpi=xi_s(1,i,k)
-                ypi=xi_s(2,i,k)
-                zpi=xi_s(3,i,k)
-                rms_sxi(1,i)=rms_sxi(1,i)+xpi
-                rms_sxi(2,i)=rms_sxi(2,i)+ypi
-                rms_sxi(3,i)=rms_sxi(3,i)+zpi
-                DO j=i,N_rms
-                   xpj=xi_s(1,j,k)
-                   ypj=xi_s(2,j,k)
-                   zpj=xi_s(3,j,k)
-                   rms_sxixj(i,j)=rms_sxixj(i,j)+(xpi*xpj+ypi*ypj+zpi*zpj)
+    natom=ntap
+    ALLOCATE(wc(natom),xyz0(3,natom))
+    wc=0.0D0
+
+    count_res=0
+    DO n=1,nbun
+       i_f=atres(1,n)
+       DO k1=1,units
+          IF(prsymb(res(i_f))(1:3) == Res_u(k1)%target(1:3)) THEN
+             ok=.FALSE.
+             DO k2=1,Res_u(k1)%n0
+                ok=.FALSE.
+                DO i=atres(1,n),atres(2,n)
+                   IF(Res_u(k1)%beta(k2) == beta(i)) THEN
+                      ok=.TRUE.
+                   END IF
                 END DO
+                IF(.NOT. ok) EXIT
              END DO
-          END DO
-       ELSE
-          DO i=1,N_rms
-             xpi=xi_s(1,i,1)
-             ypi=xi_s(2,i,1)
-             zpi=xi_s(3,i,1)
-             rms_sxi(1,i)=rms_sxi(1,i)-xpi
-             rms_sxi(2,i)=rms_sxi(2,i)-ypi
-             rms_sxi(3,i)=rms_sxi(3,i)-zpi
-             DO j=i,N_rms
-                xpj=xi_s(1,j,1)
-                ypj=xi_s(2,j,1)
-                zpj=xi_s(3,j,1)
-                rms_sxixj(i,j)=rms_sxixj(i,j)-(xpi*xpj+ypi*ypj+zpi*zpj)
-             END DO
-          END DO
-          DO i=1,N_rms
-             xpi=xp0(index(i))
-             ypi=yp0(index(i))
-             zpi=zp0(index(i))
-             rms_sxi(1,i)=rms_sxi(1,i)+xpi
-             rms_sxi(2,i)=rms_sxi(2,i)+ypi
-             rms_sxi(3,i)=rms_sxi(3,i)+zpi
-             DO j=i,N_rms
-                xpj=xp0(index(j))
-                ypj=yp0(index(j))
-                zpj=zp0(index(j))
-                rms_sxixj(i,j)=rms_sxixj(i,j)+(xpi*xpj+ypi*ypj+zpi*zpj)
-             END DO
-          END DO
-          
-       END IF
-       
-       DO k=1,Navg-1
-          xi_s(:,:,k)=xi_s(:,:,k+1)
+             IF(ok) THEN
+                count_res=count_res+1
+             END IF
+          END IF
        END DO
-       DO i=1,N_rms
-          xpi=xp0(index(i))
-          ypi=yp0(index(i))
-          zpi=zp0(index(i))
-          xi_s(1,i,Navg)=xpi
-          xi_s(2,i,Navg)=ypi
-          xi_s(3,i,Navg)=zpi
-       END DO
+    END DO
+    nbunits=count_res
 
-       DO i=1,N_rms
-          xpi=rms_sxi(1,i)*f_avg
-          ypi=rms_sxi(2,i)*f_avg
-          zpi=rms_sxi(3,i)*f_avg
-          DO j=i,N_rms
-             xpj=rms_sxi(1,j)*f_avg
-             ypj=rms_sxi(2,j)*f_avg
-             zpj=rms_sxi(3,j)*f_avg
-             xixj=rms_sxixj(i,j)*f_avg
-             dxidxj=xixj-(xpi*xpj+ypi*ypj+zpi*zpj)
-             rms_xixj(i,j)=rms_xixj(i,j)+dxidxj
-          END DO
+    ALLOCATE(atoms(nbunits),index(units),mask(ntap))
+    ALLOCATE(charge(ntap))
+    SELECT CASE(rms_type)
+    CASE('cm')
+       charge(1:ntap)=1.0D0
+    CASE('dipole')
+       charge(1:ntap)=charges(1:ntap)*sunit
+    CASE('mechanic')
+       DO i=1,ntap
+          charge(i)=SIGN(1.0D0,charges(i))
        END DO
-    END IF
-  END SUBROUTINE Compute_avg
-  SUBROUTINE Write_it
-    IMPLICIT NONE 
-    INTEGER :: i,j
-    REAL(8) :: xpi,ypi,zpi,xpj,ypj,zpj,xixj,dxidxj,f_Calls,xxi,xxj
-    REAL(8), DIMENSION (:), ALLOCATABLE, SAVE :: xxii
-    REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: rms
-    INTEGER(8) :: lda,info
-
-    WRITE(*,*) N_Calls,N_rms
-    IF(MOD(N_Calls,Write_Freq) == 0) THEN
-       REWIND(krms_matrix)
-       ALLOCATE(xxii(N_rms))
-       ALLOCATE(rms(N_rms,N_rms))
-       f_Calls=1.0D0/DFLOAT(N_Calls)
-       WRITE(krms_matrix,'(''Averages After '',i7,'' Calls '')') N_Calls
-       DO i=1,N_rms
-          xpi=rms_xi(1,i)*f_Calls
-          ypi=rms_xi(2,i)*f_Calls
-          zpi=rms_xi(3,i)*f_Calls
-          xixj=rms_xixj(i,i)*f_Calls
-          xxii(i)=xixj-(xpi*xpi+ypi*ypi+zpi*zpi)
-          WRITE(krms_matrix,'(2i5,e20.12)') i,i,xxii(i)
-          xxii(i)=DSQRT(xxii(i))
-       END DO
-
-       DO i=1,N_rms
-          xpi=rms_xi(1,i)*f_Calls
-          ypi=rms_xi(2,i)*f_Calls
-          zpi=rms_xi(3,i)*f_Calls
-          xxi=xxii(i)
-          DO j=i,N_rms
-             xxj=xxii(j)*xxi
-             xpj=rms_xi(1,j)*f_Calls
-             ypj=rms_xi(2,j)*f_Calls
-             zpj=rms_xi(3,j)*f_Calls
-             xixj=rms_xixj(i,j)*f_Calls
-             dxidxj=xixj-(xpi*xpj+ypi*ypj+zpi*zpj)
-             rms(i,j)=dxidxj
-             WRITE(krms_matrix,'(2i5,e20.12)') i,j,dxidxj/xxj
-          END DO
-       END DO
+    CASE DEFAULT
        STOP
-       IF(N_Calls /= 1) THEN
-          lda=N_rms
-          WRITE(*,*) (rms(i,i+2),i=1,10)
-          CALL DPOTRF('U',lda,rms,lda,info)
-          CALL DPOTRI('U',lda,rms,lda,info)
-       END IF
-       WRITE(krms_matrix,'(''Inverse of RMS Matrix'')')  
-       DO i=1,N_rms
-          WRITE(krms_matrix,'(2i5,e20.12)') i,i,rms(i,i)
+    END SELECT
+    
+    nlist=0
+    DO n=1,nbun
+       i_f=atres(1,n)
+       count=0
+       index=0
+       DO k1=1,units
+          IF(prsymb(res(i_f))(1:3) == Res_u(k1)%target(1:3)) THEN
+             ok=.FALSE.
+             DO k2=1,Res_u(k1)%n0
+                ok=.FALSE.
+                DO i=atres(1,n),atres(2,n)
+                   IF(Res_u(k1)%beta(k2) == beta(i)) THEN
+                      ok=.TRUE.
+                   END IF
+                END DO
+                IF(.NOT. ok) EXIT
+             END DO
+             IF(ok) THEN
+                count=count+1
+                index(count)=k1
+             END IF
+          END IF
        END DO
-
-       DEALLOCATE(xxii,rms)
-    END IF
-  END SUBROUTINE Write_it
-  SUBROUTINE Write_it_avg
-    IMPLICIT NONE 
-    INTEGER :: i,j
-    REAL(8) :: xpi,ypi,zpi,xpj,ypj,zpj,xixj,dxidxj,f_Calls,xxi,xxj
-    REAL(8), DIMENSION (:), ALLOCATABLE, SAVE :: xxii
-
-    IF(N_Calls_avg /=0 .AND. MOD(N_Calls_avg,Write_Freq) == 0) THEN
-       REWIND(krms_matrix)
-       f_Calls=1.0D0/DFLOAT(N_Calls_avg)
-       WRITE(krms_matrix,'(''Averages After '',i7,'' Calls '')') N_Calls_avg
-       ALLOCATE(xxii(N_rms))
-       DO i=1,N_rms
-          xxii(i)=rms_xixj(i,i)*f_Calls
-          WRITE(krms_matrix,'(2i5,e20.12)') i,i,xxii(i)
-          xxii(i)=DSQRT(xxii(i))
-       END DO
-
-       DO i=1,N_rms
-          xxi=xxii(i)
-          DO j=i,N_rms
-             xxj=xxii(j)*xxi
-             dxidxj=rms_xixj(i,j)*f_Calls
-             WRITE(krms_matrix,'(2i5,e20.12)') i,j,dxidxj/xxj
+       DO nn=1,count
+          nlist=nlist+1
+          k1=index(nn) 
+          mask(atres(1,n):atres(2,n))=.FALSE.
+          DO i=atres(1,n),atres(2,n)
+             DO k2=1,Res_u(k1)%n0
+                IF(Res_u(k1)%beta(k2) == beta(i)) THEN
+                   mask(i)=.TRUE.
+                END IF
+             END DO
+          END DO
+          count2=0
+          DO i=atres(1,n),atres(2,n)
+             IF(mask(i)) count2=count2+1
+          END DO
+          atoms(nlist)%n0=count2
+          atoms(nlist)%target=prsymb(res(atres(1,n)))
+          ALLOCATE(atoms(nlist)%ind(count2))
+          count2=0
+          DO i=atres(1,n),atres(2,n)
+             IF(mask(i)) THEN
+                count2=count2+1
+                atoms(nlist)%ind(count2)=i
+             END IF
           END DO
        END DO
+    END DO
+    DEALLOCATE(index,mask)
+    count=0
+    DO n=1,nbunits
+       IF(atoms(n)%n0 /= 0) THEN
+          count=count+1
+          DO i=1,atoms(n)%n0
+             k1=atoms(n)%ind(i)
+             WRITE(*,'(2i6,a5,2x,a5)') n,k1,atoms(n)%target,beta(k1)
+          END DO
+       END IF
+    END DO
+    IF(count /= nbunits) STOP
+    n_dip=count
+    ALLOCATE(dip(3,n_dip),dip_corr(n_dip,n_dip),dists(n_dip,n_dip))
+    dip=0.0D0
+    dip_corr=0.0D0
+    dists=0.0D0
+
+!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+
+  END SUBROUTINE Initialize
+
+  SUBROUTINE Start(xp0,yp0,zp0)
+    IMPLICIT NONE 
+    REAL(8) :: xp0(*),yp0(*),zp0(*)
+    INTEGER :: i,n,nn,count
+    REAL(8) :: sum_wc
+    
+    DO n=1,nbunits
+       IF(atoms(n)%n0 /= 0) THEN
+          DO nn=1,atoms(n)%n0
+             i=atoms(n)%ind(nn)
+             wc(i)=1.0D0
+             xyz0(1,i)=xp0(i)
+             xyz0(2,i)=yp0(i)
+             xyz0(3,i)=zp0(i)
+          END DO
+       END IF
+    END DO
+    sum_wc=SUM(wc)
+    wc=wc/sum_wc
+  END SUBROUTINE Start
+
+  SUBROUTINE Compute(co,oc,xp0,yp0,zp0)
+    IMPLICIT NONE 
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+
+    REAL(8) :: xp0(*),yp0(*),zp0(*),oc(3,3),co(3,3)
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+    INTEGER :: i,n,nn,m,c1,c2
+    INTEGER :: count
+    REAL(8) :: xc,yc,zc,sumx,sumy,sumz,fatoms,xd,yd,zd,xdn,ydn,zdn&
+         &,xdm,ydm,zdm,sum_wc
+    REAL(8), DIMENSION(:), ALLOCATABLE :: dipx,dipy,dipz
+    
+!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+
+    ALLOCATE(dipx(n_dip),dipy(n_dip),dipz(n_dip))
+    counter=counter+1
+
+    c1=0
+    DO n=1,nbunits
+       IF(atoms(n)%n0 /= 0) THEN
+          c1=c1+1
+          fatoms=1.0D0/DBLE(atoms(n)%n0)
+          dipx(c1)=0.0D0
+          dipy(c1)=0.0D0
+          dipz(c1)=0.0D0
+          DO nn=1,atoms(n)%n0
+             i=atoms(n)%ind(nn)
+             dipx(c1)=dipx(c1)+charge(i)*xp0(i)
+             dipy(c1)=dipy(c1)+charge(i)*yp0(i)
+             dipz(c1)=dipz(c1)+charge(i)*zp0(i)
+          END DO
+          dipx(c1)=dipx(c1)*fatoms
+          dipy(c1)=dipy(c1)*fatoms
+          dipz(c1)=dipz(c1)*fatoms
+          dip(1,c1)=dip(1,c1)+dipx(c1)
+          dip(2,c1)=dip(2,c1)+dipy(c1)
+          dip(3,c1)=dip(3,c1)+dipz(c1)
+       END IF
+    END DO
+
+    DO n=1,n_dip
+       xdn=oc(1,1)*dipx(n)+oc(1,2)*dipy(n)+oc(1,3)*dipz(n)
+       ydn=oc(2,1)*dipx(n)+oc(2,2)*dipy(n)+oc(2,3)*dipz(n)
+       zdn=oc(3,1)*dipx(n)+oc(3,2)*dipy(n)+oc(3,3)*dipz(n)
+       DO m=1,n_dip
+          xdm=oc(1,1)*dipx(m)+oc(1,2)*dipy(m)+oc(1,3)*dipz(m)
+          ydm=oc(2,1)*dipx(m)+oc(2,2)*dipy(m)+oc(2,3)*dipz(m)
+          zdm=oc(3,1)*dipx(m)+oc(3,2)*dipy(m)+oc(3,3)*dipz(m)
+          xd=xdm-xdn
+          yd=ydm-ydn
+          zd=zdm-zdn
+          xd=xd-2.0D0*PBC(xd)
+          yd=yd-2.0D0*PBC(yd)
+          zd=zd-2.0D0*PBC(zd)
+          xc=co(1,1)*xd+co(1,2)*yd+co(1,3)*zd
+          yc=co(2,1)*xd+co(2,2)*yd+co(2,3)*zd
+          zc=co(3,1)*xd+co(3,2)*yd+co(3,3)*zd
+          dists(n,m)=dists(n,m)+xc*xc+yc*yc+zc*zc
+          dip_corr(n,m)=dip_corr(n,m)+(dipx(n)*dipx(m)+dipy(n)&
+               &*dipy(m)+dipz(n)*dipz(m)) 
+       END DO
+    END DO
+
+
+    DEALLOCATE(dipx,dipy,dipz)
+!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+
+  END SUBROUTINE Compute
+  SUBROUTINE Write_it(fstep)
+    IMPLICIT NONE 
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+    
+    REAL(8) :: fstep
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+    INTEGER :: i,n,nn,m,k
+    INTEGER :: count
+    INTEGER(8) :: lda,info,lwork
+    REAL(8) :: xc,yc,zc,xc2,yc2,zc2,fcounter,rms_tot,rms,snm,summo
+    REAL(8), DIMENSION(:,:), ALLOCATABLE :: mrirj
+    REAL(8), DIMENSION(:,:), ALLOCATABLE :: mrirj_or
+    REAL(8), DIMENSION(:,:), ALLOCATABLE :: Multiply
+    REAL(8), DIMENSION(:,:), ALLOCATABLE :: ddip
+
+    REAL(8), DIMENSION(:,:), ALLOCATABLE :: U,VT,sigma
+    REAL(8), DIMENSION(:), ALLOCATABLE :: sing,work
+    
+    
+!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+
+    ALLOCATE(mrirj(n_dip,n_dip),mrirj_or(n_dip,n_dip),Multiply(n_dip&
+         &,n_dip),ddip(3,n_dip))
+    ALLOCATE(U(n_dip,n_dip),VT(n_dip,n_dip),sigma(n_Dip,n_Dip)&
+         &,sing(n_dip)) 
+
+    REWIND(krms_dip)
+
+    fcounter=1.0D0/DBLE(counter)
+    WRITE(krms_dip,'(''Ring Dipole Correlation at '',f12.3,'' fs'')')&
+         & fstep 
+
+    DO n=1,n_dip
+       ddip(1,n)=dip(1,n)*fcounter
+       ddip(2,n)=dip(2,n)*fcounter
+       ddip(3,n)=dip(3,n)*fcounter
+    END DO
+    DO n=1,n_dip
+       xc=ddip(1,n)
+       yc=ddip(2,n)
+       zc=ddip(3,n)
+       DO m=1,n_dip
+          snm=dip_corr(n,m)*fcounter
+          mrirj(n,m)=snm-(xc*ddip(1,m)+yc*ddip(2,m)+zc*ddip(3,m))
+          mrirj_or(n,m)=mrirj(n,m)
+          WRITE(krms_dip,'(2i7,e15.7)') n,m,mrirj(n,m)
+       END DO
+    END DO
+    IF(counter /= 1 .AND. RMS_Invert) THEN
+
+       lda=SIZE(mrirj,1)
+       lwork=5*lda
+       ALLOCATE(work(lwork))
+       CALL DGESVD('A','A',lda,lda,mrirj,lda,sing,U,lda,vt,lda,work,lwork,info)
+       DEALLOCATE(work)
+       sigma=0.0D0
+       DO i=1,n_dip
+          IF(DABS(sing(i)) > 1.0D-3) THEN
+             sigma(i,i)=1.0D0/sing(i)
+          END IF
+       END DO
+
+       vt=TRANSPOSE(vt)
+       U=TRANSPOSE(U)
+       U=MATMUL(sigma,U)
+       mrirj=MATMUL(vt,U)
+
+       Multiply=MATMUL(mrirj,mrirj_or)
+       WRITE(*,*) Multiply(10,10),Multiply(2,4),Multiply(4,2)
     END IF
-  END SUBROUTINE Write_it_avg
+    WRITE(krms_dip,'(''Dipolar fluctuations inverse'')')
+    DO n=1,n_dip
+       DO m=n,n_dip
+          snm=dists(n,m)*fcounter
+          WRITE(krms_dip,'(2i7,e15.7,2x,f15.7)') n,m,mrirj(n,m),DSQRT(snm)
+       END DO
+    END DO
+    DEALLOCATE(mrirj,mrirj_or,ddip)
+    DEALLOCATE(U,VT,sigma,sing) 
+
+
+!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+
+  END SUBROUTINE Write_it
+  FUNCTION PBC(x)
+    IMPLICIT NONE 
+    REAL(8) :: x,PBC
+
+    PBC=DNINT(0.5D0*x)
+  END FUNCTION PBC
   SUBROUTINE Rotate(xp0,yp0,zp0)
     IMPLICIT NONE
     REAL(8) :: xp0(*),yp0(*),zp0(*)
@@ -291,6 +392,7 @@ CONTAINS
     INTEGER :: i,ii
 
     ALLOCATE(xyz(3,natom),xyzfit(3,natom),work(natom+1))
+    
     
     DO i=1,natom 
        xyz(1,i)=xp0(i)
@@ -305,33 +407,5 @@ CONTAINS
     END DO
     DEALLOCATE(xyz,xyzfit,work)
   END SUBROUTINE Rotate
-  SUBROUTINE Plot
-    IMPLICIT NONE 
-    INTEGER :: i,k
-    REAL(8) :: xpi,ypi,zpi,dr,f_Calls
-
-    IF(N_Calls /=0 .AND. MOD(N_Calls,Write_Freq) == 0) THEN
-       f_Calls=1.0D0/DFLOAT(N_Calls)
-       REWIND(krms_matrix_plot)
-       dr=0.0D0
-       k=0
-       DO i=1,N_rms
-          xpi=rms_xi(1,i)*f_Calls
-          ypi=rms_xi(2,i)*f_Calls
-          zpi=rms_xi(3,i)*f_Calls
-          WRITE(krms_matrix_plot,1)'ATOM  ',i,'CA   ','ALA',i,xpi,ypi&
-               &,zpi,dr,DFLOAT(k)
-       END DO
-       WRITE(krms_matrix_plot,'(''TER'')')
-       DO i=1,N_rms
-          xpi=xyz0(1,index(i))
-          ypi=xyz0(2,index(i))
-          zpi=xyz0(3,index(i))
-          WRITE(krms_matrix_plot,1)'ATOM  ',i,' CA  ','ALA',i,xpi,ypi&
-               &,zpi,dr,DFLOAT(k)
-       END DO
-    END IF
-1   FORMAT(a6,i5,1x,a5,a3,2x,i4,4x,3f8.3,f8.4,f4.1)
-  END SUBROUTINE Plot
-!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
-END MODULE RMS_Matrix_Mod
+  INCLUDE 'RMS_Subtract_Read.f90'
+END MODULE RMS_Subtract_Mod

@@ -509,9 +509,9 @@ SUBROUTINE Polarization_Forces(fscnstr_slt,fscnstr_slv,ntap,chargeb&
   fpy(1:ntap)=fpy(1:ntap)+fd0y(1:ntap)+flj_y(1:ntap)
   fpz(1:ntap)=fpz(1:ntap)+fd0z(1:ntap)+flj_z(1:ntap)
 
-  Tot_Dip_x=Tot_Dip_x/DBLE(ntap-1)
-  Tot_Dip_y=Tot_Dip_y/DBLE(ntap-1)
-  Tot_Dip_z=Tot_Dip_z/DBLE(ntap-1)
+  Tot_Dip_x=Tot_Dip_x/DFLOAT(ntap-1)
+  Tot_Dip_y=Tot_Dip_y/DFLOAT(ntap-1)
+  Tot_Dip_z=Tot_Dip_z/DFLOAT(ntap-1)
   Polzed=DSQRT(Tot_Dip_x**2+Tot_Dip_y**2+Tot_Dip_z**2)
 
   CALL Get_Max_Dip(Dipoles,Max_Dip)
@@ -574,8 +574,8 @@ CONTAINS
        sum = sum + DSQRT(norma)
        sum2 = sum2 + diff
     end do
-    sum=sum/DBLE(ntap)
-    sum2=DSQRT(sum2/DBLE(ntap))
+    sum=sum/DFLOAT(ntap)
+    sum2=DSQRT(sum2/DFLOAT(ntap))
     diff_dipole = 100.0D0*sum2/sum
     diff_dipole = sum2
     return
@@ -735,7 +735,7 @@ CONTAINS
     DO i=1,Max_Bin
        rx=Bins*(i-1)
        IF(no_hist(i) .NE. 0) THEN
-          EE=hist(i)/DBLE(no_hist(i))
+          EE=hist(i)/DFLOAT(no_hist(i))
           WRITE(Unit,'(f12.4,e18.8)') rx,EE
        END IF
     END DO
@@ -755,7 +755,7 @@ CONTAINS
        rx=Bins*(i-1)
        dv=4.0D0*pi*rx**2
        IF(hist(i) .NE. 0.0D0) THEN
-          EE=facrdf*hist(i)/DBLE(Times_of_Calls)/(rx*rx)
+          EE=facrdf*hist(i)/DFLOAT(Times_of_Calls)/(rx*rx)
           WRITE(Unit,'(f12.4,e18.8)') rx,EE
        END IF
     END DO

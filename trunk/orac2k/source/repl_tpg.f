@@ -216,7 +216,7 @@
       int14p=int14p*gnmol
       int13p=int13p*gnmol
       ngrp=ngrp*gnmol
-      wmtp=wmtp*DBLE(gnmol)
+      wmtp=wmtp*DFLOAT(gnmol)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

@@ -34,7 +34,7 @@
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-      fstep=fstep/DBLE(divide)
+      fstep=fstep/DFLOAT(divide)
       length_tot=length_tot*divide
       IF(MOD(length_tot,2) .NE. 0) THEN
          length_tot=length_tot-1

@@ -42,7 +42,7 @@
 
 *==================== EXECUTABLE STATEMENTS ============================
 
-      CALL openf(kdump,file,'UNFORMATTED','OLD',0)
+      OPEN(unit=kdump,file=file,form='UNFORMATTED',status='OLD')
       REWIND kdump
       READ(kdump,END=100) ((co(i,j),j=1,3),i=1,3),((oc(i,j),j=1,3),i=1,3
      &     )

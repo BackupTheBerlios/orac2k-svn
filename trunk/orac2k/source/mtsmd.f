@@ -379,10 +379,10 @@
       END IF
       IF(heating) THEN
          temp_heat=0.0D0
-         dtemp_heat=t/DBLE(nheating)
+         dtemp_heat=t/DFLOAT(nheating)
       END IF
       mrject=nrject*lrespa*mrespa
-      time_fs=time*DBLE(maxstp+nrject)
+      time_fs=time*DFLOAT(maxstp+nrject)
       nscale=0
       ncconf=0
       mstep=0
@@ -586,7 +586,7 @@
          ninn1=nstep*lrespa*mrespa*n1respa
 
          IF(flag .EQ. 1) THEN
-            time_fs=time*DBLE(maxstp)
+            time_fs=time*DFLOAT(maxstp)
          END IF
       END IF
       
@@ -1635,9 +1635,9 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
          dentr=0.0D0
          DO i=1,neta
             IF(.NOT. near0(qmass(i))) dentr=dentr
-     &           -DBLE(ndf_thermos(i))*gascon*t*etap(i)
+     &           -DFLOAT(ndf_thermos(i))*gascon*t*etap(i)
          END DO
-         tn1=tm/DBLE(n1respa)
+         tn1=tm/dfloat(n1respa)
          a_free=a_free+dfree*tn1
          ts_free=ts_free+dentr*tn1
       END IF
@@ -1713,12 +1713,12 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
      &     +gcpu_0*n1respa*mrespa*lrespa+gcpu_1*mrespa*lrespa+gcpu_2
      &     *lrespa+gcpu_3)
       write(kprint,10068) theoric_speed_up
-      if(nupdte.gt.0) gcpu_u = gcpu_u /DBLE(nupdte)
+      if(nupdte.gt.0) gcpu_u = gcpu_u /dfloat(nupdte)
       aux = (gcpu*n0respa*n1respa*lrespa*mrespa+gcpu_0*n1respa*lrespa
      &     *mrespa+gcpu_1*mrespa*lrespa+gcpu_2*lrespa + gcpu_3 + gcpu_u)
-      gcpu_0 = aux/DBLE(lrespa*mrespa)
+      gcpu_0 = aux/dfloat(lrespa*mrespa)
       gcpu_1 = aux / time
-      aux = aux*(maxstp+(mrject/DBLE(lrespa*mrespa)))
+      aux = aux*(maxstp+(mrject/dfloat(lrespa*mrespa)))
       hours = int(aux/3600.d0)
       min = int((aux-hours*3600)/60.d0)
       write(kprint,80033) hours,min,gcpu_0,gcpu_1
@@ -1733,6 +1733,7 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
       elaps=elapse
       lfirst=.true.
       counter=0
+      if(energy_then_die) go to 1010
 100   CONTINUE
       
       CALL timer(vfcp_hh,tfcp_hh,elapse)
@@ -1854,7 +1855,7 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
 *=======================================================================
       
       CALL zeroa(fpx_h,fpy_h,fpz_h,ntap,1)
-      tl = time/DBLE(lrespa)
+      tl = time/dfloat(lrespa)
       tl2=tl*0.5D0
       CALL timer(vfcp_hh,tfcp_hh,elapse)
       tdelta_hh=tfcp_hh-tdelta_hh
@@ -1898,7 +1899,7 @@ C Need to change in parallel runs
 *=======================================================================
          
          CALL zeroa(fpx_l,fpy_l,fpz_l,ntap,1)
-         tm = tl/DBLE(mrespa)
+         tm = tl/dfloat(mrespa)
          tm2=tm*0.5D0
          tm4=tm*0.25D0
          
@@ -2009,7 +2010,7 @@ c----------  Recompute forces on the thermostat variables --------------
 *=======================================================================
             
             CALL zeroa(fpx_m,fpy_m,fpz_m,ntap,1)
-            tn1 = tm/DBLE(n1respa)
+            tn1 = tm/dfloat(n1respa)
             tn12=tn1*0.5D0
 
 #if defined PARALLEL           
@@ -2069,7 +2070,7 @@ c----------  Recompute forces on the thermostat variables --------------
 
                CALL zeroa(fpx_n1(nstart_1),fpy_n1(nstart_1)
      &              ,fpz_n1(nstart_1),nlocal_1,1)
-               tn0 = tn1/DBLE(n0respa)
+               tn0 = tn1/dfloat(n0respa)
                tn02=tn0*0.5D0
 
                DO in0=1,n0respa
@@ -2245,7 +2246,7 @@ c ---
                   dentr=0.0D0
                   DO i=1,neta
                      IF(.NOT. near0(qmass(i))) dentr=dentr
-     &                    -DBLE(ndf_thermos(i))*gascon*t*etap(i)
+     &                    -DFLOAT(ndf_thermos(i))*gascon*t*etap(i)
                   END DO
                   a_free=a_free+dfree*tn1
                   ts_free=ts_free+dentr*tn1
@@ -2390,8 +2391,8 @@ c$$$         STOP
      &              ,mesos,Mesos_Rho,volume,Polarization_Model)
 c$$$               fpx(1)=DSQRT(SUM(fpx_m(1:ntap)**2+fpy_m(1:ntap)**2
 c$$$     &              +fpz_m(1:ntap)**2))
-c$$$               WRITE(95,'(f12.4,6e18.8)')  time*DBLE(ninner)
-c$$$     &              /DBLE(mrespa*lrespa),fpx(1)
+c$$$               WRITE(95,'(f12.4,6e18.8)')  time*DFLOAT(ninner)
+c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
 
                eer_m=Urecip
             ELSE
@@ -2534,7 +2535,7 @@ c$$$     &              /DBLE(mrespa*lrespa),fpx(1)
             INCLUDE 'mtsmd_avg_inc.CPP.f'
             IF(abmd_native) THEN
                IF(MOD(ninner,nprint) .EQ. 0) THEN
-                  fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                  fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                   WRITE(kprint,'('' FREE '',f10.2,2e16.8)') fstep
      &                 ,a_free*efact/1000.0D0,ts_free/1000.0D0
                END IF

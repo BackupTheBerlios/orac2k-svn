@@ -39,19 +39,19 @@
       c=2.0D0*pi*2.997925D10
 
       omega=qmass(1)*c
-      qmass(1)=2.0D0*DBLE(ntot(1))*boltz*t/omega**2
+      qmass(1)=2.0D0*DFLOAT(ntot(1))*boltz*t/omega**2
       qmass(1)=qmass(1)/(unitm*unitl**2)
 
       IF(slt_exist) THEN
          omega=qmass(2)*c
-         qmass(2)=2.0D0*DBLE(ntot(2))*boltz*t/omega**2
+         qmass(2)=2.0D0*DFLOAT(ntot(2))*boltz*t/omega**2
          qmass(2)=qmass(2)/(unitm*unitl**2)
       ELSE
          qmass(2)=0.0D0
       END IF
       IF(slv_exist) THEN
          omega=qmass(3)*c
-         qmass(3)=2.0D0*DBLE(ntot(3))*boltz*t/omega**2
+         qmass(3)=2.0D0*DFLOAT(ntot(3))*boltz*t/omega**2
          qmass(3)=qmass(3)/(unitm*unitl**2)
       ELSE
          qmass(3)=0.0D0

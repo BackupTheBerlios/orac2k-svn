@@ -1,5 +1,5 @@
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-26 15:15:09 marchi>                           *
+!!$   Time-stamp: <2005-03-06 22:24:37 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -42,9 +42,7 @@ CONTAINS
        IF(SIZE(neigh) > 0) THEN
           DO i=1,SIZE(neigh)
              IF(ASSOCIATED(neigh(i) % nb)) THEN
-                IF(neigh(i) % no /= 0) THEN
-                   DEALLOCATE(neigh(i) % nb)
-                END IF
+                DEALLOCATE(neigh(i) % nb)
              END IF
           END DO
           DEALLOCATE(neigh)

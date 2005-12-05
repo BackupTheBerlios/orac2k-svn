@@ -74,7 +74,7 @@
                   DO j=Nstart,Nend
                      sum=sum+chrge(j)
                   END DO
-                  IF(.NOT. Near0(sum)) sum=sum/DBLE(Nend-Nstart+1)
+                  IF(.NOT. Near0(sum)) sum=sum/DFLOAT(Nend-Nstart+1)
                   DO j=Nstart,Nend
                      chrge(j)=chrge(j)-sum
                   END DO
@@ -104,7 +104,7 @@
          END DO
       END IF
       IF(scharge) THEN
-         sum1=sum1/DBLE(natomm)
+         sum1=sum1/DFLOAT(natomm)
          ncount=0
          DO i=1,nprot
             noff=protl(ncount+1)

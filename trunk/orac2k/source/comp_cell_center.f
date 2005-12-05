@@ -37,9 +37,9 @@
          ypc=ypc+yp0(i)
          zpc=zpc+zp0(i)
       END DO
-      xpc=-xpc/DBLE(nato)
-      ypc=-ypc/DBLE(nato)
-      zpc=-zpc/DBLE(nato)
+      xpc=-xpc/DFLOAT(nato)
+      ypc=-ypc/DFLOAT(nato)
+      zpc=-zpc/DFLOAT(nato)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

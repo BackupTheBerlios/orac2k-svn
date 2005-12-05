@@ -37,7 +37,7 @@
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
       WRITE(kprint,'('' Tstep = '',f12.2,2x,a2)') fstep,label
-      fnstep=DBLE(nstep)
+      fnstep=DFLOAT(nstep)
       DO j=1,ngrp
          DO i=grppt(1,j),grppt(2,j)
             aux=drp(i)/fnstep

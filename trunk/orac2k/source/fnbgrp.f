@@ -71,7 +71,7 @@
       INTEGER ii,mma,iam
       REAL*8 fact,quarter,half,factor
       DATA quarter,half/0.25D0,0.5D0/
-      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
 

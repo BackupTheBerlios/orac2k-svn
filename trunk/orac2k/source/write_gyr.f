@@ -64,7 +64,7 @@
                   natom=natom+1
                END DO
             END DO
-            gyr(count)=gyr(count)/DBLE(natom)
+            gyr(count)=gyr(count)/DFLOAT(natom)
          END IF
          map=map+m+1
       END DO

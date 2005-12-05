@@ -169,11 +169,11 @@
                      CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                      CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                      CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                     fact=1.0D0/DBLE(iter_avg)
+                     fact=1.0D0/DFLOAT(iter_avg)
                      CALL dscal(nato_slt,fact,xpo,1)
                      CALL dscal(nato_slt,fact,ypo,1)
                      CALL dscal(nato_slt,fact,zpo,1)
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      IF(avg_ca) WRITE(kavg,80000) 
                      IF(avg_he) WRITE(kavg,80100)
                      IF(avg_bc) WRITE(kavg,80101) 
@@ -186,11 +186,11 @@
                      CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                      CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                      CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                     fact=1.0D0/DBLE(iter_avg)
+                     fact=1.0D0/DFLOAT(iter_avg)
                      CALL dscal(nato_slt,fact,xpo,1)
                      CALL dscal(nato_slt,fact,ypo,1)
                      CALL dscal(nato_slt,fact,zpo,1)
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      CALL calc_avg_xrms(avg_ca,avg_he,avg_bc,fstep
      &                    ,kavg_xrms,xpt0,ypt0,zpt0,xpo,ypo,zpo
      &                    ,wca,whe,wbc,protlb
@@ -256,7 +256,7 @@ c =
                   IF(MOD(ninner,ndipole).EQ.0)THEN
                      CALL comp_dip(co,xpga,ypga,zpga,xpa,ypa,zpa
      &                    ,chrge,dips,ntap,ngrp,grppt)
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      aux=elechg*unitl/3.336D-30
                      WRITE(kdipole,106) fstep, (dips(j)*aux,j=1,3)
 106                  FORMAT(' Dip. ',f12.3,' t ', 3e15.5)
@@ -278,7 +278,7 @@ c =
                         CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo,xpo
      &                       ,ypo,zpo)
                      END IF
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      CALL plotc(co,abmd,gr,gra,fstep,beta,xpo,ypo,zpo
      &                    ,ntap,nres,m1,prsymb,chrge)
                   END IF
@@ -296,7 +296,7 @@ c =
                
                IF(nplot_fragm .GT. 0) THEN
                   IF(MOD(ninner,nplot_fragm).EQ.0 ) THEN
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      write(kplot_fragm,'(''Fstep '',f20.5,2i8)') fstep
      &                    ,ninner
                      do i=1,nfragm
@@ -315,7 +315,7 @@ c =
      &                    ,protlb)
                      CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo,xpo,ypo
      &                    ,zpo)
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      CALL plot_center(abmd,gr,gra,fstep,beta,xpo,ypo,zpo
      &                    ,ntap,nres,m1,prsymb,chrge)
                   END IF
@@ -337,8 +337,8 @@ c =
                IF(gofr) THEN
                   IF(MOD(ninner,gofr_nprint) .EQ. 0 .AND. nstep .GT.
      &                 nrject)THEN
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
-                     vol_gofr=sum_volume/DBLE(ninner)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
+                     vol_gofr=sum_volume/DFLOAT(ninner)
                      IF(slt_exist) THEN
                         offset=0
                         CALL write_gofrp(.NOT.gofr_avg,fstep,krdf,maxint
@@ -378,7 +378,7 @@ c =
                
                IF(prttopl) THEN
                   IF(MOD(ninner,ntop_print) .EQ. 0) THEN
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      IF(top_bonds(1) .GT. 0) CALL write_bonds(ktopol
      &                    ,fstep,top_bonds,lbnd,lbond,xp0,yp0,zp0)
                      IF(top_bendings(1) .GT. 0) CALL write_bends(ktopol
@@ -394,7 +394,7 @@ c =
 c =
                IF(nconf.GT.0 .AND. node .EQ. 0) THEN
                   IF(MOD(ninner,nconf).EQ.0 .AND. ninner.GT.mrject)THEN
-                     fstep=time*DBLE(ninner)/DBLE(mrespa*lrespa)
+                     fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
                      CALL write_confc(co,xp0,yp0,zp0,ntap,fstep,ninner
      &                    ,nconf,divide_records,atom_record)
                   END IF

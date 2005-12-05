@@ -51,7 +51,7 @@
       uconf=0.0D0
       gr=0.0D0
       nbtot=nbone*(nbone-1)/2
-      fnbtot=1.0D0/DBLE(nbtot)
+      fnbtot=1.0D0/DFLOAT(nbtot)
 
       DO i=1,nato
           fppx(i)=0.0D0

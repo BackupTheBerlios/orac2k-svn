@@ -177,7 +177,7 @@ c==== Command ERF_CORR=================================================
             READ(strngs(3),fmt,err=20) rlew
             CALL fndfmt(2,strngs(4),fmt)
             READ(strngs(4),fmt,err=20) ruew
-            delew = (ruew-rlew)/DBLE(nbinew) 
+            delew = (ruew-rlew)/DFLOAT(nbinew) 
           ELSE
             nsevere = nsevere + 1
             errmsg=err_args(1) // '3 after keyword "ERF_CORR"' 

@@ -108,11 +108,11 @@
          CALL ffct4(vacf_tot,psp_tot,nlast-1)
 
             
-         wf=1.0D5/(2.0D0*2.997925D0*dt)/DBLE(nlast-1)
+         wf=1.0D5/(2.0D0*2.997925D0*dt)/DFLOAT(nlast-1)
          WRITE(kvaf,100) 
          DO i=0,nlast-1
-            WRITE(kvaf,200) DBLE(i)*dt,vacf_tot(i),vacf_slv(i)
-     &           ,vacf_slt(i),DBLE(i)*wf,psp_tot(i),psp_slv(i)
+            WRITE(kvaf,200) DFLOAT(i)*dt,vacf_tot(i),vacf_slv(i)
+     &           ,vacf_slt(i),DFLOAT(i)*wf,psp_tot(i),psp_slv(i)
      &           ,psp_slt(i)
          END DO
 

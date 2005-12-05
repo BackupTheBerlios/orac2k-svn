@@ -227,7 +227,7 @@ c$$$      WRITE(node+60,'(8(e14.8,x))') (cpu_l(i),i=1,nprocs)
 #if defined PARALLEL
       IF(nprocs .GT. 1) CALL P_merge_r8(ela)
 #endif
-      time_avg=time_avg+ela/DBLE(nprocs)
+      time_avg=time_avg+ela/DFLOAT(nprocs)
       ntime_avg=ntime_avg+1
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*

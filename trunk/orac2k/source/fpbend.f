@@ -61,7 +61,7 @@
       logical coupling 
       DATA quasi_zero/1.0D-12/
       DATA quarter,half/0.25D0,0.5D0/
-      FACTOR(i)=(1.0D0+DBLE(i/IABS(i)))*half
+      FACTOR(i)=(1.0D0+DFLOAT(i/IABS(i)))*half
 
 *==================== EXECUTABLE STATEMENTS ============================
 

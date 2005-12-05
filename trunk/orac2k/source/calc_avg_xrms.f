@@ -82,17 +82,17 @@
          IF(n_ca .EQ. 0) THEN
             sum_ca=0.0D0
          ELSE
-            sum_ca=sum_ca/DBLE(n_ca)
+            sum_ca=sum_ca/DFLOAT(n_ca)
          END IF
          IF(n_he .EQ. 0) THEN
             sum_he=0.0D0
          ELSE
-            sum_he=sum_he/DBLE(n_he)
+            sum_he=sum_he/DFLOAT(n_he)
          END IF
          IF(n_bc .EQ. 0) THEN
             sum_bc=0.0D0
          ELSE 
-            sum_bc=sum_bc/DBLE(n_bc)
+            sum_bc=sum_bc/DFLOAT(n_bc)
          END IF
          IF(DABS(sum_he+sum_bc+sum_ca) .GT. 1.0D-6) THEN
 
@@ -139,17 +139,17 @@
          IF(n_ca .EQ. 0) THEN
             sum_ca=0.0D0
          ELSE
-            sum_ca=sum_ca/DBLE(n_ca)
+            sum_ca=sum_ca/DFLOAT(n_ca)
          END IF
          IF(n_he .EQ. 0) THEN
             sum_he=0.0D0
          ELSE
-            sum_he=sum_he/DBLE(n_he)
+            sum_he=sum_he/DFLOAT(n_he)
          END IF
          IF(n_bc .EQ. 0) THEN
             sum_bc=0.0D0
          ELSE 
-            sum_bc=sum_bc/DBLE(n_bc)
+            sum_bc=sum_bc/DFLOAT(n_bc)
          END IF
          nprot=nprot+1
          count=count+m+1

@@ -1,5 +1,5 @@
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-26 23:59:46 marchi>                           *
+!!$   Time-stamp: <2005-02-18 11:13:30 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -175,8 +175,8 @@ CONTAINS
     IF(den % initialized) THEN
        out = Copy(in)
 
-       fact1=den % n_plus/DBLE(out % natom)
-       fact2=den % n_minus/DBLE(out % natom)
+       fact1=den % n_plus/DFLOAT(out % natom)
+       fact2=den % n_minus/DFLOAT(out % natom)
        fact3=den % efact/den % kt
 
        out % chg = fact3 * out % chg * in % phi

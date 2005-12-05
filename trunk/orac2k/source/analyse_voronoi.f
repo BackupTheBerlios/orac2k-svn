@@ -185,7 +185,7 @@
          DO ia=1,nvol_type
             IF(vol_typep(ia) .NE. 0) THEN
                map=map+1
-               vol_type(map)=vol_type(ia)/DBLE(vol_typep(ia))
+               vol_type(map)=vol_type(ia)/DFLOAT(vol_typep(ia))
                vol_typep(map)=ia
             END IF
          END DO

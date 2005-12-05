@@ -109,9 +109,9 @@ c$$$-------------------------------------------------------------------*
          DO l=-1,1
             DO m=-1,1
                DO n=-1,1
-                  xg=xcm-xcmi+DBLE(2*l)
-                  yg=ycm-ycmi+DBLE(2*m)
-                  zg=zcm-zcmi+DBLE(2*n)
+                  xg=xcm-xcmi+DFLOAT(2*l)
+                  yg=ycm-ycmi+DFLOAT(2*m)
+                  zg=zcm-zcmi+DFLOAT(2*n)
                   xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
                   yc=           co(2,2)*yg+co(2,3)*zg
                   zc=                      co(3,3)*zg

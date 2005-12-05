@@ -61,12 +61,12 @@
             fskr(m)=fskr(m)+DCOS(scal)
             fski(m)=fski(m)+DSIN(scal)
          END DO
-         fskr(m)=fskr(m)/DBLE(ntap)
-         fski(m)=fski(m)/DBLE(ntap)
+         fskr(m)=fskr(m)/DFLOAT(ntap)
+         fski(m)=fski(m)/DFLOAT(ntap)
          fskt(m)=fskr(m)**2+fski(m)**2
          fsk=fsk+fskt(m)
       END DO
-      fsk=fsk/DBLE(nkvect)
+      fsk=fsk/DFLOAT(nkvect)
 
       IF(near0(skkset)) skkset=fsk
       WRITE(6,*) skkset,fsk
@@ -74,7 +74,7 @@
          IF(skkset .GE. fsk) THEN
             skkset=fsk
          ELSE
-            coef=4.0D0*alpha*(fsk-skkset)/DBLE(ntap*nkvect)
+            coef=4.0D0*alpha*(fsk-skkset)/DFLOAT(ntap*nkvect)
             uconf=alpha*(fsk-skkset)**2
             DO m=1,nkvect
                kx=kvect(1,m)
@@ -99,7 +99,7 @@
          IF(skkset .LE. fsk) THEN
             skkset=fsk
          ELSE
-            coef=4.0D0*alpha*(fsk-skkset)/DBLE(ntap*nkvect)
+            coef=4.0D0*alpha*(fsk-skkset)/DFLOAT(ntap*nkvect)
             uconf=alpha*(fsk-skkset)**2
             DO m=1,nkvect
                kx=kvect(1,m)

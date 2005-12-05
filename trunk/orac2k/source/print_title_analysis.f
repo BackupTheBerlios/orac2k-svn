@@ -63,20 +63,20 @@
          IF(voronoi_access)  WRITE(kprint,14000)
          IF(voronoi_contact) WRITE(kprint,15000)
          WRITE(kprint,16000)
-         WRITE(kprint,17000) DBLE(nvoronoi)*fstep
+         WRITE(kprint,17000) DFLOAT(nvoronoi)*fstep
       END IF
       IF(gofr) THEN
          WRITE(kprint,18000)
 
-         WRITE(kprint,19000) DBLE(gofr_ncomp)*fstep,DBLE(gofr_navg)
-     &        *fstep,DBLE(gofr_nprint)*fstep
+         WRITE(kprint,19000) DFLOAT(gofr_ncomp)*fstep,DFLOAT(gofr_navg)
+     &        *fstep,DFLOAT(gofr_nprint)*fstep
       END IF
       
       IF(anxrms) THEN
          WRITE(kprint,20000) 
       END IF 
       IF(avg_str) THEN
-         WRITE(kprint,21000) DBLE(navg_str_xrms)*fstep
+         WRITE(kprint,21000) DFLOAT(navg_str_xrms)*fstep
       END IF
 
       WRITE(kprint,22000)

@@ -94,7 +94,7 @@
          END DO
          CALL fpbond(ss_index,lcnstr,lconstr,sp,xp0,yp0,zp0,potbo(1,2)
      &        ,potbo(1,1),ubond_slt,ubond_slv,fpx,fpy,fpz)
-         ubond=(ubond_slt+ubond_slv)/DBLE(lconstr)
+         ubond=(ubond_slt+ubond_slv)/DFLOAT(lconstr)
          IF(DABS(ubond) .LE. tol2) ok=.TRUE.
          gg=0.0D0
          dgg=0.0D0

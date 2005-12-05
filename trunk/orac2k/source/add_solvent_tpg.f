@@ -252,7 +252,7 @@
       DO i=1,nato_slv
          sum=sum+mass_slv(i)
       END DO
-      wmtp=wmtp+DBLE(nmol)*sum
+      wmtp=wmtp+DFLOAT(nmol)*sum
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

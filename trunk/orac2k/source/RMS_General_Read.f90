@@ -25,7 +25,7 @@
     ALLOCATE(Res_u(n_Res))
     line(79:80)='  '
     read_err=0
-    RMS_Subtract=.TRUE.
+    General=.TRUE.
     DO
        READ(knlist,'(a78)',END=600) line(1:78)
        CALL wrenc(kprint,line)
@@ -93,41 +93,6 @@
              n_write=IDINT(dummy)
           END IF
 !!$
-!!$==== subcommand charges ============================================
-!!$
-       CASE('rms_type')
-          IF(nword .LT. 2) THEN
-             errmsg=err_args(1)//'1'
-             CALL xerror(errmsg,80,1,30)
-             nsevere=nsevere+1
-          ELSE
-             SELECT CASE(TRIM(strngs(2)))
-             CASE('dipole')
-                CONTINUE
-             CASE('mechanic')
-                CONTINUE
-             CASE('cm')
-                CONTINUE
-             CASE DEFAULT
-                errmsg='Illegal rms_type. Only dipole, mechanic and'//&
-                     &' cm are legal types.'
-                CALL xerror(errmsg,80,1,30)
-                nsevere=nsevere+1
-             END SELECT
-             RMS_TYPE=TRIM(strngs(2))
-          END IF
-
-!!$
-!!$==== subcommand no_inversion  ======================================
-!!$
-       CASE('no_inversion')
-          RMS_Invert=.FALSE.
-!!$
-!!$==== subcommand test  ==============================================
-!!$
-       CASE('test')
-          RMS_test=.TRUE.
-!!$
 !!$--------------------------------------------------------------------
 !!$
        CASE(' ')
@@ -138,19 +103,12 @@
        END SELECT
     END DO
 
-    filename='RMS_FILE.rms'
+    filename='RMS_GENERAL.rms'
     INQUIRE(FILE=filename,EXIST=exist)
     IF(exist) THEN
        CALL openf(krms_sub,filename,'FORMATTED','OLD',0)
     ELSE
        CALL openf(krms_sub,filename,'FORMATTED','NEW',0)
-    END IF
-    filename_dip='RMS_FILE.dip'
-    INQUIRE(FILE=filename_dip,EXIST=exist)
-    IF(exist) THEN
-       CALL openf(krms_dip,filename_dip,'FORMATTED','OLD',0)
-    ELSE
-       CALL openf(krms_dip,filename_dip,'FORMATTED','NEW',0)
     END IF
     RETURN
 

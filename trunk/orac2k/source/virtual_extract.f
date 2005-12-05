@@ -90,7 +90,7 @@
                rsd(1:3)=prsymb(j)(1:3)
                CALL low_up(rsd,3)
                WRITE(88,1)'ATOM  ',kk,bet2(1:5),rsd,uu,xb,yb,zb
-     &              ,charge(i)*sunitc,DBLE(k)
+     &              ,charge(i)*sunitc,DFLOAT(k)
             END DO
          END IF
       END DO

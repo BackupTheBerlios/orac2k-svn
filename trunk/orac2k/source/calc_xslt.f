@@ -84,7 +84,7 @@
                   if(work(i) .GT. 1.0d-6) nrm = nrm + 1
                END DO
                if (nrm .ne. 0) then
-                  errca(n)= errca(n)/ DBLE(nrm)
+                  errca(n)= errca(n)/ DFLOAT(nrm)
                   errca(n)= dsqrt(errca(n))
                end if
             END DO
@@ -103,7 +103,7 @@
                if(work(i) .GT. 1.0d-6) nrm = nrm + 1
             END DO
             if (nrm .ne. 0) then
-               errca(nc2)= errca(nc2)/ DBLE(nrm)
+               errca(nc2)= errca(nc2)/ DFLOAT(nrm)
                errca(nc2)= dsqrt(errca(nc2))
             end if
             ncount=ncount+m+1
@@ -127,7 +127,7 @@
                   if(work(i) .GT. 1.0d-6) nrm = nrm + 1
                END DO
                if (nrm .ne. 0) then
-                  errbc(n)= errbc(n)/ DBLE(nrm)
+                  errbc(n)= errbc(n)/ DFLOAT(nrm)
                   errbc(n)= dsqrt(errbc(n))
                end if
             END DO
@@ -146,7 +146,7 @@
                if(work(i) .GT. 1.0d-6) nrm = nrm + 1
             END DO
             if (nrm .ne. 0) then
-               errbc(nc2)= errbc(nc2)/ DBLE(nrm)
+               errbc(nc2)= errbc(nc2)/ DFLOAT(nrm)
                errbc(nc2)= dsqrt(errbc(nc2))
             end if
             ncount=ncount+m+1
@@ -170,7 +170,7 @@
                   if(work(i) .GT. 1.0d-6) nrm = nrm + 1
                END DO
                if (nrm .ne. 0) then
-                  errhe(n)= errhe(n)/ DBLE(nrm)
+                  errhe(n)= errhe(n)/ DFLOAT(nrm)
                   errhe(n)= dsqrt(errhe(n))
                end if
             END DO
@@ -189,7 +189,7 @@
                if(work(i) .GT. 1.0d-6) nrm = nrm + 1
             END DO
             if (nrm .ne. 0) then
-               errhe(nc2)= errhe(nc2)/ DBLE(nrm)
+               errhe(nc2)= errhe(nc2)/ DFLOAT(nrm)
                errhe(nc2)= dsqrt(errhe(nc2))
             end if
             ncount=ncount+m+1
@@ -213,7 +213,7 @@
                   if(work(i) .GT. 1.0d-6) nrm = nrm + 1
                END DO
                if (nrm .ne. 0) then
-                  erral(n)= erral(n)/ DBLE(nrm)
+                  erral(n)= erral(n)/ DFLOAT(nrm)
                   erral(n)= dsqrt(erral(n))
                end if
             END DO
@@ -232,7 +232,7 @@
                if(work(i) .GT. 1.0d-6) nrm = nrm + 1
             END DO
             if (nrm .ne. 0) then
-               erral(nc2)= erral(nc2)/ DBLE(nrm)
+               erral(nc2)= erral(nc2)/ DFLOAT(nrm)
                erral(nc2)= dsqrt(erral(nc2))
             end if
             ncount=ncount+m+1

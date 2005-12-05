@@ -71,7 +71,7 @@
          rsd(1:3)=prsymb(j)(1:3)
          CALL low_up(rsd,3)
          WRITE(kout,1)'ATOM  ',i,bet2(1:5),rsd,nres(i,1),xb,yb,zb
-     &        ,charge(i)*sunitc,DBLE(k)
+     &        ,charge(i)*sunitc,DFLOAT(k)
       END DO
       WRITE(kout,'(a)')'TER  '
 1     FORMAT(a5,i6,1x,a5,a3,1x,i5,4x,3f8.3,2f6.2)

@@ -75,7 +75,7 @@
             rsd(1:3)=prsymb(j)(1:3)
             CALL low_up(rsd,3)
             WRITE(kout,1)'ATOM  ',i,bet2(1:5),rsd,nres(i,1),xb,yb,zb
-     &           ,dr,DBLE(k)
+     &           ,dr,DFLOAT(k)
          END IF
       END DO
 
