@@ -13,8 +13,6 @@ LD = ifort
 F90 = ifort
 CC = cc
 CFLAGS = -O3 -DINTEL
-FFLAGS = -O3
-#FFTW_LIB = /home/marchi/fftw/lib
 FFTW_LIB = /usr/local/fftw/lib
 LLFLAGS = -lrfftw -lfftw 
 
@@ -23,13 +21,11 @@ else
 TARGET0 = 'INTEL'
 TARGET1 = 'OPTERON'
 FFTS = _GPFFT_
-FC = mpif90
-LD = mpif90
-F90 = mpif90
+FC = mpif77
+LD = mpif77
+F90 = mpif77
 CC = cc
-FFLAGS = -O3
 CFLAGS = -O3 -DINTEL
-#FFTW_LIB = /home/marchi/fftw/lib
 FFTW_LIB = /usr/local/fftw/lib
 LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lm
 endif

@@ -483,11 +483,11 @@ PGI :
 	${MAKE} orac_PGI
 
 INTEL :
-	${MAKE} obj_INTEL 
-	${MAKE} prepro_INTEL 
-	${MAKE} prepronkl_INTEL
-	${MAKE} eigr_INTEL 
-	${MAKE} recur_INTEL
+	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
+	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
+	${MAKE} prepronkl_INTEL "FFLAGS = -warn noalignments -O0 "
+	${MAKE} eigr_INTEL "FFLAGS = -w95 -O1 "
+	${MAKE} recur_INTEL "FFLAGS = -w95  "
 	${MAKE} orac_INTEL 
 
 OSF1 :
@@ -513,14 +513,6 @@ G95 :
 	${MAKE} eigr_G95
 	${MAKE} recur_G95
 	${MAKE} orac_G95 
-
-NAG :
-	${MAKE} obj_NAG 
-	${MAKE} prepro_NAG
-	${MAKE} prepronkl_NAG
-	${MAKE} eigr_NAG
-	${MAKE} recur_NAG
-	${MAKE} orac_NAG 
 
 
 #========================================================================
@@ -646,28 +638,6 @@ orac_G95: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
 	-L$(FFTW_LIB) $(LLFLAGS)
-
-#==========================================================================
-# Compile and load ORAC on NAG compiler
-#==========================================================================
-
-obj_NAG : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
-
-recur_NAG: $(OBJREC)
-
-eigr_NAG: $(EIGRS)
-
-prepro_NAG: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_NAG: $(OBJPRE_NKL)
-
-orac_NAG: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -O3 -o orac_NAG $(OBJ) $(OBJREC)\
-	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) $(LLFLAGS)
-
 #==========================================================================
 # Clean Objects
 #==========================================================================
@@ -770,7 +740,8 @@ cself_dipole.o: unit.h
 delrfg.o: parst.h
 drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
 	parst.h iobuffer.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
-	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o
+	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
+	RMS_Matrix_Mod.o
 dspat.o: parst.h pbc.h
 dumptp.o: cpropar.h parst.h
 erf_corr_cutoff.o: unit.h
@@ -897,7 +868,7 @@ read_setup.o: parst.h cpropar.h unit.h
 read_integrator.o: parst.h cpropar.h unit.h
 read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
-	PDBs_Mod.o RMS_Subtract_Mod.o
+	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 

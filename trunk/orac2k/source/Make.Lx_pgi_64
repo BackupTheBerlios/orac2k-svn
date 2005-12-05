@@ -13,5 +13,6 @@ LD = mpif90
 F90 = mpif90 
 CC = mpicc
 CFLAGS = -O3 -DPGI
-FFTW_LIB = /workdir/marchi/fftw.new/lib
-LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw 
+FFTW_LIB = /workdir/marchi/fftw.new/lib 
+LLFLAGS= -L/usr/local/soft/pgi/linux86-64/5.2/lib  -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw\
+	-llapack
