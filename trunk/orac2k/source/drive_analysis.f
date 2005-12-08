@@ -3,11 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-<<<<<<< drive_analysis.f
 *   Time-stamp: <2005-11-28 21:15:03 marchi>                             *
-=======
-*   Time-stamp: <2005-10-21 15:00:53 marchi>                             *
->>>>>>> 1.8
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -69,14 +65,9 @@
      &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
      &     ,PDB_ncompute=>n_compute
       USE RMS_Subtract_Mod, ONLY: SUB_Initialize=>Initialize
-<<<<<<< drive_analysis.f
      &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
      &     =>n_write,SUB_Write_it=>Write_it,SUB_Rotate=>Rotate,SUB_Start
      &     =>Start
-=======
-     &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
-     &     =>n_write,SUB_Write_it=>Write_it
->>>>>>> 1.8
       
       IMPLICIT none
       
@@ -403,15 +394,9 @@ c$$$====================================================================
          CALL EUL_Initialize(wca,xpt0,ypt0,zpt0)
       END IF
       IF(SUB_Subtract) THEN
-<<<<<<< drive_analysis.f
          CALL get_atres(atres,nres(1,1),nato_slt,nbun_slt)
          CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
      &        ,chrge,DSQRT(unitc),nato_slt)
-=======
-         CALL get_atres(atres,nres(1,1),nato_slt,nbun_slt)
-         CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
-     &        ,nato_slt)
->>>>>>> 1.8
       END IF
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
@@ -905,13 +890,13 @@ c$$$====================================================================
 *----- Write information about the processed trajectory ----------------
 *=======================================================================
 
-                  IF(fstep .NE. ffstep*DBLE(nstep)) THEN
+                  IF(fstep .NE. ffstep*DFLOAT(nstep)) THEN
                      Regular=.FALSE.
-                     fstep=ffstep*DBLE(nstep)
+                     fstep=ffstep*DFLOAT(nstep)
                   END IF
                   IF(volume .EQ. 0.0D0 .OR. iret .NE. 0) THEN
                      Regular=.FALSE.
-                     fstep=ffstep*DBLE(nstep)
+                     fstep=ffstep*DFLOAT(nstep)
                   END IF
                   IF((gofr .OR. voronoi) .AND. update_anl .NE. 0) THEN
                      WRITE(kprint,90000) fstep
@@ -1236,7 +1221,7 @@ c$$$     &                       ,nsofk_data,maxsk)
                   
                   IF(gofr) THEN
                      IF(MOD(nstep,gofr_nprint) .EQ. 0)THEN
-c                  vol_gofr=sum_volume/DBLE(nstep)
+c                  vol_gofr=sum_volume/DFLOAT(nstep)
                         vol_gofr=volume
 #ifdef PARALLEL 
                         CALL P_get_gofr(krdf,krdfa,worka,maxint
@@ -1418,7 +1403,6 @@ c--------------------------
                      END IF
                   END IF
                   IF(node .EQ. 0) THEN
-<<<<<<< drive_analysis.f
                      IF(SUB_Subtract) THEN
                         IF(nnstep == 1) CALL SUB_Start(xp0,yp0,zp0)
                         CALL SUB_Rotate(xp0,yp0,zp0)
@@ -1429,16 +1413,6 @@ c--------------------------
                      END IF
                   END IF
                   IF(node .EQ. 0) THEN
-=======
-                     IF(SUB_Subtract) THEN                     
-                        CALL SUB_Compute(xp0,yp0,zp0)
-                        IF(MOD(nstep,SUB_write) == 0) THEN
-                           CALL SUB_write_it(fstep)
-                        END IF
-                     END IF
-                  END IF
-                  IF(node .EQ. 0) THEN
->>>>>>> 1.8
                      IF(PDB_pdbs) THEN
                         IF(MOD(nstep,PDB_ncompute) == 0) THEN
                            CALL PDB_Compute(xp0,yp0,zp0)
@@ -1666,7 +1640,7 @@ c----------
                            CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                            CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                            CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                           fact=1.0D0/DBLE(iter_avg)
+                           fact=1.0D0/DFLOAT(iter_avg)
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
@@ -1683,7 +1657,7 @@ c----------
                            CALL dcopy(nato_slt,xp_avg,1,xpo,1)
                            CALL dcopy(nato_slt,yp_avg,1,ypo,1)
                            CALL dcopy(nato_slt,zp_avg,1,zpo,1)
-                           fact=1.0D0/DBLE(iter_avg)
+                           fact=1.0D0/DFLOAT(iter_avg)
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
@@ -1867,7 +1841,7 @@ c$$$                     nstep=nstep-1
      &        ,ffstep,w1,w2)
          WRITE(kdipole,'('' Correlation Solute-Solute'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,vacf_data(i)
-     &        /DBLE(nstep-i),i=0,nstep-1)
+     &        /DFLOAT(nstep-i),i=0,nstep-1)
          CALL zero0(vacf_data,length_fft)
 
          CALL time_correlation(length_fft,vxpc,vxpd,wsave1,vacf_data
@@ -1879,7 +1853,7 @@ c$$$                     nstep=nstep-1
 
          WRITE(kdipole,'('' Correlation Solute-Solvent'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,2.0D0*(vacf_data(i)
-     &        /DBLE(nstep-i)),i=0,nstep-1)
+     &        /DFLOAT(nstep-i)),i=0,nstep-1)
          CALL zero0(vacf_data,length_fft)
 
          CALL time_correlation(length_fft,vxpd,vxpd,wsave1,vacf_data
@@ -1891,7 +1865,7 @@ c$$$                     nstep=nstep-1
 
          WRITE(kdipole,'('' Correlation Solvent-Solvent'')')
          WRITE(kdipole,'(f10.2,e16.6)') (i*ffstep,vacf_data(i)
-     &        /DBLE(nstep-i),i=0,nstep-1)
+     &        /DFLOAT(nstep-i),i=0,nstep-1)
       END IF
 
       CALL timer(vfcp,tfcp,elapse)
@@ -1905,12 +1879,12 @@ c$$$                     nstep=nstep-1
       WRITE(kprint,60030)
       WRITE(kprint,17000) gcpu
       IF(time_corr) THEN
-         WRITE(kprint,60300) gcpu/DBLE(ntap)
+         WRITE(kprint,60300) gcpu/DFLOAT(ntap)
       ELSE
-         WRITE(kprint,60200) gcpu/DBLE(nnstep)
+         WRITE(kprint,60200) gcpu/DFLOAT(nnstep)
       END IF
       IF(polar) THEN
-         WRITE(kprint,60400) polar_counter/DBLE(nnstep)
+         WRITE(kprint,60400) polar_counter/DFLOAT(nnstep)
       END IF
       WRITE(kprint,60030)
 
