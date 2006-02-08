@@ -1,7 +1,7 @@
       SUBROUTINE xerror(errmsg,length,idummy,err)
 
 ************************************************************************
-*   Time-stamp: <99/02/19 17:24:51 marchi>                             *
+*   Time-stamp: <2006-01-31 14:21:45 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -32,12 +32,15 @@
 
 *------------------------- LOCAL VARIABLES ----------------------------*
       
-      INTEGER i
+      INTEGER i,ierr
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
       IF(err .EQ. 2) THEN
          WRITE(kprint,2) (errmsg(i),i=1,length)
+#ifdef PARALLEL
+         CALL MPI_FINALIZE(ierr)
+#endif
          STOP
       ELSE IF (err.eq.20) THEN 
          WRITE(kprint,20) (errmsg(i),i=1,length)

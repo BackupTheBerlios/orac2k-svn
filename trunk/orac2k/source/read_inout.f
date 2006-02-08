@@ -2,7 +2,7 @@
      &     ,fascii,err_open,err_args,err_end,err_unr)
 
 ************************************************************************
-*   Time-stamp: <00/10/30 14:06:19 sterpone>                             *
+*   Time-stamp: <2006-02-05 17:21:03 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -182,6 +182,7 @@ c-------- Subcommand write
             IF(nword .EQ. 4) THEN
                CALL fndfmt(2,strngs(2),fmt)
                READ(strngs(2),fmt,err=20) fsave
+
                IF(strngs(3) .EQ. 'OPEN') THEN
                   CALL uscrpl(strngs(4),80)
                   restart_out=strngs(4)
@@ -400,7 +401,6 @@ c--   syntax errors: abort without verifying input
       ELSE IF(nsevere.gt.99) THEN 
          errmsg= 'MORE THAN 99 ERRORS WHILE EXECUTING READ_INOUT'
          call xerror(errmsg,80,1,2)
-         STOP
       END IF
 
       if(nwarning.gt.0.and.nwarning.lt.99) then 

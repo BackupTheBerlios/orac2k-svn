@@ -72,19 +72,20 @@
 *------------- Set default values of some input parameters -------------
       CALL blkdta
 
+
 #ifdef PARALLEL
 
 *=======================================================================
 *---- Input for parallel processing with MPI inteface ------------------
 *=======================================================================
 
-      OPEN(unit=knlist,file="./.ORAC.INPUT")
-
       IF(myid .NE. 0) THEN
          kprint=6
          open(unit=6,file="/dev/null")
       END IF
 #endif
+
+      CALL Open_Input(knlist)
 
       fmaxstp=0.0D0
       fscale=0.0D0
@@ -218,7 +219,6 @@ c=====Environment PARAMETERS============================================
          CALL read_parameters(iret,errmsg)
          IF(iret .NE. 0) THEN 
             CALL xerror(errmsg,80,1,2)
-            STOP
          END IF
 c=======================================================================
 
@@ -257,7 +257,6 @@ c=====Unrecognized Environment==========================================
       ELSE
          errmsg='Unrecognized ENVIRONMENT  ---> '/ / strngs(1)
          call xerror(errmsg,80,1,2) 
-         STOP
       END IF
       
       GOTO 100

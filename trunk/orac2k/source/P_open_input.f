@@ -1,7 +1,7 @@
       SUBROUTINE P_open_input(myid,numprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <2005-08-03 15:03:14 marchi>                             *
+*   Time-stamp: <2006-02-05 16:27:23 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -45,12 +45,14 @@
       IF(myid .EQ. 0) THEN
          OPEN (unit=99,file="./.ORAC.INPUT")
 1000     READ(5,'(a80)',END=2000) line
+         WRITE(*,'(a80)') line
          WRITE(99,'(a80)') line
          GOTO 1000
 2000     CONTINUE
          iret=0
          CLOSE(99)
       END IF
+      CALL P_Barrier
 
       CALL MPI_BCAST(iret,1,MPI_INTEGER4,0,MPI_COMM_WORLD,ierr)
       IF(iret .NE. 0) THEN

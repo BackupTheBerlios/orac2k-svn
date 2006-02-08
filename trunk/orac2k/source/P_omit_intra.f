@@ -1,7 +1,7 @@
       SUBROUTINE P_omit_intra(node,nprocs,ncube,nbyte,intra_x,work,iret)
 
 ************************************************************************
-*   Time-stamp: <04/11/11 17:43:46 marchi>                             *
+*   Time-stamp: <2006-01-26 22:41:43 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -39,7 +39,6 @@
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
       CALL P_Buffer_attach
-
       n=(intra_x(1)+1)*nbyte
       na=intra_x(1)
       DO i=node+1,nprocs-1

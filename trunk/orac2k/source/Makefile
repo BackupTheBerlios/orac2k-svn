@@ -12,6 +12,7 @@ CC = cc
 LIB = nolib
 CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac/source
+LIBRARIES = NONE
 
 #==========================================================================
 # Define default rules
@@ -27,6 +28,8 @@ DIST_DIR = tmp_dir/orac/source
 # Define include files
 #==========================================================================
 
+
+include Make.what
 
 INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
 	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
@@ -84,7 +87,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	correc_scale.o correc_scale_2.o correc_scale_co.o cov_thermos.o\
 	covbd.o covchg.o covfod.o covnb.o covpr.o covuen.o crdrtf.o cself.o\
 	cself_dipole.o \
-	csort.o dblas.o dcopy3.o delrfg.o dist_ijk.o dlineq.o\
+	csort.o dcopy3.o delrfg.o dist_ijk.o dlineq.o\
 	DCopy_V3.o \
 	dspat.o dumptp.o duni.o dupl_char1.o dupl_concta.o\
 	dupl_int1.o dupl_int2.o dupl_mapnl.o dupl_real1.o dupl_real2.o\
@@ -105,6 +108,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	get_spectra_vacf.o get_type_slv.o iceil.o\
 	get_velocities.o getchr.o GetSimpleCO.o grad_sum.o grad_sum2.o\
 	grad_sum_dipole.o hapacp.o hapdon.o igmap.o\
+	icopy.o \
 	indexx.o iindexx.o inicmp.o initialize_cavities.o\
 	Init_Fixed_Molecule.o\
 	int_corr_erf_spline.o interpol_dyna.o chebft_dyn.o\
@@ -114,7 +118,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	mapnl_divide.o matinv.o min_pack.o\
 	minv.o mnbrakf.o Make_Pol_Models.o\
 	mts_plot_fragm.o mts_plotp.o mts_test.o\
-	mts_umbrl.o near0.o normal.o\
+	mts_umbrl.o near0.o normal.o Open_Input.o \
 	parse.o parse_numbers.o\
 	pbend.o pbond.o pckben.o pckfrg.o pckitor.o\
 	pcktor.o phapp.o pitors.o plgndr.o plot_center.o plotc.o plot_fragm.o\
@@ -148,7 +152,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	write_bends.o\
 	write_bonds.o write_tors.o write_vacf_phi.o write_diffusion.o\
 	write_voronoi_header.o write_rms.o write_sk.o\
-	write_xrms.o write_xrms_atm.o xfit.o xerror.o\
+	write_xrms.o write_xrms_atm.o xfit.o\
 	zero0.o zero.o zero3.o zero3x3.o zero_gofr.o zero_voronoi.o\
 	zeroa.o zeroi.o write_mol_dipole.o write_electric_field.o\
 	P_cm_split.o P_get_prot.o P_get_intra.o Pme_init.o\
@@ -196,7 +200,7 @@ PRECOMP_NP = analyse_voronoi.f bldbox.f start.f furippa.f insert_solute.f\
 	mts_forces2.f mts_forpp2.f\
 	read_parallel.f P_setup_decomp.f P_setup_decompa.f\
 	P_atoms_split_intra.f P_split_intra.f P_split_constr.f\
-	P_atoms_split_inter.f 
+	P_atoms_split_inter.f xerror.f
 
 PRECOMP_NKL = mtsmd.f drive_analysis.f 
 
@@ -210,6 +214,11 @@ PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
 
 
 PRECOMP_F90 = $(PRE_F90) 
+
+ifneq ($(LIBRARIES), SYSTEM_LIB)
+OBJ_NP := $(OBJ_NP) dblas.o
+endif
+
 
 ifeq ($(MODE), PARALLEL)
 PRECOMP = $(PRECOMP_NP) $(PRECOMP_PP)
@@ -275,7 +284,6 @@ LIST = Makefile $(INCLUDE) $(patsubst %.o, %.f, $(OBJ_NP))\
 endif
 
 
-include Make.what
 
 #==========================================================================
 # Make Default 
@@ -482,6 +490,14 @@ PGI :
 	${MAKE} recur_PGI "FFLAGS =  "
 	${MAKE} orac_PGI
 
+IFC :
+	${MAKE} obj_IFC "FFLAGS = -w95 -O2 " 
+	${MAKE} prepro_IFC "FFLAGS = -w95 -O3" 
+	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -O0 "
+	${MAKE} eigr_IFC "FFLAGS = -w95 -O1 "
+	${MAKE} recur_IFC "FFLAGS = -w95  "
+	${MAKE} orac_IFC 
+
 INTEL :
 	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
 	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
@@ -553,7 +569,7 @@ orac_OSF : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) \
 	$(OBJPRE_NKL) $(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
 	$(LD) -o orac_OSF $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) \
 	$(OBJPRE_NKL) $(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L/usr/local/assist/lib -L$(FFTW_LIB) $(LLFLAGS) -lmpi
+	-L/usr/local/assist/lib -L$(OTHERS_LIB) -L$(FFTW_LIB) $(LLFLAGS) -lmpi
 
 #==========================================================================
 # Compile and load ORAC on OSF   
@@ -574,7 +590,29 @@ orac_PGI : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
 	$(LD) -Mvect -Mipa=fast -fastsse  -o orac_PGI $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) $(LLFLAGS) -lm
+	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) -lm
+
+
+#==========================================================================
+# Compile and load ORAC on INTEL Compiler   
+#==========================================================================
+
+
+obj_IFC : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+
+recur_IFC: $(OBJREC)
+
+eigr_IFC: $(EIGRS)
+
+prepro_IFC: $(OBJPRE) $(OBJPRE_F90) 
+
+prepronkl_IFC: $(OBJPRE_NKL)
+
+orac_IFC : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
+	$(LD) -o orac_IFC $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
+	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) -lm
 
 
 #==========================================================================
@@ -616,7 +654,7 @@ orac_XLF: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(LD) -O5 -qnosave -qhot -qipa -o orac_XLF $(OBJ) $(OBJREC)\
 	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) $(LLFLAGS)
+	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS)
 
 #==========================================================================
 # Compile and load ORAC on G95 compiler
@@ -637,7 +675,7 @@ orac_G95: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(LD) -O3 -o orac_G95 $(OBJ) $(OBJREC)\
 	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) $(LLFLAGS)
+	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS)
 #==========================================================================
 # Clean Objects
 #==========================================================================
@@ -650,7 +688,7 @@ clean :
 #==========================================================================
 
 extra_clean :
-	rm -f *.o *.CPP.f *.LIB.f orac_INTEL orac_OSF orac_PGI
+	rm -f *.o *.CPP.f *.LIB.f orac_*
 	@cp config.h temp ; rm -f *.h ; mv temp config.h > /dev/null
 
 #==========================================================================
@@ -917,7 +955,7 @@ write_diffusion.o: unit.h
 write_electric_field.o: parst.h cpropar.h unit.h
 write_vacf_phi.o: unit.h
 write_xrms.o:parst.h
-xerror.o: unit.h
+xerror.CPP.o: unit.h
 zero_voronoi.o: parst.h voronoi.h
 M_memory.CPP.o: M_memory.CPP.f
 M_memory_s.CPP.o: M_memory_s.CPP.f

@@ -2,7 +2,7 @@
      &     ,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2005-01-28 19:36:32 marchi>                             *
+*   Time-stamp: <2006-02-05 14:51:15 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -48,12 +48,11 @@
             temp=ends(i-1)+1
             IF(temp .NE. starts(i)) ok=.FALSE.
          END DO
+         
       END IF
       IF(.NOT. ok) THEN
          iret=1
          WRITE(errmsg,'(''Atom decomposition check failed:''
-     &        ,'' Decomposition tagged '',a12,'' overlaps.'')') tag
-         WRITE(*,'(''Atom decomposition check failed:''
      &        ,'' Decomposition tagged '',a12,'' overlaps.'')') tag
       END IF
 

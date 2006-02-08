@@ -40,7 +40,7 @@
       INTEGER n_loc,one
 #endif
       REAL*8  xc,yc,zc,xd,yd,zd,sumx,sumy,sumz,st(3,3)
-      INTEGER i,j,i1,count,m
+      INTEGER i,j,k,i1,count,m
       DATA one/1/
 
 *=======================================================================
@@ -102,7 +102,7 @@
 *---- Compute stress tensor if coupling is by group --------------------
 *=======================================================================
 
-      IF((cpress .OR. pressure) .AND. coupl_grp) THEN
+      IF(cpress .OR. pressure) THEN
          DO j=nstart,nend
             i=atomp(j)
             xc=xcm(i)
@@ -118,7 +118,7 @@
             st(3,2)=st(3,2)+yc*fpz(j)
             st(3,3)=st(3,3)+zc*fpz(j)
          END DO
-         CALL DGEMM('N','N',3,3,3,1.0D0,co,3,st,3,0.0D0,stressd,3)
+         CALL DGEMM('N','T',3,3,3,1.0D0,st,3,co,3,0.0D0,stressd,3)
       END IF
 
 *=======================================================================

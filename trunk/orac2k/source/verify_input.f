@@ -38,7 +38,7 @@
      &     ,fvi,ffragm_dist,fhbonds,fhhisto,frms,fgyr,fabmd,freq_ef
      &     ,freq_dp,fxslt,finst_fit,fcalc_cofm,finst_lda,flda_flu
      &     ,flda_hyd,fprot_hyd,fprot_lda,sofk_fprint,sofk_fcomp
-      INTEGER iret,nwarning,nsevere
+      INTEGER iret,nwarning,nsevere,ierr
       CHARACTER*80 errmsg
 
 *----------------------- VARIABLES IN COMMON --------------------------*
@@ -902,10 +902,10 @@ c$$$            nsevere = nsevere + 1
 #ifdef PARALLEL
       IF(.NOT. analys .AND. coupl_mol) THEN
          errmsg=
-     &        'In COUPLING(&SIMULATION): Can use only group coupling'
-     &     / /   ' in parallel version.'
-         call xerror(errmsg,80,1,20)
-         nsevere = nsevere + 1
+     &        'In COUPLING(&SIMULATION): You are using group '
+     &        / /'coupling in ORAC''s parallel version.'
+         call xerror(errmsg,80,1,21)
+         nwarning=nwarning+1
       END IF
 #endif
 
@@ -1124,6 +1124,9 @@ c--   if warnings are given then
          iret=1
          errmsg= 'MORE THAN 99 ERRORS WHILE EXECUTING VERIFY_INPUT'
          call xerror(errmsg,80,1,21)
+#ifdef PARALLEL
+         CALL MPI_FINALIZE(ierr)
+#endif
          STOP
       END IF
       if(nsevere.eq.0.and.nwarning.eq.0) THEN

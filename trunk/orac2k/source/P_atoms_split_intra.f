@@ -5,7 +5,7 @@
      &     ,lstrtch,lstretch,lbndg,lbend,atomp,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2005-02-20 14:48:40 marchi>                             *
+*   Time-stamp: <2006-01-31 15:01:55 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -101,7 +101,6 @@
          IF(lb .GT. at_max) at_max=lb
          IF(lc .GT. at_max) at_max=lc
       END DO
-      
       IF(at_max .NE. -1 .AND. at_min .NE. 1e8) THEN
          nato_c=(atomp(at_max)-atomp(at_min)+1)/nprocs
          DO i=0,nprocs-1

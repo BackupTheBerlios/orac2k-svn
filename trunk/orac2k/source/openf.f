@@ -1,7 +1,7 @@
       SUBROUTINE openf(kunit,file,form1,status1,recl)
 
 ************************************************************************
-*   Time-stamp: <1999-11-17 18:07:32 marchi>                             *
+*   Time-stamp: <2006-02-05 16:16:06 marchi>                             *
 *                                                                      *
 *   Connect a file to a unit                                           *
 *                                                                      *
@@ -32,7 +32,7 @@
       INTEGER unit,i
       CHARACTER*80 form,status
       SAVE unit
-      DATA unit/10/
+      DATA unit/11/
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 

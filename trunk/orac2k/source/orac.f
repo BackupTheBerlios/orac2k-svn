@@ -98,7 +98,6 @@ c*-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 *=======================================================================
 
       CALL P_whoami(node,nprocs,ncube,nbyte)
-      CALL P_open_input(node,nprocs,ncube,nbyte)
 #else
       iret=0
       errmsg='none'

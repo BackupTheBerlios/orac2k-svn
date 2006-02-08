@@ -1567,6 +1567,9 @@ c$$$
 
 #if defined PARALLEL
       WRITE(kprint,16005) GTime_h,GTime_l,GTime_m
+      gcpu_1 = gcpu_1 + GTime_m
+      gcpu_2 = gcpu_2 + GTime_l
+      gcpu_3 = gcpu_3 + GTime_h
 #endif
 907   theoric_speed_up=(gcpu_1+gcpu_2+gcpu_3)*mrespa*lrespa/(gcpu_1
      &     *mrespa*lrespa+gcpu_2*lrespa+gcpu_3)
@@ -1603,6 +1606,11 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
          gcpu_1=gcpu+gcpu_md
          gcpu_2=gcpu+gcpu_ld
          gcpu_3=gcpu+gcpu_hd
+#if defined PARALLEL
+         gcpu_1 = gcpu_1 + GTime_m
+         gcpu_2 = gcpu_2 + GTime_l
+         gcpu_3 = gcpu_3 + GTime_h
+#endif
       END IF   
       write(kprint,10067) theoric_speed_up
 

@@ -32,7 +32,7 @@
       REAL*8  unb14_slt,cnb14_slt,ungrp_slt,cngrp_slt,uptors_slt
      &       ,unb14_slv,cnb14_slv,ungrp_slv,cngrp_slv,uptors_slv
       REAL*8  xc,yc,zc,st(3,3)
-      INTEGER i,j,i1,count,m
+      INTEGER i,j,k,i1,count,m
 
 *=======================================================================
 *--- Zero stress tensor ------------------------------------------------
@@ -102,7 +102,7 @@
 *---- Compute stress tensor if coupling is by group --------------------
 *=======================================================================
 
-      IF((cpress .OR. pressure) .AND. coupl_grp) THEN
+      IF(cpress .OR. pressure) THEN
          DO j=nstart,nend
             i=atomp(j)
             xc=xcm(i)
@@ -118,11 +118,9 @@
             st(3,2)=st(3,2)+yc*fpz(j)
             st(3,3)=st(3,3)+zc*fpz(j)
          END DO
-         CALL DGEMM('N','N',3,3,3,1.0D0,co,3,st,3,0.0D0,stressd,3)
+         CALL DGEMM('N','T',3,3,3,1.0D0,st,3,co,3,0.0D0,stressd,3)
       END IF
 #if defined PARALLEL
-      WRITE(60+node,*) unb14,cngrp,uptors,conf_bnd_slt,conf_bnd_slv
-     &     ,coul_bnd_slt,coul_bnd_slv
       IF(nprocs .GT. 1) THEN
          CALL P_merge_r8(unb14)
          CALL P_merge_r8(cngrp)

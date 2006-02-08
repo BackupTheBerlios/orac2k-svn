@@ -1,5 +1,5 @@
 ************************************************************************
-*   Time-stamp: <2005-01-27 12:16:13 marchi>                             *
+*   Time-stamp: <2006-02-05 16:00:29 marchi>                             *
 *                                                                      *
 *   Dump restart file and do tests at time H                           *
 *                                                                      *
@@ -27,6 +27,7 @@
      &           ,nlocal_cm,node,nprocs,1)
             CALL P_expand_r8x3(vpx,vpy,vpz,nstart_2,nend_2,nlocal_2,node
      &           ,nprocs,1)
+
 #endif
             IF(node .EQ. 0) THEN
                grflag= igr .OR. gofr
