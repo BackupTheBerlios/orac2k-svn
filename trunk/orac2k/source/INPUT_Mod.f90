@@ -1,7 +1,7 @@
 MODULE INPUT_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-17 18:57:00 marchi>                           *
+!!$   Time-stamp: <2006-02-09 14:37:26 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -77,4 +77,58 @@ MODULE INPUT_Mod
       IF(iret /=0) CALL abort_now(errmsg)
       RETURN
     END SUBROUTINE parser
+    SUBROUTINE Parse_Numbers(strings,index)
+      IMPLICIT NONE 
+      INTEGER, POINTER :: index(:)
+      CHARACTER(80)  :: strings(:)
+
+      INTEGER :: count,i,k,ia_before,ia_after,nword
+      CHARACTER(80) :: errmsg,aux_m1,aux_p1
+      
+      nword=SIZE(strings)
+      count=0
+      DO i=1,nword
+         SELECT CASE(TRIM(strings(i)))
+         CASE DEFAULT
+            count=count+1
+         CASE('-')
+            IF(i == 1 .OR. i == nword) THEN
+               errmsg=err_unr(3)//strings(i)
+               CALL abort_now(errmsg)
+            END IF
+
+            CALL Read_String(strings(i-1),ia_before)
+            CALL Read_String(strings(i+1),ia_after)
+            DO k=ia_before+1,ia_after-1
+               count=count+1
+            END DO
+         END SELECT
+      END DO      
+      ALLOCATE(index(count))
+      index=0
+
+      count=0
+      DO i=1,nword
+         SELECT CASE(TRIM(strings(i)))
+         CASE DEFAULT
+            count=count+1
+            CALL Read_String(strings(i),index(count))
+         CASE('-')
+            IF(i == 1 .OR. i == nword) THEN
+               errmsg=err_unr(3)//strings(i)
+               CALL abort_now(errmsg)
+            END IF
+            CALL Read_String(strings(i-1),ia_before)
+            CALL Read_String(strings(i+1),ia_after)
+            IF(ia_before > ia_after) THEN
+               errmsg='Atom/Residue not in an ordered sequence. Abort'
+               CALL abort_now(errmsg)
+            END IF
+            DO k=ia_before+1,ia_after-1
+               count=count+1
+               index(count)=k
+            END DO
+         END SELECT
+      END DO
+    END SUBROUTINE Parse_Numbers
 END MODULE INPUT_Mod

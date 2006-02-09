@@ -38,6 +38,9 @@
       USE DENSITY_Mod, ONLY: DEN_input=>Read_it
       USE PDBs_Mod, ONLY: PDB_input=>Read_it
       USE RMS_Subtract_Mod, ONLY: SUB_input=>Read_it
+      USE GROUPS_Mod, ONLY: GR_groups=>groups,GR_Input=>Read_it
+      USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_input
+     &     =>Read_it
 
       IMPLICIT none
 
@@ -905,6 +908,24 @@ c==== Command DENSITY  ================================================
             IF(read_err == 1) GOTO 20
 
 c==== END Command DENSITY  ============================================
+c==== Command GROUP ===================================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'GROUPS' ) THEN
+            not_time_corr=.TRUE.
+            CALL GR_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== END Command GROUP  ==============================================
+c==== Command GEOMS ===================================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'GEOMS' ) THEN
+            not_time_corr=.TRUE.
+            CALL GE_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== END Command GROUP  ==============================================
 c==== Command RMS_SUBTRACT ============================================
                                                                        
          ELSE IF(strngs(1).EQ. 'RMS_SUBTRACT' ) THEN

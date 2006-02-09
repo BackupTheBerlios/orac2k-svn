@@ -9,10 +9,22 @@ TARGET1 = 'OPTERON'
 LIBRARIES = SYSTEM_LIB
 FFTS = _GPFFT_
 ##FFTS = _PDFFT_
+
+ifeq ($(MODE), PARALLEL)
 FC = mpif90
 LD = mpif90
 F90 =mpif90
 CC = mpicc
+
+else
+
+FC = ifort
+LD = ifort
+F90 =ifort
+CC = icc
+endif
+
+
 CFLAGS = -O3 -DPGI
 FFTW_LIB = /usr/local/fftw_OMP/lib
 OTHERS_LIB=/opt/intel/mkl/8.0.1/lib/em64t 

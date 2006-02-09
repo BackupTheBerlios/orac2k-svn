@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2005-11-28 21:15:03 marchi>                             *
+*   Time-stamp: <2006-02-09 14:06:55 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -68,6 +68,10 @@
      &     ,SUB_Subtract=>RMS_Subtract,SUB_Compute=>Compute,SUB_write
      &     =>n_write,SUB_Write_it=>Write_it,SUB_Rotate=>Rotate,SUB_Start
      &     =>Start
+      USE GROUPS_Mod, ONLY: GR_groups=>groups,GR_Init=>Init
+      USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_init
+     &     =>Init, GE_compute=>Compute,GE_Write=>n_write,GE_output
+     &     =>Write_it 
       
       IMPLICIT none
       
@@ -398,6 +402,14 @@ c$$$====================================================================
          CALL SUB_Initialize(atres,nbun_slt,nres(1,2),prsymb,beta
      &        ,chrge,DSQRT(unitc),nato_slt)
       END IF
+
+      IF(GR_Groups) THEN
+         CALL GR_Init(ntap,nbun,mres)
+      END IF
+      IF(GE_Groups) THEN
+         CALL GE_Init(ntap)
+      END IF
+
       IF(anxrms) THEN
          ALLOCATE(errca(nprot),errhe(nprot),errbc(nprot),erral(nprot)
      &        ,drpca(ntap),drpbc(ntap),drphe(ntap),drpal(ntap))
@@ -1399,6 +1411,14 @@ c--------------------------
                         CALL DEN_Compute(xpa,ypa,zpa,co)
                         IF(MOD(nstep,DEN_write) == 0) THEN
                            CALL DEN_write_it(Volume,co)
+                        END IF
+                     END IF
+                  END IF
+                  IF(node .EQ. 0) THEN
+                     IF(GE_Groups) THEN
+                        CALL GE_Compute(xpa,ypa,zpa,mass,co)
+                        IF(MOD(nstep,GE_write) == 0) THEN
+                           CALL GE_output(fstep)
                         END IF
                      END IF
                   END IF

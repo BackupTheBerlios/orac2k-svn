@@ -1,7 +1,7 @@
 SUBROUTINE Open_Input(kread)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-05 17:08:51 marchi>                           *
+!!$   Time-stamp: <2006-02-08 14:31:26 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -37,14 +37,15 @@ SUBROUTINE Open_Input(kread)
   nargs=IARGC()
   IF(nargs >= 1) THEN
      ok=.TRUE.
-     CALL GETARG(1, buffer,nchars)
+     CALL GETARG(1, buffer)
      fileinput=TRIM(buffer)
      OPEN(unit=kread,file=fileinput,form='FORMATTED')
   END IF
 
   IF(.NOT. ok) THEN
-     CALL GETARG(0, buffer, nchars)
+     CALL GETARG(0, buffer)
      command = TRIM(buffer)
+     nchars=LEN_TRIM(buffer)
      errmsg='Usage: '// command(1:nchars) //' input [ > output ]'
      CALL xerror(errmsg,80,1,2)
   END IF

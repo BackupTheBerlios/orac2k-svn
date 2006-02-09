@@ -89,7 +89,7 @@ C----------------------- ARGUMENTS -------------------------------------
 C     Quantities needed to compute the stress tensor
       REAL*8  stresstc(3,3),co(3,3)
       REAL*8  xpcm(*),ypcm(*),zpcm(*)
-#endif PRESSURE
+#endif 
 
 C----------------------- PARAMETERS ------------------------------------
 
@@ -126,7 +126,7 @@ C-------------------- LOCAL VARIABLES ----------------------------------
 C     Quantities needed to compute the stress tensor
       REAL*8  stresstc(3,3),co(3,3)
       REAL*8  xpcm(*),ypcm(*),zpcm(*)
-#endif PRESSURE
+#endif
       REAL*8  sgx(m1),sgy(m1),sgz(m1),sx,sy,sz,aux1,aux2,aux3
       INTEGER k,grppt(2,*),atomp(*),count,ia,mia
       REAL*8 stc1,stc2,stc3,stc4,stc5,stc6,stc7,stc8,stc9
@@ -192,7 +192,7 @@ C     cartesian coordinates
          sgsz(i)=sx*co(3,1)+sy*co(3,2)+sz*co(3,3)
       END DO
 
-#endif PRESSURE
+#endif
       DO 10 i=1,3
           ro(i,1)=oc(1,i)
           ro(i,2)=oc(2,i)
@@ -283,7 +283,7 @@ C     cartesian coordinates
                          sumip(i)=zero
                       END DO
                       dsnn=DBLE(SIGN(1,n))
-#endif PRESSURE
+#endif
                       
                       DO 90 i=1,ntap
                          typei=ss_index(i)
@@ -337,7 +337,7 @@ c      Coulombic contribution to the stress tensor
                           aux1=aux1+qforce*sgx(k)
                           aux2=aux2+qforce*sgy(k)
                           aux3=aux3+qforce*sgz(k)
-#endif PRESSURE
+#endif
 100                   CONTINUE
 #ifdef PRESSURE
                       stc1=stc1-aux1*gl
@@ -350,7 +350,7 @@ c      Coulombic contribution to the stress tensor
                       stc8=stc8-aux2*gn
                       stc9=stc9-aux3*gn
 
-#endif PRESSURE
+#endif
                   END IF
 80            CONTINUE
               nmint=1
@@ -367,7 +367,7 @@ c      Coulombic contribution to the stress tensor
       stresstc(3,1)=stresstc(3,1)+stc7
       stresstc(3,2)=stresstc(3,2)+stc8
       stresstc(3,3)=stresstc(3,3)+stc9
-#endif PRESSURE
+#endif
 
       urecp_slt=urecp(1)
       urecp_ss=urecp(2)
