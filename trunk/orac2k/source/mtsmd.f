@@ -1017,8 +1017,7 @@
                CALL int_corr_erf_spline(rlew,ruew,nbinew,alphal,rkcut
      &              ,erf_arr_corr,work)
             END IF
-            CALL Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt
-     &           ,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start
+            CALL Pme_init(node,nprocs,nfft1,nfft2,nfft3,nfft3_start
      &           ,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
             IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
          ELSE

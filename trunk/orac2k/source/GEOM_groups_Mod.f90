@@ -1,7 +1,7 @@
 MODULE GEOM_groups_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-09 14:32:36 marchi>                           *
+!!$   Time-stamp: <2006-02-10 10:13:31 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -20,6 +20,7 @@ MODULE GEOM_groups_Mod
   USE INPUT_Mod, ONLY: Read_String, Parser, Parse_Numbers,err_open&
        &,err_end,err_unr,err_fnf,err_args
   USE GROUPS_Mod, ONLY: GR_groups=>groups, group, molecs
+  USE PBC_Mod
 
   LOGICAL, SAVE :: Geom_groups=.FALSE.
   INTEGER, SAVE :: n_write=1,k_write=0,natom
@@ -135,42 +136,46 @@ CONTAINS
       IMPLICIT NONE 
       CHARACTER(1) :: label
       REAL(8) :: xcma,ycma,zcma,xcmb,ycmb,zcmb,mass_b
-      REAL(8) :: xa,ya,za,xc,yc,zc,rsp,PBC
+      REAL(8) :: xa,ya,za,xc,yc,zc,rsp,tmass
       INTEGER :: ka,ja,kb,jb
       
       xcma=0.0D0
       ycma=0.0D0
       zcma=0.0D0
+      tmass=0.0D0
       DO ka=1,molecs(ia)%n
          ja=molecs(ia)%index(ka)
          mass_b=1.0D0
          IF(label == 'Y') THEN
-            mass_b=1.0D0/mass(ja)
+            mass_b=mass(ja)
          END IF
          xcma=xcma+mass_b*xpa(ja)
          ycma=ycma+mass_b*ypa(ja)
          zcma=zcma+mass_b*zpa(ja)
+         tmass=tmass+mass_b
       END DO
-      xcma=xcma/DBLE(molecs(ia)%n)
-      ycma=ycma/DBLE(molecs(ia)%n)
-      zcma=zcma/DBLE(molecs(ia)%n)
+      xcma=xcma/tmass
+      ycma=ycma/tmass
+      zcma=zcma/tmass
       
       xcmb=0.0D0
       ycmb=0.0D0
       zcmb=0.0D0
+      tmass=0.0D0
       DO kb=1,molecs(ib)%n
          jb=molecs(ib)%index(kb)
          mass_b=1.0D0
          IF(label == 'Y') THEN
-            mass_b=1.0D0/mass(jb)
+            mass_b=mass(jb)
          END IF
          xcmb=xcmb+mass_b*xpa(jb)
          ycmb=ycmb+mass_b*ypa(jb)
          zcmb=zcmb+mass_b*zpa(jb)
+         tmass=tmass+mass_b
       END DO
-      xcmb=xcmb/DBLE(molecs(ib)%n)
-      ycmb=ycmb/DBLE(molecs(ib)%n)
-      zcmb=zcmb/DBLE(molecs(ib)%n)
+      xcmb=xcmb/tmass
+      ycmb=ycmb/tmass
+      zcmb=zcmb/tmass
 
       xa=xcmb-xcma
       ya=ycmb-ycma
@@ -222,10 +227,6 @@ CONTAINS
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
   END SUBROUTINE Write_it
-  REAL(8) FUNCTION PBC(x)
-    REAL(8) :: x
-    PBC=DNINT(0.5D0*x)
-  END FUNCTION PBC
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
