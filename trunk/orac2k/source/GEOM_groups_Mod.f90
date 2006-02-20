@@ -1,7 +1,7 @@
 MODULE GEOM_groups_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-10 10:13:31 marchi>                           *
+!!$   Time-stamp: <2006-02-20 12:16:47 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -104,30 +104,20 @@ CONTAINS
     m=SIZE(Geoms)
     DO i=1,m
        n_properties=i
+       ia=0
+       ib=0
+       DO k=1,SIZE(molecs)
+          IF(molecs(k)%type == Geoms(i)%data(1)) THEN
+             ia=k
+          END IF
+          IF(molecs(k)%type == Geoms(i)%data(2)) THEN
+             ib=k
+          END IF
+       END DO
        SELECT CASE(Geoms(i)%type)
        CASE('dist')
-          ia=0
-          ib=0
-          DO k=1,SIZE(molecs)
-             IF(molecs(k)%type == Geoms(i)%data(1)) THEN
-                ia=k
-             END IF
-             IF(molecs(k)%type == Geoms(i)%data(2)) THEN
-                ib=k
-             END IF
-          END DO
           CALL Get_Dist('N')
        CASE('dist_mass')
-          ia=0
-          ib=0
-          DO k=1,SIZE(molecs)
-             IF(molecs(k)%type == Geoms(i)%data(1)) THEN
-                ia=k
-             END IF
-             IF(molecs(k)%type == Geoms(i)%data(2)) THEN
-                ib=k
-             END IF
-          END DO
           CALL Get_Dist('Y')
        END SELECT
     END DO
@@ -137,6 +127,7 @@ CONTAINS
       CHARACTER(1) :: label
       REAL(8) :: xcma,ycma,zcma,xcmb,ycmb,zcmb,mass_b
       REAL(8) :: xa,ya,za,xc,yc,zc,rsp,tmass
+      REAL(8) :: xb,yb,zb
       INTEGER :: ka,ja,kb,jb
       
       xcma=0.0D0

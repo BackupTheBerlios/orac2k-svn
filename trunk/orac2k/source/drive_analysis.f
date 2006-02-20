@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2006-02-09 14:06:55 marchi>                             *
+*   Time-stamp: <2006-02-15 16:40:43 marchi2>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -404,7 +404,7 @@ c$$$====================================================================
       END IF
 
       IF(GR_Groups) THEN
-         CALL GR_Init(ntap,nbun,mres)
+         CALL GR_Init(ntap,nbun,grppt,mres)
       END IF
       IF(GE_Groups) THEN
          CALL GE_Init(ntap)
@@ -1321,7 +1321,7 @@ c--------------------------
             DO WHILE(.NOT. end .AND. nstep .LT. stop_anl)
                nstep=nstep+1
                nnstep=nnstep+1
-            
+               IF(MOD(nstep,GE_write) /= 0) CYCLE
 *=======================================================================
 *----- Read trajectory file by row -------------------------------------
 *=======================================================================
@@ -1416,8 +1416,8 @@ c--------------------------
                   END IF
                   IF(node .EQ. 0) THEN
                      IF(GE_Groups) THEN
-                        CALL GE_Compute(xpa,ypa,zpa,mass,co)
                         IF(MOD(nstep,GE_write) == 0) THEN
+                           CALL GE_Compute(xpa,ypa,zpa,mass,co)
                            CALL GE_output(fstep)
                         END IF
                      END IF
