@@ -8,11 +8,22 @@ TARGET0 = PGI
 TARGET1 = 'OPTERON'
 FFTS = _GPFFT_
 ##FFTS = _PDFFT_
+
+ifeq ($(MODE), PARALLEL)
 FC = mpif90 
 LD = mpif90
 F90 = mpif90 
 CC = mpicc
+
+else
+
+FC = pgf90
+LD = pgf90
+F90 = pgf90 
+CC = pgcc
+endif
+
 CFLAGS = -O3 -DPGI
-FFTW_LIB = /workdir/marchi/fftw.new/lib 
+FFTW_LIB = /workdir/marchi2/fftw.new/lib 
 LLFLAGS= -L/usr/local/soft/pgi/linux86-64/5.2/lib  -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw\
 	-llapack

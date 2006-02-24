@@ -11,7 +11,7 @@ CPP = /lib/cpp -traditional
 CC = cc
 LIB = nolib
 CURDIR = `pwd`
-DIST_DIR = tmp_dir/orac2k/source
+DIST_DIR = tmp_dir/orac/source
 LIBRARIES = NONE
 
 #==========================================================================
@@ -34,14 +34,9 @@ include Make.what
 INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
 	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
 	mts_vacf.inc pme.inc parallel.inc parameters.inc\
-	lc_list.inc voronoi.inc polar.h mpi_size.inc\
-	iobuffer.inc pressure.h mtsmd_avg_inc.f \
-	mtsmd_dump_inc.f dipole_interaction.f\
-	force_ele_spline.f force_ele_nospline.f force_noele.f\
-	force_ele_spline_sw.f force_ele_nospline_sw.f force_noele_sw.f\
-	DENSITY_Read.f90 FOURIER_Read.f90 GEOM_groups_Readit.f90 GROUPS_Readit.f90\
-	PDBs_Read.f90 RMS_General_Read.f90 RMS_Subtract_Read.f90 fftw_f77.i
-
+	lc_list.inc voronoi.inc\
+	iobuffer.inc pressure.h DXMLDEF.FOR mtsmd_avg_inc.f \
+	mtsmd_dump_inc.f
 
 INCPRE = $(patsubst %.inc, %.h, $(INCLUDE)) 
 
@@ -56,7 +51,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
 	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
-	GEOM_groups_Mod.o PBC_Mod.o\
+	GEOM_groups_Mod.o PBC_Mod.o \
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
@@ -161,7 +156,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	write_xrms.o write_xrms_atm.o xfit.o\
 	zero0.o zero.o zero3.o zero3x3.o zero_gofr.o zero_voronoi.o\
 	zeroa.o zeroi.o write_mol_dipole.o write_electric_field.o\
-	P_cm_split.o P_get_prot.o P_get_intra.o\
+	P_cm_split.o P_get_prot.o P_get_intra.o Pme_init.o\
 	Polarization_Forces.o Do_Electric_Fields.o
 
 OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o\
@@ -216,7 +211,7 @@ PRECOMP_PP = P_whoami.f P_open_input.f P_nwrite.f P_nread.f\
 	P_pme_assign_node.f 
 
 PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
-	Pme_init.f90 HYDRATION_Mod.f90
+	HYDRATION_Mod.f90 ORAC_Finalize.f90
 
 
 PRECOMP_F90 = $(PRE_F90) 
@@ -273,13 +268,22 @@ DUMP = dumprs.o readrs.o readrs_old.o
 # List of sources 
 #==========================================================================
 
+ifeq ($(TARGET0), Linux)
+LIST = Makefile $(INCLUDE) $(patsubst %.o, %.f, $(OBJ_NP))\
+	$(patsubst %.o, %.f, $(OBJ_PP)) $(PRECOMP_NP)\
+	$(PRECOMP_PP) $(LIBCOMP) $(patsubst %.o, %.f, $(EIGRS))\
+	$(patsubst %.o, %.c, $(OBJREC)) $(patsubst %.o, %.f, $(OBJREC1))\
+	$(patsubst %.o, %.f, $(DUMP)) $(patsubst %.o, %.c, $(OBJTIM))\
+	config.h_dist mtsmd_avg_inc.f mtsmd_dump_inc.f
+else
+LIST = Makefile $(INCLUDE) $(patsubst %.o, %.f, $(OBJ_NP))\
+	$(patsubst %.o, %.f, $(OBJ_PP)) $(PRECOMP_NP)\
+	$(PRECOMP_PP) $(LIBCOMP) $(patsubst %.o, %.f, $(EIGRS))\
+	$(patsubst %.o, %.f, $(OBJREC)) $(patsubst %.o, %.c, $(OBJREC1))\
+	$(patsubst %.o, %.f, $(DUMP)) $(patsubst %.o, %.c, $(OBJTIM))\
+	timer_linux.c config.h_dist mtsmd_avg_inc.f mtsmd_dump_inc.f
+endif
 
-LIST_OS  = $(OBJ_NP) $(OBJ_PP) $(EIGRS)  $(DUMP) recpr.o perc_bondh.o dblas.o
-LIST_FS   = $(PRECOMP_NP) $(PRECOMP_PP) $(PRECOMP_NKL) $(LIBCOMP) $(LIBCOMP)\
-	$(patsubst %.o, %.f*, $(LIST_OS))
-LIST_F90 = $(PRECOMP_F90)
-LIST_CS  = vstart.c 
-LIST_EXT = Makefile Make.* config.h mtsmd_avg_inc.f mtsmd_dump_inc.f $(INCLUDE)
 
 
 #==========================================================================
@@ -533,18 +537,12 @@ G95 :
 DISTRIBUTION : 
 	@rm -r -f $(CURDIR)/tmp_dir
 	mkdir $(CURDIR)/tmp_dir ;\
-	mkdir $(CURDIR)/tmp_dir/orac2k ;\
-	mkdir $(CURDIR)/tmp_dir/orac2k/source ;\
-	mkdir $(CURDIR)/tmp_dir/orac2k/source/python ;\
-	for j in $(LIST_FS);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	for j in $(LIST_F90);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	for j in $(LIST_CS);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	for j in $(LIST_EXT);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	cp python/include_f90.py $(CURDIR)/$(DIST_DIR)/python/;
+	mkdir $(CURDIR)/tmp_dir/orac ;\
+	mkdir $(CURDIR)/tmp_dir/orac/source ;\
+	ln -s $(CURDIR)/RCS $(CURDIR)/tmp_dir/orac/source/RCS ;\
+	cd $(CURDIR)/tmp_dir/orac/source ; co $(LIST) ; rm RCS ;\
+	mv config.h_dist config.h;\
+	chmod 644 * ; cd ../
 
 #	for j in $(LIST);\
 #	do cp $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/$$j;done;\
@@ -915,7 +913,7 @@ read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
 DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o
-RMS_Subtract_Mod.o: RMS_Subtract_Read.f90
+RMS_Subtract_Mod.o: RMS_Subtract_Read.f90 INPUT_Mod.o xerror_mod.o 
 read_parameters.o: parst.h parameters.h 
 read_parallel.CPP.o: parst.h cpropar.h unit.h
 rigfit.o: parst.h
@@ -959,7 +957,7 @@ write_diffusion.o: unit.h
 write_electric_field.o: parst.h cpropar.h unit.h
 write_vacf_phi.o: unit.h
 write_xrms.o:parst.h
-xerror.CPP.o: unit.h
+xerror.CPP.o: unit.h ORAC_Finalize.CPP.o
 zero_voronoi.o: parst.h voronoi.h
 M_memory.CPP.o: M_memory.CPP.f
 M_memory_s.CPP.o: M_memory_s.CPP.f
@@ -1001,7 +999,7 @@ P_Reduce_Forces.o: mpi_size.h
 P_Write_neighbors.o: mpi_size.h
 P_broadcast_i.o: mpi_size.h
 do_rfft3d.CPP.o: do_rfft3d.CPP.f90 
-Pme_init.CPP.o: Pme_init.CPP.f90 do_rfft3d.CPP.o
+Pme_init.o: do_rfft3d.CPP.o
 P_atoms_split_intra.CPP.o: P_atoms_split_intra.CPP.f
 Gauss_Overlap_Mod.o: Neighbors_Mod.o
 Polarization_Forces.o: Gauss_Overlap_Mod.o

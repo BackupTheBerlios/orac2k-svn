@@ -11,7 +11,7 @@ MODULE RFFT3D
   INCLUDE 'fftw_f77.i'
 CONTAINS
   SUBROUTINE do_rfft3d(isign,z,na1,na2,na3,na3_start,na3_local&
-       &,na2_start,na2_local,nda1,nda2,nda3,comm1d) 
+       &,na2_start,na2_local,nda1,nda2,nda3) 
     !***********************************************************************
     !                                                                      *
     !     Interface for FFTW version 2.1.5                                 *
@@ -52,7 +52,7 @@ CONTAINS
     
     IMPLICIT none
     INTEGER, INTENT(in) :: isign
-    INTEGER, INTENT(in), OPTIONAL :: na1,na2,na3,comm1d
+    INTEGER, INTENT(in), OPTIONAL :: na1,na2,na3
     REAL(8), DIMENSION (:,:,:), INTENT(inout) :: z
     INTEGER, INTENT(out), OPTIONAL :: nda1,nda2,nda3,na3_local&
          &,na3_start,na2_start,na2_local
@@ -128,9 +128,9 @@ CONTAINS
       nda1=(n1/2+1)*2
       nda2=n2
       ncache=1
-      CALL rfftw3d_f77_mpi_create_plan(plan_backward,comm1d&
+      CALL rfftw3d_f77_mpi_create_plan(plan_backward,MPI_COMM_WORLD&
            &,n1,n2,n3,FFTW_COMPLEX_TO_REAL,FFTW_MEASURE)
-      CALL rfftw3d_f77_mpi_create_plan(plan_forward ,comm1d&
+      CALL rfftw3d_f77_mpi_create_plan(plan_forward ,MPI_COMM_WORLD&
            &,n1,n2,n3,FFTW_REAL_TO_COMPLEX,FFTW_MEASURE)
       CALL rfftwnd_f77_mpi_local_sizes(plan_forward,n3_local,n3_start&
            &,n2_local,n2_start,total_work)
