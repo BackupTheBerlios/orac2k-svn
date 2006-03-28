@@ -357,6 +357,11 @@ c--         Topology file being read in ...
             END IF
          END IF
 
+c=====Command OLD_TPG =====================================================
+
+      ELSE IF(strngs(1).EQ. 'OLD_TPG') THEN
+         old_tpg=.TRUE.
+
 c=====Command READ_PRM_ASCII============================================
 c---- Read potential parameters from a text file ----------------------
 

@@ -1,7 +1,7 @@
 MODULE RMS_Subtract_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-24 12:26:38 marchi2>                           *
+!!$   Time-stamp: <2006-03-23 16:19:00 marchi2>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -324,7 +324,7 @@ CONTAINS
     ALLOCATE(U(n_dip,n_dip),VT(n_dip,n_dip),sigma(n_Dip,n_Dip)&
          &,sing(n_dip)) 
 
-    REWIND(krms_dip)
+!!$    REWIND(krms_dip)
 
     fcounter=1.0D0/DBLE(counter)
     WRITE(krms_dip,'(''Ring Dipole Correlation at '',f12.3,'' fs'')')&

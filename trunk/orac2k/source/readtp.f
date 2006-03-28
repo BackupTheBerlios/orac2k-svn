@@ -31,6 +31,7 @@
       INTEGER i,j,nsevere
       CHARACTER*80 errmsg
       CHARACTER*8 fmt
+      REAL*8 dummy
 
 *==================== EXECUTABLE STATEMENTS ============================
 
@@ -209,16 +210,29 @@
      &                 (ecc12(i),i=1,lpnbd*(lpnbd+1)/2)
           END IF
       ELSE
-          READ(kdump,END=100) nbun,iz,
-     x                 ((potbo(i,j),i=1,lbond),j=1,2),
-     x                 ((potbe(i,j),i=1,lbend),j=1,4),
-     x                 ((potto(i,j),i=1,ltors),j=1,2),
-     x                 ((potit(i,j),i=1,litor),j=1,3),
-     x                 (pnbd1(i),i=1,lpnbd),(pnbd2(i),i=1,lpnbd),
-     x                 (pnbd3(i),i=1,lpnbd),(pnbd4(i),i=1,lpnbd),
-     &                 (phyd1(i),i=1,lphyd),
-     x                 (phyd2(i),i=1,lphyd)
-          IF(iz .EQ. 1) THEN
+         IF(old_tpg) THEN
+            READ(kdump,END=100) nbun,iz,
+     &           ((potbo(i,j),i=1,lbond),j=1,2),
+     &           ((potbe(i,j),i=1,lbend),j=1,4),
+     &           ((dummy,i=1,lbend),j=1,3),
+     &           ((potto(i,j),i=1,ltors),j=1,2),
+     &           ((potit(i,j),i=1,litor),j=1,3),
+     &           (pnbd1(i),i=1,lpnbd),(pnbd2(i),i=1,lpnbd),
+     &           (pnbd3(i),i=1,lpnbd),(pnbd4(i),i=1,lpnbd),
+     &           (phyd1(i),i=1,lphyd),
+     &           (phyd2(i),i=1,lphyd)
+         ELSE
+            READ(kdump,END=100) nbun,iz,
+     &           ((potbo(i,j),i=1,lbond),j=1,2),
+     &           ((potbe(i,j),i=1,lbend),j=1,4),
+     &           ((potto(i,j),i=1,ltors),j=1,2),
+     &           ((potit(i,j),i=1,litor),j=1,3),
+     &           (pnbd1(i),i=1,lpnbd),(pnbd2(i),i=1,lpnbd),
+     &           (pnbd3(i),i=1,lpnbd),(pnbd4(i),i=1,lpnbd),
+     &           (phyd1(i),i=1,lphyd),
+     &           (phyd2(i),i=1,lphyd)
+         END IF
+            IF(iz .EQ. 1) THEN
              READ(kdump) 
      &                 (ecc6(i),i=1,lpnbd*(lpnbd+1)/2),
      &                 (ecc12(i),i=1,lpnbd*(lpnbd+1)/2)

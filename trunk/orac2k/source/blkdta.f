@@ -129,6 +129,7 @@ c-----
       restart_old=.FALSE.
       restart_read=.FALSE.
       restart_write=.FALSE.
+      old_tpg=.FALSE.
       read_co=.FALSE.
       gofr_nprint=0
       gofr_navg=0

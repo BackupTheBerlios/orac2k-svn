@@ -85,7 +85,7 @@
      &     ,efield,lmol_ef,print_ef,print_dp,inst_fit,calc_cofm,latms
      &     ,sel_lda,avg_lda,lda_flu,lda_hyd,prot_hyd,res_time,prot_lda
      &     ,polar,EPotential,DoFreeEnergy,Virtual_residue,skip_step
-     &     ,scan_traj,Old_dipoles,mesos
+     &     ,scan_traj,Old_dipoles,mesos,old_tpg
       LOGICAL lfield,prtatl,prthbl,prtnbl,prtcnl,prtbal,prtptl,prtitl
      &     ,prtbndl,prtseq,prtipw,prtn14,fold,scharge,UnCharge,pfix
      &     ,nonbnd,noneq,wrtgyr,iobdmp,dmprnd_i,dmprnd_o,hoover,thermos
@@ -160,7 +160,7 @@
      &     ,stretch,stretch_heavy,recstrc,mdsim,minimize,frequencies
      &     ,conj_grad,steepest,write_grad,l_bfgs_b,md_respa,stoprun
      &     ,ltest_times,clean,start_conf,annealing,heating,Old_Dipoles
-     &     ,mesos,change_cell,resize_cell,energy_then_die,title0
+     &     ,mesos,old_tpg,change_cell,resize_cell,energy_then_die,title0
      &     ,linked_cell,restart_old,restart_read,restart_write,read_co
      &     ,landersen,adjust_cnstr,readjust_cnstr,tpgprm_read,equi
      &     ,P_dyn_update,native,check_native,SecStructure
@@ -173,7 +173,7 @@
      &     ,bfgs_factr,hstep_freq,size_atom_cav,bin_size_cav
      &     ,rmax_size_cav,erfc_bin,hhisto_bin,erfc_arr(4,mspline)
      &     ,erf_arr_corr(4,mspline),delew,rlew,ruew,chrge(m1),mass(m1)
-     &     ,pmass(m1),wcoef,potbe(m2,4),potbo(m9,2),potbo_cnst(m9,2)
+     &     ,pmass(m1),wcoef,potbe(m2,7),potbo(m9,2),potbo_cnst(m9,2)
      &     ,potto(m3,2),potit(m4,3),pnbd1(m6),pnbd2(m6),pnbd3(m6)
      &     ,pnbd4(m6),ecc6(m5),ecc12(m5),ecc146(m5),ecc1412(m5),c6pw(m7)
      &     ,c12pw(m7),deps(m7),phyd2(m5),phyd1(m5),csecp(4,m13,m14)
