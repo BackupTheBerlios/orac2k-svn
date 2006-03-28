@@ -3,6 +3,8 @@
 #                    Cluster COMPAQ                                    #
 #                                                                      #
 ########################################################################
+OTHER_LIBS = /dev/null
+
 ifeq ($(MODE), SEQUENTIAL)
 TARGET0 = OSF1
 TARGET1 = 'AXP'

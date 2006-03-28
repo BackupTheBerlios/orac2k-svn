@@ -25,5 +25,6 @@ endif
 
 CFLAGS = -O3 -DPGI
 FFTW_LIB = /workdir/marchi2/fftw.new/lib 
+OTHER_LIBS=/usr/local/soft/pgi/linux86-64/5.2/lib
 LLFLAGS= -L/usr/local/soft/pgi/linux86-64/5.2/lib  -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw\
 	-llapack

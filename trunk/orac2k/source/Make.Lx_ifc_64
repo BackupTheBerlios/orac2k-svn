@@ -27,6 +27,6 @@ endif
 
 CFLAGS = -O3 -DPGI
 FFTW_LIB = /usr/local/fftw_OMP/lib
-OTHERS_LIB=/opt/intel/mkl/8.0.1/lib/em64t 
+OTHER_LIBS=/opt/intel/mkl/8.0.1/lib/em64t 
 LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_lapack \
 	-lmkl_em64t -lguide -lpthread 

@@ -16,5 +16,6 @@ CC = cc
 CPP = /usr/bin/cpp
 CFLAGS = -O3 -DG95
 FFTW_LIB = /sw/lib
+OTHER_LIBS = /dev/null
 LLFLAGS = -lrfftw -lfftw 
 endif
