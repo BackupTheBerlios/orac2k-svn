@@ -1,9 +1,9 @@
       SUBROUTINE comp_neigh_vor(nstart_h,nend_h,nstart_ah,nend_ah
-     &     ,heavy_vor,beta,nato,ngrp,grppt,nnlpp,cutoff_vor,xp0,yp0,zp0
+     &     ,heavy_vor,beta,nato,ngrp,grppt,cutoff_vor,xp0,yp0,zp0
      &     ,xpg,ypg,zpg,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <04/12/16 14:38:51 marchi>                             *
+*   Time-stamp: <2006-03-31 14:43:41 marchi2>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,13 +21,14 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE Module_Neighbors, ONLY: Neigh_Start=>Start, Neigh_Delete
+     &     =>Delete, Neighbors, neigha, neighb, neighc
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
       
       INTEGER nig_nnl,nnnlpp_vor,iret,nstart_h,nend_h,nstart_ah,nend_ah
       INTEGER nato,ngrp,grppt(2,*)
-      INTEGER nnlpp(*)
       REAL*8  xp0(*),yp0(*),zp0(*),xpg(*),ypg(*),zpg(*),co(3,3)
      &     ,cutoff_vor
       LOGICAL heavy_vor
@@ -48,23 +49,27 @@
 
       REAL*8  rs,xgg,ygg,zgg,xpgi,ypgi,zpgi,xpi,ypi,zpi,xc,yc,zc,xg,yg
      &     ,zg,cutoff2
-      INTEGER map,i,i1,j1,j,m,n,jj,mz,o
+      INTEGER map,i,i1,j1,j,m,n,jj,mz,o,p_nn
+      TYPE(Neighbors), DIMENSION (:), POINTER :: neigh
 
       INCLUDE 'pbc.h'
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+      neigh=>neigha
       iret=0
       cutoff2=cutoff_vor**2
       n=0
       o=0
+      p_nn=0
       DO i=nstart_h,nend_h
-         m=nnlpp(1+n)
+         p_nn=p_nn+1
+         m=neigh(p_nn) % no
          xpgi=xpg(i)
          ypgi=ypg(i)
          zpgi=zpg(i)
          DO jj=1,m
-            j=nnlpp(jj+1+n)
+            j=neigh(p_nn) % nb(jj)
             xgg=xpgi-xpg(j)
             ygg=ypgi-ypg(j)
             zgg=zpgi-zpg(j)
@@ -82,7 +87,7 @@
                   zpi=zp0(i1)
                   map=0
                   DO jj=1,m
-                     j=nnlpp(jj+1+n)
+                     j=neigh(p_nn) % nb(jj)
                      DO j1=grppt(1,j),grppt(2,j)
                         IF(i1 .NE. j1 .AND. beta(j1)(1:1) .NE. 'h') THEN
                            xg=xpi-xp0(j1)-xmap(jj)
@@ -155,7 +160,7 @@
                zpi=zp0(i1)
                map=0
                DO jj=1,m
-                  j=nnlpp(jj+1+n)
+                  j=neigh(p_nn) % nb(jj)
                   DO j1=grppt(1,j),grppt(2,j)
                      IF(i1 .NE. j1) THEN
                         xg=xpi-xp0(j1)-xmap(jj)

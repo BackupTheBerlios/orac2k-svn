@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2006-02-15 16:40:43 marchi2>                             *
+*   Time-stamp: <2006-03-31 14:44:15 marchi2>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -591,7 +591,6 @@ c$$$====================================================================
       CALL timer(vfcp,tfcp,elapse)
       gcpu=tfcp
 
-      WRITE(*,*) start_anl,stop_anl
       IF(ndipole .GT. 0) THEN
          CALL get_memory_iobuffer(start_anl,stop_anl,start_time
      &        ,end_time,length_run,atom_record,length_tot,length_fft)
@@ -687,7 +686,6 @@ c$$$====================================================================
      &              ,xpcc(nnstep),ypcc(nnstep),zpcc(nnstep)
      &              ,RotMat(1,1,nnstep),xt_cm,yt_cm,zt_cm,nato_slt)
 
-               WRITE(*,*) 'Nstep =',nnstep,istep
             END DO
          END IF
 
@@ -1020,12 +1018,12 @@ c$$$====================================================================
                            IF(linked_cell) THEN
                               CALL lc_index(indxyz,ncx,ncy,ncz,nind
      &                             ,indxi,indxj,indxk,aux,co)
+                              
                               IF(voronoi) THEN
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,nnlpp0,npp_u,npp,worka
-     &                                ,kprint,.FALSE.)
+     &                                ,ncube,worka,kprint,.FALSE.)
                               ELSE IF(prot_hyd) THEN
                                  CALL lc_list2(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
@@ -1044,8 +1042,7 @@ c$$$====================================================================
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,nnlpp0,npp_u,npp,worka
-     &                                ,kprint,.TRUE.)
+     &                                ,ncube,worka,kprint,.TRUE.)
                               END IF 
                            ELSE
 *----- Compute neighbors
@@ -1056,9 +1053,8 @@ c$$$====================================================================
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
-     &                                ,worka,cpu_h,ncpu_h,nstart_h
-     &                                ,nend_h,nstart_ah,nend_ah
+     &                                ,stressd_p,worka,cpu_h,ncpu_h
+     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               ELSE
@@ -1067,9 +1063,8 @@ c$$$====================================================================
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
-     &                                ,worka,cpu_h,ncpu_h,nstart_h
-     &                                ,nend_h,nstart_ah,nend_ah
+     &                                ,stressd_p,worka,cpu_h,ncpu_h
+     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               END IF
@@ -1120,7 +1115,7 @@ c$$$====================================================================
                         CALL zero_voronoi
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
      &                       ,nend_ah,heavy_vor,beta,ntap,ngrp,grppt
-     &                       ,nnlpp0,cutoff_vor,xpa,ypa,zpa,xpga,ypga
+     &                       ,cutoff_vor,xpa,ypa,zpa,xpga,ypga
      &                       ,zpga,co,iret,errmsg)
 #ifdef PARALLEL
                         CALL P_get_errmsg(iret,errmsg,80,node,nprocs
