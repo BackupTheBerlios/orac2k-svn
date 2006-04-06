@@ -9,7 +9,7 @@
      &     ,kwrite_dump_o(nfile_dump),no_records_i(nfile_dump)
      &     ,no_records_o(nfile_dump),nwrite_dump_i,nwrite_dump_o
      &     ,recl1_dump_o,recl1_dump_i,recl2_dump_o,recl2_dump_i
-     &     ,kvoronoi,kcavities,ktopol,khbonds,khhisto,kabmd,kdipole
+     &     ,kcavities,ktopol,khbonds,khhisto,kabmd,kdipole
      &     ,knative,knative_tpl,kdiff,kfreq,kequi,kout_ef,kout_dp
      &     ,kout_dp_sta,kout_dp_tot,kpol_inp,kxslt,kfit,kcalc_cofm
      &     ,klda_inst,klda_eend,klda_rmin,klda_flu,klda_hyd,kprot_hyd
@@ -29,7 +29,7 @@
      &     ,iurest,kspec,kgr,kplot_fragm,kfragm_dist,kplot_center
      &     ,kgofr_sk,ksofk,kvi,kcoord_slv,kcoord_slt,ktpgprm_write
      &     ,ktpgprm_read,kavg,kavg_xrms,kwrite_dump_i,kwrite_dump_o
-     &     ,kvoronoi,kcavities,ktopol,khbonds,khhisto,kabmd,kdipole
+     &     ,kcavities,ktopol,khbonds,khhisto,kabmd,kdipole
      &     ,knative,knative_tpl,kdiff,nwrite_dump_i,nwrite_dump_o
      &     ,no_records_i,no_records_o,recl1_dump_o,recl1_dump_i
      &     ,recl2_dump_o,recl2_dump_i,kfreq,kequi,file_names_i
