@@ -34,7 +34,7 @@ include Make.what
 INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
 	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
 	mts_vacf.inc pme.inc parallel.inc parameters.inc\
-	lc_list.inc voronoi.inc\
+	lc_list.inc\
 	iobuffer.inc pressure.h DXMLDEF.FOR mtsmd_avg_inc.f \
 	mtsmd_dump_inc.f
 
@@ -51,7 +51,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
 	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
-	GEOM_groups_Mod.o PBC_Mod.o \
+	GEOM_groups_Mod.o PBC_Mod.o HEATING_Mod.o \
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
@@ -97,7 +97,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	f1dim_adjust_bonds.o \
 	ferrf.o fit.o ferrf_tag.o fftpack.o fft3-public.o fft_default.o\
 	fft_pme_init.o fill_charge_grid.o fill_dipole_grid.o\
-	find_diss_mol.o find_igint_vor.o find_length_run.o\
+	find_diss_mol.o  find_length_run.o\
 	find_thermos.o fitors.o fix_molecules.o \
 	fnb14.o fnb14_2.o fnbgrp.o fnbgrp2.o fndfmt.o fndgrp.o fpbend.o fpbond.o\
 	fpbond_adjust_bonds.o fptors.o gauss.o gen_abmd_kvect.o\
@@ -211,7 +211,7 @@ PRECOMP_PP = P_whoami.f P_open_input.f P_nwrite.f P_nread.f\
 	P_pme_assign_node.f 
 
 PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
-	HYDRATION_Mod.f90 ORAC_Finalize.f90
+	HYDRATION_Mod.f90 ORAC_Finalize.f90 VORONOI_Mod.f90
 
 
 PRECOMP_F90 = $(PRE_F90) 
@@ -407,14 +407,6 @@ iobuffer.h: iobuffer.inc
 	@$(CPP) iobuffer.inc | awk '!/^ *$$/ && !/^#/' > temp
 	./python/include_f90.py temp
 	file=iobuffer;\
-	test -f $$file.h && ( cmp -s $$file.h temp || \
-	cp temp $$file.h) || cp temp $$file.h ;\
-	rm -f temp temp2 >/dev/null
-
-voronoi.h: config.h voronoi.inc
-	@$(CPP) -D$(MEMORY) voronoi.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
-	file=voronoi;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
 	rm -f temp temp2 >/dev/null
@@ -719,7 +711,7 @@ add_solvent_tpg.o: parst.h cpropar.h
 adjust_solvent.o: parst.h
 adjust_bonds.o: parst.h
 analyse_voronoi.CPP.o:analyse_voronoi.CPP.f
-analyse_voronoi.CPP.o:parst.h voronoi.h
+analyse_voronoi.CPP.o:parst.h VORONOI_Mod.CPP.o
 bcnstp.o: pbc.h
 bldbox.CPP.o:bldbox.CPP.f cpropar.h parst.h
 setup_box.CPP.o: setup_box.CPP.f cpropar.h parst.h unit.h
@@ -751,14 +743,14 @@ comp_abmd_fcryst.o: parst.h
 comp_abmd_fnative.CPP.o: comp_abmd_fnative.CPP.f parst.h
 comp_contacts.o: pbc.h
 comp_native.o: pbc.h
-comp_neigh_vor.o: parst.h pbc.h voronoi.h
-comp_cavities_vor.o: parst.h voronoi.h pbc.h analysis.h
+comp_neigh_vor.o: parst.h pbc.h VORONOI_Mod.CPP.o
+comp_cavities_vor.o: parst.h VORONOI_Mod.CPP.o pbc.h analysis.h
 comp_dip.o: pbc.h
 comp_dynamic_mat.o: parst.h cpropar.h unit.h
 comp_total_energy.CPP.o: parst.h cpropar.h unit.h
 comp_thermos_energy.o: unit.h
 comp_thermos_forces.o: unit.h
-comp_voronoi.CPP.o: pbc.h parst.h voronoi.h
+comp_voronoi.CPP.o: pbc.h parst.h VORONOI_Mod.CPP.o
 correc_stress.CPP.o: unit.h
 correc_stress_n0.CPP.o: unit.h
 cov_thermos.o: unit.h
@@ -778,7 +770,7 @@ cself.o: unit.h
 cself_dipole.o: unit.h
 delrfg.o: parst.h
 drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
-	parst.h iobuffer.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
+	parst.h iobuffer.h lc_list.h VORONOI_Mod.CPP.o analysis.h HYDRATION_Mod.CPP.o\
 	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
 	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o
 dspat.o: parst.h pbc.h
@@ -797,7 +789,6 @@ fft4rc.o: fft4rc.LIB.f DXMLDEF.FOR
 fft_pme.CPP.o: fft_pme.CPP.f pme.h
 fft_pme2.CPP.o: fft_pme2.CPP.f pme.h
 fhbondb.o: parst.h pbc.h
-find_igint_vor.o: parst.h voronoi.h
 find_length_run.o: unit.h
 fitors.o: unit.h 
 fnb14.o: unit.h
@@ -840,7 +831,9 @@ mts_plots.o: unit.h
 mts_spectra.o: mts_spectra.h
 mtsmd.CPP.o: mtsmd.CPP.f cpropar.h unit.h fourier.h \
 	parst.h pme.h lc_list.h parallel.h mtsmd_avg_inc.CPP.f\
-	mtsmd_dump_inc.CPP.f Module_Extra_Forces.o
+	mtsmd_dump_inc.CPP.f Module_Extra_Forces.o HEATING_Mod.o\
+	Module_Fourier.o Class_Gauss_Param.o Class_Gcharges.o\
+	Poisson_Boltzmann.o Module_Stress.o 
 orac.CPP.o: orac.CPP.f parst.h cpropar.h orac.h unit.h parallel.h
 open_file_dump.CPP.o: open_file_dump.CPP.f unit.h
 
@@ -938,6 +931,7 @@ vstart.o: config.h
 verify_input.CPP.f: pressure.h
 verify_input.CPP.o: parst.h cpropar.h unit.h pme.h
 verify_variables.o: parst.h cpropar.h unit.h
+VORONOI_Mod.CPP.o: config.h VORONOI_Mod.CPP.f90 
 write_fragm_dist: pbc.h
 write_cavities_vor.CPP.o: write_cavities_vor.CPP.f
 write_cavities_vor.CPP.o: parst.h
@@ -945,7 +939,7 @@ write_gyr.o: parst.h
 write_gofrp.o: unit.h
 write_gofrw.o: unit.h
 write_hbonds.o: parst.h pbc.h
-write_hbonds_vor.o: parst.h voronoi.h
+write_hbonds_vor.o: parst.h VORONOI_Mod.CPP.o
 write_hhisto.o: unit.h
 write_bonds.o: parst.h
 write_bends.o: parst.h
@@ -958,7 +952,7 @@ write_electric_field.o: parst.h cpropar.h unit.h
 write_vacf_phi.o: unit.h
 write_xrms.o:parst.h
 xerror.CPP.o: unit.h ORAC_Finalize.CPP.o
-zero_voronoi.o: parst.h voronoi.h
+zero_voronoi.o: parst.h VORONOI_Mod.CPP.o
 M_memory.CPP.o: M_memory.CPP.f
 M_memory_s.CPP.o: M_memory_s.CPP.f
 write_confc.CPP.o: write_confc.CPP.f
