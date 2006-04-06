@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2006-03-31 14:44:15 marchi2>                             *
+*   Time-stamp: <2006-04-05 17:30:17 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -42,6 +42,10 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE VORONOI_Mod, ONLY: voronoi, VOR_Init=>Init, VOR_cut=>cutoff
+     &     ,VOR_Heavy=>heavy, VOR_fluct=>fluct,VOR_access=>access
+     &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,maxpla,maxver
+     &     ,kvoronoi,nvoronoi,VOR_Fluctuations=>Fluctuations
       USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
      &     HYD_Initialize_P=>Initialize_P,
      &     HYD_Initialize_Array=>Initialize_Array,
@@ -94,7 +98,6 @@
       include 'pme.h'
       INCLUDE 'lc_list.h'
       INCLUDE 'iobuffer.h'
-      INCLUDE 'voronoi.h'
       INCLUDE 'analysis.h'
       INCLUDE 'unit.h'
       
@@ -345,8 +348,7 @@ c$$$====================================================================
          ELSE
             mma=ntap/(nprocs-1)+10
          END IF
-         ALLOCATE(nnlpp_vor(pnnlpp_vor,mma),ig_nnl(pig_nnl,mma))
-         ALLOCATE(area_vor(pnnlpp_vor,mma), volume_vor(ntap))
+         CALL VOR_Init(mma,ntap,nbun,mres,grppt,ss_index)
       END IF
       IF(cavities) THEN
          IF(nprocs .EQ. 1) THEN
@@ -359,7 +361,8 @@ c$$$====================================================================
      &        ,cavity_r(mqq))
       END IF
       IF(voronoi) THEN
-         IF(node .EQ. 0) CALL write_voronoi_header(kvoronoi)
+         IF(node .EQ. 0 .AND. (.NOT. VOR_fluct)) CALL
+     &        write_voronoi_header(kvoronoi)
       END IF
       IF(cavities) THEN
          CALL initialize_cavities(ss_index,ntap,nres(1,1),bin_size_cav
@@ -1114,8 +1117,8 @@ c$$$====================================================================
                         WRITE(*,93000) 
                         CALL zero_voronoi
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
-     &                       ,nend_ah,heavy_vor,beta,ntap,ngrp,grppt
-     &                       ,cutoff_vor,xpa,ypa,zpa,xpga,ypga
+     &                       ,nend_ah,VOR_heavy,beta,ntap,ngrp,grppt
+     &                       ,VOR_cut,xpa,ypa,zpa,xpga,ypga
      &                       ,zpga,co,iret,errmsg)
 #ifdef PARALLEL
                         CALL P_get_errmsg(iret,errmsg,80,node,nprocs
@@ -1126,20 +1129,19 @@ c$$$====================================================================
                         CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
      &                       ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret,errmsg
      &                       )
-                        IF(voronoi_volume .OR. voronoi_access .OR.
-     &                       voronoi_contact .OR. voronoi_neighbor) THEN
-                           CALL analyse_voronoi(nstart_ah,nend_ah
-     &                          ,nlocal_ah,nstart_uh,nend_uh,nlocal_uh
-     &                          ,node,nprocs,ncube,fstep,volume
-     &                          ,voronoi_volume,voronoi_access
-     &                          ,voronoi_contact,voronoi_neighbor
-     &                          ,ncontact_slt,contact_slt,voronoi_res
-     &                          ,kvoronoi,ss_index,ss_point(1,1),grppt
-     &                          ,mend,protl,nprot,ntap,nbun,beta,atomp
-     &                          ,nres(1,1),nres(1,2),mres,prsymb,iret
-     &                          ,errmsg)
-                           IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
+
+                        CALL analyse_voronoi(nstart_ah,nend_ah
+     &                       ,nlocal_ah,nstart_uh,nend_uh
+     &                       ,nlocal_uh,node,nprocs,ncube,fstep
+     &                       ,volume,ss_index,ss_point(1,1),grppt
+     &                       ,mend,protl,nprot,ntap,nbun,beta
+     &                       ,atomp,nres(1,1),nres(1,2),mres
+     &                       ,prsymb,iret,errmsg)
+                        IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
+                        IF(VOR_fluct) THEN
+                           CALL VOR_Fluctuations(xp0,yp0,zp0)
                         END IF
+
                      END IF
                   END IF
                   

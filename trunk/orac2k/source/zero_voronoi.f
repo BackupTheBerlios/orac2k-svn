@@ -1,7 +1,7 @@
       SUBROUTINE zero_voronoi
 
 ************************************************************************
-*   Time-stamp: <2005-01-27 17:52:05 marchi>                             *
+*   Time-stamp: <2006-04-05 14:31:18 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -19,13 +19,13 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: volume_vor,area_vor,nnlpp_vor
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
 
 *----------------------- VARIABLES IN SCRATCH COMMON ------------------*
       
-      INCLUDE 'voronoi.h'
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 

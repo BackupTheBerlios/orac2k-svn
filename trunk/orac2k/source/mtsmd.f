@@ -54,6 +54,9 @@
      &     pop3, Extra_Force, Extra_Init=> Stretch_Init
 
       USE Module_Stress, ONLY: FixedAngles_Stress
+      USE HEATING_Mod, ONLY: HEAT_Init=>Init, HEAT_Set_slv=>Set_Slv
+     &     ,HEAT_Set_slt=>Set_slt
+
       IMPLICIT none
 #if defined PARALLEL
       INTERFACE
@@ -942,6 +945,10 @@
          IF(flag .EQ. 0) THEN
             CALL zero0(eta,neta)
          END IF
+      END IF
+      IF(heating) THEN
+         CALL HEAT_Init(t,dtemp,ntap,nato_slv,nmol,cnstpp,cnstpp_slv
+     &        ,ss_index,efact,nstart_2,nend_2,node)
       END IF
 
 *=======================================================================

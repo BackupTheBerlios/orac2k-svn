@@ -377,17 +377,11 @@ c-----
       bin_size_cav=0.01D0
       rmax_size_cav=3.0D0
       ncavities=0
-      cutoff_vor=6.0D0
-      voronoi_res(1)=-1
       ChargeIon=0.0D0
       SigmaIon=0.0D0
       mass_pfix=0.0D0
       SmoothFactor=0.0D0
       DoFreeEnergy=.FALSE.
-      voronoi_access=.FALSE.
-      voronoi_volume=.FALSE.
-      voronoi_neighbor=.FALSE.
-      voronoi=.FALSE.
       cavities=.FALSE.
       hbonds_res=.FALSE.
       hbonds_tot=.FALSE.

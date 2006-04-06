@@ -1,12 +1,10 @@
       SUBROUTINE analyse_voronoi(nstart_ah,nend_ah,nlocal_ah,nstart_uh
      &     ,nend_uh,nlocal_uh,node,nprocs,ncube,fstep,volume_co
-     &     ,voronoi_volume,voronoi_access,voronoi_contact
-     &     ,voronoi_neighbor,ncontact_slt,contact_slt,voronoi_res
-     &     ,kvoronoi,ss_index,ss_point,grppt,mend,protl,nprot,nato,nbun
-     &     ,beta,atomp,res1,res2,mres,prsymb,iret,errmsg)
+     &     ,ss_index,ss_point,grppt,mend,protl,nprot,nato,nbun,beta
+     &     ,atomp,res1,res2,mres,prsymb,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <99/02/12 12:51:59 marchi>                             *
+*   Time-stamp: <2006-04-05 15:42:52 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -24,33 +22,30 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: voronoi, kvoronoi,VOR_access=>access
+     &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,volume_vor
+     &     ,area_vor,nnlpp_vor,VOR_fluct=>fluct,vol_slv,vol_res,vol_slt
+     &     ,area_slt,area_slv,area_frac,area_tot,vol_type,index
+     &     ,vol_typep
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
 
       INTEGER nstart_ah,nend_ah,nlocal_ah,nstart_uh,nend_uh,nlocal_uh
      &     ,node,nprocs,ncube
-      INTEGER iret,kvoronoi,nato,nprot,nbun,ncontact_slt,contact_slt(2,
-     &     *),voronoi_res(*)
+      INTEGER iret,nato,nprot,nbun
       INTEGER res1(*),res2(*),ss_index(*),protl(*),atomp(*),mres(2,*)
      &     ,grppt(2,*),mend(*),ss_point(*)
       REAL*8  fstep,volume_co
       CHARACTER*7 beta(*)
       CHARACTER*8 prsymb(*)
       CHARACTER*80 errmsg
-      LOGICAL voronoi_volume,voronoi_access,voronoi_contact
-     &     ,voronoi_neighbor
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
       INCLUDE 'parst.h'
-      INCLUDE 'voronoi.h'
-      REAL*8  vol_res(m1),vol_slv,vol_slt(npm),area_slt(nores)
-     &     ,area_slv(nores),area_frac(nores),area_tot(nores)
-     &     ,area_contact(pcontact_slt),area_prot(npm),vol_type(nores)
-      INTEGER nvol_type,index(nores),mmap(3),vol_typep(nores)
-      COMMON /rag1/ vol_res,vol_slv,vol_slt,area_slt,area_slv
-     &     ,area_contact,area_prot,vol_type,index,mmap,vol_typep
+
+      INTEGER nvol_type,mmap(3)
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -76,7 +71,7 @@
 
 
       IF(node .EQ. 0) THEN
-         IF(voronoi_volume) THEN
+         IF(VOR_volume) THEN
             volume=0.0D0
             DO i1=1,nato
                ign=res1(i1)
@@ -98,26 +93,14 @@
                END IF
                igo=ign
             END DO
-            IF(voronoi_res(1) .EQ. 0) THEN
-               IF(map .NE. 0) THEN
-                  DO i1=1,map,4
-                     n=3
-                     IF(map-i1 .LT. 3) n=map-i1
-                     WRITE(kvoronoi,'(a1,f11.2,1x,a6,4(f10.3,1x,i4)
-     &                    )') 'T',fstep,'VolRes',(vol_res(j),j,j=i1,i1+n
-     &                    )
-                  END DO
-               END IF
-            ELSE
-               IF(map .NE. 0) THEN
-                  DO i1=1,voronoi_res(1),4
-                     n=3
-                     IF(voronoi_res(1)-i1 .LT. 3) n=voronoi_res(1)-i1
-                     WRITE(kvoronoi,'(a1,f11.2,1x,a6,4(f10.3,1x,i4)
-     &                    )') 'T',fstep,'VolRes',(vol_res(voronoi_res(j
-     &                    +1)),voronoi_res(j+1),j=i1,i1+n)
-                  END DO
-               END IF
+            IF(map .NE. 0) THEN
+               DO i1=1,map,4
+                  n=3
+                  IF(map-i1 .LT. 3) n=map-i1
+                  IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+     &                 ,'(a1,f11.2,1x,a6,4(f10.3,1x,i4))') 'T',fstep
+     &                 ,'VolRes',(vol_res(j),j,j=i1,i1+n)
+               END DO
             END IF
          END IF
 
@@ -148,15 +131,17 @@
          DO i1=1,map
             volume=volume+vol_slt(i1)
          END DO
-         WRITE(kvoronoi,'(''T'',f11.2,1x,''VolSlt'',f12.3,
-     &        '' VolSlv'',f12.3)') fstep,volume,vol_slv
+         IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+     &        ,'(''T'',f11.2,1x,''VolSlt'',f12.3,'' VolSlv'',f12.3)')
+     &        fstep,volume,vol_slv
          IF(node .EQ. 0) WRITE(*,1000) volume+vol_slv,volume_co
          IF(map .NE. 0) THEN
             DO i1=1,map,4
                n=3
                IF(map-i1 .LT. 3) n=map-i1
-               WRITE(kvoronoi,'(a1,f11.2,1x,a9,4(f10.3,1x,i4))') 'T'
-     &              ,fstep,'VolMolSlt',(vol_slt(j),j,j=i1,i1+n)
+               IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+     &              ,'(a1,f11.2,1x,a9,4(f10.3,1x,i4))') 'T',fstep
+     &              ,'VolMolSlt',(vol_slt(j),j,j=i1,i1+n)
             END DO
          END IF
 
@@ -193,9 +178,10 @@
             DO i1=1,map,3
                n=2
                IF(map-i1 .LT. 2) n=map-i1
-               WRITE(kvoronoi,'(a1,f11.2,1x,a7,3(f10.4,1x,a8))') 'T'
-     &              ,fstep,'VolType',(vol_type(j),prsymb(vol_typep(j)
-     &              ),j=i1,i1+n)
+               IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+     &              ,'(a1,f11.2,1x,a7,3(f10.4,1x,a8))') 'T',fstep
+     &              ,'VolType',(vol_type(j),prsymb(vol_typep(j)),j=i1,i1
+     &              +n)
             END DO
          END IF
 
@@ -208,7 +194,7 @@
 *--- Compute Voronoi interface between solute and solvent---------------
 *=======================================================================
 
-      IF(voronoi_access) THEN
+      IF(VOR_access) THEN
          o=0
          DO ia=nstart_uh,nend_uh
             area_slt(ia)=0.0D0
@@ -265,30 +251,15 @@
             END IF
          END DO
          IF(node .EQ. 0) THEN
-            IF(voronoi_res(1) .EQ. 0) THEN
-               IF(map .NE. 0) THEN
-                  DO i1=1,map,3
-                     n=2
-                     IF(map-i1 .LT. 2) n=map-i1
-                     WRITE(kvoronoi,'(a1,f11.2,1x,a4,3(f10.3,f10.3,i6)
-     &                    )') 'T',fstep,'Area',(area_frac(ia)
-     &                    ,area_tot(ia),index(ia),ia=i1,i1+n)
-                  END DO
-               END IF
-            ELSE
-               IF(map .NE. 0) THEN
-                  DO i1=1,map
-                     ok=.FALSE.
-                     j1=1
-                     DO WHILE(.NOT. ok .AND. j1 .LT. voronoi_res(i))
-                        j1=j1+1
-                        IF(index(i1) .EQ. voronoi_res(1+j1)) ok=.TRUE.
-                     END DO
-                     IF(ok) WRITE(kvoronoi
-     &                    ,'(a1,f11.2,1x,a4,f10.3,f10.3,i6)')'T',fstep
-     &                    ,'Area',area_frac(i1),area_tot(i1),index(i1)
-                  END DO
-               END IF
+            IF(map .NE. 0) THEN
+               DO i1=1,map,3
+                  n=2
+                  IF(map-i1 .LT. 2) n=map-i1
+                  IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+     &                 ,'(a1,f11.2,1x,a4,3(f10.3,f10.3,i6))') 'T',fstep,
+     &                 'Area',(area_frac(ia),area_tot(ia),index(ia),ia
+     &                 =i1,i1+n)
+               END DO
             END IF
          END IF
 #ifdef PARALLEL
@@ -297,60 +268,10 @@
       END IF
 
 *=======================================================================
-*--- Compute Voronoi contact surface among molecules of the ------------
-*--- solute ------------------------------------------------------------
-*=======================================================================
-
-      IF(nprocs .EQ. 1) THEN
-         IF(voronoi_contact) THEN
-            DO ic=1,ncontact_slt
-               area_contact(ic)=0.0D0
-            END DO
-            DO ic=1,nprot
-               area_prot(ic)=0.0D0
-            END DO
-            ia=ss_point(1)
-            DO ib=1,ia
-               i1=ss_point(1+ib)
-               m=nnlpp_vor(1,i1)
-               p1=atomp(i1)
-               DO j=1,m
-                  j1=nnlpp_vor(j+1,i1)
-                  p2=atomp(j1)
-                  DO ic=1,ncontact_slt
-                     IF(p1 .EQ. contact_slt(1,ic) .AND. p2 .EQ.
-     &                    contact_slt(2,ic)) THEN
-                        
-*---- Compute contact area between given molecules
-                        
-                        area_contact(ic)=area_contact(ic)+area_vor(j+1
-     &                       ,i1)
-                     END IF
-                  END DO
-                  IF(p1 .NE. p2) THEN
-                     
-*---- Compute total area for the molecule p1        
-                     area_prot(p1)=area_prot(p1)+area_vor(j+1,i1)
-                  END IF
-               END DO
-            END DO
-            IF(map .NE. 0) THEN
-               DO ic=1,ncontact_slt
-                  WRITE(kvoronoi,'(a1,f11.2,a14,i6,a5,i6,3f10.3)') 'T'
-     &                 ,fstep,' Contact Mol.',contact_slt(1,ic),' Mol '
-     &                 ,contact_slt(2,ic),area_contact(ic)
-     &                 ,area_prot(contact_slt(1,ic))
-     &                 ,area_prot(contact_slt(2,ic))
-               END DO
-            END IF
-         END IF
-      END IF
-
-*=======================================================================
 *--- Compute number of neighbors among solute and solvent --------------
 *=======================================================================
 
-      IF(voronoi_neighbor) THEN
+      IF(VOR_neighbor) THEN
          mmap(1)=0
          mmap(2)=0
          mmap(3)=0
@@ -379,9 +300,10 @@
             CALL P_merge_r8(mmap(3))
          END IF
 #endif
-         IF(node .EQ. 0) WRITE(kvoronoi,'(a1,f11.2,a16,i7,a9,i7,a9,i7)')
-     &        'T',fstep,' Neigh. SLT-SLT ',mmap(1),' SLV-SLV
-     &        ',mmap(3),' SLT-SLV ',mmap(2)
+         IF(node .EQ. 0 .AND. (.NOT. VOR_Fluct)) WRITE(kvoronoi
+     &        ,'(a1,f11.2,a16,i7,a9,i7,a9,i7)')'T',fstep
+     &        ,' Neigh. SLT-SLT ',mmap(1),' SLV-SLV',mmap(3),' SLT-SLV '
+     &        ,mmap(2)
 
 #ifdef PARALLEL
          CALL P_barrier

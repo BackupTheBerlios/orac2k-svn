@@ -3,7 +3,7 @@
      &     ,xpg,ypg,zpg,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-03-31 14:43:41 marchi2>                             *
+*   Time-stamp: <2006-04-05 14:58:27 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,6 +21,8 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: nnlpp_vor,area_vor,volume_vor,maxpla
+     &     ,max_neigh      
       USE Module_Neighbors, ONLY: Neigh_Start=>Start, Neigh_Delete
      &     =>Delete, Neighbors, neigha, neighb, neighc
       IMPLICIT none
@@ -38,7 +40,6 @@
 *----------------------- VARIABLES IN SCRATCH COMMON ------------------*
 
       INCLUDE 'parst.h'
-      INCLUDE 'voronoi.h'
 
       INTEGER index(max_neigh)
       INTEGER indexa(max_neigh)
@@ -182,7 +183,6 @@
                      errmsg=
      &' While counting neighbors, _MAX_NEIGH_ in config.h is '
      &//'too small. Abort'
-                     WRITE(6,*) map
                      RETURN
                   END IF
                END DO

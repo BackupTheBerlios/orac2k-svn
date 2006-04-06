@@ -1,5 +1,5 @@
       SUBROUTINE read_properties(fxrms,favg,favg_xrms,fvi,gofr_fprint
-     &     ,fvoronoi,fcavities,ftop_print,gofr_favg,gofr_fcomp,fprtvaf
+     &     ,fcavities,ftop_print,gofr_favg,gofr_fcomp,fprtvaf
      &     ,ftotvaf,fnovaf,fdipole,fnative,ffragm_dist,fhbonds,fhhisto
      &     ,frms,fgyr,freq_ef,freq_dp,fxslt,finst_fit,fcalc_cofm
      &     ,finst_lda,flda_flu,flda_hyd,fprot_hyd,fprot_lda
@@ -25,6 +25,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: VOR_Input=>Read_it
       USE HYDRATION_Mod, ONLY: HYD_coeff=>coeff, HYD_cutoff=>cutoff_max,
      &     HYD_Initialize=>Initialize, hydration, HYD_n_neighbors
      &     =>n_neighbors,HYD_ncx=>ncx,HYD_ncy=>ncy,HYD_ncz=>ncz,
@@ -49,7 +50,7 @@
       INTEGER iret
       CHARACTER*80 errmsg
       REAL*8  fxrms,fvi,gofr_fprint,gofr_favg,gofr_fcomp,fprtvaf,ftotvaf
-     &     ,fdipole,fnative,fnovaf,favg,favg_xrms,fvoronoi,fcavities
+     &     ,fdipole,fnative,fnovaf,favg,favg_xrms,fcavities
      &     ,ftop_print,ffragm_dist,fhbonds,fhhisto,frms,fgyr,sofk_fprint
      &     ,sofk_fcomp
       REAL*8 freq_ef,freq_dp,finst_fit,fcalc_cofm,finst_lda
@@ -600,88 +601,9 @@ c==== Command  VORONOI==================================================
 
       ELSE IF(strngs(1) .EQ. 'VORONOI' ) THEN
          not_time_corr=.TRUE.
-         voronoi=.TRUE.
-         heavy_vor=.FALSE.
-800      READ(knlist,'(a78)',END=600) line(1:78)
-         CALL wrenc(kprint,line)
-         IF(line(1:1) .EQ. '#') GOTO 800
-         CALL parse(line,sep,2,comm,strngs,40,nword,
-     x        iret,errmsg)
-
-         IF(strngs(1) .EQ. 'cutoff' ) THEN
-            CALL fndfmt(2,strngs(2),fmt)
-            READ(strngs(2),fmt) cutoff_vor
-
-         ELSE IF(strngs(1) .EQ. 'heavy_atoms') THEN
-            heavy_vor=.TRUE.
-
-         ELSE IF(strngs(1) .EQ. 'compute') THEN
-            IF(strngs(2) .EQ. 'contact_solute') THEN
-               IF(nword .NE. 4) THEN
-                  errmsg=err_args(1)//'3'
-                  CALL xerror(errmsg,80,1,30)
-                  nsevere=nsevere+1
-               END IF
-               ncontact_slt=ncontact_slt+1
-               IF(ncontact_slt .GT. pcontact_slt) THEN
-                  errmsg=
-     &  ' Number of solute molecules for contact surface exceeded.'
-                  CALL xerror(errmsg,80,1,30)
-                  nsevere=nsevere+1
-               END IF
-               voronoi_contact=.TRUE.
-               CALL fndfmt(1,strngs(3),fmt)
-               READ(strngs(3),fmt,err=20) contact_slt(1,ncontact_slt)
-               CALL fndfmt(1,strngs(4),fmt)
-               READ(strngs(4),fmt,err=20) contact_slt(2,ncontact_slt)
-
-            ELSE IF(strngs(2) .EQ. 'accessibility') THEN
-               voronoi_access=.TRUE.
-
-            ELSE IF(strngs(2) .EQ. 'volume') THEN
-               voronoi_volume=.TRUE.
-
-            ELSE IF(strngs(2) .EQ. 'neighbors') THEN
-               voronoi_neighbor=.TRUE.
-
-            ELSE
-               errmsg=err_unr(2)//strngs(2)
-               CALL xerror(errmsg,80,1,30)
-               nsevere = nsevere + 1
-            END IF
-
-         ELSE IF(strngs(1) .EQ. 'residue') THEN
-            CALL parse_numbers(err_unr,strngs,nword,voronoi_res,n_res
-     &           ,nsevere)
-
-         ELSE IF(strngs(1) .EQ. 'print' ) THEN
-            CALL fndfmt(2,strngs(2),fmt)
-            READ(strngs(2),fmt,err=20) fvoronoi
-            IF(strngs(3) .EQ. 'OPEN') THEN
-               CALL uscrpl(strngs(4),80)
-               INQUIRE(FILE=strngs(4),EXIST=exist)
-               IF(exist) THEN
-                  CALL openf(kvoronoi,strngs(4),'FORMATTED','OLD',0)
-               ELSE
-                  CALL openf(kvoronoi,strngs(4),'FORMATTED','NEW',0)
-               END IF
-            ELSE
-               errmsg='OPEN keyword not found'
-               CALL xerror(errmsg,80,1,30)
-               nsevere = nsevere + 1
-            END IF
-
-         ELSE IF(strngs(1) .EQ. ' ') THEN
-            GOTO 800
-
-         ELSE IF(strngs(1).EQ. 'END' ) THEN
-            GOTO 100
-         ELSE
-            errmsg=err_unr(2)//strngs(2)//err_end(1:14)//err_end(16:20)
-            CALL xerror(errmsg,80,1,30)
-            nsevere = nsevere + 1
-         END IF
-         GOTO 800
+         CALL VOR_Input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+         IF(read_err == 1) GOTO 20
 
 c==== Command  CAVITIES ================================================
 
@@ -2144,7 +2066,6 @@ c--   syntax errors: abort without verifying input
          CALL xerror(errmsg,80,1,2)
          STOP
       END IF
-      voronoi_res(1)=n_res
       top_bonds(1)=n_bonds
       top_bendings(1)=n_bendings
       top_ptors(1)=n_ptors
