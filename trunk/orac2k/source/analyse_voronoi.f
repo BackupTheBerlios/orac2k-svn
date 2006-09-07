@@ -4,7 +4,7 @@
      &     ,atomp,res1,res2,mres,prsymb,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-04-05 15:42:52 marchi>                             *
+*   Time-stamp: <2006-07-28 14:35:20 marchi>                           *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -26,7 +26,7 @@
      &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,volume_vor
      &     ,area_vor,nnlpp_vor,VOR_fluct=>fluct,vol_slv,vol_res,vol_slt
      &     ,area_slt,area_slv,area_frac,area_tot,vol_type,index
-     &     ,vol_typep
+     &     ,vol_typep,noprint
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -45,7 +45,7 @@
 
       INCLUDE 'parst.h'
 
-      INTEGER nvol_type,mmap(3)
+      INTEGER nvol_type,mmap(3),ierr
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -59,7 +59,6 @@
       iret=0
       igo=0
       map=0
-
 #ifdef PARALLEL
       IF(nprocs .NE. 1) CALL P_expand_r8(volume_vor,nstart_ah,nend_ah
      &     ,nlocal_ah,node,nprocs)
@@ -70,38 +69,36 @@
 *=======================================================================
 
 
-      IF(node .EQ. 0) THEN
-         IF(VOR_volume) THEN
-            volume=0.0D0
-            DO i1=1,nato
-               ign=res1(i1)
-               volume=volume+volume_vor(i1)
-               IF(i1 .EQ. 1) THEN
-                  vol=volume_vor(i1)
-               ELSE IF(i1 .EQ. nato) THEN
-                  map=map+1
+      IF(VOR_volume) THEN
+         volume=0.0D0
+         DO i1=1,nato
+            ign=res1(i1)
+            volume=volume+volume_vor(i1)
+            IF(i1 .EQ. 1) THEN
+               vol=volume_vor(i1)
+            ELSE IF(i1 .EQ. nato) THEN
+               map=map+1
+               vol=vol+volume_vor(i1)
+               vol_res(map)=vol
+            ELSE 
+               IF(igo .EQ. ign) THEN
                   vol=vol+volume_vor(i1)
+               ELSE IF(igo .NE. ign) THEN
+                  map=map+1
                   vol_res(map)=vol
-               ELSE 
-                  IF(igo .EQ. ign) THEN
-                     vol=vol+volume_vor(i1)
-                  ELSE IF(igo .NE. ign) THEN
-                     map=map+1
-                     vol_res(map)=vol
-                     vol=volume_vor(i1)
-                  END IF
+                  vol=volume_vor(i1)
                END IF
-               igo=ign
-            END DO
-            IF(map .NE. 0) THEN
-               DO i1=1,map,4
-                  n=3
-                  IF(map-i1 .LT. 3) n=map-i1
-                  IF(.NOT. VOR_Fluct) WRITE(kvoronoi
-     &                 ,'(a1,f11.2,1x,a6,4(f10.3,1x,i4))') 'T',fstep
-     &                 ,'VolRes',(vol_res(j),j,j=i1,i1+n)
-               END DO
             END IF
+            igo=ign
+         END DO
+         IF(map .NE. 0) THEN
+            DO i1=1,map,4
+               n=3
+               IF(map-i1 .LT. 3) n=map-i1
+               IF(.NOT. VOR_Fluct .AND. (node == 0) .AND. (.NOT. noprint
+     &              )) WRITE(kvoronoi,'(a1,f11.2,1x,a6,4(f10.3,1x,i4))')
+     &              'T',fstep,'VolRes',(vol_res(j),j,j=i1,i1+n)
+            END DO
          END IF
 
 
@@ -131,15 +128,17 @@
          DO i1=1,map
             volume=volume+vol_slt(i1)
          END DO
-         IF(.NOT. VOR_Fluct) WRITE(kvoronoi
-     &        ,'(''T'',f11.2,1x,''VolSlt'',f12.3,'' VolSlv'',f12.3)')
-     &        fstep,volume,vol_slv
-         IF(node .EQ. 0) WRITE(*,1000) volume+vol_slv,volume_co
+         IF(.NOT. VOR_Fluct .AND. (node == 0) .AND. (.NOT. noprint))
+     &        WRITE(kvoronoi
+     &        ,'(''T'',f11.2,1x,''VolSlt'',f12.3,'' VolSlv'',f12.3)'
+     &        )fstep,volume,vol_slv
+         IF(node == 0 .AND. (.NOT. noprint)) WRITE(*,1000) volume
+     &        +vol_slv,volume_co
          IF(map .NE. 0) THEN
             DO i1=1,map,4
                n=3
                IF(map-i1 .LT. 3) n=map-i1
-               IF(.NOT. VOR_Fluct) WRITE(kvoronoi
+               IF(.NOT. VOR_Fluct .AND. (.NOT. noprint)) WRITE(kvoronoi
      &              ,'(a1,f11.2,1x,a9,4(f10.3,1x,i4))') 'T',fstep
      &              ,'VolMolSlt',(vol_slt(j),j,j=i1,i1+n)
             END DO
@@ -153,7 +152,6 @@
          DO i=1,nbun
             IF(nvol_type .LT. mend(i)) nvol_type=mend(i)
          END DO
-
          DO i=1,nvol_type
             vol_type(i)=0.0D0
             vol_typep(i)=0
@@ -178,18 +176,15 @@
             DO i1=1,map,3
                n=2
                IF(map-i1 .LT. 2) n=map-i1
-               IF(.NOT. VOR_Fluct) WRITE(kvoronoi
-     &              ,'(a1,f11.2,1x,a7,3(f10.4,1x,a8))') 'T',fstep
-     &              ,'VolType',(vol_type(j),prsymb(vol_typep(j)),j=i1,i1
-     &              +n)
+               IF(.NOT. VOR_Fluct .AND. (node == 0) .AND. (.NOT. noprint
+     &              )) WRITE(kvoronoi,'(a1,f11.2,1x,a7,3(f10.4,1x,a8))')
+     &              'T',fstep,'VolType',(vol_type(j),prsymb(vol_typep(j)
+     &              ),j=i1,i1+n)
             END DO
          END IF
 
       END IF
-#ifdef PARALLEL
-      CALL P_barrier
-#endif
-
+      
 *=======================================================================
 *--- Compute Voronoi interface between solute and solvent---------------
 *=======================================================================
@@ -228,7 +223,7 @@
             END DO
          END DO
 
-#ifdef PARALLEL
+#ifdef PARALLEL      
          CALL P_expand_r8(area_slt,nstart_uh,nend_uh,nlocal_uh,node
      &     ,nprocs)
          CALL P_expand_r8(area_slv,nstart_uh,nend_uh,nlocal_uh,node
@@ -250,21 +245,17 @@
                END IF
             END IF
          END DO
-         IF(node .EQ. 0) THEN
-            IF(map .NE. 0) THEN
-               DO i1=1,map,3
-                  n=2
-                  IF(map-i1 .LT. 2) n=map-i1
-                  IF(.NOT. VOR_Fluct) WRITE(kvoronoi
-     &                 ,'(a1,f11.2,1x,a4,3(f10.3,f10.3,i6))') 'T',fstep,
-     &                 'Area',(area_frac(ia),area_tot(ia),index(ia),ia
-     &                 =i1,i1+n)
-               END DO
-            END IF
+         IF(map .NE. 0) THEN
+            DO i1=1,map,3
+               n=2
+               IF(map-i1 .LT. 2) n=map-i1
+               IF(.NOT. VOR_Fluct .AND. (node == 0) .AND. (.NOT. noprint
+     &              )) WRITE(kvoronoi
+     &              ,'(a1,f11.2,1x,a4,3(f10.3,f10.3,i6))') 'T',fstep
+     &              ,'Area',(area_frac(index(ia)),area_tot(index(ia))
+     &              ,index(ia),ia=i1,i1+n)
+            END DO
          END IF
-#ifdef PARALLEL
-         CALL P_barrier
-#endif
       END IF
 
 *=======================================================================
@@ -300,14 +291,11 @@
             CALL P_merge_r8(mmap(3))
          END IF
 #endif
-         IF(node .EQ. 0 .AND. (.NOT. VOR_Fluct)) WRITE(kvoronoi
-     &        ,'(a1,f11.2,a16,i7,a9,i7,a9,i7)')'T',fstep
-     &        ,' Neigh. SLT-SLT ',mmap(1),' SLV-SLV',mmap(3),' SLT-SLV '
-     &        ,mmap(2)
+         IF(node .EQ. 0 .AND. (.NOT. VOR_Fluct) .AND. (.NOT. noprint))
+     &        WRITE(kvoronoi,'(a1,f11.2,a16,i7,a9,i7,a9,i7)')'
+     &        T',fstep,' Neigh. SLT-SLT ',mmap(1),' SLV-SLV',mmap(3)
+     &        ,' SLT-SLV ',mmap(2)
 
-#ifdef PARALLEL
-         CALL P_barrier
-#endif
       END IF
 1000  FORMAT('|***** TotVol. Check: Voronoi ',f12.3,
      &        ' Traj. = ',f12.3,'*****|') 

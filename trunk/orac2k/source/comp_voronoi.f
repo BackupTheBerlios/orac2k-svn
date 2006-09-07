@@ -2,7 +2,7 @@
      &     ,xp0,yp0,zp0,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-04-05 14:16:11 marchi>                             *
+*   Time-stamp: <2006-07-28 14:21:34 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -33,15 +33,13 @@
 *----------------------- VARIABLES IN COMMON --------------------------*
 
       INCLUDE 'parst.h'
-      REAL*8   pla(4,maxpla),vrt(3,maxver,maxpla),area(maxpla),d2(maxpla
-     &     )
+      REAL(8), ALLOCATABLE :: pla(:,:),vrt(:,:,:),area(:),d2(:)
 #if defined _CRAY_ | defined T3E
-      INTEGER*8  nver(maxpla)
+      INTEGER(8), ALLOCATABLE ::  nver(:)
 #else
-      INTEGER  nver(maxpla)
+      INTEGER, ALLOCATABLE ::  nver(:)
 #endif
-      INTEGER  iver(maxpla)
-      COMMON /rag1/ nver,iver,pla,vrt,area,d2
+      INTEGER, ALLOCATABLE ::  iver(:)
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -52,6 +50,11 @@
       INCLUDE 'pbc.h'
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
+
+
+      ALLOCATE(nver(maxpla),iver(maxpla))
+      ALLOCATE(pla(4,maxpla),vrt(3,maxver,maxpla),area(maxpla),d2(maxpla
+     &     ))
 
       iret=0
       frac=0.5D0
@@ -94,7 +97,6 @@
             nver(j)=0
             iver(j)=j1
          END DO
-
          CALL vstart(pla,vrt,nver)
 
          DO j=1,maxpla
@@ -132,6 +134,8 @@
             area_vor(j+1,o)=area(j)
          END DO
       END DO
+      DEALLOCATE(nver,iver)
+      DEALLOCATE(pla,vrt,area,d2)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

@@ -25,7 +25,8 @@
 
 *======================== DECLARATIONS ================================*
 
-      USE VORONOI_Mod, ONLY: VOR_Input=>Read_it
+      USE VORONOI_Mod, ONLY: VOR_Input=>Read_it,VOR_fluct=>fluct
+     &     ,VOR_access=>access,VOR_volume=>volume
       USE HYDRATION_Mod, ONLY: HYD_coeff=>coeff, HYD_cutoff=>cutoff_max,
      &     HYD_Initialize=>Initialize, hydration, HYD_n_neighbors
      &     =>n_neighbors,HYD_ncx=>ncx,HYD_ncy=>ncy,HYD_ncz=>ncz,
@@ -603,6 +604,7 @@ c==== Command  VORONOI==================================================
          not_time_corr=.TRUE.
          CALL VOR_Input(knlist,kprint,nsevere,nword,strngs,iret
      &           ,errmsg,read_err)
+
          IF(read_err == 1) GOTO 20
 
 c==== Command  CAVITIES ================================================

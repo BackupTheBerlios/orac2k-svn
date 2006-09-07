@@ -34,7 +34,7 @@
 !!$
 !!$==== Subcommand VORONOI =========================================
 !!$
-       SELECT CASE(strngs(1))
+       SELECT CASE(TRIM(strngs(1)))
        CASE DEFAULT
           errmsg=err_unr(2)//strngs(2)//err_end(1:14)//err_end(16:20)
           CALL xerror(errmsg,80,1,30)
@@ -53,28 +53,64 @@
        CASE('rewind')
           rewind_vor=.TRUE.
 
+       CASE('grid')
+          IF(nword .LT. 4) THEN
+             errmsg=err_args(1)//'3'
+             CALL xerror(errmsg,80,1,30)
+             nsevere=nsevere+1
+          ELSE
+             CALL Read_String(strngs(2),ncx)
+             CALL Read_String(strngs(3),ncy)
+             CALL Read_String(strngs(4),ncz)
+          END IF
+
+
        CASE('compute')
-          IF(strngs(2) .EQ. 'accessibility') THEN
+          IF(TRIM(strngs(2)) == 'accessibility') THEN
+             access=.TRUE.
+
+          ELSE IF(TRIM(strngs(2)) == 'access') THEN
              access=.TRUE.
              
-          ELSE IF(strngs(2) .EQ. 'volume') THEN
+          ELSE IF(TRIM(strngs(2)) == 'volume') THEN
              volume=.TRUE.
              
-          ELSE IF(strngs(2) .EQ. 'neighbors') THEN
+          ELSE IF(TRIM(strngs(2)) == 'neighbors') THEN
              neighbor=.TRUE.
-             
-          ELSE IF(strngs(2) .EQ. 'fluctuations') THEN
+
+          ELSE IF(TRIM(strngs(2)) == 'compress') THEN
+             compress=.TRUE.
+             neighbor=.TRUE.
+             volume=.TRUE.
+             noprint=.TRUE.
+
+          ELSE IF(TRIM(strngs(2)) == 'fluctuations' .OR.&
+               & TRIM(strngs(2)) == 'fluct') THEN
              fluct=.TRUE.
              IF(nword == 3) THEN
                 CALL Read_String(strngs(3),dummy)
                 nfluct=IDINT(dummy)
-             END IF
-             
+             END IF             
           ELSE
              errmsg=err_unr(2)//strngs(2)
              CALL xerror(errmsg,80,1,30)
              nsevere = nsevere + 1
           END IF
+
+       CASE('dynamics')
+          dynamics=.TRUE.
+
+       CASE('every')
+          CALL Read_String(strngs(2),dummy)
+          nvoronoi=IDINT(dummy)
+
+       CASE('bin_size' )
+          CALL Read_String(strngs(2),dummy)
+          bin=dummy
+          
+       CASE('print_press' )
+          CALL Read_String(strngs(2),dummy)
+          nprint_press=IDINT(dummy)
           
        CASE('print' )
           print_ok=.TRUE.
@@ -98,7 +134,8 @@
 !!$
 !!$--------------------------------------------------------------------
 !!$
-
+       CASE('no_print' )
+          noprint=.TRUE.
        CASE(' ')
           CYCLE
 
@@ -107,7 +144,31 @@
        END SELECT
     END DO
 
-    IF(.NOT. print_ok) THEN
+    IF(Dynamics) THEN
+       filename='VOR_DYNAMICS.dat'
+       INQUIRE(FILE=filename,EXIST=exist)
+       IF(exist) THEN
+          CALL openf(kdynamics,filename,'UNFORMATTED','OLD',0)
+       ELSE
+          CALL openf(kdynamics,filename,'UNFORMATTED','NEW',0)
+       END IF
+    END IF
+    IF(compress) THEN
+       filename='VOR_HISTO.dat'
+       INQUIRE(FILE=filename,EXIST=exist)
+       IF(exist) THEN
+          CALL openf(kvoronoi,filename,'FORMATTED','OLD',0)
+       ELSE
+          CALL openf(kvoronoi,filename,'FORMATTED','NEW',0)
+       END IF
+       IF(ncx == -1 .OR. ncy == -1 .OR. ncz == -1) THEN
+          errmsg='Need command grid to compute density'
+          CALL xerror(errmsg,80,1,30)
+          nsevere = nsevere + 1
+       END IF
+    END IF
+
+    IF(.NOT. print_ok .AND. (.NOT. noprint)) THEN
        filename='VORONOI.dat'
        INQUIRE(FILE=filename,EXIST=exist)
        IF(exist) THEN
@@ -116,6 +177,8 @@
           CALL openf(kvoronoi,filename,'FORMATTED','NEW',0)
        END IF
     END IF
+    
+
     RETURN
 
 600 read_err=1

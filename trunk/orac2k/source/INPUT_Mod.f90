@@ -1,7 +1,7 @@
 MODULE INPUT_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-09 14:37:26 marchi>                           *
+!!$   Time-stamp: <2006-04-07 14:31:12 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -31,6 +31,7 @@ MODULE INPUT_Mod
        &, 'UNSUPPORTED  COMMAND ----> '/)
   CHARACTER(15), SAVE :: err_fnf=' file not found'
   CHARACTER(80), SAVE :: line,strngs(40)
+
   CHARACTER(1),  DIMENSION(2), SAVE :: sep=(/' ',','/)&
        &,comm=(/'(',')'/)
   CHARACTER(8) :: fmt

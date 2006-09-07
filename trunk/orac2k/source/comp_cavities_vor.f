@@ -4,7 +4,7 @@
      &     ,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-04-05 14:27:29 marchi>                             *
+*   Time-stamp: <2006-04-11 11:57:25 marchi>                             *
 *                                                                      *
 *   Compute cavities in a system composed of solute and solvent.       *
 *   The differential cavity distribution -dp(R)/dR is binned           *

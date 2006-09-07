@@ -4,8 +4,8 @@
 #                                                                      #
 ########################################################################
 
-##include Make.parallel
-include Make.sequential
+include Make.parallel
+##include Make.sequential
 
 export MODE
 

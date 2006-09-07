@@ -2,7 +2,7 @@
 
 /* Effective number of molecules of the solute.  */
 
-#define  _N_PROT_MAX_    24000
+#define  _N_PROT_MAX_    30000
 
 /* Sites of the solvent molecules */
 
@@ -10,7 +10,7 @@
 
 /* Total sites of the solute molecules */
 
-#define  _SIT_SOLU_    110000
+#define  _SIT_SOLU_    100000
 
 /* Number of types of the solvent molecule*/
 
@@ -22,7 +22,7 @@
 
 /* Total Number of residues in the molecule */ 
 
-#define  _NRES_		22700
+#define  _NRES_		28700
 
 /* Total Number of residues in the solvent molecule */ 
 
@@ -109,14 +109,14 @@ used.                                                             */
 #define _MAX_NEIGH_	120
 */
 
-#define _MAX_NEIGH_	 2
+#define _MAX_NEIGH_	 590
 
 /*    Maximum of bonded neighbors                               */
 
 /*
                         40
 */
-#define _MAX_IG_NNL_	 2
+#define _MAX_IG_NNL_	 40
 
 /*    Maximum allowed planes in the Voronoi construcion         */
 
@@ -124,7 +124,7 @@ used.                                                             */
 #define   MAXPLA	40
 */
 
-#define   MAXPLA	2
+#define   MAXPLA        80
 
 /*    Maximum allowed verteces in the Voronoi construcion       */
 
@@ -132,7 +132,7 @@ used.                                                             */
 #define   MAXVER	20
 */
 
-#define   MAXVER	2
+#define   MAXVER       120
 
 #define   _CONTACT_VORONOI_	3
 

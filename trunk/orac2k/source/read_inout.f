@@ -2,7 +2,7 @@
      &     ,fascii,err_open,err_args,err_end,err_unr)
 
 ************************************************************************
-*   Time-stamp: <2006-02-05 17:21:03 marchi>                             *
+*   Time-stamp: <2006-04-25 12:26:19 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -167,6 +167,9 @@ c-------- Subcommand read
                   errmsg='Restart file was not found.'
                   CALL xerror(errmsg,80,1,30)
                   nsevere=nsevere+1
+               ELSE
+                  CALL openf(kdump_in,strngs(2),'FORMATTED','OLD',0)
+                  CLOSE(kdump_in)
                END IF
             ELSE
                errmsg=err_args(3)//'1'
@@ -182,10 +185,17 @@ c-------- Subcommand write
             IF(nword .EQ. 4) THEN
                CALL fndfmt(2,strngs(2),fmt)
                READ(strngs(2),fmt,err=20) fsave
-
                IF(strngs(3) .EQ. 'OPEN') THEN
                   CALL uscrpl(strngs(4),80)
                   restart_out=strngs(4)
+                  INQUIRE(FILE=strngs(4),EXIST=exist)
+                  IF(exist) THEN
+                     CALL openf(kdump_out,strngs(4),'FORMATTED','OLD',0)
+                  ELSE
+                     CALL openf(kdump_out,strngs(4),'FORMATTED','NEW',0)
+                  END IF
+                  CLOSE(kdump_out)
+
                ELSE
                   errmsg=err_open
                   CALL xerror(errmsg,80,1,30)

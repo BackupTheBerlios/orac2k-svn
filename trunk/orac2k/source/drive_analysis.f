@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2006-04-05 17:30:17 marchi>                             *
+*   Time-stamp: <2006-08-11 15:02:51 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -46,6 +46,9 @@
      &     ,VOR_Heavy=>heavy, VOR_fluct=>fluct,VOR_access=>access
      &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,maxpla,maxver
      &     ,kvoronoi,nvoronoi,VOR_Fluctuations=>Fluctuations
+     &     ,VOR_compress=>compress,VOR_Density=>Density,VOR_print
+     &     =>print_density,VOR_Shell=>Volume_Shell,VOR_Dynamics
+     &     =>Dynamics,VOR_Collect=>Collect_Dynamics
       USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
      &     HYD_Initialize_P=>Initialize_P,
      &     HYD_Initialize_Array=>Initialize_Array,
@@ -177,6 +180,7 @@
       REAL*8  ucns_p,ucos_p,virs_p,virsp_p,ucnp_p,ucop_p,ucnsp_p,ucosp_p
      &     ,fpx_p,fpy_p,fpz_p,stressd_p,cpu_h,gr,gra,uconf,enout,fpx(m1)
      &     ,fpy(m1),fpz(m1),ffwork(2),InstRotMat(3,3),Ixpcc,Iypcc,Izpcc
+     &     ,xpi,ypi,zpi,xc,yc,zc
       INTEGER offset,nnstep,start_time,end_time,length_run,length_tot
      &     ,length_fft,iatom,iatom0,niatom,naux,i_old,i_start
      &     ,i_end,typei,nato1,nato2,jmax_cav,mqq,mma,ncpu_h,mmb
@@ -320,6 +324,14 @@ c$$$====================================================================
 
       CALL mapnl_divide(node,nstart_h,nend_h,grppt,mapnl)
 
+*=======================================================================
+*----- Decide where to start to read -----------------------------------
+*=======================================================================
+
+      nstep=0
+      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
+      IF(start_anl .NE. 0) nstep=start_anl-1
+
 *========================================================================
 *==== Calls init routine for conventional kspace Ewald or PME -----------
 *========================================================================
@@ -348,7 +360,10 @@ c$$$====================================================================
          ELSE
             mma=ntap/(nprocs-1)+10
          END IF
-         CALL VOR_Init(mma,ntap,nbun,mres,grppt,ss_index)
+         aux=rcuth+rtolh+rneih
+
+         CALL VOR_Init(node,mma,ntap,nbun,mres,grppt,ss_index,pnbd1
+     &        ,nbtype,aux,prsymb,mend,stop_anl-start_anl+1)
       END IF
       IF(cavities) THEN
          IF(nprocs .EQ. 1) THEN
@@ -582,14 +597,6 @@ c$$$====================================================================
       CALL print_title_analysis(fstep)
       ffstep=fstep
       IF((.NOT. dmprnd_i)) STOP
-
-*=======================================================================
-*----- Decide where to start to read -----------------------------------
-*=======================================================================
-
-      nstep=0
-      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
-      IF(start_anl .NE. 0) nstep=start_anl-1
 
       CALL timer(vfcp,tfcp,elapse)
       gcpu=tfcp
@@ -851,7 +858,7 @@ c$$$====================================================================
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau,yau,zau,ntap
      &                 ,fstep,nstep,end,err,divide_records,atom_record)
 
-                  IF(template) THEN
+                  IF(template .AND. (.NOT. voronoi)) THEN
                      CALL calc_RotMat(whe,xpt0,ypt0,zpt0,xp0,yp0,zp0
      &                    ,Ixpcc,Iypcc,Izpcc,InstRotMat(1,1),xt_cm,yt_cm
      &                    ,zt_cm,nato_slt)
@@ -1007,6 +1014,7 @@ c$$$====================================================================
      &                 ,zpga)
                   CALL change_frame(co,oc,-1,nprot,xpcm,ypcm,zpcm,xpcma
      &                 ,ypcma,zpcma)
+
                   
 *=======================================================================
 *--- Compute neighbor lists --------------------------------------------
@@ -1114,8 +1122,9 @@ c$$$====================================================================
                   
                   IF(voronoi) THEN
                      IF(MOD(nstep,nvoronoi) .EQ. 0) THEN
-                        WRITE(*,93000) 
+                        WRITE(kprint,93000) 
                         CALL zero_voronoi
+
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
      &                       ,nend_ah,VOR_heavy,beta,ntap,ngrp,grppt
      &                       ,VOR_cut,xpa,ypa,zpa,xpga,ypga
@@ -1126,22 +1135,30 @@ c$$$====================================================================
 #else
                         IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
 #endif
-                        CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
-     &                       ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret,errmsg
-     &                       )
-
-                        CALL analyse_voronoi(nstart_ah,nend_ah
-     &                       ,nlocal_ah,nstart_uh,nend_uh
-     &                       ,nlocal_uh,node,nprocs,ncube,fstep
-     &                       ,volume,ss_index,ss_point(1,1),grppt
-     &                       ,mend,protl,nprot,ntap,nbun,beta
-     &                       ,atomp,nres(1,1),nres(1,2),mres
-     &                       ,prsymb,iret,errmsg)
-                        IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
-                        IF(VOR_fluct) THEN
-                           CALL VOR_Fluctuations(xp0,yp0,zp0)
+                        IF(.NOT. VOR_dynamics) THEN
+                           CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
+     &                          ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret
+     &                          ,errmsg)
+                           CALL analyse_voronoi(nstart_ah,nend_ah
+     &                          ,nlocal_ah,nstart_uh,nend_uh
+     &                          ,nlocal_uh,node,nprocs,ncube,fstep
+     &                          ,volume,ss_index,ss_point(1,1),grppt
+     &                          ,mend,protl,nprot,ntap,nbun,beta
+     &                          ,atomp,nres(1,1),nres(1,2),mres
+     &                          ,prsymb,iret,errmsg)
+                           
+                           IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
+                           IF(VOR_fluct) THEN
+                              CALL VOR_Fluctuations(kprint,xp0,yp0,zp0)
+                           END IF
+                           IF(VOR_compress) THEN
+                              CALL VOR_Density(volume)
+                              CALL VOR_Shell(volume,co,xpa,ypa,zpa)
+                              CALL VOR_print
+                           END IF
+                        ELSE
+                           CALL VOR_Collect
                         END IF
-
                      END IF
                   END IF
                   
@@ -1405,7 +1422,7 @@ c--------------------------
 
                   IF(node .EQ. 0) THEN
                      IF(Density_Calc) THEN                     
-                        CALL DEN_Compute(xpa,ypa,zpa,co)
+                        CALL DEN_Compute(xpa,ypa,zpa,Volume)
                         IF(MOD(nstep,DEN_write) == 0) THEN
                            CALL DEN_write_it(Volume,co)
                         END IF

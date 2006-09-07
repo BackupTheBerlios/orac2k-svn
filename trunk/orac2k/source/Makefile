@@ -491,6 +491,14 @@ IFC :
 	${MAKE} recur_IFC "FFLAGS = -w95  "
 	${MAKE} orac_IFC 
 
+IFC_DBG :
+	${MAKE} obj_IFC "FFLAGS = -w95 -g " 
+	${MAKE} prepro_IFC "FFLAGS = -w95 -g" 
+	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -g "
+	${MAKE} eigr_IFC "FFLAGS = -w95 -g "
+	${MAKE} recur_IFC "FFLAGS = -w95  -g"
+	${MAKE} orac_IFC 
+
 INTEL :
 	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
 	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
@@ -498,6 +506,7 @@ INTEL :
 	${MAKE} eigr_INTEL "FFLAGS = -w95 -O1 "
 	${MAKE} recur_INTEL "FFLAGS = -w95  "
 	${MAKE} orac_INTEL 
+
 
 OSF1 :
 	${MAKE} obj_OSF "FFLAGS = -fast " 
@@ -901,7 +910,7 @@ read_integrator.o: parst.h cpropar.h unit.h
 read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
 	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o GROUPS_Mod.o\
-	GEOM_groups_Mod.o
+	GEOM_groups_Mod.o VORONOI_Mod.CPP.o
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
@@ -928,10 +937,11 @@ tr_inbox.o: pbc.h
 mts_umbrl.o: pbc.h parst.h
 update.o: parst.h unit.h pbc.h
 vstart.o: config.h
-verify_input.CPP.f: pressure.h
+verify_input.CPP.f: pressure.h VORONOI_Mod.CPP.o
 verify_input.CPP.o: parst.h cpropar.h unit.h pme.h
 verify_variables.o: parst.h cpropar.h unit.h
-VORONOI_Mod.CPP.o: config.h VORONOI_Mod.CPP.f90 
+VORONOI_Mod.CPP.f90: config.h 
+VORONOI_Mod.CPP.o: VORONOI_Mod.CPP.f90 VORONOI_Read.f90 INPUT_Mod.o 
 write_fragm_dist: pbc.h
 write_cavities_vor.CPP.o: write_cavities_vor.CPP.f
 write_cavities_vor.CPP.o: parst.h

@@ -5,7 +5,7 @@
      &     ,lstrtch,lstretch,lbndg,lbend,atomp,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-01-31 15:01:55 marchi>                             *
+*   Time-stamp: <2006-08-08 18:13:57 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -81,7 +81,7 @@
 *=======================================================================
 
       at_min=1e8
-      at_max=-1
+      at_max=0
       DO i=1,lstretch
          la=lstrtch(1,i)
          lb=lstrtch(2,i)
@@ -101,7 +101,7 @@
          IF(lb .GT. at_max) at_max=lb
          IF(lc .GT. at_max) at_max=lc
       END DO
-      IF(at_max .NE. -1 .AND. at_min .NE. 1e8) THEN
+      IF(at_max .NE. 0 .AND. at_min .NE. 1e8) THEN
          nato_c=(atomp(at_max)-atomp(at_min)+1)/nprocs
          DO i=0,nprocs-1
             nstart_d(i)=nato_c*i+1
@@ -174,10 +174,38 @@
 *---- interactions -----------------------------------------------------
 *=======================================================================
 
-      IF(at_max .EQ. -1) THEN
+      IF(at_max .EQ. 0) THEN
          nstart_ex=1
          nend_ex=ntap
          nlocal_ex=ntap
+
+         nato_c=(atomp(ntap)-atomp(at_max+1)+1)/nprocs
+         
+         nstart_c=nato_c*node+1
+         nend_c=nato_c*(node+1)
+         IF(node+1 .EQ. nprocs) nend_c=atomp(ntap)
+         
+         count=0
+         DO i=1,nstart_c-1
+            m=protl(count+1)
+            count=count+1+m
+         END DO
+         ac_min=1e8
+         ac_max=-1
+         DO i=nstart_c,nend_c
+            m=protl(count+1)
+            DO k=1,m
+               j=protl(count+1+k)
+               IF(j .LT. ac_min) ac_min=j
+               IF(j .GT. ac_max) ac_max=j
+            END DO
+            count=count+m+1
+         END DO
+         
+         nstart_ex=ac_min
+         nend_ex=ac_max
+         nlocal_ex=nend_ex-nstart_ex+1
+
       ELSE
          IF(ntap .NE. at_max) THEN
             nato_c=(atomp(ntap)-atomp(at_max+1)+1)/nprocs
@@ -218,7 +246,7 @@
       nlocal_ex0=nlocal_ex
 
 #if defined PARALLEL
-      IF(ntap .NE. at_max .AND. at_max .NE. -1) THEN
+      IF(ntap .NE. at_max) THEN
          tag='ext atom'
          CALL P_check_decomp(nstart_ex,nend_ex,node,nbyte,nprocs,tag
      &        ,iret,errmsg)
