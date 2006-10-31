@@ -83,6 +83,9 @@
              neighbor=.TRUE.
              volume=.TRUE.
              noprint=.TRUE.
+             IF(nword == 3) THEN
+                IF(TRIM(strngs(3)) == 'kba') kba=.TRUE.
+             END IF
 
           ELSE IF(TRIM(strngs(2)) == 'fluctuations' .OR.&
                & TRIM(strngs(2)) == 'fluct') THEN
@@ -103,6 +106,18 @@
        CASE('every')
           CALL Read_String(strngs(2),dummy)
           nvoronoi=IDINT(dummy)
+
+       CASE('orient_bin')
+          CALL Read_String(strngs(2),dummy)
+          h_bin1=dummy
+          CALL Read_String(strngs(3),dummy)
+          h_bin2=dummy
+
+       CASE('orien_bin')
+          CALL Read_String(strngs(2),dummy)
+          h_bin1=dummy
+          CALL Read_String(strngs(3),dummy)
+          h_bin2=dummy
 
        CASE('bin_size' )
           CALL Read_String(strngs(2),dummy)
@@ -153,6 +168,16 @@
           CALL openf(kdynamics,filename,'UNFORMATTED','NEW',0)
        END IF
     END IF
+
+    file_cosa='COSA.hist'
+    INQUIRE(FILE=file_cosa,EXIST=exist)
+    IF(exist) THEN
+       CALL openf(kcosa,file_cosa,'UNFORMATTED','OLD',0)
+    ELSE
+       CALL openf(kcosa,file_cosa,'UNFORMATTED','NEW',0)
+    END IF
+    CLOSE(kcosa)
+
     IF(compress) THEN
        filename='VOR_HISTO.dat'
        INQUIRE(FILE=filename,EXIST=exist)

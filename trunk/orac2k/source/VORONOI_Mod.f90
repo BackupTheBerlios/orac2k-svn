@@ -1,7 +1,7 @@
 MODULE VORONOI_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-08-11 15:39:11 marchi>                           *
+!!$   Time-stamp: <2006-10-24 16:11:35 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -34,16 +34,29 @@ MODULE VORONOI_Mod
 
   LOGICAL, SAVE :: voronoi=.FALSE.,heavy=.FALSE.,access=.FALSE.&
        &,volume=.FALSE.,fluct=.FALSE.,neighbor=.FALSE.,rewind_vor&
-       &=.FALSE.,noprint=.FALSE.,compress=.FALSE.,dynamics=.FALSE.
+       &=.FALSE.,noprint=.FALSE.,compress=.FALSE.,dynamics=.FALSE.&
+       &,kba=.FALSE.,only_water=.FALSE.
   INTEGER, SAVE :: nvoronoi=1,kvoronoi=0,nfluct=2,bmax,counter=0&
-       &,nprint_press=1,ncx=-1,ncy=-1,ncz=-1,ntype=3,kdynamics=0
-  REAL(8), SAVE :: cutoff,bin=1.00D0,vol_tot=0.0D0,unit_fluct
+       &,nprint_press=1,ncx=-1,ncy=-1,ncz=-1,ntype=3,kdynamics=0&
+       &,kcosa=0
+  REAL(8), SAVE :: cutoff,bin=1.00D0,vol_tot=0.0D0,unit_fluct&
+       &,Dens_Cutoff,pi=3.141592653589D0
   CHARACTER(80), SAVE :: filename
   TYPE RESIDUE
      INTEGER :: n0
      CHARACTER(8), DIMENSION(:), POINTER :: label
   END TYPE RESIDUE
-  INTEGER, DIMENSION (:), ALLOCATABLE :: Res_Class
+  TYPE WATER
+     INTEGER :: o,h1,h2
+     REAL(8), DIMENSION(3) :: c
+     REAL(8), DIMENSION(3,4) :: v
+  END TYPE WATER
+  TYPE WAT_PAR
+     INTEGER :: o
+     REAL(8) :: rsp
+     REAL(8) :: cosa(4)
+  END TYPE WAT_PAR
+  INTEGER, DIMENSION (:), ALLOCATABLE, SAVE :: Res_Class
   TYPE(RESIDUE), DIMENSION(:), ALLOCATABLE, SAVE :: Res_type
 
 !!$======================== Input Parameters end =========================*
@@ -52,21 +65,30 @@ MODULE VORONOI_Mod
 
   INTEGER, SAVE :: ntap,nbun,nunits,node
   INTEGER, DIMENSION (:,:), ALLOCATABLE, SAVE :: nnlpp_vor
+  INTEGER, DIMENSION (:,:), ALLOCATABLE, SAVE :: nsq_nnlpp_vor
+  REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: rsq_nnlpp_vor
   INTEGER, DIMENSION (:,:), ALLOCATABLE, SAVE :: res
+  INTEGER, DIMENSION (:), ALLOCATABLE, SAVE :: atom_res
   REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: area_vor
   REAL(8), DIMENSION (:), ALLOCATABLE, SAVE :: volume_vor,dist_min&
-       &,sigmas,N1,N2,VOL1
-  REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: MM1,MM2,VVOL1
+       &,sigmas,N1,NW1,N2,VOL1
+  REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: MM1,MMW1,MM2,VVOL1
   REAL(8), SAVE :: vol_slv
   REAL(8), ALLOCATABLE, SAVE :: vol_res(:),vol_slt(:),area_slt(:)&
        &,area_slv(:),area_frac(:),area_tot(:),vol_type(:)&
-       &,surface_res(:),ratio_res(:)
+       &,surface_res(:),ratio_res(:),area_tota(:)
   REAL(4), DIMENSION (:,:), ALLOCATABLE, SAVE :: dynas
   INTEGER, ALLOCATABLE, SAVE :: index(:),vol_typep(:),N_N1(:),M_MM1(:&
        &,:),dist_id(:)
   LOGICAL, DIMENSION (:), ALLOCATABLE, SAVE :: solvent
+  TYPE(WATER), DIMENSION(:), ALLOCATABLE, SAVE :: wat
+  TYPE(WAT_PAR), DIMENSION(:), ALLOCATABLE, SAVE :: watp
+  REAL(8), DIMENSION(:,:,:), ALLOCATABLE, SAVE :: hist
+  REAL(8), SAVE :: h_bin1=0.6D0,h_bin2=0.04D0
+  INTEGER, SAVE :: h_max1,h_max2
+  INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: wat_mol
+  CHARACTER(80), SAVE :: file_cosa='COSA.hist'
 
-  
 !!$============================= Arrays End ==============================*
 
 !!$============================= Fluctations =============================*
@@ -104,13 +126,14 @@ CONTAINS
 
     ntraj=mtraj/nvoronoi
     unit_fluct=efact/unitp/kt/1000.0D0
-    WRITE(*,*) 'Unit_Fluct = ',unit_fluct
+    Dens_Cutoff=rcut
     bmax=INT(rcut/bin)+1
     ALLOCATE(N1(-bmax:bmax),N2(-bmax:bmax),N_N1(-bmax:bmax),VOL1(&
-         &-bmax:bmax)) 
+         &-bmax:bmax),NW1(-bmax:bmax)) 
     ALLOCATE(MM1(-bmax:bmax,ntype),MM2(-bmax:bmax,ntype),M_MM1(-bmax:bmax&
-         &,ntype),VVOL1(-bmax:bmax,ntype))
+         &,ntype),VVOL1(-bmax:bmax,ntype),MMW1(-bmax:bmax,ntype))
     N1=0.0D0
+    NW1=0.0D0
     N2=0.0D0
     N_N1=0
     MM1=0.0D0
@@ -123,7 +146,6 @@ CONTAINS
     ntap=natom
     node=nodea
     ALLOCATE(solvent(ntap),dist_min(ntap),dist_id(ntap),sigmas(ntap))
-
     solvent=.FALSE.
 
     facta=1.0D0/(2.0D0**(1.0D0/6.0D0))
@@ -133,30 +155,67 @@ CONTAINS
     END DO
 
     ALLOCATE(nnlpp_vor(pnnlpp_vor,mma))
-    ALLOCATE(area_vor(pnnlpp_vor,mma),volume_vor(ntap)) 
+
+    ALLOCATE(area_vor(pnnlpp_vor,mma),volume_vor(ntap),atom_res(mma)) 
     count=0
     DO n=1,nbun
        ok=.FALSE.
        DO m=mres(1,n),mres(2,n)
           DO i=grppt(1,m),grppt(2,m)
              IF(ss_index(i) == 1) ok=.TRUE.               
+             atom_res(i)=n
           END DO
        END DO
        IF(ok) THEN
           count=count+1
        END IF
     END DO
+    nunits=count
+    IF(count == 0) only_water=.TRUE.
+    IF(only_water) THEN
+       ALLOCATE(rsq_nnlpp_vor(max_neigh,mma))
+       ALLOCATE(nsq_nnlpp_vor(max_neigh,mma))
+    END IF
     ALLOCATE(res(2,nbun))
     ALLOCATE(vol_res(nbun),vol_slt(nbun),area_slt(nbun)&
          &,area_slv(nbun),area_frac(nbun),area_tot(nbun)&
          &,vol_type(nbun),surface_res(nbun),ratio_res(nbun)&
-         &,index(nbun),vol_typep(nbun))
+         &,index(nbun),vol_typep(nbun),area_tota(nbun))
     ALLOCATE(dvij(count+1,count+1),dvi(count+1),dist(count+1,count+1))
+
+    h_max1=INT(rcut/h_bin1)+1
+    h_max2=INT(2.0D0/h_bin2)+1
+    
+    ALLOCATE(wat(nbun-count),watp(nbun-count),wat_mol(ntap),hist(&
+         &0:h_max2,-h_max1:h_max1,ntype))
+
+    wat_mol=-1
+    count=0
+    DO n=1,nbun
+       ok=.FALSE.
+       DO m=mres(1,n),mres(2,n)
+          DO i=grppt(1,m),grppt(2,m)
+             IF(ss_index(i) == 2) THEN
+                ok=.TRUE.
+             END IF
+          END DO
+       END DO
+       IF(ok) THEN
+          count=count+1
+          DO m=mres(1,n),mres(2,n)
+             DO i=grppt(1,m),grppt(2,m)
+                wat_mol(i)=count
+             END DO
+             wat(count)%o=grppt(1,m)
+             wat(count)%h1=grppt(1,m)+1
+             wat(count)%h2=grppt(1,m)+2
+          END DO
+       END IF
+    END DO
     dvij=0.0D0
     dvi=0.0D0
     surface_res=0.0D0
     ratio_res=0.0D0
-    nunits=count
     count=0
     DO n=1,nbun
        res(1,n)=grppt(1,mres(1,n))
@@ -218,18 +277,19 @@ CONTAINS
 !!$
 
       Res_Type(4)%n0 = 2
-      ALLOCATE(Res_Type(4)%label(5))
+      ALLOCATE(Res_Type(4)%label(6))
       Res_Type(4)%label(1)='asn'
       Res_Type(4)%label(2)='gln'
       Res_Type(4)%label(3)='ser'
       Res_Type(4)%label(4)='thr'
       Res_Type(4)%label(5)='ace'
+      Res_Type(4)%label(6)='wat'
 
 !!$      
 !!$ ----- Charged
 !!$
 
-      Res_Type(5)%n0 = 3
+      Res_Type(5)%n0 = 2
       ALLOCATE(Res_Type(5)%label(4))
       Res_Type(5)%label(1)='lys'
       Res_Type(5)%label(2)='arg'
@@ -267,6 +327,7 @@ CONTAINS
 !!$            WRITE(*,'(i6,i3,a5)') m,Res_Class(p),label
 !!$         END DO
 !!$      END DO
+
     END SUBROUTINE Assign_Residues
   END SUBROUTINE Init
 
@@ -295,7 +356,6 @@ CONTAINS
        END DO
        dynas(n-nunits,counter)=rmin
     END DO
-    WRITE(*,*) SIZE(dynas,2),counter
     IF(SIZE(dynas,2) == counter) THEN
        REWIND(kdynamics)
 
@@ -327,19 +387,46 @@ CONTAINS
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
-    INTEGER :: i,n,ih,o,i_min
-    REAL(8) :: rmin
-    REAL(8), DIMENSION (:), ALLOCATABLE :: NW,N_NW
-    REAL(8), DIMENSION (:,:), ALLOCATABLE :: MMW,M_MMW
+    INTEGER :: i,n,ih,ihh,o,i_min
+    REAL(8) :: rmin,scale
+    REAL(8), DIMENSION (:), ALLOCATABLE :: NW,N_NW,NWW
+    REAL(8), DIMENSION (:,:), ALLOCATABLE :: MMW,MMWW,M_MMW
+
+
 
     ALLOCATE(NW(-bmax:bmax),N_NW(-bmax:bmax),MMW(-bmax:bmax,ntype),M_MMW(&
-         &-bmax:bmax,ntype))
+         &-bmax:bmax,ntype),MMWW(-bmax:bmax,ntype),NWW(-bmax:bmax))
 
     counter=counter+1
+    IF(counter == 1 .AND. kba) THEN
+       WRITE(99) SIZE(wat)
+    END IF
+
+    DO n=1,SIZE(wat)
+       ih=INT(watp(n)%rsp/h_bin1)+1
+       o=watp(n)%o
+       IF(o <= ntype .AND. o >= 1) THEN
+          IF(ih >= -h_max1 .AND. ih <= h_max1) THEN
+             DO i=1,4
+                ihh=INT(watp(n)%cosa(i)/h_bin2)+1
+                IF(ihh <= h_max2 .AND. ihh >= 0) THEN
+                   hist(ihh,ih,o)=hist(ihh,ih,o)+1.0D0
+                END IF
+             END DO
+          END IF
+       END IF
+    END DO
+
+    IF(kba) THEN
+       WRITE(*,*) ' Writing kinetic file ===>      Step = ',counter
+       WRITE(99) counter,(watp(n)%o,REAL(watp(n)%rsp),n=1,SIZE(wat))
+    END IF
     
     NW=0.0D0
+    NWW=0.0D0
     N_NW=0.0D0
     MMW=0.0D0
+    MMWW=0.0D0
     M_MMW=0.0D0
     Vol_tot=Vol_Tot+volume
     WRITE(*,'(''Cell Volume ='',f14.5,'' Dev. = '',f14.5,'' Ang. '',e1&
@@ -353,15 +440,21 @@ CONTAINS
              i_min=dist_id(i)
           END IF
        END DO
-       IF(rmin < 1.0D9) THEN
+       IF(rmin <= Dens_Cutoff) THEN
           ih=INT(rmin/bin)+1
+          IF(ABS(ih) > bmax) THEN
+             WRITE(*,*) 'STOPS ',ih,bmax
+             STOP
+          END IF
           NW(ih)=NW(ih)+vol_res(n)
+          NWW(ih)=NWW(ih)+area_tota(n)
           N_N1(ih)=N_N1(ih)+1
           N_NW(ih)=N_NW(ih)+1.0D0
           
           o=Res_Class(i_min)
           IF(o > 0) THEN
              MMW(ih,o)=MMW(ih,o)+vol_res(n)
+             MMWW(ih,o)=MMWW(ih,o)+area_tota(n)
              M_MMW(ih,o)=M_MMW(ih,o)+1.0D0
              M_MM1(ih,o)=M_MM1(ih,o)+1
           END IF
@@ -372,6 +465,7 @@ CONTAINS
        IF(N_NW(ih) /= 0.0D0) THEN
           N1(ih)=N1(ih)+NW(ih)/N_NW(ih)
           N2(ih)=N2(ih)+volume*NW(ih)/N_NW(ih)
+          NW1(ih)=NW1(ih)+NWW(ih)/N_NW(ih)
        END IF
     END DO
 
@@ -379,6 +473,7 @@ CONTAINS
        DO ih=-bmax,bmax
           IF(M_MMW(ih,o) /= 0.0D0) THEN
              MM1(ih,o)=MM1(ih,o)+MMW(ih,o)/M_MMW(ih,o)
+             MMW1(ih,o)=MMW1(ih,o)+MMWW(ih,o)/M_MMW(ih,o)
              MM2(ih,o)=MM2(ih,o)+volume*MMW(ih,o)/M_MMW(ih,o)
           END IF
        END DO
@@ -386,7 +481,6 @@ CONTAINS
 
     DEALLOCATE(NW,MMW,N_NW,M_MMW)
   END SUBROUTINE Density
-
   SUBROUTINE print_density
 
 !!$----------------------------- ARGUMENTS ------------------------------*
@@ -396,7 +490,8 @@ CONTAINS
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
     INTEGER :: i,n,ih,o
-    REAL(8) :: n00,n0,nn,vol,kk,r,aux,auxx,dens
+    REAL(8) :: n00,n0,nn,vol,kk,r,aux,auxx,dens,scale,w0,w00
+    LOGICAL :: exist
 
     IF(MOD(counter,nprint_press) == 0) THEN
        DO ih=-bmax,bmax
@@ -414,9 +509,10 @@ CONTAINS
              n0=n00*aux
              nn=aux*N2(ih)/DBLE(counter)
              vol=vol_tot/DBLE(counter)
-
+             w00=NW1(ih)/DBLE(counter)
+             w0=w00**3/(36.0D0*pi*n00**2)
              IF(n0 /= 0.0D0) kk=(nn-n0*vol)/n0
-             WRITE(*,'(f12.3,5e14.6)') r,n00,aux,dens,kk*unit_fluct
+             WRITE(*,'(f12.3,5e14.6)') r,n00,aux,dens,kk*unit_fluct,w0
           END IF
        END DO
        WRITE(*,*) '#  '
@@ -438,12 +534,37 @@ CONTAINS
                 n0=n00*aux
                 nn=aux*MM2(ih,o)/DBLE(counter)
                 vol=vol_tot/DBLE(counter)
+                w00=MMW1(ih,1)/DBLE(counter)
+                w0=w00**3/(36.0D0*pi*n00**2)
+
                 IF(n0 /= 0.0D0) kk=(nn-n0*vol)/n0
-                WRITE(*,'(f12.3,4e14.6)') r,n00,aux,dens,kk*unit_fluct
+                WRITE(*,'(f12.3,6e14.6)') r,n00,aux,dens,kk*unit_fluct,w0
              END IF
           END DO
        END DO
     END IF
+
+
+    INQUIRE(FILE=file_cosa,EXIST=exist)
+    IF(exist) THEN
+       OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='OLD')
+    ELSE
+       OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='NEW')
+    END IF
+
+    REWIND(kcosa)
+
+    WRITE(kcosa) counter,h_max1,h_max2,h_bin1,h_bin2,2
+    scale=1.0D0/DBLE(counter)
+    DO o=1,2
+       DO ih=1,h_max1
+          WRITE(kcosa) (ih-1)*h_bin1
+          DO i=0,h_max2
+             WRITE(kcosa) hist(i,ih,o)*scale
+          END DO
+       END DO
+    END DO
+    CLOSE(kcosa)
     
   END SUBROUTINE Print_density
   SUBROUTINE Volume_Shell(volume,co,xp0,yp0,zp0)
@@ -511,6 +632,157 @@ CONTAINS
     END DO
 
   END SUBROUTINE Volume_Shell
+  SUBROUTINE hbonds(co,xp0,yp0,zp0)
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+
+    IMPLICIT NONE 
+
+    REAL(8) :: xp0(*),yp0(*),zp0(*),co(3,3)
+
+!!$----------------------- VARIABLES IN COMMON --------------------------*
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+    INTEGER :: nwaters,o,h1,h2,i,j
+    REAL(8) :: c(3),xd,yd,zd,xc,yc,zc,rsp,pax(3),xa(2),ya(2),za(2)&
+         &    ,x0(2),y0(2),z0(2),ax(3)
+
+    nwaters=SIZE(wat)
+    DO i=1,nwaters
+       o=wat(i)%o
+       h1=wat(i)%h1
+       h2=wat(i)%h2
+       c(1)=co(1,1)*xp0(o)+co(1,2)*yp0(o)+co(1,3)*zp0(o)
+       c(2)=co(2,1)*xp0(o)+co(2,2)*yp0(o)+co(2,3)*zp0(o)
+       c(3)=co(3,1)*xp0(o)+co(3,2)*yp0(o)+co(3,3)*zp0(o)
+       xd=xp0(h1)-xp0(o)
+       yd=yp0(h1)-yp0(o)
+       zd=zp0(h1)-zp0(o)
+       xc=co(1,1)*xd+co(1,2)*yd+co(1,3)*zd
+       yc=co(2,1)*xd+co(2,2)*yd+co(2,3)*zd
+       zc=co(3,1)*xd+co(3,2)*yd+co(3,3)*zd
+       rsp=SQRT(xc*xc+yc*yc+zc*zc)
+       wat(i)%v(1,1)=xc/rsp
+       wat(i)%v(2,1)=yc/rsp
+       wat(i)%v(3,1)=zc/rsp
+
+       xd=xp0(h2)-xp0(o)
+       yd=yp0(h2)-yp0(o)
+       zd=zp0(h2)-zp0(o)
+       xc=co(1,1)*xd+co(1,2)*yd+co(1,3)*zd
+       yc=co(2,1)*xd+co(2,2)*yd+co(2,3)*zd
+       zc=co(3,1)*xd+co(3,2)*yd+co(3,3)*zd
+       rsp=SQRT(xc*xc+yc*yc+zc*zc)
+
+       wat(i)%v(1,2)=xc/rsp
+       wat(i)%v(2,2)=yc/rsp
+       wat(i)%v(3,2)=zc/rsp
+       xa(1)=wat(i)%v(1,1)
+       ya(1)=wat(i)%v(2,1)
+       za(1)=wat(i)%v(3,1)
+       xa(2)=wat(i)%v(1,2)
+       ya(2)=wat(i)%v(2,2)
+       za(2)=wat(i)%v(3,2)
+
+       pax(1)=ya(1)*za(2)-za(1)*ya(2)
+       pax(2)=za(1)*xa(2)-xa(1)*za(2)
+       pax(3)=xa(1)*ya(2)-ya(1)*xa(2)
+
+       ax=0.0D0
+       DO j=1,2
+          ax(1)=ax(1)-xa(j)
+          ax(2)=ax(2)-ya(j)
+          ax(3)=ax(3)-za(j)
+       END DO
+
+       CALL add2h(ax,pax,1,1.0D0,x0,y0,z0)
+       wat(i)%v(1,3)=x0(1)
+       wat(i)%v(2,3)=y0(1)
+       wat(i)%v(3,3)=z0(1)
+       wat(i)%v(1,4)=x0(2)
+       wat(i)%v(2,4)=y0(2)
+       wat(i)%v(3,4)=z0(2)
+    END DO
+  END SUBROUTINE hbonds
+  SUBROUTINE Water_Density(nstart_h,nend_h)
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+
+    IMPLICIT NONE 
+
+    INTEGER :: nstart_h,nend_h
+
+!!$    REAL(8) :: volume
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+    INTEGER :: i,n,ih,ihh,o,jj,j,m
+    REAL(8) :: rmin,scale,rsp
+    REAL(8), DIMENSION (:,:), ALLOCATABLE :: MMW,MMWW,M_MMW
+
+
+
+    ALLOCATE(MMW(-bmax:bmax,ntype),MMWW(-bmax:bmax,ntype),M_MMW(-bmax:bmax,ntype))
+
+    counter=counter+1
+
+    o=0
+    MMW=0.0D0
+    MMWW=0.0D0
+    M_MMW=0.0D0
+    DO i=nstart_h,nend_h
+       o=o+1
+       m=nsq_nnlpp_vor(1,o)
+       DO jj=1,m
+          j=nsq_nnlpp_vor(jj+1,o)
+          rsp=rsq_nnlpp_vor(jj+1,o)
+          ih=INT(rsp/bin)+1
+          IF(ABS(ih) > bmax) THEN
+             WRITE(*,*) 'STOPS ',ih,bmax
+             STOP
+          END IF
+          MMW(ih,1)=MMW(ih,1)+vol_res(atom_res(j))
+          MMWW(ih,1)=MMWW(ih,1)+area_tota(atom_res(j))
+          M_MMW(ih,1)=M_MMW(ih,1)+1.0D0
+          M_MM1(ih,1)=M_MM1(ih,1)+1
+       END DO
+    END DO
+    DO ih=-bmax,bmax
+       IF(M_MMW(ih,1) /= 0.0D0) THEN
+          MM1(ih,1)=MM1(ih,1)+MMW(ih,1)/M_MMW(ih,1)
+          MMW1(ih,1)=MMW1(ih,1)+MMWW(ih,1)/M_MMW(ih,1)
+       END IF
+    END DO
+    DEALLOCATE(MMW,MMWW,M_MMW)
+  END SUBROUTINE Water_Density
+  SUBROUTINE water_print
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+
+    IMPLICIT NONE 
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+    INTEGER :: i,n,ih,o
+    REAL(8) :: n00,n0,nn,vol,kk,r,aux,auxx,dens,scale,w0,w00,r00
+    LOGICAL :: exist
+    
+    IF(MOD(counter,nprint_press) == 0) THEN
+       DO ih=-bmax,bmax
+          IF(M_MM1(ih,1) /= 0) THEN
+             r=DBLE(ih-1)*bin
+             aux=DBLE(M_MM1(ih,1))/DBLE(counter)
+             n00=MM1(ih,1)/DBLE(counter)
+             w00=MMW1(ih,1)/DBLE(counter)
+             w0=w00**3/(36.0D0*pi*n00**2)
+
+             WRITE(*,'(f12.3,4e14.6)') r,n00,w00,w0
+          END IF
+       END DO
+    END IF
+
+  END SUBROUTINE Water_print
 
   SUBROUTINE Fluctuations(kprint,xp0,yp0,zp0)
 
