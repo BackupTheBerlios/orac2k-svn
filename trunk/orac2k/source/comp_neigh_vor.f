@@ -3,7 +3,7 @@
      &     ,xpg,ypg,zpg,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-08-01 12:06:19 marchi>                             *
+*   Time-stamp: <2006-10-24 13:41:53 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,8 +21,10 @@
 
 *======================== DECLARATIONS ================================*
 
-      USE VORONOI_Mod, ONLY: nnlpp_vor,area_vor,volume_vor,maxpla
-     &     ,max_neigh,compress,solvent,dist_min,sigmas,dist_id
+      USE VORONOI_Mod, ONLY: nnlpp_vor,rsq_nnlpp_vor,nsq_nnlpp_vor
+     &     ,area_vor,volume_vor,maxpla,max_neigh,compress,solvent
+     &     ,dist_min,sigmas,dist_id,wat_mol,watp,wat,Res_Class
+     &     ,only_water
       USE Module_Neighbors, ONLY: Neigh_Start=>Start, Neigh_Delete
      &     =>Delete, Neighbors, neigha, neighb, neighc
       IMPLICIT none
@@ -43,13 +45,14 @@
 
       INTEGER index(max_neigh+1)
       INTEGER indexa(max_neigh),i_min
-      REAL*8    rsq(max_neigh),xmap(m1),ymap(m1),zmap(m1)
+      REAL*8    rsq(max_neigh),rsqq(max_neigh),xmap(m1),ymap(m1),zmap(m1
+     &     )
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
       REAL*8  rs,xgg,ygg,zgg,xpgi,ypgi,zpgi,xpi,ypi,zpi,xc,yc,zc,xg,yg
-     &     ,zg,cutoff2,rmin,rsp
-      INTEGER map,i,i1,j1,j,m,n,jj,mz,o,p_nn
+     &     ,zg,cutoff2,rmin,rsp,xmin,ymin,zmin,xb,yb,zb
+      INTEGER map,i,i1,j1,j,m,n,jj,mz,o,p_nn,kk,kl
       LOGICAL ok
       TYPE(Neighbors), DIMENSION (:), POINTER :: neigh
 
@@ -109,6 +112,9 @@
                               IF(rmin .GT. rsp) THEN
                                  rmin=rsp
                                  i_min=j1
+                                 xmin=xc
+                                 ymin=yc
+                                 zmin=zc
                                  ok=.TRUE.
                               END IF
                            END IF
@@ -123,6 +129,7 @@
                                  RETURN
                               END IF
                               rsq(map)=rs
+                              rsqq(map)=SQRT(rs)-sigmas(j1)
                               index(map+1)=j1
                            END IF
                         END IF
@@ -132,6 +139,35 @@
                   IF(ok) THEN
                      dist_min(i1)=rmin 
                      dist_id(i1)=i_min
+
+                     rsp=SQRT(xmin**2+ymin**2+zmin**2)
+                     xc=xmin/rsp
+                     yc=ymin/rsp
+                     zc=zmin/rsp
+                     kk=wat_mol(i1)
+                     IF(kk == 0) THEN
+                        WRITE(*,*) ' 0 ',kk
+                        STOP
+                     END IF
+                     IF(kk > SIZE(watp)) THEN
+                        WRITE(*,*) ' > SIZE(watp) ',kk,i1
+                        STOP
+                     END IF
+c$$$
+c$$$ ----  Added for Ions
+c$$$                    
+                     IF(Res_Class(i_min) >= 1) THEN
+                        watp(kk)%o=Res_Class(i_min)
+                        watp(kk)%rsp=rmin
+                        IF(kk .GT. 0) THEN
+                           DO kl=1,4
+                              xb=wat(kk)%v(1,kl)
+                              yb=wat(kk)%v(2,kl)
+                              zb=wat(kk)%v(3,kl)
+                              watp(kk)%cosa(kl)=xb*xc+yb*yc+zb*zc+1.0D0
+                           END DO
+                        END IF
+                     END IF
                   END IF
                END IF
 
@@ -141,13 +177,29 @@
 *=======================================================================
 
                mz=index(1)
+               IF(only_water) THEN
+                  nsq_nnlpp_vor(:,o)=0
+                  rsq_nnlpp_vor(:,o)=0.0D0
+               END IF
                IF(mz .NE. 0) THEN
                   CALL indexx(mz,rsq,indexa)
-                     
 *=======================================================================
 *--- Take only the first max_neigh -------------------------------------
 *=======================================================================
-                     
+                  IF(only_water) THEN
+                     IF(mz > max_neigh) THEN
+                        WRITE(*,*) 'Increase max_neigh, please.'
+     &                       ,' Program stops'
+                        STOP
+                     END IF
+                     nsq_nnlpp_vor(1,o)=mz
+
+                     DO jj=1,mz
+                        nsq_nnlpp_vor(jj+1,o)=index(1+indexa(jj))
+                        rsq_nnlpp_vor(jj+1,o)=rsqq(indexa(jj))
+                     END DO
+                  END IF
+                  
                   IF(mz .GT. maxpla) THEN
                      DO jj=1,maxpla
                         nnlpp_vor(jj,o)=index(1+indexa(jj))
@@ -192,6 +244,7 @@
                         IF(rs .LT. cutoff2) THEN
                            map=map+1
                            rsq(map)=rs
+                           rsqq(map)=SQRT(rs)-sigmas(j1)
                            index(map+1)=j1
                         END IF
                      END IF
@@ -217,6 +270,16 @@
                      indexa(1)=1
                   ELSE
                      CALL indexx(mz,rsq,indexa)
+                  END IF
+
+                  IF(only_water) THEN
+                     nsq_nnlpp_vor(:,o)=0
+                     rsq_nnlpp_vor(:,o)=0.0D0
+                     nsq_nnlpp_vor(1,o)=mz
+                     DO jj=1,mz
+                        nsq_nnlpp_vor(jj+1,o)=index(1+indexa(jj))
+                        rsq_nnlpp_vor(jj+1,o)=rsqq(jj)
+                     END DO
                   END IF
 
 *=======================================================================

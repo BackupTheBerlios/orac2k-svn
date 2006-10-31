@@ -2,7 +2,7 @@
      &     ,xp0,yp0,zp0,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-07-28 14:21:34 marchi>                             *
+*   Time-stamp: <2006-10-24 14:42:07 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,6 +21,7 @@
 *======================== DECLARATIONS ================================*
 
       USE VORONOI_Mod, ONLY: nnlpp_vor,area_vor,volume_vor,maxpla,maxver
+     &     ,only_water,rsq_nnlpp_vor
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
