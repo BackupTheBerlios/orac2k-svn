@@ -499,6 +499,14 @@ IFC_DBG :
 	${MAKE} recur_IFC "FFLAGS = -w95  -g"
 	${MAKE} orac_IFC 
 
+MAC_I :
+	${MAKE} obj_MAC_I "FFLAGS = -w95 -O2 " 
+	${MAKE} prepro_MAC_I "FFLAGS = -w95 -O3" 
+	${MAKE} prepronkl_MAC_I "FFLAGS = -warn noalignments -O0 "
+	${MAKE} eigr_MAC_I "FFLAGS = -w95 -O1 "
+	${MAKE} recur_MAC_I "FFLAGS = -w95  "
+	${MAKE} orac_MAC_I 
+
 INTEL :
 	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
 	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
@@ -615,6 +623,28 @@ orac_IFC : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(LD) -o orac_IFC $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
 	-L$(FFTW_LIB) -L$(OTHER_LIBS) $(LLFLAGS) -lm
+
+
+#==========================================================================
+# Compile and load ORAC on MAC INTEL Compiler   
+#==========================================================================
+
+
+obj_MAC_I : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+
+recur_MAC_I: $(OBJREC)
+
+eigr_MAC_I: $(EIGRS)
+
+prepro_MAC_I: $(OBJPRE) $(OBJPRE_F90) 
+
+prepronkl_MAC_I: $(OBJPRE_NKL)
+
+orac_MAC_I : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
+	$(LD) -o orac_MAC_I $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
+	-L$(FFTW_LIB) -L$(OTHER_LIBS) $(LLFLAGS) 
 
 
 #==========================================================================
