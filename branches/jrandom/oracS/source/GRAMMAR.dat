@@ -1,0 +1,3 @@
+{&PARAMETERS [ Define a new environment used for reading and storing parameters]
+{READ_TPG [ Usage: READ_TPG f1 -- f1, the name of the topology file; both CHARMM 
+and ORAC topologies are accepted ]}}
