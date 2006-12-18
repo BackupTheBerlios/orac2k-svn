@@ -2,6 +2,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.3  2006/12/18 22:23:44  mmarchi
+# *** empty log message ***
+#
 # Revision 1.2  2006/12/18 20:49:30  mmarchi
 # *** empty log message ***
 #
@@ -74,34 +77,48 @@ copy:
 	do cp $$j oppo/$$j;done;
 
 
-oracS.o: Class_Tree.o ORAC_INPUT_Mod.o GRAMMAR_Mod.o ORAC_PROCESS_Mod.o TOPOLOGY_Mod.o
-GRAMMAR_Mod.o: Class_Tree.o STRINGS_Mod.o flib.o TYPES.o ERROR_Mod.o
-STRINGS_Mod.o: TYPES.o flib.o 
-TOPPAR_STORE_Mod.o: CONSTANTS.o NODES_Mod.o flib.o PARAMETERS_GLOBALS.o
-NODES_Mod.o: CONSTANTS.o
-ORAC_INPUT_Mod.o: flib.o TYPES.o STRINGS_Mod.o Xerror_Mod.o
-ORAC_PROCESS_Mod.o: Class_Tree.o MYPARSE_Mod.o STRINGS_Mod.o ERROR_Mod.o PARAMETERS_Mod.o
-Class_Tree.o: flib.o Xerror_Mod.o CONSTANTS.o STRINGS_Mod.o
-TOPS_Mod.o: TOPS_Mod.f90 TOPS_Charmm.f90 TOPS_Orac.f90 TYPES.o Xerror_Mod.o MYPARSE_Mod.o\
-	STRINGS_Mod.o PARAMETERS_GLOBALS.o
-PARAMETERS_Mod.o: CONSTANTS.o PARAMETERS_GLOBALS.o Class_Tree.o ERROR_Mod.o MYPARSE_Mod.o\
-	 TOPPAR_STORE_Mod.o TOPS_Mod.o Store_TpgPar.f90
-GLOBALS.o: PARAMETERS_GLOBALS.o 
-PARAMETERS_GLOBALS.o: TYPES.o
-TYPES.o: CONSTANTS.o
-MYPARSE_Mod.o: CONSTANTS.o flib.o
-ERROR_Mod.o: CONSTANTS.o
-TOPOLOGY_Mod.o: PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o Class_AtomCnt.o\
-	TYPES_Utils.o STRINGS_Mod.o MYPARSE_Mod.o ERROR_Mod.o Class_SystemTpg.o\
-	Class_SystemPrm.o New_Residues.f90 
-Class_AtomCnt.o: ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o flib.o \
-	MYPARSE_Mod.o STRINGS_Mod.o LINKED_LIST.o
-Class_SystemTpg.o: ERROR_Mod.o CONSTANTS.o Class_AtomCnt.o PARAMETERS_GLOBALS.o\
-	TOPOLOGY_GLOBALS.o Class_ResidueTpg.o
-TYPES_Utils.o: TYPES.o
-
-Class_SystemPrm.o: UNITS.o Class_AtomCnt.o ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o flib.o \
-	MYPARSE_Mod.o STRINGS_Mod.o LINKED_LIST.o
-
-Class_ResidueTpg.o: ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o \
-	MYPARSE_Mod.o LINKED_LIST.o flib.o
+# Dependencies
+CONSTANTS.o : CONSTANTS.f90 
+Class_AtomCnt.o : Class_AtomCnt.f90 LINKED_LIST.o MYPARSE_Mod.o STRINGS_Mod.o flib.o\
+	ERROR_Mod.o TOPOLOGY_GLOBALS.o PARAMETERS_GLOBALS.o 
+Class_ResidueTpg.o : Class_ResidueTpg.f90 LINKED_LIST.o MYPARSE_Mod.o\
+	ERROR_Mod.o TOPOLOGY_GLOBALS.o PARAMETERS_GLOBALS.o flib.o STRINGS_Mod.o 
+Class_SystemPrm.o : Class_SystemPrm.f90 Class_SystemTpg.o LINKED_LIST.o\
+	flib.o UNITS.o CONSTANTS.o STRINGS_Mod.o MYPARSE_Mod.o ERROR_Mod.o\
+	TOPOLOGY_GLOBALS.o PARAMETERS_GLOBALS.o 
+Class_SystemTpg.o : Class_SystemTpg.f90 LINKED_LIST.o CONSTANTS.o Class_ResidueTpg.o\
+	Class_AtomCnt.o ERROR_Mod.o TOPOLOGY_GLOBALS.o PARAMETERS_GLOBALS.o 
+Class_Tree.o : Class_Tree.f90 Xerror_Mod.o STRINGS_Mod.o CONSTANTS.o 
+ERROR_Mod.o : ERROR_Mod.f90 TYPES.o CONSTANTS.o 
+GLOBALS.o : GLOBALS.f90 PARAMETERS_GLOBALS.o TYPES.o 
+GRAMMAR_Mod.o : GRAMMAR_Mod.f90 flib.o STRINGS_Mod.o Class_Tree.o TYPES.o ERROR_Mod.o 
+LINKED_LIST.o : LINKED_LIST.f90 CONSTANTS.o 
+MYPARSE_Mod.o : MYPARSE_Mod.f90 flib.o CONSTANTS.o 
+NODES_Mod.o : NODES_Mod.f90 CONSTANTS.o 
+New_Residues.o : New_Residues.f90 
+ORAC_INPUT_Mod.o : ORAC_INPUT_Mod.f90 STRINGS_Mod.o TYPES.o flib.o Xerror_Mod.o 
+ORAC_PROCESS_Mod.o : ORAC_PROCESS_Mod.f90 Class_Tree.o MYPARSE_Mod.o\
+	ERROR_Mod.o PARAMETERS_Mod.o 
+PARAMETERS_GLOBALS.o : PARAMETERS_GLOBALS.f90 TYPES.o 
+PARAMETERS_Mod.o : PARAMETERS_Mod.f90 Store_TpgPar.f90 TOPPAR_STORE_Mod.o\
+	TOPS_Mod.o MYPARSE_Mod.o STRINGS_Mod.o ERROR_Mod.o Class_Tree.o \
+	PARAMETERS_GLOBALS.o CONSTANTS.o 
+STRINGS_Mod.o : STRINGS_Mod.f90 flib.o TYPES.o CONSTANTS.o 
+Store_TpgPar.o : Store_TpgPar.f90 
+TOPOLOGY_GLOBALS.o : TOPOLOGY_GLOBALS.f90 TYPES.o 
+TOPOLOGY_Mod.o : TOPOLOGY_Mod.f90 New_Residues.f90 TOPOLOGY_GLOBALS.o\
+	PARAMETERS_GLOBALS.o ERROR_Mod.o TYPES_Utils.o MYPARSE_Mod.o STRINGS_Mod.o\
+	Class_SystemPrm.o Class_SystemTpg.o 
+TOPPAR_STORE_Mod.o : TOPPAR_STORE_Mod.f90 flib.o NODES_Mod.o CONSTANTS.o\
+	PARAMETERS_GLOBALS.o 
+TOPS_Charmm.o : TOPS_Charmm.f90 
+TOPS_Mod.o : TOPS_Mod.f90 TOPS_Charmm.f90 TOPS_Orac.f90 STRINGS_Mod.o MYPARSE_Mod.o\
+	Xerror_Mod.o PARAMETERS_GLOBALS.o TYPES.o 
+TOPS_Orac.o : TOPS_Orac.f90 
+TYPES.o : TYPES.f90 CONSTANTS.o 
+TYPES_Utils.o : TYPES_Utils.f90 TYPES.o 
+UNITS.o : UNITS.f90 
+Xerror_Mod.o : Xerror_Mod.f90 
+flib.o : flib.f90 
+oracS.o : oracS.f90 TOPOLOGY_Mod.o ORAC_PROCESS_Mod.o GRAMMAR_Mod.o\
+	ORAC_INPUT_Mod.o Class_Tree.o
