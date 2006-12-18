@@ -1,7 +1,7 @@
 MODULE TYPES_Utils
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-05 12:38:15 marchi>                           *
+!!$   Time-stamp: <2006-12-17 16:38:59 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -60,12 +60,14 @@ CONTAINS
     CALL Alloc(a (i) % dele, b (o) % dele)
     CALL Alloc(a (i) % ends, b (o) % ends)
     IF(ALLOCATED(a (i) % group)) THEN
+       IF(ALLOCATED(b (o) % group)) DEALLOCATE(b(o) % group)
        ALLOCATE(b (o ) % group (SIZE(a (i) % group)))
        DO m=1,SIZE(a (i) % group)
           ALLOCATE(b (o) % group (m) % g (SIZE(a (i) % group (m) % g)))
        END DO
     END IF
     IF(ALLOCATED(a (i) % mass)) THEN
+       IF(ALLOCATED(b (o) % mass)) DEALLOCATE( b(o) % mass)
        ALLOCATE(b (o) % mass (2,SIZE(a(i) % mass)))
     END IF
     b(o)=a(i)

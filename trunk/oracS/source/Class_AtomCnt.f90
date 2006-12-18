@@ -1,7 +1,7 @@
 MODULE Class_AtomCnt
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-14 16:29:27 marchi>                           *
+!!$   Time-stamp: <2006-12-18 11:31:38 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -50,6 +50,8 @@ CONTAINS
     TYPE(index), DIMENSION(2) :: inds
     LOGICAL :: ok
     LOGICAL, SAVE :: Called=.FALSE.
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: nind_ptch
+    CHARACTER(len=max_char), DIMENSION(:,:), ALLOCATABLE :: ind_ptch
 
     IF(Called) RETURN
     Called=.TRUE.
@@ -59,13 +61,39 @@ CONTAINS
     Grp_No=0
     ALLOCATE(inds(1) % i (SIZE(Secondary_Seq(1) % line)))
     ALLOCATE(inds(2) % i (SIZE(Secondary_Seq(2) % line)))
-
+    m=0
+    DO n=1,SIZE(patches)
+       IF(patches (n) % Type == 'link') THEN
+          m=m+1
+       END IF
+    END DO
+    ALLOCATE(ind_ptch(2,m))
+    ALLOCATE(nind_ptch(2,m))
+    m=0
+    DO n=1,SIZE(patches)
+       IF(patches (n) % Type == 'link') THEN
+          m=m+1
+          nind_ptch(1,m)=patches(n)%one
+          nind_ptch(2,m)=patches(n)%two
+          ind_Ptch(1,m)='Link '//TRIM(patches(n)%Res_l(1))
+          ind_Ptch(2,m)='Link '//TRIM(patches(n)%Res_l(2))
+       END IF
+    END DO
     DO n=1,SIZE(Secondary_Seq)
        DO m=1,SIZE(Secondary_Seq(n) % line)
-
           Res_No=Res_No+1
-
-          res_i=Secondary_Seq(n) % line(m)
+          IF(n == 1 .AND. ALLOCATED(ind_ptch)) THEN
+             res_i=Secondary_Seq(n) % line(m)
+             ok=.FALSE.
+             DO i=1,SIZE(ind_ptch,2)
+                DO j=1,2
+                   IF(nind_ptch(j,i) == m) THEN
+                      res_i=ind_ptch(j,i)
+                      ok=.TRUE.
+                   END IF
+                END DO
+             END DO
+          END IF
           i_f=Pick_Res(res_i,App_Char)
           inds(n) % i (m) = i_f
 !!$
@@ -153,14 +181,16 @@ CONTAINS
        END IF
     END DO
 
+    DEALLOCATE(ind_ptch)
+    DEALLOCATE(nind_ptch)
     CONTAINS
       SUBROUTINE Get_Connections
         INTEGER :: Res_No,n,m,i,j,i_N,i_P,i_F,i1,i2,ii1,ii2,count_a,count_extra,m1,o,o1
-        INTEGER :: extra_Bond(2),new_bond(2),bonds(2),nind_x
+        INTEGER :: extra_Bond(2),new_bond(2),bonds(2),nind_x,n1,m2,i_2
         
         INTEGER, DIMENSION(:,:), ALLOCATABLE :: Res_Bonds
         INTEGER, DIMENSION(:), ALLOCATABLE :: ind_x
-        CHARACTER(len=max_char) :: label0
+        CHARACTER(len=max_char) :: label0,label1,lab0
         LOGICAL :: end_of_list,ok
         
         Res_No=0
@@ -178,10 +208,52 @@ CONTAINS
               CALL Start()
               DO i=1,SIZE(App_Char(i_F) % bonds,2)
                  DO j=1,SIZE(App_Char(i_F) % bonds,1)
-                    label0=App_Char(i_F) % bonds(j,i)
+                    label0=TRIM(App_Char(i_F) % bonds(j,i))
+                    IF(ICHAR(label0(1:1)) == 49 .OR. ICHAR(label0(1:1)) == 50) EXIT
                     new_bond(j)=Find_Atom(i_F,Res_No,label0)
                  END DO
-                 CALL Add(new_bond, count_A)
+                 label0=TRIM(App_Char(i_F) % bonds(1,i))
+                 label1=TRIM(App_Char(i_F) % bonds(2,i))
+                 IF((ICHAR(label0(1:1)) == 49 .AND. ICHAR(label1(1:1)) == 50)&
+                         & .OR. (ICHAR(label0(1:1)) == 50 &
+                         &.AND. ICHAR(label1(1:1)) == 49)) THEN
+                    m2=-1
+                    DO n1=1,SIZE(nind_ptch,2)
+                       IF(nind_ptch(1,n1) == m) THEN
+                          m2=nind_ptch(2,n1)
+                       END IF
+                    END DO
+                    m1=-1
+                    DO n1=1,SIZE(nind_ptch,2)
+                       IF(nind_ptch(2,n1) == m) THEN
+                          m1=nind_ptch(1,n1)
+                       END IF
+                    END DO
+                    IF(m2 /= -1) THEN
+                       DO j=1,SIZE(App_Char(i_F) % bonds,1)
+                          label0=TRIM(App_Char(i_F) % bonds(j,i))
+                          label1=label0(2:)
+                          IF(ICHAR(label0(1:1)) == 49) THEN
+                             new_bond(j)=Find_Atom(i_F,Res_No,label1)
+                          ELSE IF(ICHAR(label0(1:1)) == 50) THEN
+                             i_2=inds(n) % i (m2) 
+                             new_bond(j)=Find_Atom(i_2,m2,label1)
+                          END IF
+                       END DO
+                       CALL Add(new_bond, count_A)
+                    ELSE IF(m1 == -1) THEN
+                       WRITE(lab0,'(i4)') m
+                       label0=TRIM(App_Char(i_F) % bonds(1,i))
+                       label1=TRIM(App_Char(i_F) % bonds(2,i))
+                       errmsg_f='Inter-residue connection '//TRIM(label0)&
+                            &//' '//TRIM(label1)//' not found. Residue No. '&
+                            &//TRIM(lab0)//' not on the list of linked residues.'
+                       CALL Add_Error(-1,errmsg_f)
+                       CALL Print_Errors()
+                    END IF
+                 ELSE
+                    CALL Add(new_bond, count_A)
+                 END IF
               END DO
 !!$
 !!$--- Add extra bonds if connections to other residues exist
@@ -264,6 +336,12 @@ CONTAINS
               DEALLOCATE(Res_bonds)
            END DO
         END DO
+!!$
+!!$--- Add additional links between residues
+!!$
+
+
+
 !!$
 !!$--- Then add missing connections: So far, the bond between 
 !!$--- the n and n+1 residues is counted only for the n-th residue

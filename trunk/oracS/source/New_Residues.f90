@@ -1,7 +1,7 @@
 SUBROUTINE New_Residues
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-15 17:19:04 marchi>                           *
+!!$   Time-stamp: <2006-12-17 22:15:41 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -41,7 +41,7 @@ SUBROUTINE New_Residues
 
   m=COUNT(patches % Type == 'resi')+2*COUNT(patches % Type == 'resi')
   ALLOCATE(Add_Char(m))
-  CALL copy(Res_Char,Res_Char1)
+  ALLOCATE(Res_Char1(SIZE(Res_Char)))
 
   new_r=0
   DO n=1,SIZE(patches)
@@ -50,6 +50,8 @@ SUBROUTINE New_Residues
         res_l=patches(n) % res
         pres_l=patches(n) % pres
         CALL Pick(i_r,i_p)
+        CALL copy(Res_Char,Res_Char1,i_p,i_p)
+        CALL copy(Res_Char,Res_Char1,i_r,i_r)
         Res_r=>Res_Char1(i_r)
         Res_p=>Res_Char1(i_p)
         Res_n=>Add_Char(new_r)
@@ -92,7 +94,8 @@ SUBROUTINE New_Residues
         DO ip=1,2
            res_l=patches(n) % Res_l(ip)
            CALL Pick(i_r,i_p)
-           WRITE(*,*) 'Ippa 2',i_r,i_p
+           CALL copy(Res_Char,Res_Char1,i_p,i_p)
+           CALL copy(Res_Char,Res_Char1,i_r,i_r)
            Res_r=>Res_Char1(i_r)
            Res_p=>Res_Char1(i_p)
            CALL Get_Deleted_link(Res_p%dele,ip)
@@ -108,7 +111,7 @@ SUBROUTINE New_Residues
            CALL Dele_Tpg(Res_r%don_)
            CALL Dele_Tpg(Res_r%ends)
 
-           CALL Assemble_group(Res_r%group,Res_p % group ,Res_n % group)
+           CALL Assemble_group(Res_r%group,Res_p % group ,Res_n % group, ip)
            CALL Assemble_Tpg(Res_r%bonds, Res_p%bonds, Res_n%bonds)
            CALL Assemble_Tpg(Res_r%imph, Res_p%imph, Res_n%imph)
            CALL Assemble_Tpg(Res_r%acc, Res_p%acc, Res_n%acc)
@@ -202,13 +205,47 @@ CONTAINS
     END DO
 
   END SUBROUTINE Dele_Tpg
-  SUBROUTINE Assemble_group(group_r,group_p,group_n)
+  SUBROUTINE Assemble_group(group_r,group_p,group_n,which)
     TYPE(list), DIMENSION(:), ALLOCATABLE :: group_r,group_p,group_n
-    INTEGER :: n_r,n_p,m_r,m_p,new_g,nxt_p,nxt_r,iflag,c,p1,p2
+    INTEGER, OPTIONAL :: which
+    INTEGER :: n_r,n_p,m_r,m_p,new_g,nxt_p,nxt_r,iflag,c,p1,p2,p_dim
     CHARACTER(len=*), PARAMETER :: lst='   '
     CHARACTER(len=max_char) :: line,tok_r,tok_p
     LOGICAL :: ok
+    CHARACTER(len=max_char) :: C_Which,lab0
+    TYPE(list), DIMENSION(:), ALLOCATABLE :: group_t
 
+    IF(present(which)) THEN
+       WRITE(c_which,'(i1)') which
+       ALLOCATE(group_t(SIZE(group_p)))
+       DO n_p=1,SIZE(group_p)
+          ALLOCATE(group_t(n_p) % g (SIZE(group_p (n_p) % g)))
+       END DO
+       DO n_p=1,SIZE(group_p)
+          p_dim=0
+          DO m_p=1,SIZE(group_p (n_p) % g)
+             lab0=TRIM(group_p (n_p) % g(m_p))
+             IF(lab0(1:1) == C_which(1:1)) THEN
+                group_t (n_p) % g(m_p)=lab0(2:)
+                p_dim=p_dim+1
+             ELSE
+                group_t (n_p) % g(m_p)=' '
+             END IF
+          END DO
+          DEALLOCATE(group_p (n_p) % g)
+          ALLOCATE(group_p(n_p) % g (p_dim))
+          p_dim=0
+          DO m_p=1,SIZE(group_t (n_p) % g)
+             lab0=TRIM(group_t (n_p) % g(m_p))
+             IF(LEN_TRIM(lab0) /= 0 ) THEN
+                p_dim=p_dim+1
+                group_p (n_p) % g(p_dim)=lab0
+             END IF
+          END DO
+       END DO
+       DEALLOCATE(group_t)
+    END IF
+    
     DO n_r=1,SIZE(group_r)
        DO m_r=1,SIZE(group_r (n_r) % g)
           ok=.TRUE.
@@ -275,10 +312,49 @@ CONTAINS
        END DO
     END DO
   END SUBROUTINE Assemble_group
-  SUBROUTINE Assemble_Tpg(Tpg_r,Tpg_p,Tpg_n)
+  SUBROUTINE Assemble_Tpg(Tpg_r,Tpg_p,Tpg_n,which)
     CHARACTER(len=max_char), DIMENSION (:,:), ALLOCATABLE  :: tpg_r,Tpg_p,Tpg_n
-    INTEGER :: n_r,n_p,m_r,m_p,new_g,c
+    INTEGER :: n_r,n_p,m_r,m_p,new_g,c,nn,p_dim
+    INTEGER, OPTIONAL :: which
+    CHARACTER(len=max_char), DIMENSION (:,:), ALLOCATABLE  :: tpg_t
+    CHARACTER(len=max_char), DIMENSION (:), ALLOCATABLE  :: lab0
+    CHARACTER(len=max_char) :: C_Which
     
+
+    IF(present(which)) THEN
+       WRITE(c_which,'(i1)') which
+       ALLOCATE(tpg_t(SIZE(tpg_p,1),SIZE(tpg_p,2)))
+       ALLOCATE(lab0(SIZE(tpg_p,1)))
+       DO n_p=1,SIZE(tpg_p,2)
+          nn=0
+          p_dim=0
+          DO m_p=1,SIZE(Tpg_p,1)
+             lab0(m_p)=TRIM(Tpg_p (m_p,n_p))
+             IF(lab0(m_p)(1:1) == C_which(1:1)) nn=nn+1
+          END DO
+          IF(nn /= 0) THEN
+             p_dim=p_dim+1
+             Tpg_t (:,n_p)=Tpg_p (:,n_p)
+          ELSE
+             Tpg_t (:,n_p)=' '
+          END IF
+       END DO
+       p_dim=0
+       DEALLOCATE(Tpg_p)
+       ALLOCATE(Tpg_p(SIZE(Tpg_t,1), p_dim))
+       DO n_p=1,SIZE(tpg_t,2)
+          nn=0
+          DO m_p=1,SIZE(Tpg_t,1)
+             IF(LEN_TRIM(Tpg_t(m_p,n_p)) == 0) nn=nn+1
+          END DO
+          IF(nn == SIZE(Tpg_t,1)) THEN
+             p_dim=p_dim+1
+             Tpg_p(:,p_dim)=Tpg_t(:,n_p)
+          END IF
+       END DO
+       DEALLOCATE(lab0,Tpg_t)
+    END IF
+
     new_g=0
     DO n_r=1,SIZE(Tpg_r,2)
        c=0
