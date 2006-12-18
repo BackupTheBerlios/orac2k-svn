@@ -2,8 +2,11 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
-# Revision 1.1  2006/12/16 20:50:03  mmarchi
-# Initial revision
+# Revision 1.2  2006/12/18 20:49:30  mmarchi
+# *** empty log message ***
+#
+# Revision 1.1.1.1  2006/12/16 20:50:03  mmarchi
+# initial import into CVS
 #
 
 #FC = gfortran
@@ -54,7 +57,7 @@ OBJS = Class_Tree.o Xerror_Mod.o GRAMMAR_Mod.o flib.o  STRINGS_Mod.o  NODES_Mod.
 	TOPS_Mod.o PARAMETERS_Mod.o PARAMETERS_GLOBALS.o GLOBALS.o\
 	CONSTANTS.o TOPPAR_STORE_Mod.o TOPOLOGY_Mod.o TOPOLOGY_GLOBALS.o \
 	Class_AtomCnt.o Class_SystemTpg.o TYPES_Utils.o LINKED_LIST.o UNITS.o\
-	Class_SystemPrm.o oracS.o 
+	Class_SystemPrm.o Class_ResidueTpg.o oracS.o 
 
 SRC = $(patsubst %.o, %.f90, $(OBJS)) 
 
@@ -94,6 +97,11 @@ TOPOLOGY_Mod.o: PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o Class_AtomCnt.o\
 Class_AtomCnt.o: ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o flib.o \
 	MYPARSE_Mod.o STRINGS_Mod.o LINKED_LIST.o
 Class_SystemTpg.o: ERROR_Mod.o CONSTANTS.o Class_AtomCnt.o PARAMETERS_GLOBALS.o\
-	TOPOLOGY_GLOBALS.o
+	TOPOLOGY_GLOBALS.o Class_ResidueTpg.o
 TYPES_Utils.o: TYPES.o
-Class_SystemPrm.o: UNITS.o
+
+Class_SystemPrm.o: UNITS.o Class_AtomCnt.o ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o flib.o \
+	MYPARSE_Mod.o STRINGS_Mod.o LINKED_LIST.o
+
+Class_ResidueTpg.o: ERROR_Mod.o PARAMETERS_GLOBALS.o TOPOLOGY_GLOBALS.o \
+	MYPARSE_Mod.o LINKED_LIST.o flib.o

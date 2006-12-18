@@ -1,7 +1,7 @@
 MODULE Class_SystemPrm
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-15 13:50:23 marchi>                           *
+!!$   Time-stamp: <2006-12-18 20:43:24 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -120,12 +120,13 @@ CONTAINS
       ALLOCATE(Prm % Types (count_a))
       Prm % Types=rewrite(1:count_a)
       DEALLOCATE(oks,rewrite)
+      
       WRITE(*,*) 'Atomic types in use No. =====>',SIZE(Prm % Types)
     END SUBROUTINE Types
     SUBROUTINE Lennard_Jones
       INTEGER :: n,m,ij,ntypes,i,i_bonds,count_out,count_A,iflags&
            &,nlines,nword,m1,ip
-      LOGICAL :: ok
+      LOGICAL :: ok,noerror
       INTEGER, DIMENSION(:), ALLOCATABLE :: ind_x
       REAL(8) :: eps,sigma,eps14,sigma14,tmpi
       TYPE(ChainR8C), DIMENSION(:), ALLOCATABLE :: LJ
@@ -175,7 +176,8 @@ CONTAINS
       
       oks=.FALSE.
       DO n=1,count_a
-         ip=Type_Number(LJ(n) % lab)
+         ip=Type_Number(LJ(n) % lab, noerror)
+         
          IF(ip > 0) THEN
             oks(ip)=.TRUE.
             Prm % LJs (ip) % pt = ip
@@ -259,6 +261,8 @@ CONTAINS
             END IF
          END DO
       END DO
+      CALL Print_Errors()
+
       DEALLOCATE(LJ,oks)
     END SUBROUTINE Lennard_Jones
     SUBROUTINE Bonds
@@ -280,10 +284,12 @@ CONTAINS
       CALL Start()
 
       m_bonds=SIZE(Tpg % bonds,2)
+      WRITE(*,*) m_bonds
 
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % bonds, Tpg % atm, count_out)
+      WRITE(*,*) 'Uppa 3'
 
-      CALL Gather_Prm(Tpg % bonds, Tpg % atm, m_bonds, Prm % bonds,  count_out)
+      CALL Gather_Prm('Bonds ',Tpg % bonds, Tpg % atm, m_bonds, Prm % bonds,  count_out)
 
       WRITE(*,*) 'Bond Parameters No. =====>',SIZE(Prm % bonds)
     END SUBROUTINE Bonds
@@ -318,7 +324,7 @@ CONTAINS
 
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % angles, Tpg % atm, count_out)
 
-      CALL Gather_Prm(Tpg % angles, Tpg % atm, m_angles, Prm % angles,  count_out)
+      CALL Gather_Prm('Angles ',Tpg % angles, Tpg % atm, m_angles, Prm % angles,  count_out)
 
       WRITE(*,*) 'Angle Parameters No. =====>',SIZE(Prm % angles)
     END SUBROUTINE Angles
@@ -350,9 +356,12 @@ CONTAINS
 
       m_dihed=SIZE(Tpg % dihed,2)
 
+      WRITE(*,*) 'popllo 1'
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % dihed, Tpg % atm, count_out)
+      WRITE(*,*) 'popllo 2',count_out
 
-      CALL Gather_Prm(Tpg % dihed, Tpg % atm, m_dihed, Prm % dihed,  count_out)
+      CALL Gather_Prm('Torsions ',Tpg % dihed, Tpg % atm, m_dihed, Prm % dihed,  count_out)
+      WRITE(*,*) 'popllo 3'
 
       WRITE(*,*) 'Dihedral Parameters No. =====>',SIZE(Prm % dihed)
 
@@ -380,10 +389,13 @@ CONTAINS
 
       m_dihed=SIZE(Tpg % imph,2)
 
+      WRITE(*,*) 'popllo 1'
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % imph, Tpg % atm, count_out)
 
-      CALL Gather_Prm(Tpg % imph, Tpg % atm, m_dihed, Prm % imph,  count_out)
+      WRITE(*,*) 'popllo 2'
+      CALL Gather_Prm('Improper Torsions ',Tpg % imph, Tpg % atm, m_dihed, Prm % imph,  count_out)
 
+      WRITE(*,*) 'popllo 3'
       WRITE(*,*) 'Improper dihedral Parameters No. =====>',SIZE(Prm % imph)
 
     END SUBROUTINE Improper
@@ -396,12 +408,14 @@ CONTAINS
 
       INTEGER :: n,m,ma,mb,iflags
       INTEGER, DIMENSION(:), ALLOCATABLE :: ip
-      LOGICAL :: ok1,ok2,ok3
+      LOGICAL :: ok1,ok2,ok3,ok4
       
       ALLOCATE(ip(SIZE(labels)))
       DO n=1,SIZE(labels)
          ip(n)=Type_Number(labels(n))
       END DO
+
+      ok4=.FALSE.
       DO n=1,SIZE(Pot)
          IF(.NOT. ALLOCATED(Pot(n) % p)) CYCLE
          ok1=.TRUE.
@@ -409,7 +423,6 @@ CONTAINS
          ok3=.FALSE.
          ma=SIZE(Pot (n) % b)
          mb=SIZE(Pot (n) % p)
-
          
          DO m=1,ma
             ok1=ok1 .AND. (Pot (n) % b (m) == ip(m) .OR. Pot (n) % b (m) == -1)
@@ -428,9 +441,10 @@ CONTAINS
             Params(mb+1)=DBLE(ind_in)
             IF(ok3) Params(mb+1)=-DBLE(ind_in)
             CALL Add(Params,count_out)
+            ok4=.TRUE.
          END IF
       END DO
-      
+      IF(.NOT. ok4) STOP
     END SUBROUTINE Find_Type
     SUBROUTINE Associate_Type(lines, Tot_Tpg, atm, count_out)
       TYPE(Atom2Cnt), DIMENSION(:), INTENT(IN) :: atm
@@ -439,9 +453,9 @@ CONTAINS
       INTEGER, INTENT(OUT) :: count_out
 
       INTEGER :: xdim
-      INTEGER :: nlines,n,nword,ia,m_Tpg,iflags,i1
+      INTEGER :: nlines,n,nword,ia,m_Tpg,iflags,i1,count_A
       CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE :: labs
-      LOGICAL :: ok
+      LOGICAL :: ok,noerror
 
       xdim=SIZE(Tot_Tpg,1)
       
@@ -453,18 +467,24 @@ CONTAINS
       DO n=1,nlines
          CALL MY_parse(lines(n), strngs)
          nword=SIZE(strngs)
-         ALLOCATE(p_Tpg(n) % b (xdim))
-         
+         ok=.TRUE.
          DO i1=1,xdim
-            p_Tpg(n) % b(i1) = Type_Number(strngs(i1))
+            IF(Type_Number(strngs(i1),noerror) < 0) ok=.FALSE.
          END DO
-         IF(nword > xdim) THEN
-            ALLOCATE(p_Tpg (n) % p (nword-xdim))
-            DO ia=1,SIZE(p_Tpg(n) % p)
-               CALL SP_Getnum(strngs(ia+xdim),p_Tpg(n) % p (ia), iflags)
+         IF(ok) THEN
+            ALLOCATE(p_Tpg(n) % b (xdim))
+            DO i1=1,xdim
+               p_Tpg(n) % b(i1) = Type_Number(strngs(i1))
             END DO
+            IF(nword > xdim) THEN
+               ALLOCATE(p_Tpg (n) % p (nword-xdim))
+               DO ia=1,SIZE(p_Tpg(n) % p)
+                  CALL SP_Getnum(strngs(ia+xdim),p_Tpg(n) % p (ia), iflags)
+               END DO
+            END IF
          END IF
       END DO
+
       CALL Print_Errors()
 
       m_Tpg=SIZE(Tot_Tpg,2)
@@ -478,8 +498,9 @@ CONTAINS
       DEALLOCATE(labs,p_Tpg)
       
     END SUBROUTINE Associate_Type
-    FUNCTION Type_Number(label) RESULT(out)
+    FUNCTION Type_Number(label,noerror) RESULT(out)
       CHARACTER(len=*) :: label
+      LOGICAL, OPTIONAL :: noerror
       INTEGER  :: out
       CHARACTER(len=max_char) :: lab1
       INTEGER :: i2
@@ -494,11 +515,13 @@ CONTAINS
             RETURN
          END IF
       END DO
+      out = -999
+      IF(PRESENT(noerror)) RETURN
       errmsg_f='Atom type '//TRIM(label)//' not on parameter list'
       CALL Add_Error(-1,errmsg_f)
-      out = -999
     END FUNCTION Type_Number
-    SUBROUTINE Gather_Prm(Tot_Tpg, atm, m_Tpg, Tot_Prm,  count_out)
+    SUBROUTINE Gather_Prm(What_this_is,Tot_Tpg, atm, m_Tpg, Tot_Prm,  count_out)
+      CHARACTER(len=*) :: What_this_Is
       TYPE(Atom2Cnt), DIMENSION(:), INTENT(IN) :: atm
       TYPE(Chain_M), DIMENSION(:), ALLOCATABLE, INTENT(OUT)  :: Tot_Prm
       INTEGER, DIMENSION(:,:), INTENT(IN) :: Tot_Tpg
@@ -547,10 +570,12 @@ CONTAINS
       END DO
       count_a=0
       count_b=0
+      WRITE(*,*) 'count_b 0',count_b
       DO ii=1,m_Tpg
          IF(ind_x(ii) > 1) THEN
             DO i=1,ind_x(ii)
                count_A=count_A+1
+               IF(count_a > SIZE(ind_y)) WRITE(*,*) 'illoppa',count_a,size(ind_y)
                IF(ind_y(count_A) /= 0) count_b=count_b+1
             END DO
          ELSE
@@ -559,6 +584,7 @@ CONTAINS
          END IF
       END DO
 
+      WRITE(*,*) 'count_b',count_b
       ALLOCATE(Tot_Prm (count_b))
 
       count_a=0
@@ -575,7 +601,7 @@ CONTAINS
                lab1=TRIM(lab1)//' '//TRIM(atm(Tot_Tpg (i1,ii)) % a % betab)
             END DO
             lab1=TRIM(lab1)//' !'
-            errmsg_f='Torsion '//TRIM(lab0)//' : '//TRIM(lab1)&
+            errmsg_f=TRIM(What_This_Is)//TRIM(lab0)//' : '//TRIM(lab1)&
                  &//' not associated with a parameter of the list'
             CALL Add_Error(-1,errmsg_f)
          ELSE

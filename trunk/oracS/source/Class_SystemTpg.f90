@@ -1,7 +1,7 @@
 MODULE Class_SystemTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-14 18:32:03 marchi>                           *
+!!$   Time-stamp: <2006-12-18 20:08:33 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -23,6 +23,7 @@ MODULE Class_SystemTpg
   USE Class_AtomCnt, ONLY: AtomCnt, Atom_cnt=>Atoms, atm_cnt=>atm&
        &, Pick_Res, Find_Atom, AtomCnt__Grp_Atm=>Grp_Atm, &
        & AtomCnt__Res_Atm=>Res_Atm
+  USE Class_ResidueTpg, ONLY: ResidueTpg__init=>init, ResidueTpg
   USE CONSTANTS
   USE Linked_Int4_D
   IMPLICIT none
@@ -40,19 +41,37 @@ MODULE Class_SystemTpg
   END TYPE SystemTpg
   TYPE(SystemTpg), SAVE :: Tpg
   CHARACTER(len=max_pars), DIMENSION(:), ALLOCATABLE :: strngs
-  INTEGER, DIMENSION(:,:), POINTER :: T_bonds,T_angles,T_tors
+  INTEGER, DIMENSION(:,:), POINTER :: T_bonds,T_angles,T_tors,T_Int14
   CHARACTER(len=max_char_long) :: errmsg_f
+  TYPE(ResidueTpg), DIMENSION(:), ALLOCATABLE, SAVE :: Res_Used
 CONTAINS
   SUBROUTINE Init
-    INTEGER :: n,m,level,c_Perc
+    INTEGER :: n,m,level,c_Perc,i_F,count_a
     LOGICAL, SAVE :: Called=.FALSE.
+    CHARACTER(len=max_char) :: linea,res_i
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: oks
 
     IF(Called) RETURN
     Called=.TRUE.
-
+    
+    ALLOCATE(oks(SIZE(App_Char)))
+    oks=.FALSE.
+    DO n=1,SIZE(Secondary_Seq)
+       DO m=1,SIZE(Secondary_Seq(n) % line)
+          res_i=Secondary_Seq(n) % line(m)
+          i_f=Pick_Res(res_i,App_Char)
+          oks(i_f)=.TRUE.
+       END DO
+    END DO
+    ALLOCATE(Res_Used(SIZE(App_Char)))
+    DO n=1,SIZE(App_Char)
+       IF(oks(n)) THEN
+          res_i=App_Char (n) % Type
+          Res_Used(n)=ResidueTpg__Init(Res_i)
+       END IF
+    END DO
     CALL Atom_Cnt
     WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
-
     ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
     ALLOCATE(Tpg % Grp_Atm(SIZE(AtomCnt__Grp_Atm,1),SIZE(AtomCnt__Grp_Atm,2)))
     ALLOCATE(Tpg % Res_Atm(SIZE(AtomCnt__Res_Atm,1),SIZE(AtomCnt__Res_Atm,2)))
@@ -127,34 +146,64 @@ CONTAINS
     SUBROUTINE Angles
       IMPLICIT NONE 
       INTEGER :: count_a, count_out,i,m1,m2,j,jj,kk,k,m3,oo,o,ia,iaa&
-           &,ja,jaa,ka,kaa
-      INTEGER :: bends(3)
+           &,ja,jaa,ka,kaa,ii,ll,l,i_f
+      INTEGER :: bends(3),nstart,nend,offset
       LOGICAL :: end_of_list,ok
 
       CALL Start()
 
-      DO i=1,SIZE(atm_cnt)
-         m1=SIZE(atm_cnt(i) % cnt)
-         DO jj=1,m1
-            j=atm_cnt(i) % cnt (jj) 
-            m2=SIZE(atm_cnt(j) % cnt)
-            DO kk=1,m2
-               k=atm_cnt(j) % cnt (kk) 
-               IF(k == i) CYCLE
-               bends(1)=i
-               bends(2)=j
-               bends(3)=k
-               ok=.TRUE.
-               m3=SIZE(atm_cnt(k) % cnt)
-               DO oo=1,m3
-                  o=atm_cnt(k) % cnt(oo)
-                  IF(o == i) ok=.FALSE.
+      offset=0
+      DO n=1,SIZE(Secondary_Seq)
+         DO m=1,SIZE(Secondary_Seq(n) % line)
+            res_i=Secondary_Seq(n) % line(m)
+            i_f=Pick_Res(res_i,App_Char) 
+            IF(ALLOCATED(Res_Used(i_F) % Angles)) THEN
+               DO i=1,SIZE(Res_Used(i_F) % Angles,2)
+                  bends(1)=Res_Used(i_F) % Angles (1, i)+offset
+                  bends(2)=Res_Used(i_F) % Angles (2, i)+offset
+                  bends(3)=Res_Used(i_F) % Angles (3, i)+offset
+                  CALL Add(bends,count_out)
                END DO
-               IF(i /= k .AND. ok) CALL Add(bends,count_out)
-            END DO
+            END IF
+            offset=offset+SIZE(Res_Used(i_F) % atm)
          END DO
       END DO
+      nstart=count_out+1
 
+      DO ii=1,SIZE(Tpg % bonds,2)
+         i=Tpg % bonds (1,ii)
+         j=Tpg % bonds (2,ii)
+         bends(2)=i
+         bends(3)=j
+         m1=0
+         IF(ALLOCATED(atm_cnt(i) % cnt)) THEN
+            m1=SIZE(atm_cnt(i) % cnt)
+         END IF
+         DO ll=1,m1
+            l=atm_cnt(i) % cnt (ll) 
+            IF(l == j) CYCLE
+            IF((atm_cnt(i) % Res_No == atm_cnt(j) % Res_No) &
+                 &.AND. (atm_cnt(l) % Res_No == atm_cnt(j) % Res_No)) CYCLE
+            bends(1)=l 
+            CALL Add(bends,count_out)
+         END DO
+
+         bends(1)=i
+         bends(2)=j
+         m2=0
+         IF(ALLOCATED(atm_cnt(j) % cnt)) THEN
+            m2=SIZE(atm_cnt(j) % cnt)
+         END IF
+         DO ll=1,m2
+            l=atm_cnt(j) % cnt (ll) 
+            IF(l == i) CYCLE
+            IF((atm_cnt(i) % Res_No == atm_cnt(j) % Res_No) &
+                 &.AND. (atm_cnt(l) % Res_No == atm_cnt(j) % Res_No)) CYCLE
+            bends(3)=l
+            CALL Add(bends,count_out)
+         END DO
+      END DO
+      nend=count_out
       ALLOCATE(t_angles(3,count_out))
       end_of_list=.FALSE.
       count_A=0
@@ -168,11 +217,11 @@ CONTAINS
       END DO
       CALL Cleanup()
 
-      DO i=1,count_A
+      DO i=nstart,nend
          ia=t_angles(1,i)
          ja=t_angles(2,i)
          ka=t_angles(3,i)
-         DO j=1,i-1
+         DO j=nstart,i-1
             iaa=t_angles(1,j)
             jaa=t_angles(2,j)
             kaa=t_angles(3,j)
@@ -201,11 +250,30 @@ CONTAINS
     SUBROUTINE Torsions
       IMPLICIT NONE 
       INTEGER :: count_a, count_out,i,m1,m2,j,k,ii,ll,l,n,ia,iaa,ja&
-           &,jaa,ka,kaa,la,laa
-      INTEGER :: tors(4)
-      LOGICAL :: end_of_list,oka1,oka2,oka3,oka4,okb1,okb2,okb3,okb4
+           &,jaa,ka,kaa,la,laa,nend,nstart,i_F
+      INTEGER :: tors(4),new_Int14(2),k1,k2,k3,offset
+      INTEGER, DIMENSION(:), ALLOCATABLE :: p_tors,p_int14
+      LOGICAL :: end_of_list,oka1,oka2,oka3,oka4,okb1,okb2,okb3,okb4,ok,dyn
 
       CALL Start()
+      offset=0
+      DO n=1,SIZE(Secondary_Seq)
+         DO m=1,SIZE(Secondary_Seq(n) % line)
+            res_i=Secondary_Seq(n) % line(m)
+            i_f=Pick_Res(res_i,App_Char) 
+            IF(ALLOCATED(Res_Used(i_F) % dihed )) THEN
+               DO i=1,SIZE(Res_Used(i_F) % dihed,2)
+                  tors(1)=Res_Used(i_F) % dihed (1, i)+offset
+                  tors(2)=Res_Used(i_F) % dihed (2, i)+offset
+                  tors(3)=Res_Used(i_F) % dihed (3, i)+offset
+                  tors(4)=Res_Used(i_F) % dihed (4, i)+offset
+                  CALL Add(tors,count_out)
+               END DO
+            END IF
+            offset=offset+SIZE(Res_Used(i_F) % atm)
+         END DO
+      END DO
+      nstart=count_out+1
 
       DO ii=1,SIZE(Tpg % angles,2)
          i=Tpg % angles (1,ii)
@@ -220,8 +288,11 @@ CONTAINS
          tors(4)=k
          DO ll=1,m1
             l=atm_cnt(i) % cnt (ll) 
-            tors(1)=l 
             IF(l == j .OR. l == k) CYCLE
+            IF((atm_cnt(i) % Res_No == atm_cnt(j) % Res_No) &
+              &.AND. (atm_cnt(i) % Res_No  == atm_cnt(k) % Res_No)&
+              &.AND. (atm_cnt(i) % Res_No == atm_cnt(l) % Res_No) ) CYCLE
+            tors(1)=l 
             CALL Add(tors,count_out)
          END DO
          tors(1)=i
@@ -233,34 +304,35 @@ CONTAINS
          END IF
          DO ll=1,m2
             l=atm_cnt(k) % cnt (ll) 
-            tors(4)=l
             IF(l == j .OR. l == i) CYCLE
+            IF((atm_cnt(i) % Res_No == atm_cnt(j) % Res_No) &
+              &.AND. (atm_cnt(i) % Res_No  == atm_cnt(k) % Res_No)&
+              &.AND. (atm_cnt(i) % Res_No == atm_cnt(l) % Res_No) ) CYCLE
+            tors(4)=l
             CALL Add(tors,count_out)
          END DO
       END DO
-
+      nend=count_out
       ALLOCATE(t_tors(4,count_out))
-
       end_of_list=.FALSE.
       count_A=0
-      CALL Extract(tors, end_of_list, 0)
+      CALL Extract(p_tors, end_of_list, dyn, 0)
       DO WHILE(.NOT. end_of_list) 
          count_A=count_A+1
-         t_tors(1,count_A)=tors(1)
-         t_tors(2,count_A)=tors(2)
-         t_tors(3,count_A)=tors(3)
-         t_tors(4,count_A)=tors(4)
-         CALL Extract(tors, end_of_list)
+         t_tors(1,count_A)=p_tors(1)
+         t_tors(2,count_A)=p_tors(2)
+         t_tors(3,count_A)=p_tors(3)
+         t_tors(4,count_A)=p_tors(4)
+         CALL Extract(p_tors, end_of_list, dyn)
       END DO
       CALL Cleanup()
 
-
-      DO i=1,count_A
+      DO i=nstart,nend
          ia=t_tors(1,i)
          ja=t_tors(2,i)
          ka=t_tors(3,i)
          la=t_tors(4,i)
-         DO j=1,i-1
+         DO j=nstart,i-1
             iaa=t_tors(1,j)
             jaa=t_tors(2,j)
             kaa=t_tors(3,j)
@@ -284,8 +356,71 @@ CONTAINS
          END IF
       END DO
       DEALLOCATE(t_tors)
-      WRITE(*,*) 'Torsions No. =====>',count_A
+      WRITE(*,*) 'Torsions No. =====>',SIZE(Tpg % dihed,2)
 
+      CALL Start()
+      offset=0
+      DO n=1,SIZE(Secondary_Seq)
+         DO m=1,SIZE(Secondary_Seq(n) % line)
+            res_i=Secondary_Seq(n) % line(m)
+            i_f=Pick_Res(res_i,App_Char) 
+            IF(ALLOCATED(Res_Used(i_F) % Int14 )) THEN
+               DO i=1,SIZE(Res_Used(i_F) % Int14,2)
+                  tors(1)=Res_Used(i_F) % Int14 (1, i)+offset
+                  tors(2)=Res_Used(i_F) % Int14 (2, i)+offset
+                  CALL Add(tors,count_out)
+               END DO
+            END IF
+            offset=offset+SIZE(Res_Used(i_F) % atm)
+         END DO
+      END DO
+      DO ii=nstart,SIZE(Tpg % dihed,2)
+         i=Tpg % dihed (1,ii)
+         j=Tpg % dihed (4,ii)
+         ok=.TRUE.
+         m1=0
+         IF(ALLOCATED(Tpg % angles)) THEN
+            m1=SIZE(Tpg % angles,2)
+         END IF
+         DO k=1,m1
+            k1=Tpg % angles(1,k)
+            k2=Tpg % angles(2,k)
+            k3=Tpg % angles(3,k)
+!!$
+!!$--- eliminate 1-4 separated by an angle
+!!$          
+            IF((k1 == i .AND. k3 == j) .OR. (k1 == j .AND. k3 == i)) ok=.FALSE.
+!!$
+!!$--- eliminate 1-4 separated by an bond
+!!$          
+            IF((k1 == i .AND. k2 == j) .OR. (k2 == j .AND. k1 == i)) ok=.FALSE.
+            IF((k2 == i .AND. k3 == j) .OR. (k3 == j .AND. k2 == i)) ok=.FALSE.
+         END DO
+         IF(ok) THEN
+            new_Int14(1)=i
+            new_Int14(2)=j
+            CALL Add(new_Int14,count_out)
+         END IF
+      END DO
+      ALLOCATE(t_Int14(2,count_out))
+      end_of_list=.FALSE.
+      count_A=0
+      CALL Extract(p_Int14, end_of_list, dyn, 0)
+      DO WHILE(.NOT. end_of_list) 
+         count_A=count_A+1
+         t_Int14(1,count_A)=p_Int14(1)
+         t_Int14(2,count_A)=p_Int14(2)
+         CALL Extract(p_Int14, end_of_list, dyn)
+      END DO
+      CALL Cleanup()
+      ALLOCATE(Tpg % int14(2,count_A))
+      Tpg % Int14 =t_Int14
+      DEALLOCATE(t_Int14)
+      IF(ALLOCATED(p_tors)) DEALLOCATE(p_tors)
+      IF(ALLOCATED(p_Int14)) DEALLOCATE(p_Int14)
+      
+
+      WRITE(*,*) 'Int14 No. =====>',SIZE(Tpg % Int14,2)
     END SUBROUTINE Torsions
     SUBROUTINE ITorsions
       LOGICAL ::  end_of_list

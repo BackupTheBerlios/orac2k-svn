@@ -1,5 +1,5 @@
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-13 17:34:37 marchi>                           *
+!!$   Time-stamp: <2006-12-18 20:43:42 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -134,19 +134,14 @@ CONTAINS
     REAL(8), DIMENSION(:), INTENT(IN) :: labels
     INTEGER, INTENT(OUT) :: count_out
     INTEGER :: kk
-    TYPE(NODE_Real8_D), POINTER :: new_node
-
-    
+    TYPE(NODE_Real8_D), POINTER :: new_node    
     count_a=count_a+1
-
     ALLOCATE(new_node)
     ALLOCATE(new_node % labels(SIZE(labels)))
     new_node % labels = labels
     NULLIFY(new_node % next)
-
     current % next => new_node
     current => current % next
-
     count_out=count_a
   END SUBROUTINE Add
 
