@@ -1,7 +1,7 @@
 MODULE Class_ResidueTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 20:06:18 marchi>                           *
+!!$   Time-stamp: <2006-12-18 22:40:13 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -50,6 +50,7 @@ CONTAINS
     LOGICAL, SAVE :: Called=.FALSE.
     CHARACTER(len=max_char) :: line
     LOGICAL :: ok
+    LOGICAL, SAVE :: First_Time=.TRUE.
     
     
     i_f=Pick_Res(res_i,App_Char)
@@ -81,6 +82,7 @@ CONTAINS
        Res_Tpg % Grp_Atm(2,Grp_No)=nato
     END DO
     i=Find_Atom(0,' ', Res_Tpg % atm)
+    IF(First_Time) WRITE(*,'(''Computing residue topology ====>'')')
     CALL bonds(Res_Tpg,i_F)
     CALL Angles(Res_Tpg)
     CALL Torsions(Res_Tpg)
@@ -115,6 +117,7 @@ CONTAINS
           STOP
        END IF
     END DO
+    First_Time=.FALSE.
   END FUNCTION Init
   SUBROUTINE bonds(Res_Tpg,i_F)
     INTEGER :: i_F
@@ -177,7 +180,8 @@ CONTAINS
        Res_Tpg % atm(i1) % cnt(ind_x(i1)) = i2
        Res_Tpg % atm(i2) % cnt(ind_x(i2)) = i1
     END DO
-    WRITE(*,*) 'Bonds No. =====>',SIZE(Res_Tpg % bonds,2)
+    WRITE(*,'(''.'')',ADVANCE='NO')
+
     DEALLOCATE(ind_x)
     IF(ALLOCATED(p_bonds)) DEALLOCATE(p_bonds)
   END SUBROUTINE Bonds
@@ -283,7 +287,7 @@ CONTAINS
     DEALLOCATE(t_angles)
     IF(ALLOCATED(p_angles)) DEALLOCATE(p_angles)
     
-    WRITE(*,*) 'Bendings No. =====>',count_A
+    WRITE(*,'(''.'')',ADVANCE='NO') 
     
   END SUBROUTINE Angles
   SUBROUTINE Torsions(Res_Tpg)
@@ -378,8 +382,8 @@ CONTAINS
     END DO
     DEALLOCATE(t_Tors)
     IF(ALLOCATED(p_tors)) DEALLOCATE(p_tors)
-    WRITE(*,*) 'Torsions No. =====>',count_A
-    
+    WRITE(*,'(''.'')',ADVANCE='NO') 
+   
   END SUBROUTINE Torsions
   SUBROUTINE Int14(Res_Tpg)
     IMPLICIT NONE 
@@ -441,7 +445,7 @@ CONTAINS
     DEALLOCATE(t_Int14)
     IF(ALLOCATED(p_Int14)) DEALLOCATE(p_Int14)
 
-    WRITE(*,*) '1--4 Interactions No. =====>',count_A
+    WRITE(*,'(''.'')',ADVANCE='NO') 
   END SUBROUTINE Int14
   FUNCTION Pick_Res(res,Res_C) RESULT (out)
     TYPE(Unit_Char), DIMENSION(:) :: Res_C

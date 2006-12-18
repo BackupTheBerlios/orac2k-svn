@@ -1,7 +1,7 @@
 MODULE Class_SystemTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 20:08:33 marchi>                           *
+!!$   Time-stamp: <2006-12-18 22:39:56 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -70,6 +70,7 @@ CONTAINS
           Res_Used(n)=ResidueTpg__Init(Res_i)
        END IF
     END DO
+    WRITE(*,*)
     CALL Atom_Cnt
     WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
     ALLOCATE(Tpg % atm(SIZE(atm_cnt)))

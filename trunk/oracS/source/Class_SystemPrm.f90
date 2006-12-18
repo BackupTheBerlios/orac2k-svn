@@ -1,7 +1,7 @@
 MODULE Class_SystemPrm
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 20:43:24 marchi>                           *
+!!$   Time-stamp: <2006-12-18 22:20:35 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -284,14 +284,10 @@ CONTAINS
       CALL Start()
 
       m_bonds=SIZE(Tpg % bonds,2)
-      WRITE(*,*) m_bonds
 
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % bonds, Tpg % atm, count_out)
-      WRITE(*,*) 'Uppa 3'
-
       CALL Gather_Prm('Bonds ',Tpg % bonds, Tpg % atm, m_bonds, Prm % bonds,  count_out)
 
-      WRITE(*,*) 'Bond Parameters No. =====>',SIZE(Prm % bonds)
     END SUBROUTINE Bonds
     SUBROUTINE Angles
       CHARACTER(len=max_char) :: labs(3)
@@ -356,13 +352,8 @@ CONTAINS
 
       m_dihed=SIZE(Tpg % dihed,2)
 
-      WRITE(*,*) 'popllo 1'
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % dihed, Tpg % atm, count_out)
-      WRITE(*,*) 'popllo 2',count_out
-
       CALL Gather_Prm('Torsions ',Tpg % dihed, Tpg % atm, m_dihed, Prm % dihed,  count_out)
-      WRITE(*,*) 'popllo 3'
-
       WRITE(*,*) 'Dihedral Parameters No. =====>',SIZE(Prm % dihed)
 
     END SUBROUTINE Dihedrals
@@ -389,13 +380,9 @@ CONTAINS
 
       m_dihed=SIZE(Tpg % imph,2)
 
-      WRITE(*,*) 'popllo 1'
       CALL Associate_Type(Paras(i_Bonds) % line, Tpg % imph, Tpg % atm, count_out)
-
-      WRITE(*,*) 'popllo 2'
       CALL Gather_Prm('Improper Torsions ',Tpg % imph, Tpg % atm, m_dihed, Prm % imph,  count_out)
 
-      WRITE(*,*) 'popllo 3'
       WRITE(*,*) 'Improper dihedral Parameters No. =====>',SIZE(Prm % imph)
 
     END SUBROUTINE Improper
@@ -409,6 +396,7 @@ CONTAINS
       INTEGER :: n,m,ma,mb,iflags
       INTEGER, DIMENSION(:), ALLOCATABLE :: ip
       LOGICAL :: ok1,ok2,ok3,ok4
+      CHARACTER(len=max_char) :: lab0
       
       ALLOCATE(ip(SIZE(labels)))
       DO n=1,SIZE(labels)
@@ -444,7 +432,11 @@ CONTAINS
             ok4=.TRUE.
          END IF
       END DO
-      IF(.NOT. ok4) STOP
+      IF(.NOT. ok4) THEN
+         WRITE(lab0,'(4(a7,2x))') (TRIM(labels(n)),n=1,SIZE(labels))
+         errmsg_f='The following bonded parameter is undefined: '//lab0
+         CALL Add_Error(-1,errmsg_f)
+      END IF
     END SUBROUTINE Find_Type
     SUBROUTINE Associate_Type(lines, Tot_Tpg, atm, count_out)
       TYPE(Atom2Cnt), DIMENSION(:), INTENT(IN) :: atm
@@ -469,7 +461,7 @@ CONTAINS
          nword=SIZE(strngs)
          ok=.TRUE.
          DO i1=1,xdim
-            IF(Type_Number(strngs(i1),noerror) < 0) ok=.FALSE.
+            IF(Type_Number(strngs(i1),noerror) < -1) ok=.FALSE.
          END DO
          IF(ok) THEN
             ALLOCATE(p_Tpg(n) % b (xdim))
@@ -570,12 +562,11 @@ CONTAINS
       END DO
       count_a=0
       count_b=0
-      WRITE(*,*) 'count_b 0',count_b
       DO ii=1,m_Tpg
          IF(ind_x(ii) > 1) THEN
             DO i=1,ind_x(ii)
                count_A=count_A+1
-               IF(count_a > SIZE(ind_y)) WRITE(*,*) 'illoppa',count_a,size(ind_y)
+               IF(count_a > SIZE(ind_y)) STOP
                IF(ind_y(count_A) /= 0) count_b=count_b+1
             END DO
          ELSE
@@ -584,7 +575,6 @@ CONTAINS
          END IF
       END DO
 
-      WRITE(*,*) 'count_b',count_b
       ALLOCATE(Tot_Prm (count_b))
 
       count_a=0
