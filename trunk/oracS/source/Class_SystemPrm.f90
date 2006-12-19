@@ -1,7 +1,7 @@
 MODULE Class_SystemPrm
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 09:38:18 marchi>                           *
+!!$   Time-stamp: <2006-12-19 14:22:39 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -103,25 +103,7 @@ CONTAINS
          END IF
       END DO
 
-      ALLOCATE(rewrite(count_a),oks(count_a))
-      oks=.FALSE.
-      DO n=1,SIZE(Tpg % atm)
-         lab0=TRIM(Tpg % atm(n) % a % betab)
-         oks(Type_Number(lab0))=.TRUE.
-      END DO
-      count_a=0
-      DO n=1,SIZE(Prm % Types)
-         IF(oks(n)) THEN
-            count_a=count_a+1
-            rewrite(count_a)=Prm % Types(n)
-         END IF
-      END DO
-      DEALLOCATE(Prm % Types)
-      ALLOCATE(Prm % Types (count_a))
-      Prm % Types=rewrite(1:count_a)
-      DEALLOCATE(oks,rewrite)
-      
-      WRITE(*,*) 'Atomic types in use No. =====>',SIZE(Prm % Types)
+      WRITE(*,*) 'Total atomic types No. =====>',SIZE(Prm % Types)
     END SUBROUTINE Types
     SUBROUTINE Lennard_Jones
       INTEGER :: n,m,ij,ntypes,i,i_bonds,count_out,count_A,iflags&
@@ -486,6 +468,7 @@ CONTAINS
             ia=Tot_Tpg(i1,n)
             labs(i1)= atm (ia) % a % betab
          END DO
+         
          CALL Find_Type(n, count_out, p_Tpg, labs)
       END DO
       DEALLOCATE(labs,p_Tpg)

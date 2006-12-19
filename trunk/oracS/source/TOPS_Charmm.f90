@@ -213,9 +213,7 @@ SUBROUTINE Init_Hash_Charmm
   Hash_Charmm(6)%Type='don_'
   Hash_Charmm(7)%Type='dele'
   Hash_Charmm(8)%Type='term'
-  WRITE(*,*) 'What'
   ALLOCATE(Hash_Charmm(1)%keys(3))
-  WRITE(*,*) 'What'
   Hash_Charmm(1)%keys=(/'bond','doub','trip'/)
   Hash_Charmm(1)%n=2
   ALLOCATE(Hash_Charmm(2)%keys(2))

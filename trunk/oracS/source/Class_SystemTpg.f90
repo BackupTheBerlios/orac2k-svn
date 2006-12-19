@@ -1,7 +1,7 @@
 MODULE Class_SystemTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 22:39:56 marchi>                           *
+!!$   Time-stamp: <2006-12-19 13:58:03 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -48,49 +48,60 @@ CONTAINS
   SUBROUTINE Init
     INTEGER :: n,m,level,c_Perc,i_F,count_a
     LOGICAL, SAVE :: Called=.FALSE.
-    CHARACTER(len=max_char) :: linea,res_i
-    LOGICAL, DIMENSION(:), ALLOCATABLE :: oks
 
     IF(Called) RETURN
     Called=.TRUE.
     
-    ALLOCATE(oks(SIZE(App_Char)))
-    oks=.FALSE.
-    DO n=1,SIZE(Secondary_Seq)
-       DO m=1,SIZE(Secondary_Seq(n) % line)
-          res_i=Secondary_Seq(n) % line(m)
-          i_f=Pick_Res(res_i,App_Char)
-          oks(i_f)=.TRUE.
-       END DO
-    END DO
-    ALLOCATE(Res_Used(SIZE(App_Char)))
-    DO n=1,SIZE(App_Char)
-       IF(oks(n)) THEN
-          res_i=App_Char (n) % Type
-          Res_Used(n)=ResidueTpg__Init(Res_i)
-       END IF
-    END DO
-    WRITE(*,*)
     CALL Atom_Cnt
-    WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
-    ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
-    ALLOCATE(Tpg % Grp_Atm(SIZE(AtomCnt__Grp_Atm,1),SIZE(AtomCnt__Grp_Atm,2)))
-    ALLOCATE(Tpg % Res_Atm(SIZE(AtomCnt__Res_Atm,1),SIZE(AtomCnt__Res_Atm,2)))
 
-    WRITE(*,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
-    WRITE(*,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
-    Tpg % Grp_Atm = AtomCnt__Grp_Atm
-    Tpg % Res_Atm = AtomCnt__Res_Atm
-    DO n=1,SIZE(atm_cnt)
-       Tpg % atm (n) % a => atm_cnt(n)
-    END DO
-
+    CALL Used_Residues
+    CALL Atoms
     CALL Bonds
     CALL Angles
     CALL Torsions
     CALL ITorsions
     CALL Molecules
+
   CONTAINS
+    SUBROUTINE Used_Residues
+      LOGICAL, DIMENSION(:), ALLOCATABLE :: oks
+      INTEGER :: n,m,i_F
+      CHARACTER(len=max_char) :: res_i
+      ALLOCATE(oks(SIZE(App_Char)))
+      oks=.FALSE.
+      DO n=1,SIZE(Secondary_Seq)
+         DO m=1,SIZE(Secondary_Seq(n) % line)
+            res_i=Secondary_Seq(n) % line(m)
+            i_f=Pick_Res(res_i,App_Char)
+            oks(i_f)=.TRUE.
+         END DO
+      END DO
+      ALLOCATE(Res_Used(SIZE(App_Char)))
+      DO n=1,SIZE(App_Char)
+         IF(oks(n)) THEN
+            res_i=App_Char (n) % Type
+            Res_Used(n)=ResidueTpg__Init(Res_i)
+         END IF
+      END DO
+      DEALLOCATE(oks)
+    END SUBROUTINE Used_Residues
+    SUBROUTINE Atoms
+      INTEGER :: n
+      WRITE(*,*)
+
+      WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
+      ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
+      ALLOCATE(Tpg % Grp_Atm(SIZE(AtomCnt__Grp_Atm,1),SIZE(AtomCnt__Grp_Atm,2)))
+      ALLOCATE(Tpg % Res_Atm(SIZE(AtomCnt__Res_Atm,1),SIZE(AtomCnt__Res_Atm,2)))
+      
+      WRITE(*,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
+      WRITE(*,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
+      Tpg % Grp_Atm = AtomCnt__Grp_Atm
+      Tpg % Res_Atm = AtomCnt__Res_Atm
+      DO n=1,SIZE(atm_cnt)
+         Tpg % atm (n) % a => atm_cnt(n)
+      END DO
+    END SUBROUTINE Atoms
     SUBROUTINE Bonds
       LOGICAL ::  end_of_list
       INTEGER :: count_a, count_out,i,m,jj,j,ia,iaa,ja,jaa
@@ -150,6 +161,7 @@ CONTAINS
            &,ja,jaa,ka,kaa,ii,ll,l,i_f
       INTEGER :: bends(3),nstart,nend,offset
       LOGICAL :: end_of_list,ok
+      CHARACTER(len=max_char) :: res_i
 
       CALL Start()
 
@@ -255,6 +267,7 @@ CONTAINS
       INTEGER :: tors(4),new_Int14(2),k1,k2,k3,offset
       INTEGER, DIMENSION(:), ALLOCATABLE :: p_tors,p_int14
       LOGICAL :: end_of_list,oka1,oka2,oka3,oka4,okb1,okb2,okb3,okb4,ok,dyn
+      CHARACTER(len=max_char) :: res_i
 
       CALL Start()
       offset=0
@@ -418,8 +431,7 @@ CONTAINS
       Tpg % Int14 =t_Int14
       DEALLOCATE(t_Int14)
       IF(ALLOCATED(p_tors)) DEALLOCATE(p_tors)
-      IF(ALLOCATED(p_Int14)) DEALLOCATE(p_Int14)
-      
+      IF(ALLOCATED(p_Int14)) DEALLOCATE(p_Int14)      
 
       WRITE(*,*) 'Int14 No. =====>',SIZE(Tpg % Int14,2)
     END SUBROUTINE Torsions

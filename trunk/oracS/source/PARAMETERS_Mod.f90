@@ -1,7 +1,7 @@
 MODULE PARAMETERS_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-15 17:11:26 marchi>                           *
+!!$   Time-stamp: <2006-12-19 14:35:47 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -35,7 +35,7 @@ MODULE PARAMETERS_Mod
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Scan_Parameters
+  PUBLIC Scan
   CHARACTER(len=max_pars), DIMENSION(:), ALLOCATABLE, PRIVATE ::&
        & strngs
   CHARACTER(len=max_char), SAVE :: input
@@ -44,7 +44,7 @@ CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
 
-  SUBROUTINE Scan_Parameters
+  SUBROUTINE Scan
     CHARACTER(len=max_pars) :: line,linea
     REAL(8) :: a
     INTEGER :: n,m,iflag
@@ -76,7 +76,7 @@ CONTAINS
           CALL Add_Errors(-1,errmsg_f)
        END IF
     END DO
-  END SUBROUTINE Scan_Parameters
+  END SUBROUTINE Scan
   SUBROUTINE Binary
     INTEGER ::nword,io
     IF(nword /= 2) THEN

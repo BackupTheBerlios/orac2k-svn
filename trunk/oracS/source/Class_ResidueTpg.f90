@@ -1,7 +1,7 @@
 MODULE Class_ResidueTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 22:40:13 marchi>                           *
+!!$   Time-stamp: <2006-12-19 14:16:54 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -119,6 +119,30 @@ CONTAINS
     END DO
     First_Time=.FALSE.
   END FUNCTION Init
+  SUBROUTINE Change(Res_Tpg,Pot)
+    TYPE(ResidueTpg) :: Res_Tpg
+    CHARACTER(len=max_char), DIMENSION(:) :: Pot
+    INTEGER :: n,m
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: oks
+
+    ALLOCATE(oks(SIZE(Res_Tpg % atm)))
+    oks=.TRUE.
+    DO n=1,SIZE(Pot)
+       DO m=1,SIZE(Res_Tpg % atm)
+          IF(.NOT. oks(m)) CYCLE
+          IF(My_Fxm(TRIM(Res_Tpg % atm(m) % betab), TRIM(Pot(n))) ) THEN
+             oks(m)=.FALSE.
+             Res_Tpg % atm(n) % Id_Type = n
+          END IF
+       END DO
+    END DO
+    IF(COUNT(oks) /= 0) THEN
+       errmsg_f='Atom type unknown. Catastrophic error! Should not be here.'
+       CALL Add_Error(-1, errmsg_f)
+       CALL Print_Errors()
+    END IF
+    DEALLOCATE(oks)
+  END SUBROUTINE Change
   SUBROUTINE bonds(Res_Tpg,i_F)
     INTEGER :: i_F
     TYPE(ResidueTpg) :: Res_Tpg

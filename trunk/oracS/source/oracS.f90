@@ -1,7 +1,7 @@
 PROGRAM OracS
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-15 09:08:41 marchi>                           *
+!!$   Time-stamp: <2006-12-19 14:31:11 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -20,10 +20,12 @@ PROGRAM OracS
 !!$======================== DECLARATIONS ================================*
 
   USE Class_Tree, ONLY: Start
-  USE ORAC_INPUT_Mod, ONLY: Options, Store, Modify, Single_String, Input_String
-  USE GRAMMAR_Mod, ONLY: Create_list=>Create, Grammar_String, Grammar_Collect,&
+  USE INPUT_Mod, ONLY: Input__Options=>Options, Input__Store=>Store&
+       &, Input__Modify=>Modify, Input__Single_String=>Single_String&
+       &, Input__Input_String=>Input_String
+  USE GRAMMAR_Mod, ONLY: Grammar__Create=>Create, Grammar_String, Grammar_Collect,&
        & Read_Grammar
-  USE ORAC_PROCESS_Mod, ONLY:  Inputs, Grammar, Process_Commands
+  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process_Commands
   USE TOPOLOGY_Mod, ONLY: Setup_Topology, Setup_Parameters
   IMPLICIT none
 
@@ -72,19 +74,19 @@ PROGRAM OracS
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   CONTAINS
    SUBROUTINE Read_Input
-     CALL Options
-     CALL Store
-     CALL Modify
-     CALL Single_String
+     CALL Input__Options
+     CALL Input__Store
+     CALL Input__Modify
+     CALL Input__Single_String
    END SUBROUTINE Read_Input
    SUBROUTINE Collect_Input
      Grammar_Collect=.FALSE.
      CALL start(Inputs)
-     CALL Create_List(Input_String,'')
+     CALL Grammar__Create(Input__Input_String,'')
    END SUBROUTINE Collect_Input
    SUBROUTINE Collect_Grammar
      Grammar_Collect=.TRUE.
      CALL start(Grammar)
-     CALL Create_List(Grammar_String,'')
+     CALL Grammar__Create(Grammar_String,'')
    END SUBROUTINE Collect_Grammar
 END PROGRAM OracS

@@ -2,6 +2,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.4  2006/12/19 13:42:51  mmarchi
+# *** empty log message ***
+#
 # Revision 1.3  2006/12/18 22:23:44  mmarchi
 # *** empty log message ***
 #
@@ -56,7 +59,7 @@ FFLAGS = -O
 
 
 OBJS = Class_Tree.o Xerror_Mod.o GRAMMAR_Mod.o flib.o  STRINGS_Mod.o  NODES_Mod.o\
-	ORAC_INPUT_Mod.o TYPES.o ORAC_PROCESS_Mod.o MYPARSE_Mod.o ERROR_Mod.o\
+	INPUT_Mod.o TYPES.o PROCESS_Mod.o MYPARSE_Mod.o ERROR_Mod.o\
 	TOPS_Mod.o PARAMETERS_Mod.o PARAMETERS_GLOBALS.o GLOBALS.o\
 	CONSTANTS.o TOPPAR_STORE_Mod.o TOPOLOGY_Mod.o TOPOLOGY_GLOBALS.o \
 	Class_AtomCnt.o Class_SystemTpg.o TYPES_Utils.o LINKED_LIST.o UNITS.o\
@@ -96,8 +99,8 @@ LINKED_LIST.o : LINKED_LIST.f90 CONSTANTS.o
 MYPARSE_Mod.o : MYPARSE_Mod.f90 flib.o CONSTANTS.o 
 NODES_Mod.o : NODES_Mod.f90 CONSTANTS.o 
 New_Residues.o : New_Residues.f90 
-ORAC_INPUT_Mod.o : ORAC_INPUT_Mod.f90 STRINGS_Mod.o TYPES.o flib.o Xerror_Mod.o 
-ORAC_PROCESS_Mod.o : ORAC_PROCESS_Mod.f90 Class_Tree.o MYPARSE_Mod.o\
+INPUT_Mod.o : INPUT_Mod.f90 STRINGS_Mod.o TYPES.o flib.o Xerror_Mod.o 
+PROCESS_Mod.o : PROCESS_Mod.f90 Class_Tree.o MYPARSE_Mod.o\
 	ERROR_Mod.o PARAMETERS_Mod.o 
 PARAMETERS_GLOBALS.o : PARAMETERS_GLOBALS.f90 TYPES.o 
 PARAMETERS_Mod.o : PARAMETERS_Mod.f90 Store_TpgPar.f90 TOPPAR_STORE_Mod.o\
@@ -120,5 +123,5 @@ TYPES_Utils.o : TYPES_Utils.f90 TYPES.o
 UNITS.o : UNITS.f90 
 Xerror_Mod.o : Xerror_Mod.f90 
 flib.o : flib.f90 
-oracS.o : oracS.f90 TOPOLOGY_Mod.o ORAC_PROCESS_Mod.o GRAMMAR_Mod.o\
-	ORAC_INPUT_Mod.o Class_Tree.o
+oracS.o : oracS.f90 TOPOLOGY_Mod.o PROCESS_Mod.o GRAMMAR_Mod.o\
+	INPUT_Mod.o Class_Tree.o

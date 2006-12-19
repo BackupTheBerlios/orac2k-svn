@@ -1,7 +1,7 @@
 MODULE TYPES_Utils
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 09:28:31 marchi>                           *
+!!$   Time-stamp: <2006-12-19 09:35:05 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -115,6 +115,7 @@ CONTAINS
       IF(ALLOCATED(Tpg_o)) THEN
          p1=SIZE(Tpg_o,1)
          p2=SIZE(Tpg_o,2)
+         IF(ALLOCATED(Tpg_n)) DEALLOCATE(Tpg_n)
          ALLOCATE(Tpg_n(p1,p2))
       END IF
     END SUBROUTINE Alloc
@@ -153,6 +154,7 @@ CONTAINS
       IF(ALLOCATED(Tpg_o)) THEN
          p1=SIZE(Tpg_o,1)
          p2=SIZE(Tpg_o,2)
+         IF(ALLOCATED(Tpg_n)) DEALLOCATE(Tpg_n)
          ALLOCATE(Tpg_n(p1,p2))
       END IF
     END SUBROUTINE Alloc

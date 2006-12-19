@@ -1,7 +1,7 @@
 MODULE Class_AtomCnt
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 09:28:44 marchi>                           *
+!!$   Time-stamp: <2006-12-19 13:38:44 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -89,6 +89,7 @@ CONTAINS
                 DO j=1,2
                    IF(nind_ptch(j,i) == m) THEN
                       res_i=ind_ptch(j,i)
+                      Secondary_Seq(n) % line(m)=TRIM(res_i)
                       ok=.TRUE.
                    END IF
                 END DO
