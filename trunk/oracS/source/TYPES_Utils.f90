@@ -1,7 +1,7 @@
 MODULE TYPES_Utils
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-17 16:38:59 marchi>                           *
+!!$   Time-stamp: <2006-12-19 09:28:31 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -50,7 +50,7 @@ CONTAINS
     TYPE(Unit_Char), DIMENSION (:), ALLOCATABLE  :: a,b
     INTEGER :: i,o
     INTEGER :: m_size,j,n,m
-    
+
     CALL Alloc(a (i) % bonds, b (o) % bonds)
     CALL Alloc(a (i) % imph , b (o) % imph )
     CALL Alloc(a (i) % acc, b (o) % acc)
@@ -76,9 +76,10 @@ CONTAINS
       CHARACTER(len=max_char), DIMENSION (:,:),  ALLOCATABLE :: tpg_o, tpg_n
       INTEGER :: p1,p2
       
-      IF(.NOT. ALLOCATED(Tpg_o)) THEN
+      IF(ALLOCATED(Tpg_o)) THEN
          p1=SIZE(Tpg_o,1)
          p2=SIZE(Tpg_o,2)
+         IF(ALLOCATED(Tpg_n)) DEALLOCATE(Tpg_n)
          ALLOCATE(Tpg_n(p1,p2))
       END IF
     END SUBROUTINE Alloc

@@ -1,7 +1,7 @@
 MODULE Class_SystemPrm
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-18 22:20:35 marchi>                           *
+!!$   Time-stamp: <2006-12-19 09:38:18 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -248,7 +248,8 @@ CONTAINS
             tmpi=1000.0D0*4.184D0/(unite*avogad)
             Prm % c6(ij) = tmpi*4.0D0*eps*sigma**6
             Prm % c12(ij) = tmpi*4.0D0*eps*sigma**12
-            IF(SIZE(Prm % LJs (n) % g) == 4) THEN
+            IF((SIZE(Prm % LJs (n) % g) == 4)&
+                 & .AND. (SIZE(Prm % LJs (m) % g) == 4)) THEN
                sigma=(Prm % LJs (n) % g(3) + Prm % LJs (m) % g(3))*0.5D0
                eps=SQRT(Prm % LJs (n) % g(4)*Prm % LJs (m) % g(4))
                ij=m*(m-1)/2+n
