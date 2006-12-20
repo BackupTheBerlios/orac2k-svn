@@ -1,7 +1,7 @@
 MODULE Class_AtomCnt
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 13:38:44 marchi>                           *
+!!$   Time-stamp: <2006-12-20 17:54:41 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -30,7 +30,7 @@ MODULE Class_AtomCnt
   INTEGER, PARAMETER :: max_atms=7
   TYPE AtomCnt
      CHARACTER(len=max_atms) :: Res,beta, betab
-     INTEGER :: Res_No, Grp_No, Id_Res, Id_Type
+     INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv
      REAL(8) :: chg,mass
      INTEGER, DIMENSION(:), ALLOCATABLE :: cnt
   END TYPE AtomCnt
@@ -137,6 +137,7 @@ CONTAINS
                 atm(nato) % Res_No = Res_No
                 atm(nato) % Id_Res = i_F
                 atm(nato) % Grp_No = Grp_No
+                atm(nato) % Id_Slv = n
                 IF(i == 1 .AND. j == 1) Res_Atm(1,Res_No)=nato
                 IF(j == 1) Grp_Atm(1,Grp_No)=nato
                 CALL My_Parse(App_Char(i_F)  % group (i) % g(j), strngs)

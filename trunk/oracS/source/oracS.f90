@@ -1,7 +1,7 @@
 PROGRAM OracS
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 14:31:11 marchi>                           *
+!!$   Time-stamp: <2006-12-20 16:51:57 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -19,14 +19,16 @@ PROGRAM OracS
 
 !!$======================== DECLARATIONS ================================*
 
-  USE Class_Tree, ONLY: Start
+  USE Class_Tree, ONLY: Tree__Start=>Start
   USE INPUT_Mod, ONLY: Input__Options=>Options, Input__Store=>Store&
        &, Input__Modify=>Modify, Input__Single_String=>Single_String&
        &, Input__Input_String=>Input_String
   USE GRAMMAR_Mod, ONLY: Grammar__Create=>Create, Grammar_String, Grammar_Collect,&
        & Read_Grammar
-  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process_Commands
-  USE TOPOLOGY_Mod, ONLY: Setup_Topology, Setup_Parameters
+  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
+  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
+       &Topology__SetupPrm=>SetupPrm
+  USE SYSTEM_Mod, ONLY: System__Setup=>Setup
   IMPLICIT none
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
@@ -60,13 +62,13 @@ PROGRAM OracS
 !!$--  of input errors 
 !!$======================================================================
 
-  CALL Process_Commands
+  CALL Process__Construe
 
-  CALL Setup_Topology
+  CALL Topology__SetupTpg
 
-  CALL Setup_Parameters
+  CALL Topology__SetupPrm
 
-!!$  CALL Setup_System
+  CALL System__Setup
 
 !!$  CALL Run_oracS
 
@@ -81,12 +83,12 @@ PROGRAM OracS
    END SUBROUTINE Read_Input
    SUBROUTINE Collect_Input
      Grammar_Collect=.FALSE.
-     CALL start(Inputs)
+     CALL Tree__Start(Inputs)
      CALL Grammar__Create(Input__Input_String,'')
    END SUBROUTINE Collect_Input
    SUBROUTINE Collect_Grammar
      Grammar_Collect=.TRUE.
-     CALL start(Grammar)
+     CALL Tree__start(Grammar)
      CALL Grammar__Create(Grammar_String,'')
    END SUBROUTINE Collect_Grammar
 END PROGRAM OracS

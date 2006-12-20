@@ -1,7 +1,7 @@
 MODULE INPUT_Mod
   
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 14:25:01 marchi>                           *
+!!$   Time-stamp: <2006-12-20 16:20:37 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -125,14 +125,16 @@ CONTAINS
        n_trim=LEN_TRIM(data(n))
        data(n)(n_trim+1:n_trim+1)='}'
     END DO
-
   END SUBROUTINE Modify
   SUBROUTINE Single_String
-    INTEGER :: n
+    INTEGER :: n,m
     Input_String=' '
+    m=0
     DO n=1,SIZE(data)
        Input_String=TRIM(Input_String)//' '//TRIM(data(n))
+       m=m+LEN_TRIM(data(n))
     END DO
+    
     DEALLOCATE(data,ind)
 
   END SUBROUTINE Single_String

@@ -1,5 +1,5 @@
 MODULE ERROR_List
-  USE CONSTANTS, ONLY: max_char
+  USE CONSTANTS, ONLY: max_char,max_data
   IMPLICIT NONE 
   INTEGER, SAVE :: counter=0, count_f=0, count_w=0
   INTEGER, PARAMETER :: max_err=4*max_char, max_err_long=12000
@@ -63,7 +63,7 @@ MODULE ERROR_Mod
   IMPLICIT NONE 
   PRIVATE
   PUBLIC abort_now, abort_later, warning, add, print_errors,&
-       & error_args,error_unr ,error_file,error_other,Setup_Errors
+       & error_args,error_unr ,error_file,error_other,Setup_Errors,errmsg_f,errmsg_w
 
   CHARACTER(LEN=45), SAVE :: err_arg_no='.. Arguments to command must be at least '
   TYPE fatal_err
@@ -93,6 +93,7 @@ MODULE ERROR_Mod
   END TYPE warning_err
 
   TYPE(List), SAVE :: error_args,error_unr,error_file,error_other
+  CHARACTER(len=max_data) :: errmsg_f,errmsg_w
 CONTAINS
 
   SUBROUTINE abort_now(msg)

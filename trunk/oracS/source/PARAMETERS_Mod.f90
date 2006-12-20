@@ -1,7 +1,7 @@
 MODULE PARAMETERS_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-19 14:35:47 marchi>                           *
+!!$   Time-stamp: <2006-12-20 15:07:23 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -79,6 +79,7 @@ CONTAINS
   END SUBROUTINE Scan
   SUBROUTINE Binary
     INTEGER ::nword,io
+    nword=SIZE(strngs)
     IF(nword /= 2) THEN
        errmsg_f=error_args % g (2)//' 2'
        CALL Add_Errors(-1,errmsg_f)

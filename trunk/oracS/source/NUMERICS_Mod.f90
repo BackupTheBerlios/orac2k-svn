@@ -1,7 +1,7 @@
-MODULE TOPOLOGY_Mod
+MODULE NUMERICS_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-12-20 16:52:34 marchi>                           *
+!!$   Time-stamp: <2006-12-20 12:08:36 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -10,35 +10,36 @@ MODULE TOPOLOGY_Mod
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Mon Nov 27 2006 -                                     *
+!!$              - Wed Dec 20 2006 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This Module is part of the program ORAC ----*
-  
-  USE Class_SystemTpg, ONLY: SystemTpg__Init=>Init
-  USE Class_SystemPrm, ONLY: SystemPrm__Init=>Init
-  USE STRINGS_Mod, ONLY: MY_Fxm
-  USE MYPARSE_Mod, ONLY: MY_parse=>parse, max_pars
-  USE TYPES_Utils
-  USE ERROR_Mod,ONLY: Add_error=>Add
-  USE PARAMETERS_GLOBALS
-  USE TOPOLOGY_GLOBALS
+!!$---- This subroutine is part of the program ORAC  ----*
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SetupTpg, SetupPrm
-  
+  PUBLIC :: MatInv, Determinant
+  REAL(8), SAVE :: Determinant
 CONTAINS
-  SUBROUTINE SetupTPG
-    
-    CALL New_Residues
-    CALL SystemTpg__Init
+  SUBROUTINE MatInv(A,B)
+    REAL(8), DIMENSION(:,:) :: A
+    REAL(8), DIMENSION(:,:) :: B
 
-  END SUBROUTINE SetupTPG
-  SUBROUTINE SetupPrm
+    INTEGER, DIMENSION(:), ALLOCATABLE :: l
+    INTEGER, DIMENSION(:), ALLOCATABLE :: m
+    INTEGER :: o,p
+    REAL(8) :: d
     
-    CALL SystemPrm__Init
-
-  END SUBROUTINE SetupPrm
-  INCLUDE 'New_Residues.f90'
-END MODULE TOPOLOGY_Mod
+    o=SIZE(A,1)
+    p=SIZE(A,2)
+    ALLOCATE(l(o),m(o))
+    b=a
+    IF(o < 20) THEN
+       CALL DMINV(b,o,d,l,m)
+    END IF
+    IF(d == 0.0D0) b=0.0D0
+    Determinant=d
+    DEALLOCATE(l,m)
+  CONTAINS
+    INCLUDE 'dminv.f'
+  END SUBROUTINE MatInv
+END MODULE NUMERICS_Mod
