@@ -2,6 +2,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.5  2006/12/20 08:53:19  mmarchi
+# *** empty log message ***
+#
 # Revision 1.4  2006/12/19 13:42:51  mmarchi
 # *** empty log message ***
 #
@@ -41,7 +44,7 @@ LIB = nolib
 CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac/source
 LIBRARIES = NONE
-FFLAGS = -O
+FFLAGS = -O3
 #==========================================================================
 # Define default rules
 #==========================================================================
