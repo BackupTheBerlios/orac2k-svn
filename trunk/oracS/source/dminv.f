@@ -1,19 +1,42 @@
-!!$**************************************************************************
+!!$***************************************************************************
 !!$
 !!$                       DMINV  
 !!$
 !!$                                                                       
 !!$        PURPOSE   INVERT A MATRIX    
-!!$        idem MINV en double precision                                 
+!!$        idem MINV en double precision                                    
 !!$
 !!$**************************************************************************
+!!$        USAGE                                                          
+!!$           CALL MINV(A,N,D,L,M)                                        
+!!$                                                                       
+!!$        DESCRIPTION OF PARAMETERS                                      
+!!$           A - INPUT MATRIX, DESTROYED IN COMPUTATION AND REPLACED BY  
+!!$               RESULTANT INVERSE.                                      
+!!$           N - ORDER OF MATRIX A                                       
+!!$           D - RESULTANT DETERMINANT                                   
+!!$           L - WORK VECTOR OF LENGTH N                                 
+!!$           M - WORK VECTOR OF LENGTH N                                 
+!!$                                                                       
+!!$        REMARKS                                                        
+!!$           MATRIX A MUST BE A GENERAL MATRIX                           
+!!$                                                                       
+!!$        SUBROUTINES AND FUNCTION SUBPROGRAMS REQUIRED                  
+!!$           NONE                                                        
+!!$                                                                       
+!!$        METHOD                                                         
+!!$           THE STANDARD GAUSS-JORDAN METHOD IS USED. THE DETERMINANT   
+!!$           IS ALSO CALCULATED. A DETERMINANT OF ZERO INDICATES THAT    
+!!$           THE MATRIX IS SINGULAR.                                     
+!!$                                                                       
+!!$**************************************************************************
       SUBROUTINE DMINV(A,N,D,L,M)
-      IMPLICIT REAL(8) (a-h, o-z), INTEGER (i-n)
-      REAL(8) A
-      REAL(8) D
-      REAL(8) HOLD
-      REAL(8) BIGA
-      DIMENSION A(*),L(*),M(*)                                          
+        IMPLICIT INTEGER (i-n), REAL(8) (a-h, o-z)
+        REAL(8) :: A
+        REAL(8) :: D
+        REAL(8) :: HOLD
+        REAL(8) :: BIGA
+        DIMENSION A(*),L(*),M(*)                                          
 !!$        SEARCH FOR LARGEST ELEMENT                                     
       D=1.0                                                             
       NK=-N                                                             
@@ -112,4 +135,7 @@
   130 A(JI) =HOLD                                                       
       GO TO 100                                                         
   150 RETURN                                                            
-   END SUBROUTINE dminv
+   END SUBROUTINE DMINV
+
+!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+
