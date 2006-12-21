@@ -48,6 +48,7 @@ CONTAINS
     ALLOCATE(co(3,3),oc(3,3))
     CALL GetCO
     CALL MatInv(co,oc)
+    
     IF(Determinant == 0.0D0) THEN
        errmsg_f='Cell parameters are probably wrong: CO matrix is singular'
        CALL Add_Errors(-1,errmsg_f)
