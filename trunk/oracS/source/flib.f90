@@ -5673,16 +5673,16 @@ INTENT(out) :: iflg
   !Analyze file and path.
   UNIX=((INDEX(fni,':').EQ.0).AND.(INDEX(fni,'/').GT.0))
   IF (unix) THEN
-     CALL CHR_SAR('\','/',buf)
+     CALL CHR_SAR(CHAR(92),'/',buf)
      DD='/'
   ELSE
-    CALL CHR_SAR('/','\', buf)
-    DD='\'
+    CALL CHR_SAR('/',CHAR(92), buf)
+    DD=CHAR(92)
   ENDIF
   CALL STR_XLET(buf)  !interchange letters to simplify analysis
 
   nxt=1
-  IF (.NOT.((BUF(1:1).EQ.'/').OR.(BUF(1:1).EQ.'\'))) THEN
+  IF (.NOT.((BUF(1:1).EQ.'/').OR.(BUF(1:1).EQ.CHAR(92)))) THEN
     !attempt to locate filename extension
     ilen=INDEX(buf,'.')
     jlen=INDEX(buf,dd)
@@ -5756,10 +5756,10 @@ SUBROUTINE FN_GETCWD(dn)
 !     CREATION DATE: 18-NOV-1997
 !     REVISIONS HISTORY:
 !       28-DEC-1997 RD STEWART
-!         check for existing '/' or '\' in directory name
+!         check for existing '/' or CHAR(92) in directory name
 !         before appending one to the end of DN.
 !       20-FEB-1998 RD STEWART
-!         change algorithm so that a '/' or '\' is not added to the
+!         change algorithm so that a '/' or CHAR(92) is not added to the
 !         directory name when the directory name length = 0.
 !       01-FEB-1999 RD STEWART
 !         Updated to Fortran 90 version
@@ -5775,7 +5775,7 @@ INTENT(out) :: DN
   IF (unix) THEN
     DD='/'
   ELSE
-    DD='\'
+    DD=CHAR(92)
   ENDIF
 
   IF (.not.unix) THEN
@@ -5871,11 +5871,11 @@ CALL STR_ADD(DN,CWD)
 !Analyze file and path.
 UNIX=((INDEX(cwd,':').EQ.0).AND.(INDEX(cwd,'/').GT.0))
 IF (unix) THEN
-  CALL CHR_SAR('\','/', cwd)
+  CALL CHR_SAR(CHAR(92),'/', cwd)
   DD='/'
 ELSE
-  CALL CHR_SAR('/','\', cwd)
-  DD='\'
+  CALL CHR_SAR('/',CHAR(92), cwd)
+  DD=CHAR(92)
 ENDIF
 ilen=LENTRIM(cwd)
 IF (ilen.EQ.0) THEN
@@ -5909,7 +5909,7 @@ SUBROUTINE FN_SETDL(dl)
 !  Set the current drive letter to dl.  If DL is any
 !  upper- or lowercase letter, then the all instances
 !  of '/' in the current working directory are converted
-!  to '\'.
+!  to CHAR(92).
 !
 !      LIBRARY: [FIOPAK]
 !       STATUS: [BETA]
@@ -5943,10 +5943,10 @@ IF (.not.CHR_ILET(dl)) THEN
   RETURN
 ENDIF
 CWD_DL=DL
-CALL CHR_SAR('/','\', cwd)
+CALL CHR_SAR('/',CHAR(92), cwd)
 unix=no
 
-ilen=INDEX(cwd,'\')
+ilen=INDEX(cwd,CHAR(92))
 DO WHILE(ilen.GT.0)
   IF (cwd(ilen:ilen).EQ.'.') THEN
     CALL STR_SHFT(-1,cwd(ilen:))
