@@ -6,8 +6,8 @@ MODULE Setup__Cell
   PRIVATE
   PUBLIC :: Init, co,oc,a,b,c,alpha,beta,gamma
   REAL(8), DIMENSION(:,:), ALLOCATABLE, SAVE :: co,oc
-  REAL(8), TARGET, SAVE :: a, alpha=90.0D0
-  REAL(8), POINTER, SAVE :: b, c, beta,gamma
+  REAL(8), SAVE :: a, alpha=90.0D0
+  REAL(8), SAVE :: b, c, beta,gamma
 CONTAINS
   SUBROUTINE Init(strngs)
     USE NUMERICS_Mod
@@ -15,20 +15,20 @@ CONTAINS
     CHARACTER(len=max_pars), DIMENSION(:) :: strngs
     INTEGER ::nword,iflags
     nword=SIZE(strngs)
-    b=>a
-    c=>a
-    beta=>alpha
-    gamma=>alpha
     SELECT CASE(nword)
     CASE(2)
        CALL SP_Getnum(strngs(2),a,iflags)
+       b=a
+       c=a
+       beta=alpha
+       gamma=alpha
     CASE(4)
-       ALLOCATE(b,c)
        CALL SP_Getnum(strngs(2),a,iflags)
        CALL SP_Getnum(strngs(3),b,iflags)
        CALL SP_Getnum(strngs(4),c,iflags)
+       beta=alpha
+       gamma=alpha
     CASE(7)
-       ALLOCATE(b,c,beta,gamma)
        CALL SP_Getnum(strngs(2),a,iflags)
        CALL SP_Getnum(strngs(3),b,iflags)
        CALL SP_Getnum(strngs(4),c,iflags)
