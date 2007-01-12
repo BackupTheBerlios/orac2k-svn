@@ -2,6 +2,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.3  2007/01/12 09:59:49  mmarchi
+# *** empty log message ***
+#
 # Revision 1.2  2007/01/12 09:57:52  mmarchi
 # *** empty log message ***
 #
@@ -86,14 +89,14 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	Tree.o Inputs.o Grammars.o Myparse.o Keyword.o Resid.o Parameters.o \
 	Numerics.o Units.o PDB.o Setups.o Process.o Hash_Tops.o Tops.o SecondarySeq.o\
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
-	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o oracS.o 
+	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o oracDD.o 
 
 SRC = $(patsubst %.o, %.f90, $(OBJS)) 
 
-all: oracS.x
+all: oracDD.x
 
-oracS.x: $(OBJS) 
-	$(LD) -o oracS.x $(OBJS) $(LIBS)
+oracDD.x: $(OBJS) 
+	$(LD) -o oracDD.x $(OBJS) $(LIBS)
 
 clean:
 	rm -f *.o *.x *.mod *~
