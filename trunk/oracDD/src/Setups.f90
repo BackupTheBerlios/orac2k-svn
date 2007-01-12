@@ -92,7 +92,7 @@ CONTAINS
 END MODULE Cell
 MODULE Solute
   USE Constants, ONLY: max_pars,max_data, max_char
-  USE PDB
+  USE ReadStore
   USE Tree
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   USE Strings, ONLY: MY_Fxm
@@ -100,7 +100,7 @@ MODULE Solute
   IMPLICIT NONE 
   PRIVATE
   PUBLIC :: Solute_,PDB_Solute, PDB_Template
-  CHARACTER(len=max_char), DIMENSION(:), POINTER, SAVE :: PDB_Solute, PDB_Template
+  CHARACTER(len=max_char), ALLOCATABLE, SAVE :: PDB_Solute(:), PDB_Template(:)
 CONTAINS
   SUBROUTINE Solute_(name)
     CHARACTER(len=*) :: name
@@ -120,21 +120,30 @@ CONTAINS
        IF(MY_Fxm('coord',linea)) THEN
           IF(nword /= 2) THEN
              WRITE(lab0,'(i2)') nword
-             errmsg_f=error_args % g (4) //' 1 whereas it was '//TRIM(lab0)//' : '//TRIM(line)
+             errmsg_f=error_args % g (4) //' 1 whereas it was '&
+                  &//TRIM(lab0)//' : '//TRIM(line)
              CALL Add_Errors(-1,errmsg_f)
              RETURN
           END IF
+
           WRITE(*,*) 'Storing SOLUTE .pdb ====>'
-          CALL PDB_('Solute',strngs(2),PDB_Solute)
+          IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
+          ALLOCATE(PDB_Solute(SIZE(RS__string)))
+          PDB_Solute=RS__string
+          CALL ReadStore__Delete
        ELSE IF(MY_Fxm('temp',linea)) THEN
           IF(nword /= 2) THEN
              WRITE(lab0,'(i2)') nword
-             errmsg_f=error_args % g (4) //' 1 whereas it was '//TRIM(lab0)//' : '//TRIM(line)
+             errmsg_f=error_args % g (4) //' 1 whereas it was '&
+                  &//TRIM(lab0)//' : '//TRIM(line)
              CALL Add_Errors(-1,errmsg_f)
              RETURN
           END IF
           WRITE(*,*) 'Storing TEMPLATE .pdb ====>'
-          CALL PDB_('Template',strngs(2),PDB_Template)
+          IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
+          ALLOCATE(PDB_Template(SIZE(RS__string)))
+          PDB_Template=RS__string
+          CALL ReadStore__Delete
        ELSE IF(MY_Fxm('scale',linea)) THEN
           CONTINUE
        ELSE
@@ -145,6 +154,122 @@ CONTAINS
     CALL Print_Errors()
   END SUBROUTINE Solute_
 END MODULE Solute
+MODULE Solvent
+  USE Constants, ONLY: max_pars,max_data, max_char
+  USE ReadStore
+  USE Tree
+  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
+  USE Strings, ONLY: MY_Fxm
+  USE Myparse
+  USE STRPAK
+  IMPLICIT NONE 
+  PRIVATE
+  PUBLIC :: Solvent_,PDB_Solvent, Solvent__Param, Solvent__Type
+  CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: PDB_Solvent
+  TYPE :: Solvent__Type
+     LOGICAL :: Build=.FALSE.
+     INTEGER :: Added=0
+     INTEGER :: replicate(3)=(/0,0,0/)
+     CHARACTER(len=max_Char) :: Cell_Type='SC'
+     REAL(8) :: rho=-1.0D0
+  END TYPE Solvent__Type
+  TYPE(Solvent__Type), SAVE :: Solvent__Param
+CONTAINS
+  SUBROUTINE Solvent_(name)
+    CHARACTER(len=*) :: name
+    TYPE(Branch), SAVE :: check
+    CHARACTER(len=max_pars) :: line,linea
+    CHARACTER(len=max_char) :: lab0
+    INTEGER :: n,nword,iflags
+
+    CALL Tree__Check_Tree(name,check)
+    IF(.NOT. ASSOCIATED(check%children)) RETURN
+
+    DO n=1,SIZE(check%children)
+       line=TRIM(check%children(n))
+       nword=MYParse_(line)
+       linea=strngs(1)
+       WRITE(*,*) TRIM(strngs(1))
+       
+       IF(MY_Fxm('coord',linea)) THEN
+          IF(nword /= 2) THEN
+             WRITE(lab0,'(i2)') nword
+             errmsg_f=error_args % g (4) //' 1 whereas it was '&
+                  &//TRIM(lab0)//' : '//TRIM(line)
+             CALL Add_Errors(-1,errmsg_f)
+             CYCLE
+          END IF
+          WRITE(*,*) 'Storing SOLVENT .pdb ====>'
+          IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
+          ALLOCATE(PDB_Solvent(SIZE(RS__string)))
+          PDB_Solvent=RS__string
+          CALL ReadStore__Delete
+
+       ELSE IF(My_Fxm('repli',linea)) THEN
+          Solvent__Param % Build=.TRUE.
+          SELECT CASE(nword-1)
+          CASE(2)
+             Solvent__Param % Cell_Type = TRIM(ADJUSTL(strngs(2)))
+             CALL SP_Getnum(strngs(3),Solvent__Param % replicate(1),iflags)
+             IF(iflags /=0) THEN
+                errmsg_f='Cannot convert to integer: '''&
+                     &//TRIM(strngs(3))//''' '
+                CALL Add_Errors(-1,errmsg_f)
+                CYCLE
+             END IF
+             Solvent__Param % replicate(2)=Solvent__Param % replicate(1)             
+             Solvent__Param % replicate(3)=Solvent__Param % replicate(1)             
+          CASE(4)
+             Solvent__Param % Cell_Type = TRIM(ADJUSTL(strngs(2)))
+             CALL SP_Getnum(strngs(3),Solvent__Param % replicate(1),iflags)
+             CALL SP_Getnum(strngs(4),Solvent__Param % replicate(2),iflags)
+             CALL SP_Getnum(strngs(5),Solvent__Param % replicate(2),iflags)
+             IF(iflags /=0) THEN
+                errmsg_f='Cannot convert to integer: '''&
+                     &//TRIM(strngs(2))//' '//TRIM(strngs(3))&
+                     &//' '//TRIM(strngs(4))//''' '
+                CALL Add_Errors(-1,errmsg_f)
+                CYCLE
+             END IF
+          CASE DEFAULT 
+             errmsg_f=error_args % g (4)//' 2 or 4'
+             CALL Add_Errors(-1,errmsg_f)
+             CYCLE
+          END SELECT
+       ELSE IF(My_Fxm('add',linea)) THEN
+          Solvent__Param % Build=.TRUE.
+          IF(nword /= 2) THEN
+             errmsg_f=error_args % g (4)//' 1 '
+             CALL Add_Errors(-1,errmsg_f)
+          END IF
+          CALL SP_Getnum(strngs(2),Solvent__Param % added,iflags)
+          IF(iflags /=0) THEN
+             errmsg_f='Cannot convert to integer: '''//TRIM(strngs(3))//''' '
+             CALL Add_Errors(-1,errmsg_f)
+             CYCLE
+          END IF
+
+       ELSE IF(My_Fxm('densi',linea)) THEN
+          Solvent__Param % Build=.TRUE.
+          IF(nword /= 2) THEN
+             errmsg_f=error_args % g (4)//' 1 '
+             CALL Add_Errors(-1,errmsg_f)
+          END IF
+          CALL SP_Getnum(strngs(2),Solvent__Param % rho,iflags)
+          IF(iflags /=0) THEN
+             errmsg_f='Cannot convert to double: '''&
+                  &//TRIM(strngs(2))//''' '
+             CALL Add_Errors(-1,errmsg_f)
+             CYCLE
+          END IF
+       ELSE
+          errmsg_f='Illegal commmands found: '//TRIM(linea)
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    END DO
+    CALL Print_Errors()
+  END SUBROUTINE Solvent_
+END MODULE Solvent
 MODULE Setup
 
 !!$***********************************************************************
@@ -177,6 +302,7 @@ MODULE Setup
   USE Myparse
   USE Cell
   USE Solute
+  USE Solvent
 
 !!$---- DATA Statements -------------------------------------------------*
 
@@ -205,13 +331,10 @@ CONTAINS
           CALL Cell_(strngs)
        ELSE IF(MY_Fxm('SOLU',linea)) THEN
           CALL Solute_(TRIM(line))
-
+       ELSE IF(MY_Fxm('SOLV',linea)) THEN
+          CALL Solvent_(TRIM(line))
 !!$       ELSE IF(MY_Fxm('RESET',linea)) THEN
 !!$          CALL Reset_CM
-!!$       ELSE IF(MY_Fxm('SOLV',linea)) THEN
-!!$          CALL Solvent(TRIM(line))
-!!$       ELSE IF(MY_Fxm('TEMPLATE',linea)) THEN
-!!$          CALL Template
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)

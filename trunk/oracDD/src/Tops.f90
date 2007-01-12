@@ -1,7 +1,7 @@
 MODULE Tops
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-11 15:34:38 marchi>                           *
+!!$   Time-stamp: <2007-01-12 12:27:25 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -17,6 +17,7 @@ MODULE Tops
 !!$---- This subroutine is part of the program ORAC ----*
   
 
+  USE Solvent
   USE SecondarySeq
   USE Types
   USE Myparse
@@ -54,6 +55,10 @@ CONTAINS
     INTEGER, SAVE :: i_L,n,m,p,o
     REAL(8) :: Time_begin, Time_end
     CALL Hash_Tops_
+
+    IF(Solvent__Param % Build .AND. &
+         &Solvent__Param % Added /=  0) &
+         &CALL SecondarySeq__AddSlv(Solvent__Param % Added)
 
     ALLOCATE(Res_Char(SIZE(Residue)))
     ALLOCATE(ok_Residue(SIZE(Residue)))

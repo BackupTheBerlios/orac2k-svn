@@ -1,6 +1,7 @@
-MODULE CONSTANTS
+MODULE AddWater__
+
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-12 20:28:23 marchi>                           *
+!!$   Time-stamp: <2007-01-12 15:40:07 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -9,16 +10,32 @@ MODULE CONSTANTS
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Fri Nov 24 2006 -                                     *
+!!$              - Fri Jan 12 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program ORAC ----*
-  INTEGER, PARAMETER :: max_pars=200,max_char_tree = 80,&
-       & max_char_long = 12000, max_data=12000,max_char=120,max_atm=10
-  CHARACTER(len=1), DIMENSION(2), PARAMETER :: Comms=(/'!','#'/)
-  CHARACTER(len=max_char), DIMENSION(9), PARAMETER :: Used=(/'ATOM  ','H&
-       &ETATM','CONECT','SSBOND','CRYST1','SEQRES','HELIX ','SHEET ','CI&
-       &SPEP'/)
-  REAL(8), PARAMETER :: Huge=1.0D10,Tiny=1.0D-10
-END MODULE CONSTANTS
+!!$---- This subroutine is part of the program oracDD ----*
+
+
+!!$======================== DECLARATIONS ================================*
+
+  USE SystemTpg
+  IMPLICIT none
+
+!!$----------------------------- ARGUMENTS ------------------------------*
+
+!!$----------------------- VARIABLES IN COMMON --------------------------*
+
+!!$------------------------- LOCAL VARIABLES ----------------------------*
+
+
+!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+
+CONTAINS
+  SUBROUTINE AddWater()
+    
+  END SUBROUTINE AddWater
+
+!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+
+END MODULE AddWater__

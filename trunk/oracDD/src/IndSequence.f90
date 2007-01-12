@@ -1,7 +1,7 @@
 MODULE IndSequence
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-10 15:10:39 marchi>                           *
+!!$   Time-stamp: <2007-01-12 18:58:16 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -29,13 +29,15 @@ MODULE IndSequence
   IMPLICIT none
   PRIVATE
   PUBLIC IndSequence_, IndSequence__type, IndSequence__Grp, IndSequence__Res&
-       &, IndSequence__Pickres
+       &, IndSequence__Pickres, Indsequence__SltSlv_Res, Indsequence__SltSlv_Grp
   TYPE IndSequence__Type
      INTEGER, DIMENSION(:), ALLOCATABLE :: i
   END TYPE IndSequence__Type
   TYPE(IndSequence__Type), DIMENSION(2), SAVE, TARGET :: Indexa
-  INTEGER, DIMENSION(:,:), ALLOCATABLE, SAVE, TARGET :: Res_Atm
-  INTEGER, DIMENSION(:,:), ALLOCATABLE, SAVE, TARGET :: Grp_Atm  
+  INTEGER, ALLOCATABLE, SAVE, TARGET :: Res_Atm(:,:)
+  INTEGER, ALLOCATABLE, SAVE, TARGET :: Grp_Atm(:,:)  
+  INTEGER, SAVE, TARGET :: SltSlv_Res(2,2),SltSlv_Grp(2,2)
+
   LOGICAL, ALLOCATABLE, TARGET, SAVE :: ok_Residue(:)
 CONTAINS
   FUNCTION IndSequence_() RESULT(out)
@@ -50,7 +52,10 @@ CONTAINS
 
     Res_No=0
     Grp_No=0
+
     DO n=1,SIZE(Secondary)
+       sltslv_res(1,n)=Res_no+1
+       sltslv_Grp(1,n)=Grp_no+1
        IF(.NOT. ALLOCATED(Secondary(n) % line)) CYCLE
        DO m=1,SIZE(Secondary(n) % line)
           Res_No=Res_No+1
@@ -72,9 +77,11 @@ CONTAINS
              nato=nato+SIZE(App_Char(i_F)  % group (i) % g)
           END DO
        END DO
+       sltslv_Res(2,n)=Res_No
+       sltslv_Grp(2,n)=Grp_No
     END DO
     out=>Indexa
-
+    
     ALLOCATE(Res_Atm(2,Res_No))
     ALLOCATE(Grp_Atm(2,Grp_No))
 
@@ -126,6 +133,15 @@ CONTAINS
     IF(.NOT. ALLOCATED(Res_Atm)) RETURN
     out=>Res_Atm
   END FUNCTION IndSequence__Res
+
+  FUNCTION IndSequence__SltSlv_Res() RESULT (out)
+    INTEGER, DIMENSION(:,:), POINTER :: out
+    out=>SltSlv_res
+  END FUNCTION IndSequence__SltSlv_Res
+  FUNCTION IndSequence__SltSlv_Grp() RESULT (out)
+    INTEGER, DIMENSION(:,:), POINTER :: out
+    out=>SltSlv_Grp
+  END FUNCTION IndSequence__SltSlv_Grp
     
   FUNCTION IndSequence__PickRes(res) RESULT (out)
     CHARACTER(len=*) :: res

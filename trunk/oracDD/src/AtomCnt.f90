@@ -1,7 +1,7 @@
 MODULE AtomCnt
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-11 19:10:40 marchi>                           *
+!!$   Time-stamp: <2007-01-12 19:02:35 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -29,7 +29,7 @@ MODULE AtomCnt
   USE Strings, ONLY: My_Fxm,My_Fam
   IMPLICIT none
   PRIVATE
-  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find
+  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find 
 
   TYPE AtomCnt__Type
      CHARACTER(len=max_atm) :: Res,beta, betab
@@ -40,6 +40,7 @@ MODULE AtomCnt
   TYPE(AtomCnt__Type), ALLOCATABLE, TARGET, SAVE :: AtomCnts(:)
   INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
   INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
+  INTEGER, SAVE, POINTER :: SltSlv(:,:)=>NULL()
 CONTAINS
   SUBROUTINE AtomCnt_
     CHARACTER(len=max_char) :: res_i,line
@@ -48,8 +49,6 @@ CONTAINS
     LOGICAL, SAVE :: Called=.FALSE.
     TYPE(Indpatch__type), DIMENSION(:), POINTER :: IndPa
     TYPE(Indsequence__type), DIMENSION(:), POINTER :: Inds
-    IF(Called) RETURN
-    Called=.TRUE.
 
     indPa=>IndPatch_()
     IF(.NOT. ASSOCIATED(indPa)) CALL Print_Errors()

@@ -1,7 +1,7 @@
 MODULE SystemTpg
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-11 11:33:10 marchi>                           *
+!!$   Time-stamp: <2007-01-12 18:49:51 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -51,8 +51,6 @@ CONTAINS
     INTEGER :: n,m,level,c_Perc,i_F,count_a
     LOGICAL, SAVE :: Called=.FALSE.
 
-    IF(Called) RETURN
-    Called=.TRUE.
     
     Grp_Atm=>IndSequence__Grp()
     Res_Atm=>IndSequence__Res()

@@ -1,7 +1,7 @@
 MODULE SecondarySeq
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-10 16:32:21 marchi>                           *
+!!$   Time-stamp: <2007-01-12 12:42:45 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -26,13 +26,12 @@ MODULE SecondarySeq
   USE Node
   IMPLICIT none
   PRIVATE
-  PUBLIC SecondarySeq_, Secondary, SecondarySeq__type
+  PUBLIC SecondarySeq_, Secondary, SecondarySeq__type, SecondarySeq__AddSlv
   TYPE :: SecondarySeq__Type
      CHARACTER(len=max_char) :: Type
      CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE :: line
   END TYPE SecondarySeq__Type
   TYPE(SecondarySeq__Type), DIMENSION(2), SAVE :: Secondary
-
 CONTAINS
   SUBROUTINE SecondarySeq_(ip,Type,Seq)
     CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE  :: Seq
@@ -82,6 +81,24 @@ CONTAINS
        Secondary(ip) % line (c) = TRIM(line)
     END DO
   END SUBROUTINE SecondarySeq_
+  SUBROUTINE Secondaryseq__AddSlv(nunits)
+    INTEGER :: nunits
+    INTEGER :: n,m,begins,ends
+
+    TYPE(SecondarySeq__Type)  :: Temp
+    IF(ALLOCATED(Secondary(2) % line)) THEN
+       m=SIZE(Secondary(2) % line)
+       ALLOCATE(Temp % line(m*nunits))
+       DO n=1,nunits
+          begins=(n-1)*m+1
+          ends=begins+m-1
+          Temp % line (begins:ends)=Secondary(2) % line
+       END DO
+       DEALLOCATE(Secondary(2) % line)
+       ALLOCATE(Secondary(2) % line(m*nunits))
+       Secondary(2) % line=Temp % line
+    END IF
+  END SUBROUTINE Secondaryseq__AddSlv
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

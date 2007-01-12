@@ -1,7 +1,7 @@
 MODULE Strings
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-08 12:41:56 marchi>                           *
+!!$   Time-stamp: <2007-01-12 18:29:49 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -18,7 +18,71 @@ MODULE Strings
   USE CONSTANTS, ONLY: max_pars, max_char, Comms
   USE TYPES
   USE STRPAK
+  INTERFACE Myread
+     MODULE PROCEDURE MyRead_I4
+     MODULE PROCEDURE MyRead_R8
+  END INTERFACE
+  INTERFACE Myputnum
+     MODULE PROCEDURE MyPutNum_i4
+     MODULE PROCEDURE MyPutNum_r8
+  END INTERFACE
 CONTAINS
+  FUNCTION MyPutnum_i4(n) RESULT(out)
+    INTEGER  :: n
+    CHARACTER(len=max_char) :: out
+    CHARACTER(len=max_char) :: str1
+    INTEGER :: iflag
+
+    CALL STR_Fill(' ',str1)
+    CALL SP_PUTNUM(n,1,-1,'I',str1,iflag)
+    IF(iflag /= 0) THEN
+       errmsg_f='Cannot convert integer to character '
+       CALL Add_errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+    out=TRIM(str1)
+  END FUNCTION MyPutnum_i4
+  FUNCTION MyPutnum_R8(r) RESULT(out)
+    REAL(8) :: r
+    CHARACTER(len=max_char) :: out
+    CHARACTER(len=max_char) :: str1
+    INTEGER :: iflag
+
+    CALL SP_PUTNUM(3,1,-1,'R5',str1,iflag)
+    IF(iflag /= 0) THEN
+       errmsg_f='Cannot convert real to character '
+       CALL Add_errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+    out=TRIM(str1)
+  END FUNCTION MyPutnum_R8
+  SUBROUTINE Myread_I4(str1,out)
+    CHARACTER(len=*) :: str1
+    INTEGER :: out
+    
+    INTEGER :: iflag
+    
+    CALL STR_Geti4n(str1,out,iflag)
+    IF(iflag /= 0) THEN
+       errmsg_f='Cannot convert to integer: '''//TRIM(str1)//''' '
+       CALL Add_errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+  END SUBROUTINE Myread_I4
+  SUBROUTINE Myread_R8(str1, out)
+    CHARACTER(len=*) :: str1
+    REAL(8) :: out
+    
+    INTEGER :: iflag
+    
+    CALL STR_Getr8n(str1,out,iflag)
+    IF(iflag /= 0) THEN
+       errmsg_f='Cannot convert to double: '''//TRIM(str1)//''' '
+       CALL Add_errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+  END SUBROUTINE Myread_R8
+
   FUNCTION My_FAM(str1,str2)
     IMPLICIT NONE 
     CHARACTER(len=*) :: str1,str2
