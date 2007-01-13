@@ -1,3 +1,24 @@
+!!$/---------------------------------------------------------------------\
+!!$                                                                      |
+!!$  Copyright (C) 2006-2007 Massimo Marchi <Massimo.Marchi@cea.fr>      |
+!!$                                                                      |
+!!$      This program is free software;  you  can  redistribute  it      |
+!!$      and/or modify it under the terms of the GNU General Public      |
+!!$      License version 2 as published  by  the  Free  Software         |
+!!$      Foundation;                                                     |
+!!$                                                                      |
+!!$      This program is distributed in the hope that  it  will  be      |
+!!$      useful, but WITHOUT ANY WARRANTY; without even the implied      |
+!!$      warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR      |
+!!$      PURPOSE.   See  the  GNU  General  Public License for more      |
+!!$      details.                                                        |
+!!$                                                                      |
+!!$      You should have received a copy of the GNU General  Public      |
+!!$      License along with this program; if not, write to the Free      |
+!!$      Software Foundation, Inc., 59  Temple  Place,  Suite  330,      |
+!!$      Boston, MA  02111-1307  USA                                     |
+!!$                                                                      |
+!!$\---------------------------------------------------------------------/
 SUBROUTINE AtomCnt__GetConnections
   INTEGER :: Res_No,n,m,i,j,i_N,i_P,i_F,i1,i2,ii1,ii2,count_a,count_extra,m1,o,o1
   INTEGER :: extra_Bond(2),new_bond(2),nind_x,n1,m2,i_2,ip
