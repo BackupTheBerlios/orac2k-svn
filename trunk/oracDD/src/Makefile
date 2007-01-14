@@ -23,6 +23,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.6  2007/01/14 16:39:05  mmarchi
+# *** empty log message ***
+#
 # Revision 1.5  2007/01/13 21:25:30  mmarchi
 # *** empty log message ***
 #
@@ -117,14 +120,16 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	Numerics.o Units.o PDB.o Setups.o Process.o Hash_Tops.o Tops.o SecondarySeq.o\
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
-	ReadStore.o oracDD.o 
+	ReadStore.o AddHydrogens_.o oracDD.o 
 
-SRC = $(patsubst %.o, %.f90, $(OBJS)) 
+OBJS_f = AddH.o duni.o
+
+SRC = $(patsubst %.o, %.f90, $(OBJS)) $(patsubst %.o, %.f, $(OBJS_f)) 
 
 all: oracDD.x
 
-oracDD.x: $(OBJS) 
-	$(LD) -o oracDD.x $(OBJS) $(LIBS)
+oracDD.x: $(OBJS) $(OBJS_f)
+	$(LD) -o oracDD.x $(OBJS) $(OBJS_f) $(LIBS)
 
 clean:
 	rm -f *.o *.x *.mod *~

@@ -19,10 +19,10 @@
 !!$      Boston, MA  02111-1307  USA                                     |
 !!$                                                                      |
 !!$\---------------------------------------------------------------------/
-MODULE SimulationBox
+SUBROUTINE PDB__Write(PDB__Coords)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-12 20:39:55 marchi>                           *
+!!$   Time-stamp: <2007-01-14 17:36:13 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -31,67 +31,54 @@ MODULE SimulationBox
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Fri Jan 12 2007 -                                     *
+!!$              - Sun Jan 14 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This subroutine is part of the program oracDD ----*
+  
+  TYPE(AtomPDB) :: PDB__Coords(:)
+  CHARACTER(len=3) :: Res
+  CHARACTER(len=4) :: AtmName
+  REAL(8) :: x,y,z,occ,tmp
+  INTEGER :: Serial,ResSeq
+  INTEGER :: n
+  
+  occ=1.0D0; tmp=0.0D0!!$/---------------------------------------------------------------------\
+!!$                                                                      |
+!!$  Copyright (C) 2006-2007 Massimo Marchi <Massimo.Marchi@cea.fr>      |
+!!$                                                                      |
+!!$      This program is free software;  you  can  redistribute  it      |
+!!$      and/or modify it under the terms of the GNU General Public      |
+!!$      License version 2 as published  by  the  Free  Software         |
+!!$      Foundation;                                                     |
+!!$                                                                      |
+!!$      This program is distributed in the hope that  it  will  be      |
+!!$      useful, but WITHOUT ANY WARRANTY; without even the implied      |
+!!$      warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR      |
+!!$      PURPOSE.   See  the  GNU  General  Public License for more      |
+!!$      details.                                                        |
+!!$                                                                      |
+!!$      You should have received a copy of the GNU General  Public      |
+!!$      License along with this program; if not, write to the Free      |
+!!$      Software Foundation, Inc., 59  Temple  Place,  Suite  330,      |
+!!$      Boston, MA  02111-1307  USA                                     |
+!!$                                                                      |
+!!$\---------------------------------------------------------------------/
 
 
-!!$======================== DECLARATIONS ================================*
-
-
-  USE AddHydrogens_
-  USE SystemTpg
-  USE Cell
-  USE Solvent
-  USE Solute
-  USE PDB
-  USE IndSequence
-  USE SecondarySeq
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
-  IMPLICIT none
-
-  PRIVATE
-  PUBLIC :: SimulationBox_
-  TYPE :: AtomsBox
-     REAL(8) :: x,y,z
-  END TYPE AtomsBox
-  TYPE(AtomsBox), ALLOCATABLE, SAVE :: Slv(:),Slt(:)
-CONTAINS
-  SUBROUTINE SimulationBox_
-    INTEGER :: n,m,Begins, Ends,p 
-    TYPE(AtomPdb), POINTER :: PDB__Coords(:)=>NULL()
-
-    IF(ALLOCATED(Secondary(1) % Line)) THEN
-       IF(.NOT. ALLOCATED(PDB_Solute)) THEN
-          errmsg_f='Solute is defined, but no file to read from '
-          CALL Add_Errors(-1,errmsg_f)
-          CALL Print_Errors()
-       END IF
-       IF(.NOT. PDB_('Solute', PDB_Solute, PDB__Coords)) CALL Print_Errors()
-       IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
-
-       
-       IF(ASSOCIATED(PDB__Coords)) THEN
-          CALL PDB__Write(PDB__Coords)
-          DEALLOCATE(PDB__Coords)
-       END IF
-    END IF
-    IF(ALLOCATED(Secondary(2) % Line)) THEN
-       IF(.NOT. ALLOCATED(PDB_Solvent)) THEN
-          errmsg_f='Solvent is defined, but no file to read from '
-          CALL Add_Errors(-1,errmsg_f)
-          CALL Print_Errors()
-       END IF
-       IF(.NOT. PDB_('Solvent', PDB_Solvent, PDB__Coords)) CALL Print_Errors()
-       IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
-       IF(ASSOCIATED(PDB__Coords)) THEN
-          CALL PDB__Write(PDB__Coords)
-          DEALLOCATE(PDB__Coords)
-       END IF
-    END IF
-  END SUBROUTINE SimulationBox_
-!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
-
-END MODULE SimulationBox
+  DO n=1,SIZE(PDB__Coords)
+     x=PDB__Coords(n) % x
+     y=PDB__Coords(n) % y
+     z=PDB__Coords(n) % z
+     Serial=PDB__Coords(n) % Serial
+     AtmName=TRIM(Tpg % atm (Serial) % a % beta)
+     AtmName=ADJUSTL(AtmName)
+     Res=ADJUSTL(Tpg % atm (Serial) % a % Res)
+     ResSeq=Tpg % atm (Serial) % a % Res_No
+     CALL TRANUC(Res)
+     CALL TRANUC(AtmName)
+     WRITE(99,'(A6,I5,2X,A4,A3,2X,I4,4X,3F8.3,2F6.2)') &
+          &'ATOM  ',Serial,AtmName,Res,ResSeq,x,y,z,occ,tmp
+  END DO
+END SUBROUTINE PDB__Write
