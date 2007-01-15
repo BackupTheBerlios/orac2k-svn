@@ -188,17 +188,23 @@ FUNCTION PDB__Validate(Type, PDB__Coords) RESULT(out)
       INTEGER, SAVE :: first_Time=0
       IF(First_Time == 0) THEN
          First_Time=1
+
          ALLOCATE(ex(1) % res(1)); ALLOCATE(ex(1) % lab(2))
          ALLOCATE(ex(2) % res(4)); ALLOCATE(ex(2) % lab(3))
          ALLOCATE(ex(3) % res(1)); ALLOCATE(ex(3) % lab(2))
          ALLOCATE(ex(4) % res(1)); ALLOCATE(ex(4) % lab(2))
-         ex=(/Name_Exception((/'ile'/),(/'cd ','cd1'/))&
-              &, Name_Exception((/'hoh','tip','wat','spc'/),(/'o','o1','oh2'/))&
-              &, Name_Exception((/' '/),(/'oct1','ot1'/))&
-              &, Name_Exception((/' '/),(/'oct2','ot2'/)) /)
+         ex (1) % res(1) = 'ile'
+         ex (1) % lab = (/'cd ','cd1'/)
+         ex (2) % res = (/'hoh','tip','wat','spc'/)
+         ex (2) % lab = (/'o  ','o1 ','oh2'/)
+         ex (3) % res = (/' '/)
+         ex (3) % lab = (/'oct1','ot1 '/)
+         ex (4) % res = (/' '/)
+         ex (4) % lab = (/'oct2','ot2 '/)
       END IF
 
       IF(ASSOCIATED(new_lab)) DEALLOCATE(new_lab)
+
       DO n=1,SIZE(ex)
 
 !!$
@@ -229,7 +235,8 @@ FUNCTION PDB__Validate(Type, PDB__Coords) RESULT(out)
             
             m=SIZE(ex(n) % lab)
             ALLOCATE(new_lab(m))
-            new_lab=ADJUSTL(ex(n) % lab)
+            new_lab=ex(n) % lab
+            new_lab=ADJUSTL(new_lab)
             RETURN
          END IF
       END DO
