@@ -40,9 +40,9 @@ MODULE Parameters_globals
   USE TYPES
   INTEGER, SAVE :: ktpg_read=0,kpar_read=0,kbin=0
   CHARACTER(len=max_char), SAVE :: ftpg_read,fpar_read,fbin
-  CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE :: input_data
+  CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: input_data
 
   TYPE(keys), SAVE :: in_str
-  TYPE(Param), DIMENSION(2) :: Secondary_Seq
-  TYPE(PATCH), DIMENSION(:), ALLOCATABLE :: patches  
+  TYPE(Param), DIMENSION(2), SAVE :: Secondary_Seq
+  TYPE(PATCH), DIMENSION(:), ALLOCATABLE, SAVE :: patches  
 END MODULE Parameters_globals

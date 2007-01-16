@@ -55,7 +55,7 @@ CONTAINS
     INTEGER :: iflag
 
     CALL STR_Fill(' ',str1)
-    CALL SP_PUTNUM(n,1,-1,'I',str1,iflag)
+    CALL PUTI4N(n,1,-1,'I',str1,iflag)
     IF(iflag /= 0) THEN
        errmsg_f='Cannot convert integer to character '
        CALL Add_errors(-1,errmsg_f)
@@ -69,7 +69,7 @@ CONTAINS
     CHARACTER(len=max_char) :: str1
     INTEGER :: iflag
 
-    CALL SP_PUTNUM(3,1,-1,'R5',str1,iflag)
+    CALL PUTR8N(r,1,-1,'R5',str1,iflag)
     IF(iflag /= 0) THEN
        errmsg_f='Cannot convert real to character '
        CALL Add_errors(-1,errmsg_f)

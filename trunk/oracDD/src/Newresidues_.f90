@@ -23,13 +23,13 @@ SUBROUTINE NewResidues_
   IMPLICIT none
   INTEGER :: n,new_r,m,i_r,i_p,p1,p2,i
   CHARACTER(len=max_char) :: pres_l,res_l,lab0
-  TYPE(Tops__Type), DIMENSION(:), POINTER :: Store
   TYPE(Tops__Type), POINTER :: Res_r,Res_p,Res_n
   TYPE(list), DIMENSION(:), ALLOCATABLE :: atoms,angles,acc
   LOGICAL :: ok0(2),ok_link,ok_resi
   INTEGER :: ip, ip1, ip0,ipp,ipp_end
   CHARACTER(len=max_char), DIMENSION(:,:), ALLOCATABLE :: share
   TYPE(list), DIMENSION(:), ALLOCATABLE :: shareg
+  TYPE(Tops__Type), DIMENSION(:), POINTER :: Stores=>NULL()
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -40,10 +40,10 @@ SUBROUTINE NewResidues_
      RETURN
   END IF
 
-  m=COUNT(patches % Type == 'resi')+COUNT(patches % Type == 'link')
-  store=>Tops__Store(Res_Char)
-  ALLOCATE(Add_Char(m))
+  stores=>Tops__Store(Res_Char)
 
+  m=COUNT(patches % Type == 'resi')+COUNT(patches % Type == 'link')
+  ALLOCATE(Add_Char(m))
   new_r=0
   DO n=1,SIZE(patches)
      ok_resi=.FALSE.; ok_Link=.FALSE.
@@ -103,7 +103,6 @@ SUBROUTINE NewResidues_
            END DO
         END IF
 
-        
         CALL Assemble_Tpg(Res_r%bonds, Res_p%bonds)
         IF(ALLOCATED(share)) THEN
            IF(ALLOCATED(Add_Char(new_r) %bonds)) DEALLOCATE(Add_Char(new_r) %bonds)
@@ -151,7 +150,8 @@ SUBROUTINE NewResidues_
         IF(ok_link) Res_n%type='Link '//TRIM(patches(n)%Res_l(ipp))
         CALL Verify_Ends(Res_n%bonds,Res_n%ends)
         CALL Dealloc_Deleted
-        Res_Char(i_r)=Store(i_r)
+
+        Res_Char(i_r)=Stores(i_r)
      END DO
   END DO
 
@@ -645,5 +645,72 @@ CONTAINS
        END IF
     END DO
   END SUBROUTINE Append_Tpg
+  FUNCTION Tops__Store(Tops__, delete) RESULT(out)
+    INTEGER, OPTIONAL :: delete
+    TYPE(Tops__type), DIMENSION(:), ALLOCATABLE :: Tops__
+    TYPE(Tops__type), DIMENSION(:), ALLOCATABLE, SAVE, TARGET :: store
+    TYPE(Tops__type), DIMENSION(:), POINTER  :: out
+    INTEGER :: o(2),n,m
+
+    out=>NULL()
+    IF(PRESENT(delete)) THEN
+       IF(ALLOCATED(Store)) DEALLOCATE(Store)
+       RETURN
+    END IF
+    IF(ALLOCATED(Store)) DEALLOCATE(Store)
+
+    IF(ALLOCATED(Tops__)) THEN
+       ALLOCATE(Store(SIZE(Tops__)))
+       DO n=1,SIZE(Tops__)
+          o=0
+          IF(ALLOCATED(Tops__(n) % bonds)) THEN
+             o=SHAPE(Tops__(n) % bonds)
+             ALLOCATE(Store(n) % bonds(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % imph)) THEN
+             o=SHAPE(Tops__(n) % imph)
+             ALLOCATE(Store(n) % imph(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % acc)) THEN
+             o=SHAPE(Tops__(n) % acc)
+             ALLOCATE(Store(n) % acc(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % don)) THEN
+             o=SHAPE(Tops__(n) % don)
+             ALLOCATE(Store(n) % don(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % acc_)) THEN
+             o=SHAPE(Tops__(n) % acc_)
+             ALLOCATE(Store(n) % acc_(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % don_)) THEN
+             o=SHAPE(Tops__(n) % don_)
+             ALLOCATE(Store(n) % don_(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % dele)) THEN
+             o=SHAPE(Tops__(n) % dele)
+             ALLOCATE(Store(n) % dele(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % ends)) THEN
+             o=SHAPE(Tops__(n) % ends)
+             ALLOCATE(Store(n) % ends(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % mass)) THEN
+             o=SHAPE(Tops__(n) % mass)
+             ALLOCATE(Store(n) % mass(o(1), o(2)))
+          END IF
+          IF(ALLOCATED(Tops__(n) % group)) THEN
+             ALLOCATE(Store(n) % group (SIZE(Tops__(n) % group)))
+             DO m=1,SIZE(Tops__(n) % group)
+                IF(ALLOCATED(Tops__(n) % group (m) % g)) THEN
+                   ALLOCATE(Store(n) % group (m) % g (SIZE(Tops__(n) % group (m) % g)))
+                END IF
+             END DO
+          END IF
+       END DO
+       Store=Tops__
+       out=>Store
+    END IF
+  END FUNCTION Tops__Store
 
 END SUBROUTINE NewResidues_

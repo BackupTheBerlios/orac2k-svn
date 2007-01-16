@@ -65,7 +65,7 @@ MODULE LennardJones
      REAL(8), DIMENSION(:), ALLOCATABLE :: g
   END TYPE LennardJones__Chain
 
-  TYPE(LennardJones__Type) :: LennardJones__Par
+  TYPE(LennardJones__Type), SAVE :: LennardJones__Par
   
 CONTAINS
   FUNCTION LennardJones_() RESULT(out)

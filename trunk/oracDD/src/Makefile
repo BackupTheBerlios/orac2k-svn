@@ -23,6 +23,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.7  2007/01/16 15:06:01  mmarchi
+# *** empty log message ***
+#
 # Revision 1.6  2007/01/14 16:39:05  mmarchi
 # *** empty log message ***
 #
@@ -60,10 +63,10 @@
 # initial import into CVS
 #
 
-#FC = gfortran
-#F90 = gfortran
+#FC = /usr/local/bin/gfortran
+#F90 = /usr/local/bin/gfortran
 #CC = gcc
-#LD = gfortran
+#LD = /usr/local/bin/gfortran
 
 FC = g95
 F90 = g95
@@ -97,8 +100,8 @@ CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac/source
 LIBRARIES = NONE
 #FFLAGS = -g 
-#FFLAGS = -g -fbounds-check -ftrace=frame 
-FFLAGS = -O3
+FFLAGS = -g -fbounds-check 
+#FFLAGS = -O3
 #==========================================================================
 # Define default rules
 #==========================================================================

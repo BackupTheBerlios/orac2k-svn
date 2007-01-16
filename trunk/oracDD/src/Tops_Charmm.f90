@@ -149,7 +149,7 @@
          END IF
          DEALLOCATE(Res_Char(i_L) % bonds)
          ALLOCATE(Res_Char(i_L) % bonds(2,count))
-         Res_Char(i_L) % bonds=new_bonds
+         Res_Char(i_L) % bonds(:,1:count)=new_bonds(:,1:count)
       END IF
       DEALLOCATE(new_bonds)
     END SUBROUTINE Ends_Charmm_
