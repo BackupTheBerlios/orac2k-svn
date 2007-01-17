@@ -50,14 +50,13 @@ MODULE SimulationBox
   USE IndSequence
   USE SecondarySeq
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
+  USE SystemPrm
+  USE AtomCnt
+  USE AtomBox
   IMPLICIT none
-
   PRIVATE
   PUBLIC :: SimulationBox_
-  TYPE :: AtomsBox
-     REAL(8) :: x,y,z
-  END TYPE AtomsBox
-  TYPE(AtomsBox), ALLOCATABLE, SAVE :: Slv(:),Slt(:)
+  TYPE(AtomBox__), POINTER, SAVE :: Slv(:),Slt(:)
 CONTAINS
   SUBROUTINE SimulationBox_
     INTEGER :: n,m,Begins, Ends,p 
@@ -75,9 +74,13 @@ CONTAINS
        
        IF(ASSOCIATED(PDB__Coords)) THEN
           CALL PDB__Write(PDB__Coords)
+          IF(ALLOCATED(Secondary(2) % Line)) THEN
+             CALL AtomBox_(PDB__Coords,Slt)
+          END IF
           DEALLOCATE(PDB__Coords)
        END IF
     END IF
+
     IF(ALLOCATED(Secondary(2) % Line)) THEN
        IF(.NOT. ALLOCATED(PDB_Solvent)) THEN
           errmsg_f='Solvent is defined, but no file to read from '
@@ -88,9 +91,18 @@ CONTAINS
        IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
        IF(ASSOCIATED(PDB__Coords)) THEN
           CALL PDB__Write(PDB__Coords)
+          CALL AtomBox_(PDB__Coords,Slv)
           DEALLOCATE(PDB__Coords)
        END IF
+       IF(Solvent__Param % added /= 0) RETURN
+
+       IF(Solvent__Param % Build) THEN
+          IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
+       END IF
     END IF
+
+
+
   END SUBROUTINE SimulationBox_
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

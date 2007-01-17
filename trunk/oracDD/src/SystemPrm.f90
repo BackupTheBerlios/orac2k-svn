@@ -65,7 +65,6 @@ MODULE SystemPrm
   LOGICAL, DIMENSION(:), ALLOCATABLE  :: oks
 CONTAINS
   SUBROUTINE SystemPrm_
-    INTEGER :: n,m
     Prm % Types=>TypesPrm_()
     IF(.NOT. ASSOCIATED(Prm % Types)) CALL Print_errors()
     Prm % LJ=>LennardJones_() 

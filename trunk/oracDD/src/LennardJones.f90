@@ -65,7 +65,7 @@ MODULE LennardJones
      REAL(8), DIMENSION(:), ALLOCATABLE :: g
   END TYPE LennardJones__Chain
 
-  TYPE(LennardJones__Type), SAVE :: LennardJones__Par
+  TYPE(LennardJones__Type), SAVE, TARGET :: LennardJones__Par
   
 CONTAINS
   FUNCTION LennardJones_() RESULT(out)
@@ -224,6 +224,7 @@ CONTAINS
           END IF
        END DO
     END DO
+    out=>LennardJones__Par
     WRITE(*,*) 'Total Lennard-Jones Parameter &
          &types No. =====>',SIZE(LennardJones__Par % C12)
     DEALLOCATE(LJ,oks)

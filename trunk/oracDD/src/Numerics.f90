@@ -41,7 +41,9 @@ MODULE Numerics
   PUBLIC :: MatInv, Determinant
   REAL(8), SAVE :: Determinant
 CONTAINS
-  SUBROUTINE MatInv(A,B)
+  FUNCTION MatInv(A,B) RESULT(out)
+    REAL(8) :: out
+
     REAL(8), DIMENSION(:,:) :: A
     REAL(8), DIMENSION(:,:) :: B
 
@@ -59,8 +61,9 @@ CONTAINS
     END IF
     IF(d == 0.0D0) b=0.0D0
     Determinant=d
+    out=d
     DEALLOCATE(l,m)
   CONTAINS
     INCLUDE 'dminv.f'
-  END SUBROUTINE MatInv
+  END FUNCTION MatInv
 END MODULE Numerics

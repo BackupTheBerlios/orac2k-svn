@@ -25,10 +25,10 @@ MODULE Cell
   USE STRPAK, ONLY: SP_Getnum
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: Cell_, co,oc,a,b,c,alpha,beta,gamma
+  PUBLIC :: Cell_, Cell__Volume, co,oc,a,b,c,alpha,beta,gamma, volume
   REAL(8), DIMENSION(:,:), ALLOCATABLE, SAVE :: co,oc
   REAL(8), SAVE :: a, alpha=90.0D0
-  REAL(8), SAVE :: b, c, beta,gamma
+  REAL(8), SAVE :: b, c, beta,gamma,Volume
 CONTAINS
   SUBROUTINE Cell_(strngs)
     USE Numerics
@@ -68,7 +68,7 @@ CONTAINS
     END IF
     ALLOCATE(co(3,3),oc(3,3))
     CALL GetCO
-    CALL MatInv(co,oc)
+    Volume=MatInv(co,oc)*boxl**3
     
     IF(Determinant == 0.0D0) THEN
        errmsg_f='Cell parameters are probably wrong: CO matrix is singular'
@@ -110,6 +110,47 @@ CONTAINS
       END WHERE
     END SUBROUTINE GetCO
   END SUBROUTINE Cell_
+  FUNCTION Cell__Volume(a0,b0,c0,alf0,bet0,gam0) RESULT(out)
+    USE Units
+    USE Numerics
+    REAL(8) :: a0,b0,c0
+    REAL(8) :: alf0,bet0,gam0
+    REAL(8) :: out
+    REAL(8) ::  degrad,qt,alf,bet,gam,ax,bx,by,cx,cy,cz
+    REAL(8) :: co0(3,3),oc0(3,3),volume0
+    INTEGER :: n
+
+    co0(2,1)=0.0D0
+    co0(3,1)=0.0D0
+    co0(3,2)=0.0D0
+    degrad=pi/180.0d0
+    ax=a0
+    alf=DCOS(degrad*alf0)
+    bet=DCOS(degrad*bet0)
+    qt=DSIN(degrad*gam0)
+    gam=DCOS(degrad*gam0)
+    bx=b0*gam
+    by=b0*qt
+    cx=c0*bet
+    cy=c0*(alf-bet*gam)/qt
+    cz=dsqrt(c0*c0-cx*cx-cy*cy)
+    co0(1,1)=ax
+    co0(1,2)=bx
+    co0(1,3)=cx
+    co0(2,2)=by
+    co0(2,3)=cy
+    co0(3,3)=cz
+    DO n=1,3
+       co0(n,1)=co0(n,1)/boxl
+       co0(n,2)=co0(n,2)/boxl
+       co0(n,3)=co0(n,3)/boxl
+    END DO
+    WHERE(ABS(co0) < 1.0D-8)
+       co0=0.0D0
+    END WHERE
+    Volume0=MatInv(co0,oc0)*boxl**3
+    out=Volume0
+  END FUNCTION Cell__Volume
 END MODULE Cell
 MODULE Solute
   USE Constants, ONLY: max_pars,max_data, max_char
@@ -185,7 +226,8 @@ MODULE Solvent
   USE STRPAK
   IMPLICIT NONE 
   PRIVATE
-  PUBLIC :: Solvent_,PDB_Solvent, Solvent__Param, Solvent__Type
+  PUBLIC :: Solvent_,PDB_Solvent, Solvent__Param, Solvent__Type&
+       &, Solvent__Cell, Solvent__Box
   CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: PDB_Solvent
   TYPE :: Solvent__Type
      LOGICAL :: Build=.FALSE.
@@ -194,7 +236,27 @@ MODULE Solvent
      CHARACTER(len=max_Char) :: Cell_Type='SC'
      REAL(8) :: rho=-1.0D0
   END TYPE Solvent__Type
+  TYPE :: Solvent__Cell
+     SEQUENCE
+     CHARACTER(len=3) :: type
+     INTEGER :: nt
+     REAL(8) :: t(3,4)
+  END TYPE Solvent__Cell
+
   TYPE(Solvent__Type), SAVE :: Solvent__Param
+  TYPE(Solvent__Cell), PARAMETER :: Solvent__Box(3)=(/ Solvent__Cell('SC ',1&
+       &,RESHAPE((/ &
+       & 0.0D0, 0.0D0, 0.0D0, 0.0D0,&
+       & 0.0D0, 0.0D0, 0.0D0, 0.0D0,&
+       & 0.0D0, 0.0D0, 0.0D0, 0.0D0  /),(/3,4/)) ), Solvent__Cell('BBC',2&
+       &,RESHAPE((/ &
+       & 0.0D0, 0.5D0, 0.0D0, 0.0D0,&
+       & 0.0D0, 0.5D0, 0.0D0, 0.0D0,&
+       & 0.0D0, 0.5D0, 0.0D0, 0.0D0 /),(/3,4/)) ), Solvent__Cell('FCC',4&
+       &,RESHAPE((/ &
+       & 0.0D0, 0.5D0, 0.0D0,-0.5D0,&
+       & 0.0D0,-0.5D0, 0.5D0, 0.0D0,&
+       & 0.0D0, 0.0D0,-0.5D0, 0.5D0 /),(/3,4/)) )/)
 CONTAINS
   SUBROUTINE Solvent_(name)
     CHARACTER(len=*) :: name
@@ -210,7 +272,6 @@ CONTAINS
        line=TRIM(check%children(n))
        nword=MYParse_(line)
        linea=strngs(1)
-       WRITE(*,*) TRIM(strngs(1))
        
        IF(MY_Fxm('coord',linea)) THEN
           IF(nword /= 2) THEN
@@ -270,11 +331,12 @@ CONTAINS
              CYCLE
           END IF
 
-       ELSE IF(My_Fxm('densi',linea)) THEN
+       ELSE IF(My_Fxm('molvol',linea)) THEN
           Solvent__Param % Build=.TRUE.
           IF(nword /= 2) THEN
              errmsg_f=error_args % g (4)//' 1 '
              CALL Add_Errors(-1,errmsg_f)
+             CYCLE
           END IF
           CALL SP_Getnum(strngs(2),Solvent__Param % rho,iflags)
           IF(iflags /=0) THEN
@@ -283,6 +345,7 @@ CONTAINS
              CALL Add_Errors(-1,errmsg_f)
              CYCLE
           END IF
+          Solvent__Param % rho=1.0D0/Solvent__Param % rho
        ELSE
           errmsg_f='Illegal commmands found: '//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)

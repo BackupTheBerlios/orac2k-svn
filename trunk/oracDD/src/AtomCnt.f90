@@ -65,7 +65,7 @@ MODULE AtomCnt
 CONTAINS
   SUBROUTINE AtomCnt_
     CHARACTER(len=max_char) :: res_i,line
-    INTEGER :: nato, n, m, i, j, Res_No, ii, iflag, Grp_No,i_F,jm,nword
+    INTEGER :: nato, n, m, i, j, Res_No, ii, iflag, Grp_No,i_F,jm,nword,o,i_mass
     LOGICAL :: ok
     LOGICAL, SAVE :: Called=.FALSE.
     TYPE(Indpatch__type), DIMENSION(:), POINTER :: IndPa
@@ -93,6 +93,22 @@ CONTAINS
 !!$
 !!$--- Count atoms
 !!$
+    i_mass=-1
+    DO n=1,SIZE(App_Char)
+       IF(My_Fxm('mass',App_Char(n) % Type)) THEN
+          i_mass=n
+          EXIT
+       END IF
+    END DO
+
+    IF(i_mass == -1) THEN
+       errmsg_f='Atomic masses not found on Topology file: List of &
+            &masses in CHARMM format must be added at the&
+            & beginning of any Topology file'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+
     Res_No=0
     Grp_No=0
     nato=0
@@ -115,10 +131,25 @@ CONTAINS
                 AtomCnts(nato) % beta = TRIM(strngs(1))
                 AtomCnts(nato) % betab = TRIM(strngs(2))
                 CALL SP_Getnum(strngs(3),AtomCnts (nato) % chg, iflag)
+                ok=.FALSE.
+                DO o=1,SIZE(App_Char(i_mass) % mass,2)
+                   IF(My_Fxm(TRIM(AtomCnts(nato) % betab), App_Char(i_mass) % mass (1,o))) THEN
+                      AtomCnts(nato) % Id_Type = o
+                      ok=.TRUE.
+                      EXIT
+                   END IF
+                END DO
+                IF(.NOT. ok) THEN
+                   errmsg_f='Atom type '//TRIM(AtomCnts(nato) % betab)&
+                        &//' not found in the parameter list'
+                   CALL Add_Errors(-1,errmsg_f)
+                   CALL Print_Errors()
+                END IF
              END DO
           END DO
        END DO
     END DO
+
     CALL AtomCnt__GetConnections
   CONTAINS
     INCLUDE 'AtomCnt__GetConnections.f90'
