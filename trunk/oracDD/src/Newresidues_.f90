@@ -26,7 +26,7 @@ SUBROUTINE NewResidues_
   TYPE(Tops__Type), POINTER :: Res_r,Res_p,Res_n
   TYPE(list), DIMENSION(:), ALLOCATABLE :: atoms,angles,acc
   LOGICAL :: ok0(2),ok_link,ok_resi
-  INTEGER :: ip, ip1, ip0,ipp,ipp_end
+  INTEGER :: ip, ip1, ip0,ipp,ipp_end,o,p
   CHARACTER(len=max_char), DIMENSION(:,:), ALLOCATABLE :: share
   TYPE(list), DIMENSION(:), ALLOCATABLE :: shareg
   TYPE(Tops__Type), DIMENSION(:), POINTER :: Stores=>NULL()
@@ -71,6 +71,7 @@ SUBROUTINE NewResidues_
         END IF
 
         CALL Pick(i_r,i_p)
+        
 
         Res_r=>Res_Char(i_r)
         Res_p=>Res_Char(i_p)
@@ -150,7 +151,6 @@ SUBROUTINE NewResidues_
         IF(ok_link) Res_n%type='Link '//TRIM(patches(n)%Res_l(ipp))
         CALL Verify_Ends(Res_n%bonds,Res_n%ends)
         CALL Dealloc_Deleted
-
         Res_Char(i_r)=Stores(i_r)
      END DO
   END DO
@@ -170,16 +170,17 @@ CONTAINS
     
     DO i=1,SIZE(Res_Char)
        IF(MY_Fxm('RESI',Res_Char(i)%Residue)) THEN
-          IF(MY_Fxm(TRIM(res_l),Res_Char(i)%Type)) THEN
+          IF(MY_Fxm(TRIM(res_l),TRIM(Res_Char(i)%Type))) THEN
              i_r=i
           END IF
        ELSE IF(MY_Fxm('PRES',Res_Char(i)%Residue)) THEN
-          IF(MY_Fxm(TRIM(pres_l),Res_Char(i)%Type)) THEN
+          IF(MY_Fxm(TRIM(pres_l),TRIM(Res_Char(i)%Type))) THEN
              i_p=i
           END IF
        END IF
        IF(i_p /= -1 .AND. i_r /= -1) EXIT
     END DO
+
     IF(i_p == -1 .OR. i_r == -1) THEN
        errmsg_f='Generating new residues '//TRIM(ADJUSTL(res_l))&
             &//' failed. Required PRES or RESIDUE not found.'
@@ -658,7 +659,6 @@ CONTAINS
        RETURN
     END IF
     IF(ALLOCATED(Store)) DEALLOCATE(Store)
-
     IF(ALLOCATED(Tops__)) THEN
        ALLOCATE(Store(SIZE(Tops__)))
        DO n=1,SIZE(Tops__)
@@ -666,49 +666,61 @@ CONTAINS
           IF(ALLOCATED(Tops__(n) % bonds)) THEN
              o=SHAPE(Tops__(n) % bonds)
              ALLOCATE(Store(n) % bonds(o(1), o(2)))
+             Store(n) % bonds=Tops__(n) % bonds
           END IF
           IF(ALLOCATED(Tops__(n) % imph)) THEN
              o=SHAPE(Tops__(n) % imph)
              ALLOCATE(Store(n) % imph(o(1), o(2)))
+             Store(n) % imph=Tops__(n) %  imph
           END IF
           IF(ALLOCATED(Tops__(n) % acc)) THEN
              o=SHAPE(Tops__(n) % acc)
              ALLOCATE(Store(n) % acc(o(1), o(2)))
+             Store(n) % acc=Tops__(n) %  acc
           END IF
           IF(ALLOCATED(Tops__(n) % don)) THEN
              o=SHAPE(Tops__(n) % don)
              ALLOCATE(Store(n) % don(o(1), o(2)))
+             Store(n) % don=Tops__(n) %  don
           END IF
           IF(ALLOCATED(Tops__(n) % acc_)) THEN
              o=SHAPE(Tops__(n) % acc_)
              ALLOCATE(Store(n) % acc_(o(1), o(2)))
+             Store(n) % acc_=Tops__(n) %  acc_
           END IF
           IF(ALLOCATED(Tops__(n) % don_)) THEN
              o=SHAPE(Tops__(n) % don_)
              ALLOCATE(Store(n) % don_(o(1), o(2)))
+             Store(n) % don_=Tops__(n) %  don_
           END IF
           IF(ALLOCATED(Tops__(n) % dele)) THEN
              o=SHAPE(Tops__(n) % dele)
              ALLOCATE(Store(n) % dele(o(1), o(2)))
+             Store(n) % dele=Tops__(n) %  dele
           END IF
           IF(ALLOCATED(Tops__(n) % ends)) THEN
              o=SHAPE(Tops__(n) % ends)
              ALLOCATE(Store(n) % ends(o(1), o(2)))
+             Store(n) % ends=Tops__(n) %  ends
           END IF
           IF(ALLOCATED(Tops__(n) % mass)) THEN
              o=SHAPE(Tops__(n) % mass)
              ALLOCATE(Store(n) % mass(o(1), o(2)))
+             Store(n) % mass=Tops__(n) %  mass
           END IF
           IF(ALLOCATED(Tops__(n) % group)) THEN
              ALLOCATE(Store(n) % group (SIZE(Tops__(n) % group)))
              DO m=1,SIZE(Tops__(n) % group)
                 IF(ALLOCATED(Tops__(n) % group (m) % g)) THEN
                    ALLOCATE(Store(n) % group (m) % g (SIZE(Tops__(n) % group (m) % g)))
+                   Store(n) % group(m) % g =Tops__(n) % group(m) % g
                 END IF
              END DO
           END IF
+          Store(n) % FField=Tops__(n) % FField
+          Store(n) % Type=Tops__(n) % Type
+          Store(n) % Residue=Tops__(n) % Residue
        END DO
-       Store=Tops__
        out=>Store
     END IF
   END FUNCTION Tops__Store

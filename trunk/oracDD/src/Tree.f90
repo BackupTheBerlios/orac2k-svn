@@ -44,20 +44,20 @@ module Tree
 ! Define the basic tree type
    type trees
        character(max_char_tree) :: name    ! name of node
-       CHARACTER(len=max_char_long), POINTER  :: y(:)    ! stored real data
-       type(trees), pointer :: parent  ! parent node
-       type(trees), pointer :: sibling ! next sibling node
-       type(trees), pointer :: child   ! first child node
+       CHARACTER(len=max_char_long), POINTER  :: y(:)=>NULL()    ! stored real data
+       type(trees), pointer :: parent=>NULL()  ! parent node
+       type(trees), pointer :: sibling=>NULL() ! next sibling node
+       type(trees), pointer :: child=>NULL()   ! first child node
     end type trees
   TYPE branch
      CHARACTER(max_char_tree)   :: name,parent
-     CHARACTER(max_char_long), DIMENSION(:), POINTER :: data
+     CHARACTER(max_char_long), DIMENSION(:), POINTER :: data=>NULL()
      CHARACTER(max_char_tree), DIMENSION(:), POINTER :: children=>NULL()
   END TYPE branch
 !
 ! Module variables
-   type(trees), pointer    :: current       ! current node
-   type(trees), pointer    :: forest_root   ! the root of the forest
+   type(trees), pointer    :: current=>NULL()       ! current node
+   type(trees), pointer    :: forest_root=>NULL()   ! the root of the forest
    integer                :: max_data      ! max size of data array
    character(max_char_tree), allocatable, target :: names(:)
                                            ! for returning list of names
@@ -278,7 +278,6 @@ contains
 !!$!
      IF(ASSOCIATED(check%children)) THEN
         DEALLOCATE(check%children)
-        NULLIFY(check%children)
      END IF
      call Tree__retrieve(name, Real_name, data, parent, children)
      IF(ASSOCIATED(data)) THEN

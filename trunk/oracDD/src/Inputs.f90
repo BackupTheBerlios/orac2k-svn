@@ -178,16 +178,16 @@ CONTAINS
     LOGICAL :: ok
 
     n=0
-    ntot=COMMAND_ARGUMENT_COUNT()
-    IF(ntot == 0) THEN       
-       CALL GET_COMMAND_ARGUMENT(0,line)
+    ntot=IARGC()
+    IF(ntot == 0) THEN
+       CALL GETARG(0,line)
        errmsg='Usage: '//TRIM(line)//' [-V] input > output '
        CALL abort_now(errmsg)
     END IF
     ok=.FALSE.
     DO WHILE(n < ntot)
        n=n+1
-       CALL GET_COMMAND_ARGUMENT(n,line)
+       CALL GETARG(n,line)
        linea=TRIM(line)
        IF(linea(1:1) == '-') THEN
           line=linea(2:)
@@ -204,7 +204,7 @@ CONTAINS
        END IF
     END DO
     IF(.NOT. ok) THEN
-       CALL GET_COMMAND_ARGUMENT(0,line)
+       CALL GETARG(0,line)
        errmsg='Usage: '//TRIM(line)//' [-V] input > output '
        CALL abort_now(errmsg)
     END IF

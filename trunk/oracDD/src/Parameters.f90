@@ -68,7 +68,6 @@ CONTAINS
     REAL(8) :: a
     INTEGER :: n,m,iflag,nword
     TYPE(Branch), SAVE :: check
-
     CALL Tree__Check_Tree('&PARAM',check)
     IF(.NOT. ASSOCIATED(check%children)) RETURN
 
