@@ -1,7 +1,7 @@
 MODULE Neighbors
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-18 17:27:58 marchi>                           *
+!!$   Time-stamp: <2007-01-18 21:25:01 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -264,8 +264,7 @@ CONTAINS
        numcell=nz+ncz*(ny+ncy*nx)+1
        chainp(n)=headp(numcell)
        headp(numcell)=n
-    END DO
-    
+    END DO    
 
   END FUNCTION Neighbors__Atoms
   FUNCTION Neighbors__Valid() RESULT(out)

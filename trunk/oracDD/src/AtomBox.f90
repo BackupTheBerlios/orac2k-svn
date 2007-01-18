@@ -1,7 +1,7 @@
 MODULE AtomBox
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-18 17:25:20 marchi>                           *
+!!$   Time-stamp: <2007-01-18 21:50:00 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -25,7 +25,7 @@ MODULE AtomBox
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__
+  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame
   TYPE :: AtomBox__
      INTEGER :: Serial
      REAL(8) :: sigma
@@ -35,10 +35,10 @@ MODULE AtomBox
   INTEGER, SAVE :: nSlv=0
 CONTAINS
   SUBROUTINE AtomBox_(PDB__Coords, Coords)
-    TYPE(AtomPdb) :: PDB__Coords(:)
+    TYPE(AtomPdb), POINTER :: PDB__Coords(:)
     TYPE(AtomBox__), POINTER :: Coords(:)
     INTEGER :: n,m
-    IF(ALLOCATED(PDB__Coords)) ALLOCATE(Coords(SIZE(PDB__Coords)))
+    IF(ASSOCIATED(PDB__Coords)) ALLOCATE(Coords(SIZE(PDB__Coords)))
     Coords(:) % x = PDB__Coords(:) % x
     Coords(:) % y = PDB__Coords(:) % y
     Coords(:) % z = PDB__Coords(:) % z
@@ -137,14 +137,34 @@ CONTAINS
     END DO
     DEALLOCATE(Coords)
     ALLOCATE(Coords(SIZE(Coords0)))
-    Coords(:) % x = oc(1,1)*Coords0(:) % x + oc(1,2)*Coords0(:) % y + oc(1,3)*Coords0(:) % z
-    Coords(:) % y = oc(2,1)*Coords0(:) % x + oc(2,2)*Coords0(:) % y + oc(3,3)*Coords0(:) % z
-    Coords(:) % z = oc(3,1)*Coords0(:) % x + oc(3,2)*Coords0(:) % y + oc(3,3)*Coords0(:) % z
-    Coords(:) % sigma = Coords0(:) % sigma 
-    Coords(:) % serial = Coords0(:) % Serial
+    Coords=Coords0
     DEALLOCATE(Coords0)
   END FUNCTION AtomBox__BuildSlv  
+  SUBROUTINE AtomBox__ChgFrame(Dir,Coords)
+    INTEGER :: Dir
+    TYPE(AtomBox__) :: Coords(:)
+    TYPE(AtomBox__), ALLOCATABLE :: Coords0(:)
 
+    ALLOCATE(Coords0(SIZE(Coords)))
+    Coords0=Coords
+    IF(Dir > 0) THEN
+       Coords(:) % x = co(1,1)*Coords0(:) % x + co(1,2)*Coords0(:) % y &
+            &+ co(1,3)*Coords0(:) % z
+       Coords(:) % y = co(2,1)*Coords0(:) % x + co(2,2)*Coords0(:) % y &
+            &+ co(3,3)*Coords0(:) % z
+       Coords(:) % z = co(3,1)*Coords0(:) % x + co(3,2)*Coords0(:) % y &
+            &+ co(3,3)*Coords0(:) % z
+    ELSE
+       Coords(:) % x = oc(1,1)*Coords0(:) % x + oc(1,2)*Coords0(:) % y &
+            &+ oc(1,3)*Coords0(:) % z
+       Coords(:) % y = oc(2,1)*Coords0(:) % x + oc(2,2)*Coords0(:) % y &
+            &+ oc(3,3)*Coords0(:) % z
+       Coords(:) % z = oc(3,1)*Coords0(:) % x + oc(3,2)*Coords0(:) % y &
+            &+ oc(3,3)*Coords0(:) % z
+    END IF
+    DEALLOCATE(Coords0)
+  END SUBROUTINE AtomBox__ChgFrame
+  
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomBox

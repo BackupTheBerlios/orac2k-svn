@@ -57,6 +57,7 @@ MODULE SimulationBox
   IMPLICIT none
   PRIVATE
   PUBLIC :: SimulationBox_
+  TYPE(AtomBox__), POINTER, SAVE :: Total(:)
   TYPE(AtomBox__), POINTER, SAVE :: Slv(:),Slt(:)
   REAL(8), PARAMETER :: Cube_length=10.0D0
   REAL(8), SAVE :: rcut
@@ -98,19 +99,44 @@ CONTAINS
           CALL AtomBox_(PDB__Coords,Slv)
           DEALLOCATE(PDB__Coords)
        END IF
+
        IF(Solvent__Param % added /= 0) RETURN
 
        IF(.NOT. Solvent__Param % Build) RETURN
        IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
 
+       IF(ALLOCATED(Secondary(1) % Line)) THEN
+          n=SIZE(Slt)
+          m=SIZE(Slv)
+          ALLOCATE(Total(n+m))
+          Total(1:n)=Slt
+          Total(n+1:)=Slv
+          DEALLOCATE(Slt,Slv)
+          Slt=>Total(1:n)
+          Slv=>Total(n+1:)
+       ELSE
+          m=SIZE(Slv)
+          ALLOCATE(Total(m))
+          DEALLOCATE(Slv)
+          Slv=>Total
+       END IF
        nccx=INT(a/Cube_Length)
        nccy=INT(b/Cube_Length)
        nccz=INT(c/Cube_Length)
        rcut=MAXVAL(Slv(:) % sigma)*2.0D0
+       CALL AtomBox__ChgFrame(-1,Total)
 
        IF(.NOT. Neighbors_(rcut, nccx, nccy, nccz)) CALL Print_Errors()
-       IF(.NOT. Neighbors__Atoms(Slv(:) % x, Slv(:) % y, Slv(:) % z)) CALL Print_Errors()
+       IF(.NOT. Neighbors__Atoms(Total(:) % x&
+            &, Total(:) % y, Total(:) % z)) CALL Print_Errors()
+       
+       CALL AtomBox__ChgFrame(1,Total)
+       DO n=1,SIZE(Total)
+          WRITE(98,'(i6,2x,f9.3,3x,3f12.4)') Total(n) % Serial&
+               &, Total(n) % Sigma, Total(n) % x, Total(n) % y, Total(n) % z
+       END DO
     END IF
+
 
   END SUBROUTINE SimulationBox_
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
