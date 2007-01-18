@@ -23,6 +23,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.10  2007/01/18 16:44:49  mmarchi
+# *** empty log message ***
+#
 # Revision 1.9  2007/01/17 16:57:32  mmarchi
 # *** empty log message ***
 #
@@ -106,9 +109,9 @@ CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac/source
 LIBRARIES = NONE
 #FFLAGS = -g 
-#FFLAGS = -g -fbounds-check 
+FFLAGS = -g -fbounds-check 
 #FFLAGS = -g -Mbounds -Mchkstk -Mchkfpstk
-FFLAGS = -O3
+#FFLAGS = -O3
 #==========================================================================
 # Define default rules
 #==========================================================================
@@ -130,7 +133,7 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	Numerics.o Units.o PDB.o Setups.o Process.o Hash_Tops.o Tops.o SecondarySeq.o\
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
-	ReadStore.o AddHydrogens_.o AtomBox.o oracDD.o 
+	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
 

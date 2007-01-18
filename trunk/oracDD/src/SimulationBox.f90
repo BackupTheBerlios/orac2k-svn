@@ -41,6 +41,7 @@ MODULE SimulationBox
 !!$======================== DECLARATIONS ================================*
 
 
+  USE Neighbors
   USE AddHydrogens_
   USE SystemTpg
   USE Cell
@@ -57,9 +58,12 @@ MODULE SimulationBox
   PRIVATE
   PUBLIC :: SimulationBox_
   TYPE(AtomBox__), POINTER, SAVE :: Slv(:),Slt(:)
+  REAL(8), PARAMETER :: Cube_length=10.0D0
+  REAL(8), SAVE :: rcut
 CONTAINS
   SUBROUTINE SimulationBox_
-    INTEGER :: n,m,Begins, Ends,p 
+    INTEGER :: n,m,Begins, Ends,p, nccx,nccy,nccz
+    
     TYPE(AtomPdb), POINTER :: PDB__Coords(:)=>NULL()
 
     IF(ALLOCATED(Secondary(1) % Line)) THEN
@@ -96,12 +100,17 @@ CONTAINS
        END IF
        IF(Solvent__Param % added /= 0) RETURN
 
-       IF(Solvent__Param % Build) THEN
-          IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
-       END IF
+       IF(.NOT. Solvent__Param % Build) RETURN
+       IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
+
+       nccx=INT(a/Cube_Length)
+       nccy=INT(b/Cube_Length)
+       nccz=INT(c/Cube_Length)
+       rcut=MAXVAL(Slv(:) % sigma)*2.0D0
+
+       IF(.NOT. Neighbors_(rcut, nccx, nccy, nccz)) CALL Print_Errors()
+       IF(.NOT. Neighbors__Atoms(Slv(:) % x, Slv(:) % y, Slv(:) % z)) CALL Print_Errors()
     END IF
-
-
 
   END SUBROUTINE SimulationBox_
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
