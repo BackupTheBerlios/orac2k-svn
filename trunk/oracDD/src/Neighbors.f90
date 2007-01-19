@@ -1,7 +1,7 @@
 MODULE Neighbors
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-19 16:26:35 marchi>                           *
+!!$   Time-stamp: <2007-01-19 18:57:55 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -21,7 +21,8 @@ MODULE Neighbors
   USE Cell
   IMPLICIT none
   PRIVATE
-  PUBLIC Neighbors_, Neighbors__Atoms, ind_xyz, chainp, headp, cellpi, cellpj, cellpk
+  PUBLIC Neighbors_, Neighbors__Atoms, ind_xyz, Neighbors__Ind&
+       &, chainp, headp, cellpi, cellpj, cellpk
   TYPE :: Neighbors__Ind
      INTEGER :: i,j,k
   END TYPE Neighbors__Ind
