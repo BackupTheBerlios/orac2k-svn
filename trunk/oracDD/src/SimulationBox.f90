@@ -57,17 +57,29 @@ MODULE SimulationBox
   IMPLICIT none
   PRIVATE
   PUBLIC :: SimulationBox_
-  TYPE(AtomBox__), POINTER, SAVE :: Total(:)
-  TYPE(AtomBox__), POINTER, SAVE :: Slv(:),Slt(:)
-  REAL(8), PARAMETER :: Cube_length=10.0D0
+  TYPE(Atombox__), ALLOCATABLE, SAVE, TARGET :: Atoms_InBox(:)
+  TYPE(Atombox__), POINTER, SAVE :: Slv_InBox(:)=>NULL(),Slt_InBox(:)=>NULL()
+
+!!$
+!!$--- Temporary pointers Erased after call to SimulationBox_
+!!$
+
+  TYPE(AtomBox__), POINTER, SAVE :: Total(:)=>NULL()
+  TYPE(AtomBox__), POINTER, SAVE :: Slv(:)=>NULL(),Slt(:)=>NULL()
+  REAL(8), PARAMETER :: Cube_length=6.0D0
+  INTEGER, SAVE :: nato_Slv
   REAL(8), SAVE :: rcut
 CONTAINS
   SUBROUTINE SimulationBox_
     INTEGER :: n,m,Begins, Ends,p, nccx,nccy,nccz
-    
+    INTEGER :: nato_Slv,nato_Slt
+    LOGICAL :: Exist_Slv, Exist_Slt
     TYPE(AtomPdb), POINTER :: PDB__Coords(:)=>NULL()
 
-    IF(ALLOCATED(Secondary(1) % Line)) THEN
+    Exist_Slt=ALLOCATED(Secondary(1) % Line)
+    Exist_Slv=ALLOCATED(Secondary(2) % Line)
+
+    IF(Exist_Slt) THEN
        IF(.NOT. ALLOCATED(PDB_Solute)) THEN
           errmsg_f='Solute is defined, but no file to read from '
           CALL Add_Errors(-1,errmsg_f)
@@ -84,9 +96,11 @@ CONTAINS
           END IF
           DEALLOCATE(PDB__Coords)
        END IF
+       nato_Slt=SIZE(Slt)
+       IF(Solvent__Param % Build) CALL AtomBox__Center(Slt)
     END IF
 
-    IF(ALLOCATED(Secondary(2) % Line)) THEN
+    IF(Exist_Slv) THEN
        IF(.NOT. ALLOCATED(PDB_Solvent)) THEN
           errmsg_f='Solvent is defined, but no file to read from '
           CALL Add_Errors(-1,errmsg_f)
@@ -94,18 +108,23 @@ CONTAINS
        END IF
        IF(.NOT. PDB_('Solvent', PDB_Solvent, PDB__Coords)) CALL Print_Errors()
        IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
+
        IF(ASSOCIATED(PDB__Coords)) THEN
           CALL PDB__Write(PDB__Coords)
           CALL AtomBox_(PDB__Coords,Slv)
+          nato_Slv=SIZE(Slv)
           DEALLOCATE(PDB__Coords)
+          IF(Solvent__Param % Build) CALL AtomBox__Center(Slv)
        END IF
 
        IF(Solvent__Param % added /= 0) RETURN
 
        IF(.NOT. Solvent__Param % Build) RETURN
-       IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
 
-       IF(ALLOCATED(Secondary(1) % Line)) THEN
+
+       IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
+       
+       IF(Exist_Slt) THEN
           n=SIZE(Slt)
           m=SIZE(Slv)
           ALLOCATE(Total(n+m))
@@ -114,30 +133,129 @@ CONTAINS
           DEALLOCATE(Slt,Slv)
           Slt=>Total(1:n)
           Slv=>Total(n+1:)
+       
+          nccx=INT(a/Cube_Length)
+          nccy=INT(b/Cube_Length)
+          nccz=INT(c/Cube_Length)
+          rcut=MAXVAL(Slv(:) % sigma)*2.0D0
+          IF(.NOT. Neighbors_(rcut, nccx, nccy, nccz)) CALL Print_Errors()
+
+          CALL AtomBox__ChgFrame(-1,Total)
+          IF(.NOT. Neighbors__Atoms(Total(:) % x&
+               &, Total(:) % y, Total(:) % z)) CALL Print_Errors()
+          CALL Insert
        ELSE
           m=SIZE(Slv)
-          ALLOCATE(Total(m))
+          ALLOCATE(Atoms_InBox(m))
+          Atoms_InBox=Slv
+          CALL AtomBox__ChgFrame(-1,Atoms_InBox)
+          Slv_InBox=>atoms_InBox
           DEALLOCATE(Slv)
-          Slv=>Total
        END IF
-       nccx=INT(a/Cube_Length)
-       nccy=INT(b/Cube_Length)
-       nccz=INT(c/Cube_Length)
-       rcut=MAXVAL(Slv(:) % sigma)*2.0D0
-       CALL AtomBox__ChgFrame(-1,Total)
-
-       IF(.NOT. Neighbors_(rcut, nccx, nccy, nccz)) CALL Print_Errors()
-       IF(.NOT. Neighbors__Atoms(Total(:) % x&
-            &, Total(:) % y, Total(:) % z)) CALL Print_Errors()
-       
-       CALL AtomBox__ChgFrame(1,Total)
-       DO n=1,SIZE(Total)
-          WRITE(98,'(i6,2x,f9.3,3x,3f12.4)') Total(n) % Serial&
-               &, Total(n) % Sigma, Total(n) % x, Total(n) % y, Total(n) % z
-       END DO
     END IF
+  CONTAINS
+    SUBROUTINE Insert
+      INTEGER ::  nx,ny,nz,i,j,k,l,m,n,nv,numcell,iv,jv,kv,nmin&
+           &,nmol,nn,Size_Total,count_a,o,nmol_old
+      REAL(8) :: x1,y1,z1,x2,y2,z2,xx,yy,zz,sqcut,d
+      TYPE(AtomBox__), ALLOCATABLE, SAVE :: Temp(:)
+      LOGICAL, ALLOCATABLE :: ok_mol(:)
+      LOGICAL :: ok
+      
+      nmol=SIZE(Slv)/nato_Slv
+      ALLOCATE(ok_mol(nmol))
+      ok_mol=.TRUE.
 
+      DO n=1,nmol
+         ok=.TRUE.
+         DO m=1,nato_Slv
+            nn=(n-1)*nato_Slv + m
+            x1=Slv(nn) % x
+            y1=Slv(nn) % y
+            z1=Slv(nn) % z
+            nv=0
+            i=cellpi(Slv (nn) % Serial)
+            j=cellpj(Slv (nn) % Serial)
+            k=cellpk(Slv (nn) % Serial)
+            DO o=1,SIZE(Ind_xyz)
+               iv=Ind_xyz(o) % i
+               jv=Ind_xyz(o) % j
+               kv=Ind_xyz(o) % k
+               nx=mod(mod(i+iv,nccx)+nccx,nccx)
+               ny=mod(mod(j+jv,nccy)+nccy,nccy)
+               nz=mod(mod(k+kv,nccz)+nccz,nccz)
+               numcell=nz+nccz*(ny+nccy*nx)+1
+               IF(numcell > nccx*nccy*nccz) STOP
+               l=headp(numcell)
+               DO WHILE(l > 0)
+                  IF(l > nato_Slt) THEN
+                     l=chainp(l)
+                     CYCLE
+                  END IF
+                  sqcut=((Total(l) % sigma+Slv(nn) % sigma)*0.5D0)**2
+                  x2=x1-Total(l) % x
+                  y2=y1-Total(l) % y
+                  z2=z1-Total(l) % z
 
+                  x2=x2-2.0*PBC(x2)
+                  y2=y2-2.0*PBC(y2)
+                  z2=z2-2.0*PBC(z2)
+
+                  xx=co(1,1)*x2+co(1,2)*y2+co(1,3)*z2
+                  yy=           co(2,2)*y2+co(2,3)*z2
+                  zz=                      co(3,3)*z2
+                  d=xx**2+yy**2+zz**2
+                  IF(d < sqcut) THEN
+                     ok=.FALSE.
+                     EXIT
+                  ENDIF
+                  l=chainp(l)
+               END DO
+               IF(.NOT. ok) EXIT
+            END DO
+            IF(.NOT. ok) EXIT
+         END DO
+         IF(.NOT. ok) THEN
+            ok_mol(n) = .FALSE.
+         END IF
+      END DO
+
+      nmol_old=nmol
+      nmol=COUNT(ok_mol)
+      Size_Total=nato_Slt+nmol*nato_Slv
+      WRITE(*,'(a)') ' Inserting solute into solvent ====>'
+      WRITE(*,'(a,i5,a,i5,a,i5, a)') ' Eliminated '&
+           &,nmol_old-nmol,' molecules over ', nmol_old,' remain ',nmol&
+           &,' solvent molecules '
+      ALLOCATE(Temp(SIZE(Total)))
+      Temp=Total
+      
+      ALLOCATE(Atoms_InBox(Size_Total))
+      Atoms_InBox(1:nato_Slt)=Temp(1:nato_Slt)
+
+      count_a=0
+      DO n=1,nmol
+         IF(.NOT. ok_mol(n)) CYCLE
+         DO m=1,nato_Slv
+            count_a=count_a+1
+            nn=(n-1)*nato_Slv + m
+            Atoms_InBox(count_a) = Temp(nn+nato_Slt)
+            Atoms_InBox(count_a) % Serial = count_a+nato_Slt
+         END DO
+      END DO
+
+      Slt_InBox=>Atoms_InBox(1:nato_Slt)
+      Slv_InBox=>Atoms_InBox(nato_Slt+1:)
+
+      DEALLOCATE(Temp,ok_mol,Total)
+      Slv=>NULL()
+      Slt=>NULL()
+    END SUBROUTINE Insert
+    FUNCTION PBC(x) RESULT(out)
+      REAL(8) :: out
+      REAL(8) :: x
+      out=ANINT(0.5D0*x)
+    END FUNCTION PBC
   END SUBROUTINE SimulationBox_
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

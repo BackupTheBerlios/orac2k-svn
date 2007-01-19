@@ -198,9 +198,8 @@ CONTAINS
     out=.TRUE.
     count_out=Node__Size() 
     IF(count_out == 0) THEN
-       errmsg_w='No Stretching were found: Is this correct?'
+       errmsg_w='Warning: No '//TRIM(What_This_is)//' were found: Is this correct?'
        CALL Add_Errors(1,errmsg_w)
-       out=.FALSE.
        RETURN
     END IF
     m_Tpg=SIZE(Tot_Tpg,2)

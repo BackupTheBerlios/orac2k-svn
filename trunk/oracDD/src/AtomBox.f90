@@ -1,7 +1,7 @@
 MODULE AtomBox
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-18 21:50:00 marchi>                           *
+!!$   Time-stamp: <2007-01-19 15:32:14 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -25,7 +25,7 @@ MODULE AtomBox
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame
+  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame, AtomBox__Center
   TYPE :: AtomBox__
      INTEGER :: Serial
      REAL(8) :: sigma
@@ -55,19 +55,12 @@ CONTAINS
     INTEGER :: Ic, Jc, Kc
     INTEGER :: n,i_Type,o,p,q,m,l
     REAL(8) :: cube,cube_side,a0,b0,c0,volume0,x,y,z,x_0,y_0,z_0&
-         &,cube_x,cube_y,cube_z,xcm,ycm,zcm
+         &,cube_x,cube_y,cube_z,ko(3,3)
     INTEGER :: i_dvol(1),nCoords,offset
     REAL(8), ALLOCATABLE :: Dvol(:)
     TYPE(AtomBox__), ALLOCATABLE :: Coords0(:)
     out=.TRUE.
 
-    nCoords=SIZE(Coords)
-    xcm=SUM(Coords(:) % x)/DBLE(nCoords)
-    ycm=SUM(Coords(:) % y)/DBLE(nCoords)
-    zcm=SUM(Coords(:) % z)/DBLE(nCoords)
-    Coords(:) % x = Coords(:) % x - xcm
-    Coords(:) % y = Coords(:) % y - ycm
-    Coords(:) % z = Coords(:) % z - zcm
 
     IF(Solvent__Param % rho > 0.0D0) THEN
        ALLOCATE(Dvol(SIZE(Solvent__Box)))
@@ -100,28 +93,28 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        out=.FALSE.; RETURN
     END IF
-
-
-
+    
     cube_x=boxl/DBLE(Ic)
     cube_y=boxl/DBLE(Jc)
     cube_z=boxl/DBLE(Kc)
+    
+    nCoords=SIZE(Coords)
     
 
     ALLOCATE(Coords0 (Solvent__Box(i_Type) % nt*Ic*Jc*Kc*SIZE(Coords)))
     m=0
     offset=0
     DO o=1,Ic
-       x_0=DBLE(o-1)*cube_x-1.0D0
+       x_0=DBLE(o-1)
        DO p=1,Jc
-          y_0=DBLE(p-1)*cube_y-1.0D0
+          y_0=DBLE(p-1)
           DO q=1,Kc
-             z_0=DBLE(q-1)*cube_z-1.0D0
+             z_0=DBLE(q-1)
 
              DO n=1,Solvent__Box(i_Type) % nt
-                x=x_0+Solvent__Box(i_Type) % T(1,n)
-                y=y_0+Solvent__Box(i_Type) % T(2,n)
-                z=z_0+Solvent__Box(i_Type) % T(3,n)
+                x=(x_0+Solvent__Box(i_Type) % T(1,n))*cube_x-1.0D0
+                y=(y_0+Solvent__Box(i_Type) % T(2,n))*cube_y-1.0D0
+                z=(z_0+Solvent__Box(i_Type) % T(3,n))*cube_z-1.0D0
                 DO l=1,nCoords
                    m=m+1
                    Coords0(m) % x = Coords(l) % x + co(1,1)*x + co(1,2)*y + co(1,3)*z 
@@ -135,6 +128,7 @@ CONTAINS
           END DO
        END DO
     END DO
+
     DEALLOCATE(Coords)
     ALLOCATE(Coords(SIZE(Coords0)))
     Coords=Coords0
@@ -151,20 +145,33 @@ CONTAINS
        Coords(:) % x = co(1,1)*Coords0(:) % x + co(1,2)*Coords0(:) % y &
             &+ co(1,3)*Coords0(:) % z
        Coords(:) % y = co(2,1)*Coords0(:) % x + co(2,2)*Coords0(:) % y &
-            &+ co(3,3)*Coords0(:) % z
+            &+ co(2,3)*Coords0(:) % z
        Coords(:) % z = co(3,1)*Coords0(:) % x + co(3,2)*Coords0(:) % y &
             &+ co(3,3)*Coords0(:) % z
     ELSE
        Coords(:) % x = oc(1,1)*Coords0(:) % x + oc(1,2)*Coords0(:) % y &
             &+ oc(1,3)*Coords0(:) % z
        Coords(:) % y = oc(2,1)*Coords0(:) % x + oc(2,2)*Coords0(:) % y &
-            &+ oc(3,3)*Coords0(:) % z
+            &+ oc(2,3)*Coords0(:) % z
        Coords(:) % z = oc(3,1)*Coords0(:) % x + oc(3,2)*Coords0(:) % y &
             &+ oc(3,3)*Coords0(:) % z
     END IF
+    
     DEALLOCATE(Coords0)
   END SUBROUTINE AtomBox__ChgFrame
-  
+  SUBROUTINE AtomBox__Center(Coords)
+    TYPE(AtomBox__), POINTER :: Coords(:)
+    INTEGER :: nCoords
+    REAL(8) :: xcm,ycm,zcm
+
+    nCoords=SIZE(Coords)
+    xcm=SUM(Coords(:) % x)/DBLE(nCoords)
+    ycm=SUM(Coords(:) % y)/DBLE(nCoords)
+    zcm=SUM(Coords(:) % z)/DBLE(nCoords)
+    Coords(:) % x = Coords(:) % x - xcm
+    Coords(:) % y = Coords(:) % y - ycm
+    Coords(:) % z = Coords(:) % z - zcm
+  END SUBROUTINE AtomBox__Center
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomBox

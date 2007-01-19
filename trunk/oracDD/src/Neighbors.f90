@@ -1,7 +1,7 @@
 MODULE Neighbors
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-18 21:25:01 marchi>                           *
+!!$   Time-stamp: <2007-01-19 16:26:35 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -21,7 +21,7 @@ MODULE Neighbors
   USE Cell
   IMPLICIT none
   PRIVATE
-  PUBLIC Neighbors_, Neighbors__Atoms
+  PUBLIC Neighbors_, Neighbors__Atoms, ind_xyz, chainp, headp, cellpi, cellpj, cellpk
   TYPE :: Neighbors__Ind
      INTEGER :: i,j,k
   END TYPE Neighbors__Ind
@@ -37,8 +37,8 @@ CONTAINS
     INTEGER :: vect0(3)
     INTEGER, POINTER :: vect(:)
     REAL(8) :: sqcut,dx,dy,dz,rmin
-    INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,nind,warnx,warny, warnz&
-         &,nxmax, nymax,nzmax
+    INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
+         &,nxmax, nymax,nzmax,nind
 
     IF(ALLOCATED(ind_xyz)) DEALLOCATE(ind_xyz)
     
@@ -53,13 +53,13 @@ CONTAINS
     imax=0
     jmax=0
     kmax=0
-    nind=1
 
     vect0=(/0, 0, 0/) 
     IF(.NOT. Node_()) STOP
 
 
     CALL Node__Push(vect0)   
+
     istart=1-ncx
     DO i=istart,ncx-1
        jstart=1-ncy
@@ -73,14 +73,12 @@ CONTAINS
                 IF(jmax < abs(j)) jmax=abs(j)
                 IF(kmax < abs(k)) kmax=abs(k)
                 IF(.NOT. (i == 0 .AND. j == 0 .AND. k == 0)) THEN
-                   nind=nind+1
                    CALL Node__Push(vect0)
                 END IF
              END IF
           END DO
        END DO
     END DO
-
     nind=Node__Size()
     ALLOCATE(ind_xyz(nind))
     nind=0
@@ -118,7 +116,7 @@ CONTAINS
   CONTAINS
     FUNCTION dist_ijk(ni,nj,nk,dx,dy,dz) RESULT(out)
       REAL(8) :: out
-      REAL(8) ::  dx,dy,dz,co(3,3)
+      REAL(8) ::  dx,dy,dz
       INTEGER ::  ni,nj,nk
 
       REAL(8) ::  d,dmin,dt
@@ -127,17 +125,17 @@ CONTAINS
       REAL(8) ::  dmx,dmy,dmz
       REAL(8) ::  msq,dmsq,lambda,s
 
-      INTEGER ::  nv(8,3)
+      INTEGER, SAVE ::  nv(8,3)
       INTEGER ::  i,j,imin,jmin
-      INTEGER ::  ndtmax
+      INTEGER, SAVE ::  ndtmax=0
 
-
-      ndtmax=500
-
-      nv(:,1)=(/0, 0, 0, 0, 1, 1, 1, 1/)
-      nv(:,2)=(/0, 0, 1, 1, 0, 0, 1, 1/)
-      nv(:,3)=(/0, 1, 0, 1, 0, 1, 0, 1/)
-
+      IF(ndtmax == 0) THEN
+         ndtmax=500
+         nv=0
+         nv(1:8,1)=(/0, 0, 0, 0, 1, 1, 1, 1/)
+         nv(1:8,2)=(/0, 0, 1, 1, 0, 0, 1, 1/)
+         nv(1:8,3)=(/0, 1, 0, 1, 0, 1, 0, 1/)
+      END IF
 
 !!$
 !!$--- Minimum distance between corners of the cells (0, 0, 0) and 
@@ -145,7 +143,6 @@ CONTAINS
 !!$
 
       dmin=1.0D8
-
       do i=1,8
          do j=1,8
             lx=(ni+nv(j,1)-nv(i,1))*dx
@@ -157,7 +154,6 @@ CONTAINS
             mz=co(3,1)*lx+co(3,2)*ly+co(3,3)*lz
 
             d=mx*mx+my*my+mz*mz
-
             if(d.lt.dmin) then
                dmin=d
                imin=i
@@ -224,7 +220,7 @@ CONTAINS
     LOGICAL :: out
     REAL(8) :: x(:),y(:),z(:)
     REAL(8) :: x1,y1,z1,dx,dy,dz
-    INTEGER :: n,nx,ny,nz,natp,numcell
+    INTEGER :: n,nx,ny,nz,natp,numcell,l
     
     out=.TRUE.
     IF(.NOT. Neighbors__Valid()) THEN
@@ -234,11 +230,12 @@ CONTAINS
        RETURN
     END IF
     IF(.NOT. ALLOCATED(headp)) THEN
-       ALLOCATE(headp(SIZE(Ind_xyz)))
+       ALLOCATE(headp(ncx*ncy*ncz))
        natp=SIZE(x)
        ALLOCATE(chainp(natp),cellpi(natp),cellpj(natp),cellpk(natp))
     END IF
     headp=0
+    chainp=0
 
 !!$=======================================================================
 !!$     Compute chain list for system
@@ -248,6 +245,7 @@ CONTAINS
     dy=2.d0/ncy
     dz=2.d0/ncz
 
+    
     DO n=1,natp
        x1=x(n)/dx
        y1=y(n)/dy
@@ -264,9 +262,12 @@ CONTAINS
        numcell=nz+ncz*(ny+ncy*nx)+1
        chainp(n)=headp(numcell)
        headp(numcell)=n
-    END DO    
-
+    END DO
   END FUNCTION Neighbors__Atoms
+  SUBROUTINE Neighbors__Delete
+    DEALLOCATE(ind_xyz)
+    DEALLOCATE(Chainp,Cellpi,Cellpj,Cellpk,Headp)
+  END SUBROUTINE Neighbors__Delete
   FUNCTION Neighbors__Valid() RESULT(out)
     LOGICAL :: out
     out=ALLOCATED(ind_xyz)

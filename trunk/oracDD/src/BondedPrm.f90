@@ -80,7 +80,9 @@ CONTAINS
        DEALLOCATE(share)
     END IF
     out=>ImpropersPrm__Param
-    WRITE(*,*) 'Total improper dihedral Parameters No. =====>',SIZE(ImpropersPrm__Param)
+    IF(ALLOCATED(ImpropersPrm__Param)) THEN
+       WRITE(*,*) 'Total improper dihedral Parameters No. =====>',SIZE(ImpropersPrm__Param)
+    END IF
   END FUNCTION ImpropersPrm_
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
@@ -154,7 +156,9 @@ CONTAINS
        DEALLOCATE(share)
     END IF
     out=>TorsionsPrm__Param
-    WRITE(*,*) 'Total Torsion Parameters No. =====>',SIZE(TorsionsPrm__Param)
+    IF(ALLOCATED(TorsionsPrm__Param)) THEN
+       WRITE(*,*) 'Total Torsion Parameters No. =====>',SIZE(TorsionsPrm__Param)
+    END IF
   END FUNCTION TorsionsPrm_
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
@@ -228,7 +232,9 @@ CONTAINS
        DEALLOCATE(share)
     END IF
     out=>AnglesPrm__Param
-    WRITE(*,*) 'Total Angle Parameters No. =====>',SIZE(AnglesPrm__Param)
+    IF(ALLOCATED(AnglesPrm__Param)) THEN
+       WRITE(*,*) 'Total Angle Parameters No. =====>',SIZE(AnglesPrm__Param)
+    END IF
   END FUNCTION AnglesPrm_
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
@@ -294,7 +300,9 @@ CONTAINS
        DEALLOCATE(share)
     END IF
     out=>BondsPrm__Param
-    WRITE(*,*) 'Total Stretching Parameters No. =====>',SIZE(BondsPrm__Param)
+    IF(ALLOCATED(BondsPrm__Param)) THEN
+       WRITE(*,*) 'Total Stretching Parameters No. =====>',SIZE(BondsPrm__Param)
+    END IF
   END FUNCTION BondsPrm_
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
