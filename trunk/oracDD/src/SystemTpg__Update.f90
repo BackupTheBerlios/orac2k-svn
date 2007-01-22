@@ -37,7 +37,7 @@
 !!$***********************************************************************
 
 !!$---- This subroutine is part of the program  oracDD ----*
-    INTEGER :: New_Units
+    INTEGER, INTENT(IN) :: New_Units
     INTEGER, POINTER :: SltSlv_Res(:,:)=>NULL()
     INTEGER, POINTER :: SltSlv_Grp(:,:)=>NULL()
     INTEGER :: n,m,l,p,q,offset,nato,Res_Begins,Res_Ends&
@@ -210,6 +210,7 @@
        DEALLOCATE(Temp)
        WRITE(*,*) 'New Int14 No. =====>',SIZE(Tpg % Int14,2)
     END IF
+
     IF(ALLOCATED(Tpg % Mol_Atm)) THEN
        o1=SIZE(Tpg % Mol_Atm)
        ALLOCATE(Temp1(o1))
@@ -219,7 +220,10 @@
        Temp1 = Tpg % Mol_Atm
        DEALLOCATE(Tpg % Mol_Atm)
        ALLOCATE(Tpg % Mol_Atm (o1+(New_Units-1)*q))
-       Tpg % Mol_Atm (1:p-1) = Temp1 (1:p-1)
+
+       DO n=1,p-1
+          Tpg % Mol_Atm (n) % g = Temp1 (n) % g 
+       END DO
 
        offset=0
        nato=0
@@ -235,4 +239,5 @@
        DEALLOCATE(Temp1)
        WRITE(*,*) 'New Molecule No. =====>',SIZE(Tpg % Mol_Atm)
     END IF
+
   END SUBROUTINE SystemTpg__Update
