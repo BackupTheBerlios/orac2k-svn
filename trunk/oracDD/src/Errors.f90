@@ -67,7 +67,6 @@ CONTAINS
   SUBROUTINE Cleanup()
     IMPLICIT none
     TYPE(Orac_Errors), POINTER :: dummy
-    INTEGER :: count
     
     current=>root
     DO WHILE(ASSOCIATED(current % next))
@@ -104,7 +103,7 @@ MODULE Errors
      CHARACTER(74), DIMENSION (3) :: top= &
           (/ '**************************************************************************' &
           &,'*                                                                        *'&
-          ,'*-- The following WARNING errors were found:         --------------------*'/)
+          &,'*-- The following WARNING errors were found:         --------------------*'/)
      CHARACTER(74), DIMENSION(1) :: intrabodies = &
           (/ '*                                                                        *'/)
      CHARACTER(74), DIMENSION (:), POINTER :: body

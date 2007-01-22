@@ -258,7 +258,7 @@ CONTAINS
        ALLOCATE(AtomCnts(n) % cnt (p))
        READ(kbin) AtomCnts(n) % cnt(1:p)
     END DO
-  END SUBROUTINE AtomCnt__Write
+  END SUBROUTINE AtomCnt__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomCnt

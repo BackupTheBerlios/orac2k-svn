@@ -63,7 +63,7 @@ MODULE IndSequence
 CONTAINS
   FUNCTION IndSequence_() RESULT(out)
     TYPE(IndSequence__Type), DIMENSION(:), POINTER :: out
-    INTEGER :: n,m,nato,Res_No,Grp_No,i_f,jm,j,i,i_L
+    INTEGER :: n,m,nato,Res_No,Grp_No,i_f,jm,j,i
     CHARACTER(len=Max_Char) :: res_i
 
     out=>NULL()

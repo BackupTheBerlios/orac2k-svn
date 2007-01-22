@@ -66,7 +66,7 @@ CONTAINS
   SUBROUTINE Resid_(linea)
     CHARACTER(len=*) :: linea
     CHARACTER(len=max_char) :: line,line1,Type
-    LOGICAL :: end_of_file=.FALSE.,exist
+    LOGICAL :: exist
     INTEGER :: io,iopt,i,nword,ndata,count_a,n,ntype,k,m
     LOGICAL :: ok
 

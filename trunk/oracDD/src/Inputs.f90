@@ -178,7 +178,8 @@ CONTAINS
     LOGICAL :: ok
 
     n=0
-    ntot=IARGC()
+!!$    ntot=IARGC()
+    ntot=COMMAND_ARGUMENT_COUNT()
     IF(ntot == 0) THEN
        CALL GETARG(0,line)
        errmsg='Usage: '//TRIM(line)//' [-V] input > output '

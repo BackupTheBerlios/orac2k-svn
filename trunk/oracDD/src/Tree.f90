@@ -273,7 +273,7 @@ contains
      TYPE(Branch)  :: check
      CHARACTER(len=*) :: name
      CHARACTER(len=max_char_long), POINTER  :: data(:)
-     CHARACTER(max_char_tree) :: parent, self, Real_name
+     CHARACTER(max_char_tree) :: parent, Real_name
      CHARACTER(max_char_tree), DIMENSION(:), POINTER :: children
 !!$!
      IF(ASSOCIATED(check%children)) THEN

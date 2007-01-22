@@ -179,8 +179,6 @@ CONTAINS
   SUBROUTINE Node_CL__Push(vect)
     CHARACTER(len=max_Char), DIMENSION(:), INTENT(IN) :: vect
     CHARACTER(len=1), DIMENSION(:), POINTER :: cvect
-    CHARACTER(len=1), DIMENSION(:), POINTER :: aux
-    INTEGER :: length
 
     cvect=>MYTransfer_Str2Char(vect)
 
@@ -191,7 +189,6 @@ CONTAINS
   SUBROUTINE Node_CL_1__Push(vect)
     CHARACTER(len=max_Char), INTENT(IN) :: vect
     CHARACTER(len=1), DIMENSION(:), POINTER :: cvect
-    INTEGER :: length
     CHARACTER(len=max_Char) :: vect0(1)
 
     vect0(1)=vect
@@ -207,7 +204,6 @@ CONTAINS
     CHARACTER(len=max_char), DIMENSION(:), POINTER :: vect
     CHARACTER(len=max_char), DIMENSION(:), POINTER :: aux
     CHARACTER(len=1), DIMENSION(:), POINTER :: cvect
-    INTEGER :: i
     
     out=Node_C__Pop(cvect)
 
@@ -273,7 +269,6 @@ CONTAINS
     IMPLICIT none
     LOGICAL :: out
     REAL(8), INTENT(OUT) :: vect
-    REAL(8), DIMENSION(:), POINTER  :: aux
     CHARACTER(len=1), DIMENSION(:), POINTER :: cvect
     
     out=Node_C__Pop(cvect)
@@ -320,7 +315,6 @@ CONTAINS
     IMPLICIT none
     LOGICAL :: out
     INTEGER, INTENT(OUT) :: vect
-    INTEGER, DIMENSION(:), POINTER  :: aux
     CHARACTER(len=1), DIMENSION(:), POINTER :: cvect
     
     out=Node_C__Pop(cvect)

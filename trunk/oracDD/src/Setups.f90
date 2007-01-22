@@ -226,8 +226,6 @@ MODULE Solvent
   USE STRPAK
   IMPLICIT NONE 
   PRIVATE
-  PUBLIC :: Solvent_,PDB_Solvent, Solvent__Param, Solvent__Type&
-       &, Solvent__Cell, Solvent__Box
   CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: PDB_Solvent
   TYPE :: Solvent__Type
      LOGICAL :: Build=.FALSE.
@@ -257,6 +255,9 @@ MODULE Solvent
        & 0.0D0, 0.5D0, 0.0D0,-0.5D0,&
        & 0.0D0,-0.5D0, 0.5D0, 0.0D0,&
        & 0.0D0, 0.0D0,-0.5D0, 0.5D0 /),(/3,4/)) )/)
+
+  PUBLIC :: Solvent_,PDB_Solvent, Solvent__Param, Solvent__Type&
+       &, Solvent__Cell, Solvent__Box
 CONTAINS
   SUBROUTINE Solvent_(name)
     CHARACTER(len=*) :: name

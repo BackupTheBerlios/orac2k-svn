@@ -65,8 +65,7 @@ CONTAINS
 
   SUBROUTINE Parameters__Scan
     CHARACTER(len=max_pars) :: line,linea
-    REAL(8) :: a
-    INTEGER :: n,m,iflag,nword
+    INTEGER :: n,nword
     TYPE(Branch), SAVE :: check
     CALL Tree__Check_Tree('&PARAM',check)
     IF(.NOT. ASSOCIATED(check%children)) RETURN
@@ -110,7 +109,7 @@ CONTAINS
     CHARACTER(len=*) :: name
     TYPE(Branch), SAVE :: checks
     CHARACTER(len=max_pars) :: line
-    INTEGER :: c,n,o,m,rept,p,iflag,nword
+    INTEGER :: c,n,m,rept,p,iflag,nword
     INTEGER, SAVE :: count_J=0
     CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE  :: Seq
     CHARACTER(len=max_char)  :: Type_Seq
@@ -206,5 +205,4 @@ CONTAINS
     END DO
 
   END SUBROUTINE Patch_it
-!!$  INCLUDE 'Store_TpgPar.f90'
 END MODULE Parameters

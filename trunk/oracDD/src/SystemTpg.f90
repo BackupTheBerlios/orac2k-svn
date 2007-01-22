@@ -639,6 +639,14 @@ CONTAINS
     END SUBROUTINE Next_Connection
   END SUBROUTINE Molecules
   INCLUDE 'SystemTpg__Update.f90'
+  SUBROUTINE SystemTpg__Write
+    
+    
+  END SUBROUTINE SystemTpg__Write
+  SUBROUTINE SystemTpg__Read
+    
+  END SUBROUTINE SystemTpg__Read
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SystemTpg

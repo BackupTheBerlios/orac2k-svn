@@ -134,7 +134,7 @@ CONTAINS
     DEALLOCATE(loc)
   CONTAINS
     SUBROUTINE get_links(n_str)
-      INTEGER :: s,n_str
+      INTEGER :: n_str
        nxt=1
        c=0
        str1=TRIM(ADJUSTL(str1))
