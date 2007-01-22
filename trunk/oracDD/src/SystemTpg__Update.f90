@@ -222,6 +222,8 @@
        ALLOCATE(Tpg % Mol_Atm (o1+(New_Units-1)*q))
 
        DO n=1,p-1
+          s=SIZE(Temp1 (n) % g)
+          ALLOCATE(Tpg % Mol_Atm (n) % g (s))
           Tpg % Mol_Atm (n) % g = Temp1 (n) % g 
        END DO
 
