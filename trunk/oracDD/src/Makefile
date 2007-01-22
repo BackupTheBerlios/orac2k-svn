@@ -23,6 +23,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.11  2007/01/22 14:17:15  mmarchi
+# *** empty log message ***
+#
 # Revision 1.10  2007/01/18 16:44:49  mmarchi
 # *** empty log message ***
 #
@@ -109,9 +112,10 @@ CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac/source
 LIBRARIES = NONE
 #FFLAGS = -g 
-FFLAGS = -g -fbounds-check 
+#FFLAGS = -g -fbounds-check 
 #FFLAGS = -g -Mbounds -Mchkstk -Mchkfpstk
-#FFLAGS = -O3
+FFLAGS = -O3
+#FFLAGS = -g -C
 #==========================================================================
 # Define default rules
 #==========================================================================

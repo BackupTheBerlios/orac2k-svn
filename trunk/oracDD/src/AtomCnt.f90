@@ -50,7 +50,7 @@ MODULE AtomCnt
   USE Strings, ONLY: My_Fxm,My_Fam
   IMPLICIT none
   PRIVATE
-  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find 
+  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find, AtomCnt__Update
 
   TYPE AtomCnt__Type
      CHARACTER(len=max_atm) :: Res,beta, betab
@@ -61,7 +61,6 @@ MODULE AtomCnt
   TYPE(AtomCnt__Type), ALLOCATABLE, TARGET, SAVE :: AtomCnts(:)
   INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
   INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
-  INTEGER, SAVE, POINTER :: SltSlv(:,:)=>NULL()
 CONTAINS
   SUBROUTINE AtomCnt_
     CHARACTER(len=max_char) :: res_i,line
@@ -183,6 +182,56 @@ CONTAINS
     CALL Print_Errors()
   END FUNCTION AtomCnt__Find
 
+  SUBROUTINE AtomCnt__Update(New_Units)
+    INTEGER :: New_Units
+    INTEGER, POINTER :: SltSlv(:,:)=>NULL()
+    TYPE(AtomCnt__Type), POINTER :: TempAtoms(:)
+    INTEGER :: n,m,l,o,offset,nato,new_dim,old_dim,Res_Begins,Res_Ends
+
+
+    SltSlv=>IndSequence__SltSlv_Res()
+    Res_Begins=sltSlv(1,2)
+    Res_Ends=sltSlv(2,2)
+    nato=Res_Atm(2,Res_Ends)-Res_Atm(1,Res_Begins)+1
+    New_Dim=(New_Units-1)*nato
+    New_Dim=New_Dim+SIZE(AtomCnts)
+
+    old_Dim=SIZE(AtomCnts)
+    ALLOCATE(TempAtoms(old_Dim))
+    DO n=1,SIZE(AtomCnts)
+       IF(ALLOCATED(AtomCnts (n) % cnt)) THEN
+          ALLOCATE(TempAtoms (n) % cnt(SIZE(AtomCnts(n) % cnt)))
+       END IF
+    END DO
+
+    TempAtoms=AtomCnts
+    DEALLOCATE(AtomCnts)
+    ALLOCATE(AtomCnts(New_Dim))
+    DO n=1,old_dim-nato
+       IF(ALLOCATED(TempAtoms (n) % cnt)) THEN
+          o=SIZE(TempAtoms(n) % cnt)
+          ALLOCATE(AtomCnts (n) % cnt(o))
+       END IF
+    END DO
+
+    AtomCnts(1:old_Dim-nato)=TempAtoms(1:old_Dim-nato)
+    offset=0
+
+    DO l=1,New_Units
+       DO n=Res_Begins,Res_Ends
+          DO m=Res_atm(1,n),Res_Atm(2,n)
+             IF(ALLOCATED(TempAtoms(m) % cnt)) THEN
+                o=SIZE(TempAtoms(m) % cnt)
+                ALLOCATE(AtomCnts(m+offset) % cnt(o))
+             END IF
+             AtomCnts(m+offset) = TempAtoms(m)
+          END DO
+       END DO
+       offset=offset+nato
+    END DO
+
+    DEALLOCATE(TempAtoms)
+  END SUBROUTINE AtomCnt__Update
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomCnt

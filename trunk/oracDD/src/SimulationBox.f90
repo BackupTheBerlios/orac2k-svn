@@ -56,7 +56,7 @@ MODULE SimulationBox
   USE AtomBox
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SimulationBox_
+  PUBLIC :: SimulationBox_,nmol_Slv
   TYPE(Atombox__), ALLOCATABLE, SAVE, TARGET :: Atoms_InBox(:)
   TYPE(Atombox__), POINTER, SAVE :: Slv_InBox(:)=>NULL(),Slt_InBox(:)=>NULL()
 
@@ -67,7 +67,7 @@ MODULE SimulationBox
   TYPE(AtomBox__), POINTER, SAVE :: Total(:)=>NULL()
   TYPE(AtomBox__), POINTER, SAVE :: Slv(:)=>NULL(),Slt(:)=>NULL()
   REAL(8), PARAMETER :: Cube_length=6.0D0
-  INTEGER, SAVE :: nato_Slv
+  INTEGER, SAVE :: nato_Slv,nato_Slt,nmol_Slv,nmol_SlvI
   REAL(8), SAVE :: rcut
 CONTAINS
   SUBROUTINE SimulationBox_
@@ -156,17 +156,17 @@ CONTAINS
   CONTAINS
     SUBROUTINE Insert
       INTEGER ::  nx,ny,nz,i,j,k,l,m,n,nv,numcell,iv,jv,kv,nmin&
-           &,nmol,nn,Size_Total,count_a,o,nmol_old
+           &,nn,Size_Total,count_a,o
       REAL(8) :: x1,y1,z1,x2,y2,z2,xx,yy,zz,sqcut,d
       TYPE(AtomBox__), ALLOCATABLE, SAVE :: Temp(:)
       LOGICAL, ALLOCATABLE :: ok_mol(:)
       LOGICAL :: ok
       
-      nmol=SIZE(Slv)/nato_Slv
-      ALLOCATE(ok_mol(nmol))
+      nmol_Slv=SIZE(Slv)/nato_Slv
+      ALLOCATE(ok_mol(nmol_Slv))
       ok_mol=.TRUE.
 
-      DO n=1,nmol
+      DO n=1,nmol_Slv
          ok=.TRUE.
          DO m=1,nato_Slv
             nn=(n-1)*nato_Slv + m
@@ -220,13 +220,13 @@ CONTAINS
          END IF
       END DO
 
-      nmol_old=nmol
-      nmol=COUNT(ok_mol)
-      Size_Total=nato_Slt+nmol*nato_Slv
+      nmol_SlvI=nmol_Slv
+      nmol_Slv=COUNT(ok_mol)
+      Size_Total=nato_Slt+nmol_Slv*nato_Slv
       WRITE(*,'(a)') ' Inserting solute into solvent ====>'
       WRITE(*,'(a,i5,a,i5,a,i5, a)') ' Eliminated '&
-           &,nmol_old-nmol,' molecules over ', nmol_old,' remain ',nmol&
-           &,' solvent molecules '
+           &,nmol_SlvI-nmol_Slv,' molecules over ', nmol_SlvI&
+           &,' remain ',nmol_Slv,' solvent molecules '
       ALLOCATE(Temp(SIZE(Total)))
       Temp=Total
       
@@ -234,7 +234,7 @@ CONTAINS
       Atoms_InBox(1:nato_Slt)=Temp(1:nato_Slt)
 
       count_a=0
-      DO n=1,nmol
+      DO n=1,nmol_Slv
          IF(.NOT. ok_mol(n)) CYCLE
          DO m=1,nato_Slv
             count_a=count_a+1

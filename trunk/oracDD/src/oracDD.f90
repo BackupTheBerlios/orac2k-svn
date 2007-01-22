@@ -91,7 +91,12 @@ PROGRAM OracDD
   
   CALL SimulationBox_
 
-  
+  CALL AtomCnt__Update(nmol_Slv)
+
+  CALL SystemTpg__Update(nmol_Slv)
+
+  CALL SystemPrm__Update
+
 !!$
 !!$  CALL Topology__SetupTpg
 !!$

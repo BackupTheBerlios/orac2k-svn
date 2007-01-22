@@ -50,7 +50,7 @@ MODULE SystemPrm
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SystemPrm_, SystemPrm__Type,SystemPrm__Chain, Prm
+  PUBLIC :: SystemPrm_, SystemPrm__Type,SystemPrm__Chain, Prm, SystemPrm__Update
   TYPE :: SystemPrm__Type
      TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),angles(:)=>NULL(),&
           &dihed(:)=>NULL(),imph(:)=>NULL()
@@ -69,6 +69,8 @@ CONTAINS
     IF(.NOT. ASSOCIATED(Prm % Types)) CALL Print_errors()
     Prm % LJ=>LennardJones_() 
     IF(.NOT. ASSOCIATED(Prm % LJ)) CALL Print_errors()
+  END SUBROUTINE SystemPrm_
+  SUBROUTINE SystemPrm__Update
     Prm % bonds=> BondsPrm_()
     IF(.NOT. ASSOCIATED(Prm % bonds)) CALL Print_errors()
     Prm % angles=>AnglesPrm_()
@@ -77,8 +79,7 @@ CONTAINS
     IF(.NOT. ASSOCIATED(Prm % dihed)) CALL Print_errors()
     Prm % imph=>ImpropersPrm_()
     IF(.NOT. ASSOCIATED(Prm % imph)) CALL Print_errors()
-
-  END SUBROUTINE SystemPrm_
+  END SUBROUTINE SystemPrm__Update
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SystemPrm

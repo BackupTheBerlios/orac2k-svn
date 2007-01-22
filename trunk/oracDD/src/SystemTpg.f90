@@ -50,7 +50,7 @@ MODULE SystemTpg
 
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SystemTpg_, SystemTpg__Type, Tpg, Atom2Cnt
+  PUBLIC :: SystemTpg_, SystemTpg__Type, Tpg, Atom2Cnt, SystemTpg__Update
   INTEGER, PARAMETER :: max_atms=7
   TYPE Atom2Cnt
      TYPE(AtomCnt__Type), POINTER  :: a=>NULL()
@@ -58,6 +58,7 @@ MODULE SystemTpg
   TYPE SystemTpg__Type
      INTEGER, DIMENSION(:,:), ALLOCATABLE :: bonds,angles,&
           &dihed,imph,int14,Grp_Atm,Res_Atm
+     INTEGER :: s_bonds,s_angles,s_dihed,s_imph,s_int14,s_Mol_Atm
      TYPE(Atom2Cnt), DIMENSION(:), ALLOCATABLE  :: atm
      TYPE(Chain), DIMENSION(:), ALLOCATABLE :: Mol_Atm
   END TYPE SystemTpg__Type
@@ -175,6 +176,7 @@ CONTAINS
          END IF
       END DO
       DEALLOCATE(t_bonds)
+      Tpg % s_bonds=get_Slv(Tpg % bonds)
       WRITE(*,*) 'Bonds No. =====>',count_A
       
       IF(ASSOCIATED(p_bonds)) DEALLOCATE(p_bonds)
@@ -281,6 +283,7 @@ CONTAINS
       DEALLOCATE(t_angles)
       WRITE(*,*) 'Angles No. =====>',count_A
       IF(ASSOCIATED(p_bends)) DEALLOCATE(p_bends)
+      Tpg % s_angles=get_Slv(Tpg % angles)
 
     END SUBROUTINE Angles
     SUBROUTINE Torsions
@@ -395,6 +398,7 @@ CONTAINS
       END DO
       DEALLOCATE(t_tors)
       WRITE(*,*) 'Torsions No. =====>',SIZE(Tpg % dihed,2)
+      Tpg % s_dihed=get_Slv(Tpg % dihed)
 
       IF(.NOT. Node_()) STOP
       offset=0
@@ -470,6 +474,8 @@ CONTAINS
 
       ALLOCATE(Tpg % int14(2,count_A))
       Tpg % Int14 =t_Int14(:,1:count_a)
+
+      Tpg % s_Int14=get_Slv(Tpg % int14)
       DEALLOCATE(t_Int14)
       IF(ASSOCIATED(p_tors)) DEALLOCATE(p_tors)
       IF(ASSOCIATED(p_Int14)) DEALLOCATE(p_Int14)      
@@ -546,8 +552,22 @@ CONTAINS
          Tpg % imph (:, count_a) = p_itors
       END DO
       WRITE(*,*) 'ITors No. =====>',count_A
+      Tpg % s_imph=get_Slv(Tpg % imph)
       IF(ASSOCIATED(p_itors)) DEALLOCATE(p_itors)
     END SUBROUTINE ITorsions
+    FUNCTION Get_Slv(tp) RESULT(out)
+      INTEGER :: out
+      INTEGER :: tp(:,:)
+      INTEGER :: n
+      out=SIZE(tp,2)+1
+      DO n=1,SIZE(tp,2)
+         IF(COUNT(Atm_Cnt(tp(:,n)) % Id_Slv == 2) /= 0) THEN
+            out=n
+            EXIT
+         END IF
+      END DO
+    END FUNCTION Get_Slv
+
   END SUBROUTINE SystemTpg_
   SUBROUTINE Molecules
     LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE :: oks,old__oks
@@ -594,6 +614,13 @@ CONTAINS
        ALLOCATE(Tpg % Mol_Atm (count_A) % g (SIZE(p_mols)))
        Tpg % Mol_Atm (count_A) % g = p_mols
     END DO
+    
+    DO n=1,SIZE(Tpg % Mol_Atm)
+       IF(COUNT(Atm_Cnt(Tpg % Mol_Atm(n) % g(:)) % Id_Slv == 2) /= 0) THEN
+          Tpg % s_Mol_Atm=n
+          EXIT
+       END IF
+    END DO
     IF(ASSOCIATED(p_mols)) DEALLOCATE(p_mols)
     WRITE(*,*) 'Molecule No. =====>',SIZE(Tpg % Mol_Atm)
   CONTAINS
@@ -611,7 +638,7 @@ CONTAINS
       END DO
     END SUBROUTINE Next_Connection
   END SUBROUTINE Molecules
-
+  INCLUDE 'SystemTpg__Update.f90'
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SystemTpg
