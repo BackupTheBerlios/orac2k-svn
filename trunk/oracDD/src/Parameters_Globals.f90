@@ -38,8 +38,6 @@ MODULE Parameters_globals
 !!$---- This module is part of the program  ORAC ----*
 
   USE TYPES
-  INTEGER, SAVE :: ktpg_read=0,kpar_read=0,kbin=0
-  CHARACTER(len=max_char), SAVE :: ftpg_read,fpar_read,fbin
   CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: input_data
 
   TYPE(keys), SAVE :: in_str

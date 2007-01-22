@@ -48,7 +48,7 @@ MODULE AtomCnt
   USE STRPAK
   USE Node
   USE Strings, ONLY: My_Fxm,My_Fam
-  USE Parameters_Globals
+  USE Parameters
   IMPLICIT none
   PRIVATE
   PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find, AtomCnt__Update
@@ -235,28 +235,28 @@ CONTAINS
   END SUBROUTINE AtomCnt__Update
   SUBROUTINE AtomCnt__Write
     INTEGER :: n
-    WRITE(kbin) SIZE(AtomCnts)
+    WRITE(kbinary) SIZE(AtomCnts)
     DO n=1,SIZE(AtomCnts)
-       WRITE(kbin) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
+       WRITE(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
             & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
             & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
             & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
             & mass, SIZE(AtomCnts(n) % cnt)
-       WRITE(kbin) AtomCnts(n) % cnt
+       WRITE(kbinary) AtomCnts(n) % cnt
     END DO
   END SUBROUTINE AtomCnt__Write
   SUBROUTINE AtomCnt__Read
     INTEGER :: n,o,p
-    WRITE(kbin) o
+    WRITE(kbinary) o
     ALLOCATE(AtomCnts(o))
     DO n=1,SIZE(AtomCnts)
-       READ(kbin) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
+       READ(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
             & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
             & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
             & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
             & mass, p
        ALLOCATE(AtomCnts(n) % cnt (p))
-       READ(kbin) AtomCnts(n) % cnt(1:p)
+       READ(kbinary) AtomCnts(n) % cnt(1:p)
     END DO
   END SUBROUTINE AtomCnt__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*

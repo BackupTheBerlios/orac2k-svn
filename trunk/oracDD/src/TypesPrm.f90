@@ -42,9 +42,11 @@ MODULE TypesPrm
   USE MyParse
   USE Strings
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
+  USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC TypesPrm_, TypesPrm__Types, TypesPrm__Number
+  PUBLIC TypesPrm_, TypesPrm__Types, TypesPrm__Number, TypesPrm__Write&
+       &, TypesPrm__Read
   CHARACTER(len=max_atm), ALLOCATABLE, TARGET, SAVE :: TypesPrm__Types(:)
 CONTAINS
   FUNCTION TypesPrm_() RESULT(out)
@@ -128,6 +130,19 @@ CONTAINS
     errmsg_f='Atom type '//TRIM(label)//' not on parameter list'
     CALL Add_Errors(-1,errmsg_f)
   END FUNCTION TypesPrm__Number
+  SUBROUTINE TypesPrm__Write
+    WRITE(kbinary) SIZE(TypesPrm__Types)
+    WRITE(kbinary) TypesPrm__Types
+  END SUBROUTINE TypesPrm__Write
+  FUNCTION TypesPrm__Read() RESULT(out)
+    CHARACTER(len=max_atm), POINTER :: out(:)
+    INTEGER :: m
+
+    READ(kbinary) m
+    ALLOCATE(TypesPrm__Types(m))
+    READ(kbinary) TypesPrm__Types
+    out=>TypesPrm__Types
+  END FUNCTION TypesPrm__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE TypesPrm

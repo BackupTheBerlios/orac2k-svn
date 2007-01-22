@@ -46,9 +46,10 @@ MODULE Parameters
 !!$---- Modules ---------------------------------------------------------*
 
   USE Tree
-  USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args
+  USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&
+       &, errmsg_f, errmsg_w
   USE Strings, ONLY: MY_Fxm
-  USE Myparse
+  USE Myparse 
   USE STRPAK
   USE Resid
 
@@ -56,9 +57,10 @@ MODULE Parameters
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Parameters__Scan
+  PUBLIC Parameters__Scan, kbinary
   CHARACTER(len=max_char), SAVE :: input
-  CHARACTER(len=max_data) :: errmsg_w,errmsg_f
+  INTEGER, SAVE :: ktpg_read=0,kpar_read=0,kbinary=0
+  CHARACTER(len=max_char), SAVE :: ftpg_read,fpar_read,fbinary='TOPPARAM.bin'
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
@@ -93,17 +95,25 @@ CONTAINS
     END DO
   END SUBROUTINE Parameters__Scan
   SUBROUTINE Binary
-    INTEGER ::nword,io
+    INTEGER ::  io,nword
+
     nword=SIZE(strngs)
-    IF(nword /= 2) THEN
-       errmsg_f=error_args % g (2)//' 2'
+
+    SELECT CASE(nword)
+    CASE(1)
+       CALL CHANNEL(io)
+       kbinary=io
+       OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='UNKNOWN')
+    CASE(2) 
+       CALL CHANNEL(io)
+       kbinary=io
+       fbinary=TRIM(strngs(2))
+       OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='UNKNOWN')
+    CASE DEFAULT
+       errmsg_f=error_args % g (2)//' 0 or 1 '
        CALL Add_Errors(-1,errmsg_f)
        RETURN
-    ELSE
-       CALL CHANNEL(io)
-       kbin=io
-       OPEN(unit=io,file=strngs(2),form='UNFORMATTED',status='UNKNOWN')
-    END IF
+    END SELECT
   END SUBROUTINE Binary
   SUBROUTINE Join(name)
     CHARACTER(len=*) :: name

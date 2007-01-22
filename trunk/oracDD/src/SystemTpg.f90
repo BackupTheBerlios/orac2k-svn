@@ -38,9 +38,10 @@ MODULE SystemTpg
 !!$---- This module is part of the program ORAC ----*
 
 
+  USE Types
   USE IndSequence
   USE SecondarySeq
-  USE Parameters_globals
+  USE Parameters
   USE Errors, ONLY: Add_error=>Add,Print_Errors, errmsg_f
   USE AtomCnt, atm_cnt=> AtomCnts
   USE ResidueTpg
@@ -640,11 +641,43 @@ CONTAINS
   END SUBROUTINE Molecules
   INCLUDE 'SystemTpg__Update.f90'
   SUBROUTINE SystemTpg__Write
-    
-    
+    INTEGER :: n
+    WRITE(kbinary) SHAPE(Tpg % bonds),SHAPE(Tpg % angles), SHAPE(Tpg % dihed)&
+         &,SHAPE(Tpg % imph),SHAPE(Tpg % int14),SHAPE(Tpg % Grp_atm)&
+         &,SHAPE(Tpg % res_atm),SIZE(Tpg %Mol_Atm),Tpg % s_bonds,Tpg % s_angles&
+         &,Tpg % s_dihed,Tpg % s_imph,Tpg % s_int14,Tpg % s_Mol_Atm
+    WRITE(kbinary) Tpg % bonds,Tpg % angles,Tpg % dihed,Tpg % imph&
+         &,Tpg % int14,Tpg % Grp_Atm,Tpg % Res_Atm
+    DO n=1,SIZE(Tpg % Mol_atm) 
+       WRITE(kbinary) SIZE(Tpg % Mol_Atm(n) % g)
+       WRITE(kbinary) Tpg % Mol_Atm(n) % g
+    END DO
   END SUBROUTINE SystemTpg__Write
   SUBROUTINE SystemTpg__Read
+    INTEGER :: n,s,o_Mol_Atm
+    INTEGER, DIMENSION(2) :: o_bonds, o_angles,  o_dihed&
+         &, o_imph, o_int14, o_Grp_atm&
+         &, o_res_atm
     
+
+    READ(kbinary)  o_bonds, o_angles,  o_dihed&
+         &, o_imph, o_int14, o_Grp_atm, o_res_atm,o_Mol_Atm&
+         &,Tpg % s_bonds,Tpg % s_angles&
+         &,Tpg % s_dihed,Tpg % s_imph,Tpg % s_int14,Tpg % s_Mol_Atm
+    ALLOCATE(Tpg % bonds(o_bonds(1),o_bonds(2)))
+    ALLOCATE(Tpg % angles(o_angles(1),o_angles(2)))
+    ALLOCATE(Tpg % dihed(o_dihed(1),o_dihed(2)))
+    ALLOCATE(Tpg % imph(o_imph(1),o_imph(2)))
+    ALLOCATE(Tpg % int14(o_int14(1),o_int14(2)))
+    ALLOCATE(Tpg % Grp_atm(o_Grp_atm(1),o_Grp_atm(2)))
+    ALLOCATE(Tpg % Res_Atm(o_Res_Atm(1),o_Res_Atm(2)))
+    ALLOCATE(Tpg % Mol_Atm(o_Mol_Atm))
+    READ(kbinary) Tpg % bonds,Tpg % angles,Tpg % dihed,Tpg % imph&
+         &,Tpg % int14,Tpg % Grp_Atm,Tpg % Res_Atm
+    DO n=1,SIZE(Tpg % Mol_atm)
+       READ(kbinary) s; ALLOCATE(Tpg % Mol_Atm(n) % g(s))
+       READ(kbinary) Tpg % Mol_Atm(n) % g
+    END DO
   END SUBROUTINE SystemTpg__Read
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*

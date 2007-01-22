@@ -80,6 +80,22 @@ CONTAINS
     Prm % imph=>ImpropersPrm_()
     IF(.NOT. ASSOCIATED(Prm % imph)) CALL Print_errors()
   END SUBROUTINE SystemPrm__Update
+  SUBROUTINE SystemPrm__Write
+    CALL TypesPrm__Write
+    CALL LennardJones__Write
+    CALL BondsPrm__Write
+    CALL AnglesPrm__Write
+    CALL TorsionsPrm__Write
+    CALL ImproperPrm__Write
+  END SUBROUTINE SystemPrm__Write
+  SUBROUTINE SystemPrm__Read
+    Prm % Types=>TypesPrm__Read()
+    Prm % LJ=>LennardJones__Read() 
+    Prm % bonds=> BondsPrm__Read()
+    Prm % angles=>AnglesPrm__Read()
+    Prm % dihed=>TorsionsPrm__Read()
+    Prm % imph=>ImpropersPrm__Read()
+  END SUBROUTINE SystemPrm__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SystemPrm
