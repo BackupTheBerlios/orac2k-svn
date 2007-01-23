@@ -182,7 +182,7 @@ CONTAINS
     INQUIRE(file='GRAMMAR.dat',EXIST=exist)
     IF(.NOT. exist) THEN
        errmsg_f='GRAMMAR.dat file does not exist. No documentation&
-            & will be avaiable'
+            & will be available'
        CALL Add_Errors(1,errmsg_f)
        out=.FALSE.
        RETURN
