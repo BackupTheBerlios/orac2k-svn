@@ -1,7 +1,7 @@
 MODULE AtomBox
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-19 15:32:14 marchi>                           *
+!!$   Time-stamp: <2007-01-23 17:12:57 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -55,8 +55,8 @@ CONTAINS
     INTEGER :: Ic, Jc, Kc
     INTEGER :: n,i_Type,o,p,q,m,l
     REAL(8) :: cube,cube_side,a0,b0,c0,volume0,x,y,z,x_0,y_0,z_0&
-         &,cube_x,cube_y,cube_z,ko(3,3)
-    INTEGER :: i_dvol(1),nCoords,offset
+         &,cube_x,cube_y,cube_z,ko(3,3),vol0,vol
+    INTEGER :: i_dvol(1),nCoords,offset,n_Tot
     REAL(8), ALLOCATABLE :: Dvol(:)
     TYPE(AtomBox__), ALLOCATABLE :: Coords0(:)
     out=.TRUE.
@@ -64,21 +64,24 @@ CONTAINS
 
     IF(Solvent__Param % rho > 0.0D0) THEN
        ALLOCATE(Dvol(SIZE(Solvent__Box)))
+       vol=1.0D0/Solvent__Param % rho
        DO n=1,SIZE(Solvent__Box)
-          cube=(1.0D0/Solvent__Param % rho)*DBLE(Solvent__Box(n) % nt)
-          Cube_Side=cube**(1.0D0/3.0D0)
-          Ic=a/Cube_Side; Jc=b/Cube_Side ; Kc=c/Cube_Side
-          a0=Ic*Cube_Side; b0=Jc*Cube_Side; c0=Kc*Cube_Side
-          volume0=Cell__Volume(a0,b0,c0,alpha,beta,gamma)
-          Dvol(n)=ABS(volume-volume0)
+          cube=(vol)*DBLE(Solvent__Box(n) % nt)
+          N_tot=NINT(volume/cube)
+          Ic=NINT(((a**2/(b*c))*DBLE(N_Tot))**(1.0D0/3.0D0))
+          Jc=NINT(Ic*b/a)
+          Kc=NINT(Ic*c/a)
+          vol0=volume/DBLE((Ic*Jc*Kc)*Solvent__Box(n) % nt)
+          Dvol(n)=ABS(vol-vol0)
        END DO
        i_dvol=MINLOC(Dvol)
        i_Type=i_Dvol(1)
-       cube=(1.0D0/Solvent__Param % rho)*DBLE(Solvent__Box(i_Type) % nt)
-       Cube_Side=cube**(1.0D0/3.0D0)
-       Ic=a/Cube_Side; Jc=b/Cube_Side ; Kc=c/Cube_Side
+       cube=(vol)*DBLE(Solvent__Box(i_Type) % nt)
+       N_tot=NINT(volume/cube)
+       Ic=NINT(((a**2/(b*c))*DBLE(N_Tot))**(1.0D0/3.0D0))
+       Jc=NINT(Ic*b/a)
+       Kc=NINT(Ic*c/a)
        DEALLOCATE(Dvol)
-
     ELSE IF(COUNT(Solvent__Param % replicate /= 0) /= 0) THEN
        DO n=1,SIZE(Solvent__Box)
           IF(TRIM(Solvent__Box(n) % type) == TRIM(Solvent__Param % Cell_Type)) THEN
@@ -86,7 +89,9 @@ CONTAINS
              EXIT
           END IF
        END DO
-       Ic=Solvent__Param % Replicate(1); Jc=Solvent__Param % Replicate(2); Kc=Solvent__Param % Replicate(3)
+       Ic=Solvent__Param % Replicate(1)
+       Jc=Solvent__Param % Replicate(2)
+       Kc=Solvent__Param % Replicate(3)
     ELSE
        errmsg_f='Can''t build Simulation box without solvent density&
             & or replicate parameters '
@@ -102,6 +107,9 @@ CONTAINS
     
 
     ALLOCATE(Coords0 (Solvent__Box(i_Type) % nt*Ic*Jc*Kc*SIZE(Coords)))
+    WRITE(*,'(a,f12.3)') ' Solvent imposed molecular volume ======> '&
+         &,volume/DBLE(Solvent__Box(i_Type) % nt*Ic*Jc*Kc)
+
     m=0
     offset=0
     DO o=1,Ic

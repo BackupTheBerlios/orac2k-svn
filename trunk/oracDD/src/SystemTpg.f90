@@ -42,16 +42,18 @@ MODULE SystemTpg
   USE IndSequence
   USE SecondarySeq
   USE Parameters
-  USE Errors, ONLY: Add_error=>Add,Print_Errors, errmsg_f
+  USE Errors, ONLY: Add_errors=>Add,Print_Errors, errmsg_f
   USE AtomCnt, atm_cnt=> AtomCnts
   USE ResidueTpg
   USE Constants
   USE Node
   USE Tops
+  USE Utilities
 
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SystemTpg_, SystemTpg__Type, Tpg, Atom2Cnt, SystemTpg__Update
+  PUBLIC :: SystemTpg_, SystemTpg__Type, Tpg, Atom2Cnt, SystemTpg__Update&
+       &, SystemTpg__Write, SystemTpg__Read
   INTEGER, PARAMETER :: max_atms=7
   TYPE Atom2Cnt
      TYPE(AtomCnt__Type), POINTER  :: a=>NULL()
@@ -517,7 +519,7 @@ CONTAINS
                         errmsg_f='Improper torsion label contains a ''+'''&
                              &//' whereas we are at the end of the '&
                              &//'secondary sequence.'
-                        CALL Add_error(-1,errmsg_f)
+                        CALL Add_errors(-1,errmsg_f)
                         CALL Print_Errors()
                      END IF
                      DO ic=1,LEN_TRIM(lab0)
@@ -529,7 +531,7 @@ CONTAINS
                         errmsg_f='Improper torsion label contains a ''-'''&
                              &//' whereas we are at the beginning of the '&
                              &//'secondary sequence.'
-                        CALL Add_error(-1,errmsg_f)
+                        CALL Add_errors(-1,errmsg_f)
                         CALL Print_Errors()
                      END IF
                      DO ic=1,LEN_TRIM(lab0)
@@ -579,7 +581,7 @@ CONTAINS
     
     IF(.NOT. ALLOCATED(atm_cnt)) THEN
        errmsg_f=' List of atomic connections not yet defined'
-       CALL Add_error(-1,errmsg_f)
+       CALL Add_errors(-1,errmsg_f)
        CALL Print_Errors()
     END IF
     ALLOCATE(oks(SIZE(atm_cnt)),old__oks(SIZE(atm_cnt)))
@@ -640,45 +642,121 @@ CONTAINS
     END SUBROUTINE Next_Connection
   END SUBROUTINE Molecules
   INCLUDE 'SystemTpg__Update.f90'
+
   SUBROUTINE SystemTpg__Write
-    INTEGER :: n
-    WRITE(kbinary) SHAPE(Tpg % bonds),SHAPE(Tpg % angles), SHAPE(Tpg % dihed)&
-         &,SHAPE(Tpg % imph),SHAPE(Tpg % int14),SHAPE(Tpg % Grp_atm)&
-         &,SHAPE(Tpg % res_atm),SIZE(Tpg %Mol_Atm),Tpg % s_bonds,Tpg % s_angles&
-         &,Tpg % s_dihed,Tpg % s_imph,Tpg % s_int14,Tpg % s_Mol_Atm
-    WRITE(kbinary) Tpg % bonds,Tpg % angles,Tpg % dihed,Tpg % imph&
-         &,Tpg % int14,Tpg % Grp_Atm,Tpg % Res_Atm
-    DO n=1,SIZE(Tpg % Mol_atm) 
-       WRITE(kbinary) SIZE(Tpg % Mol_Atm(n) % g)
-       WRITE(kbinary) Tpg % Mol_Atm(n) % g
-    END DO
-  END SUBROUTINE SystemTpg__Write
-  SUBROUTINE SystemTpg__Read
     INTEGER :: n,s,o_Mol_Atm
     INTEGER, DIMENSION(2) :: o_bonds, o_angles,  o_dihed&
-         &, o_imph, o_int14, o_Grp_atm&
-         &, o_res_atm
-    
+         &, o_imph, o_int14, o_Grp_atm, o_res_atm
 
-    READ(kbinary)  o_bonds, o_angles,  o_dihed&
+    o_bonds=MyShape(Tpg % bonds)
+    o_angles=MyShape(Tpg % angles)
+    o_dihed=MyShape(Tpg % dihed)
+    o_imph=MyShape(Tpg % imph)
+    o_int14=MyShape(Tpg % int14)
+    o_Grp_atm=MyShape(Tpg % Grp_atm)
+    o_res_atm=MyShape(Tpg % res_atm)
+    IF(ALLOCATED(Tpg %Mol_Atm)) THEN
+       o_Mol_Atm=SIZE(Tpg %Mol_Atm)
+    ELSE
+       o_Mol_Atm=0
+    END IF
+
+    WRITE(kbinary) o_bonds, o_angles,  o_dihed, o_imph, o_int14&
+         &,o_Grp_atm, o_res_atm,o_Mol_Atm,Tpg % s_bonds,Tpg % s_angles&
+         &,Tpg % s_dihed,Tpg % s_imph,Tpg % s_int14,Tpg % s_Mol_Atm
+
+    IF(SUM(o_bonds) /= 0) WRITE(kbinary) Tpg % bonds
+    IF(SUM(o_angles) /= 0) WRITE(kbinary) Tpg % angles
+    IF(SUM(o_dihed) /= 0) WRITE(kbinary) Tpg % dihed
+    IF(SUM(o_imph) /= 0) WRITE(kbinary) Tpg % imph
+    IF(SUM(o_int14) /= 0) WRITE(kbinary) Tpg % int14
+    IF(SUM(o_Grp_Atm) /= 0) WRITE(kbinary) Tpg % Grp_Atm
+    IF(SUM(o_Res_Atm) /= 0) WRITE(kbinary) Tpg % Res_Atm
+    IF(o_Mol_Atm /= 0) THEN
+       DO n=1,o_Mol_Atm
+          s=0
+          IF(ALLOCATED(Tpg % Mol_Atm(n) % g)) s=SIZE(Tpg % Mol_Atm(n) % g)
+          WRITE(kbinary) s
+          IF(s /= 0) THEN
+             WRITE(kbinary) Tpg % Mol_Atm(n) % g
+          END IF
+       END DO
+    END IF
+  END SUBROUTINE SystemTpg__Write
+  FUNCTION SystemTpg__Read() RESULT(out)
+    LOGICAL :: out
+    INTEGER :: n,s,o_Mol_Atm
+    INTEGER, DIMENSION(2) :: o_bonds, o_angles,  o_dihed&
+         &, o_imph, o_int14, o_Grp_atm, o_res_atm
+
+    READ(kbinary,ERR=100,END=200)  o_bonds, o_angles,  o_dihed&
          &, o_imph, o_int14, o_Grp_atm, o_res_atm,o_Mol_Atm&
          &,Tpg % s_bonds,Tpg % s_angles&
          &,Tpg % s_dihed,Tpg % s_imph,Tpg % s_int14,Tpg % s_Mol_Atm
-    ALLOCATE(Tpg % bonds(o_bonds(1),o_bonds(2)))
-    ALLOCATE(Tpg % angles(o_angles(1),o_angles(2)))
-    ALLOCATE(Tpg % dihed(o_dihed(1),o_dihed(2)))
-    ALLOCATE(Tpg % imph(o_imph(1),o_imph(2)))
-    ALLOCATE(Tpg % int14(o_int14(1),o_int14(2)))
-    ALLOCATE(Tpg % Grp_atm(o_Grp_atm(1),o_Grp_atm(2)))
-    ALLOCATE(Tpg % Res_Atm(o_Res_Atm(1),o_Res_Atm(2)))
-    ALLOCATE(Tpg % Mol_Atm(o_Mol_Atm))
-    READ(kbinary) Tpg % bonds,Tpg % angles,Tpg % dihed,Tpg % imph&
-         &,Tpg % int14,Tpg % Grp_Atm,Tpg % Res_Atm
-    DO n=1,SIZE(Tpg % Mol_atm)
-       READ(kbinary) s; ALLOCATE(Tpg % Mol_Atm(n) % g(s))
-       READ(kbinary) Tpg % Mol_Atm(n) % g
-    END DO
-  END SUBROUTINE SystemTpg__Read
+    
+    IF(SUM(o_bonds) /= 0) THEN
+       ALLOCATE(Tpg % bonds(o_bonds(1), o_bonds(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % bonds
+    END IF
+
+    IF(SUM(o_angles) /= 0) THEN
+       ALLOCATE(Tpg % angles(o_angles(1), o_angles(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % angles
+    END IF
+
+    IF(SUM(o_dihed) /= 0) THEN
+       ALLOCATE(Tpg % dihed(o_dihed(1), o_dihed(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % dihed
+    END IF
+
+    IF(SUM(o_imph) /= 0) THEN
+       ALLOCATE(Tpg % imph(o_imph(1), o_imph(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % imph
+    END IF
+
+    IF(SUM(o_int14) /= 0) THEN
+       ALLOCATE(Tpg % int14(o_int14(1), o_int14(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % int14
+    END IF
+
+    IF(SUM(o_Grp_Atm) /= 0) THEN
+       ALLOCATE(Tpg % Grp_Atm(o_Grp_Atm(1), o_Grp_Atm(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % Grp_Atm
+    END IF
+
+    IF(SUM(o_Res_Atm) /= 0) THEN
+       ALLOCATE(Tpg % Res_Atm(o_Res_Atm(1), o_Res_Atm(2)))
+       READ(kbinary,ERR=100,END=200) Tpg % Res_Atm
+    END IF
+
+    IF(o_Mol_Atm /= 0) THEN
+       ALLOCATE(Tpg % Mol_Atm(o_Mol_Atm))
+       DO n=1,o_Mol_Atm
+          READ(kbinary,ERR=100,END=200) s 
+          IF(s /=0) THEN
+             ALLOCATE(Tpg % Mol_Atm(n) % g(s))
+             READ(kbinary,ERR=100,END=200) Tpg % Mol_Atm(n) % g
+          END IF
+       END DO
+    END IF
+    IF(ALLOCATED(atm_cnt)) THEN
+       ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
+       DO n=1,SIZE(atm_cnt)
+          Tpg % atm (n) % a => atm_cnt(n)
+       END DO
+    END IF
+    out=.TRUE.
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN
+    
+  END FUNCTION SystemTpg__Read
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

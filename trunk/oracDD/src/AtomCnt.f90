@@ -51,7 +51,8 @@ MODULE AtomCnt
   USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find, AtomCnt__Update
+  PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find, AtomCnt__Update&
+       &, AtomCnt__Write, AtomCnt__Read
 
   TYPE AtomCnt__Type
      CHARACTER(len=max_atm) :: Res,beta, betab
@@ -234,31 +235,56 @@ CONTAINS
     DEALLOCATE(TempAtoms)
   END SUBROUTINE AtomCnt__Update
   SUBROUTINE AtomCnt__Write
-    INTEGER :: n
+    INTEGER :: n,m
     WRITE(kbinary) SIZE(AtomCnts)
     DO n=1,SIZE(AtomCnts)
        WRITE(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
             & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
             & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
             & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
-            & mass, SIZE(AtomCnts(n) % cnt)
-       WRITE(kbinary) AtomCnts(n) % cnt
+            & mass
+       IF(ALLOCATED(AtomCnts(n) % cnt)) THEN
+          m=SIZE(AtomCnts(n) % cnt)
+          WRITE(kbinary) m
+          WRITE(kbinary) AtomCnts(n) % cnt
+       ELSE
+          m=0
+          WRITE(kbinary) m
+       END IF
     END DO
+    WRITE(*,*) 'Writing Binary topology/parameter file for system ====>'
   END SUBROUTINE AtomCnt__Write
-  SUBROUTINE AtomCnt__Read
+  FUNCTION AtomCnt__Read() RESULT(out)
+    LOGICAL :: out
     INTEGER :: n,o,p
-    WRITE(kbinary) o
+
+    WRITE(*,*) 'Read Binary topology/parameter file for system ====>'
+    out=.TRUE.
+    READ(kbinary,ERR=100,END=200) o
+    IF(o == 0) RETURN
     ALLOCATE(AtomCnts(o))
     DO n=1,SIZE(AtomCnts)
-       READ(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
-            & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
+       READ(kbinary,ERR=100,END=200) AtomCnts(n) % Res, AtomCnts(n) % beta&
+            &, AtomCnts(n) % Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
             & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
             & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
-            & mass, p
-       ALLOCATE(AtomCnts(n) % cnt (p))
-       READ(kbinary) AtomCnts(n) % cnt(1:p)
+            & mass
+       READ(kbinary,ERR=100,END=200) p
+       IF(p /= 0) THEN
+          ALLOCATE(AtomCnts(n) % cnt (p))
+          READ(kbinary,ERR=100,END=200) AtomCnts(n) % cnt
+       END IF
     END DO
-  END SUBROUTINE AtomCnt__Read
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN    
+  END FUNCTION AtomCnt__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomCnt

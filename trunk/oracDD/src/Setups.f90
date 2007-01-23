@@ -159,17 +159,19 @@ MODULE Solute
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   USE Strings, ONLY: MY_Fxm
   USE Myparse
+  USE STRPAK, ONLY: SP_Getnum
   IMPLICIT NONE 
   PRIVATE
-  PUBLIC :: Solute_,PDB_Solute, PDB_Template
+  PUBLIC :: Solute_,PDB_Solute, PDB_Template, Solute__Exclusion
   CHARACTER(len=max_char), ALLOCATABLE, SAVE :: PDB_Solute(:), PDB_Template(:)
+  REAL(8), SAVE :: Solute__Exclusion=1.0D0
 CONTAINS
   SUBROUTINE Solute_(name)
     CHARACTER(len=*) :: name
     TYPE(Branch), SAVE :: check
     CHARACTER(len=max_pars) :: line,linea
     CHARACTER(len=max_char) :: lab0
-    INTEGER :: n,nword
+    INTEGER :: n,nword,iflags
 
     CALL Tree__Check_Tree(name,check)
     IF(.NOT. ASSOCIATED(check%children)) RETURN
@@ -208,6 +210,21 @@ CONTAINS
           CALL ReadStore__Delete
        ELSE IF(MY_Fxm('scale',linea)) THEN
           CONTINUE
+       ELSE IF(MY_Fxm('exclu',linea)) THEN
+          IF(nword /= 2) THEN
+             WRITE(lab0,'(i2)') nword
+             errmsg_f=error_args % g (4) //' 1 whereas it was '&
+                  &//TRIM(lab0)//' : '//TRIM(line)
+             CALL Add_Errors(-1,errmsg_f)
+             RETURN
+          END IF
+          CALL SP_Getnum(strngs(2),Solute__exclusion,iflags)
+          IF(iflags /= 0) THEN
+             errmsg_f='Internal reading error: Module Solute'
+             CALL Add_Errors(-1,errmsg_f)
+             RETURN
+          END IF
+          
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)

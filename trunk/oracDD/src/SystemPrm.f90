@@ -50,7 +50,8 @@ MODULE SystemPrm
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SystemPrm_, SystemPrm__Type,SystemPrm__Chain, Prm, SystemPrm__Update
+  PUBLIC :: SystemPrm_, SystemPrm__Type,SystemPrm__Chain, Prm, SystemPrm__Update&
+       &, SystemPrm__Read, SystemPrm__Write
   TYPE :: SystemPrm__Type
      TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),angles(:)=>NULL(),&
           &dihed(:)=>NULL(),imph(:)=>NULL()
@@ -86,15 +87,21 @@ CONTAINS
     CALL BondsPrm__Write
     CALL AnglesPrm__Write
     CALL TorsionsPrm__Write
-    CALL ImproperPrm__Write
+    CALL ImpropersPrm__Write
   END SUBROUTINE SystemPrm__Write
   SUBROUTINE SystemPrm__Read
     Prm % Types=>TypesPrm__Read()
+    IF(.NOT. ASSOCIATED(Prm % Types)) CALL Print_errors()
     Prm % LJ=>LennardJones__Read() 
+    IF(.NOT. ASSOCIATED(Prm % LJ)) CALL Print_errors()
     Prm % bonds=> BondsPrm__Read()
+    IF(.NOT. ASSOCIATED(Prm % bonds)) CALL Print_errors()
     Prm % angles=>AnglesPrm__Read()
+    IF(.NOT. ASSOCIATED(Prm % angles)) CALL Print_errors()
     Prm % dihed=>TorsionsPrm__Read()
+    IF(.NOT. ASSOCIATED(Prm % dihed)) CALL Print_errors()
     Prm % imph=>ImpropersPrm__Read()
+    IF(.NOT. ASSOCIATED(Prm % imph)) CALL Print_errors()
   END SUBROUTINE SystemPrm__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

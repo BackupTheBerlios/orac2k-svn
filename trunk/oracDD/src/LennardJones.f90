@@ -40,6 +40,7 @@ MODULE LennardJones
 
 !!$======================== DECLARATIONS ================================*
 
+  USE Parameters
   USE Units
   USE TypesPrm
   USE Constants
@@ -49,7 +50,8 @@ MODULE LennardJones
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC  LennardJones_, LennardJones__Type, LennardJones__SigmaEps
+  PUBLIC  LennardJones_, LennardJones__Type, LennardJones__SigmaEps&
+       &, LennardJones__Read, LennardJones__Write
   TYPE :: LennardJones__SigmaEps
      INTEGER :: pt 
      REAL(8), DIMENSION(:), ALLOCATABLE :: g     
@@ -236,8 +238,72 @@ CONTAINS
     END FUNCTION Valid
     
   END FUNCTION LennardJones_
+  SUBROUTINE LennardJones__Write
+    INTEGER :: n,o_c12,o_c12_,o_c6,o_c6_,o_SE
+
+    o_c12=0
+    o_c12_=0
+    o_c6=0
+    o_c6_=0
+    o_SE=0
+
+    IF(ALLOCATED(LennardJones__Par % c12)) o_c12=SIZE(LennardJones__Par % c12)
+    IF(ALLOCATED(LennardJones__Par % c12_)) o_c12_=SIZE(LennardJones__Par % c12_)
+    IF(ALLOCATED(LennardJones__Par % c6)) o_c6=SIZE(LennardJones__Par % c6)
+    IF(ALLOCATED(LennardJones__Par % c6_)) o_c6_=SIZE(LennardJones__Par % c6_)
+    IF(ALLOCATED(LennardJones__Par % Par_SE)) o_SE=SIZE(LennardJones__Par % Par_SE)
+    WRITE(kbinary) o_c12,o_c12_,o_c6,o_c6_,o_SE
+    IF(o_c12 /= 0) WRITE(kbinary) LennardJones__Par % c12
+    IF(o_c12_ /= 0) WRITE(kbinary) LennardJones__Par % c12_
+    IF(o_c6 /= 0) WRITE(kbinary) LennardJones__Par % c6
+    IF(o_c6_ /= 0) WRITE(kbinary) LennardJones__Par % c6_
+
+    DO n=1,o_SE
+       IF(ALLOCATED(LennardJones__Par % Par_SE (n) % g)) THEN
+          WRITE(kbinary) SIZE(LennardJones__Par % Par_SE (n) % g)
+          WRITE(kbinary) LennardJones__Par % Par_SE (n) % pt&
+               &, LennardJones__Par % Par_SE (n) % g
+       ELSE
+          WRITE(kbinary) 0
+       END IF
+    END DO
+  END SUBROUTINE LennardJones__Write
+  FUNCTION LennardJones__Read() RESULT(out)
+    TYPE(LennardJones__Type), POINTER :: out
+    INTEGER :: n,m,o_c12,o_c12_,o_c6,o_c6_,o_SE
+
+    out=>NULL()
+
+    READ(kbinary,ERR=100,END=200) o_c12,o_c12_,o_c6,o_c6_,o_SE
+    IF(o_c12 /= 0) ALLOCATE(LennardJones__Par % c12(o_c12))
+    IF(o_c12_ /= 0) ALLOCATE(LennardJones__Par % c12_ (o_c12_))
+    IF(o_c6 /= 0) ALLOCATE(LennardJones__Par % c6 (o_c6))
+    IF(o_c6_ /= 0) ALLOCATE(LennardJones__Par % c6_ (o_c6_))
+
+    IF(o_c12 /= 0) READ(kbinary,ERR=100,END=200) LennardJones__Par % c12
+    IF(o_c12_ /= 0) READ(kbinary,ERR=100,END=200) LennardJones__Par % c12_
+    IF(o_c6 /= 0) READ(kbinary,ERR=100,END=200) LennardJones__Par % c6
+    IF(o_c6_ /= 0) READ(kbinary,ERR=100,END=200) LennardJones__Par % c6_
+
+    IF(o_SE /= 0) ALLOCATE(LennardJones__Par % Par_SE (o_SE))
+    DO n=1,o_SE
+       READ(kbinary,ERR=100,END=200) m
+       IF(m /= 0) THEN
+          ALLOCATE(LennardJones__Par % Par_SE (n) % g(m))
+          READ(kbinary,ERR=100,END=200) LennardJones__Par % Par_SE (n) % pt&
+               &, LennardJones__Par % Par_SE (n) % g
+       END IF
+    END DO
+    out=>LennardJones__Par
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN    
+  END FUNCTION LennardJones__Read
      
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
      
 END MODULE LennardJones
-   

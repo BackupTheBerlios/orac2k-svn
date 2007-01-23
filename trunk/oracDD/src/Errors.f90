@@ -75,15 +75,18 @@ CONTAINS
        current=>dummy
     END DO
     NULLIFY(dummy, root)
+    count_w=0
   END SUBROUTINE Cleanup
 END MODULE ERROR_List
 MODULE Errors
+  USE Node
   USE ERROR_List
   USE TYPES, ONLY: list
   IMPLICIT NONE 
   PRIVATE
   PUBLIC abort_now, abort_later, warning, add, print_errors,&
-       & error_args,error_unr ,error_file,error_other,Setup_Errors,errmsg_f,errmsg_w
+       & error_args,error_unr ,error_file,error_other&
+       &,Setup_Errors,errmsg_f,errmsg_w, Print_warnings
 
   CHARACTER(LEN=45), SAVE :: err_arg_no='.. Arguments to command must be at least '
   TYPE fatal_err
@@ -91,7 +94,7 @@ MODULE Errors
           &(/ '**************************************************************************'&
           &,'*                                                                        *'&
           &,'*-- The following FATAL errors were found:         ----------------------*'/)
-     CHARACTER(74), DIMENSION (:), POINTER :: body
+     CHARACTER(74), DIMENSION (:), ALLOCATABLE :: body
      CHARACTER(74), DIMENSION(1) :: intrabodies = &
           (/ '*                                                                        *'/)
      CHARACTER(74), DIMENSION(2) :: bottom= &
@@ -106,7 +109,7 @@ MODULE Errors
           &,'*-- The following WARNING errors were found:         --------------------*'/)
      CHARACTER(74), DIMENSION(1) :: intrabodies = &
           (/ '*                                                                        *'/)
-     CHARACTER(74), DIMENSION (:), POINTER :: body
+     CHARACTER(74), DIMENSION (:), ALLOCATABLE :: body
      CHARACTER(74), DIMENSION(2) :: bottom= &
           (/ '*                                                                        *' &
           ,'**************************************************************************' /)
@@ -127,32 +130,47 @@ CONTAINS
     CHARACTER(*)  :: msg
 
     TYPE(fatal_err) :: msg2
-    INTEGER :: n,m,i,mn
+    INTEGER :: n,m,i,mn,i_nn,nn,nn_old,nlast
     INTEGER, PARAMETER :: nl=66
+    CHARACTER(len=max_char) :: vector0
+    CHARACTER(len=max_char), POINTER :: vector(:)=>NULL()
 
-    n=LEN_TRIM(msg)
+    n=LEN_TRIM(msg)+1 ! Add a space to stop DO WHILE at the end of the string
 
-    m=INT(CEILING(FLOAT(n)/FLOAT(nl)))
-    ! Make error box
+!!$-- Make the error box
 
-    ALLOCATE(msg2%body(m))
-
-    msg2%body(:)=' '
-    msg2%body(:)(1:1)='*'
-    msg2%body(:)(74:74)='*'
-
-    DO i=1,m-1
-       msg2%body(i)(5:nl+5-1)=msg((i-1)*nl+1:i*nl)
-    END DO
-    mn=nl
-    IF(MOD(n,nl) /= 0) mn=MOD(n,nl)
+    nn=0
+    nlast=0
+    nn_old=0
+    IF(.NOT. Node_()) STOP
     
-    msg2%body(m)(5:nl+5-1)=' '
-    msg2%body(m)(5:5+mn-1)=msg((m-1)*nl+1:n)
-
+    DO WHILE(nn_old+nlast < n)
+       nn_old=nn
+       nlast=MIN(nn_old+nl,n)
+       nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
+       i_nn=nn-1-nn_old
+       vector0=' '
+       vector0(1:1)='*'
+       vector0(74:74)='*'
+       vector0(5:i_nn+5-1)=msg(nn_old+1:nn-1)
+       CALL Node__Push(vector0)
+    END DO
+    
+    m=Node__Size()
+    
+    ALLOCATE(msg2 % body(m))
+    i=0
+    DO WHILE(Node__Pop(vector))
+       i=i+1
+       msg2%body(i)=vector(1)
+    END DO
+    
     WRITE(*,'(2x,a)') msg2%top
     WRITE(*,'(2x,a)') msg2%body(1:m)
     WRITE(*,'(2x,a)') msg2%bottom
+    IF(ASSOCIATED(vector)) DEALLOCATE(vector)
+    IF(ALLOCATED(msg2 % body)) DEALLOCATE(msg2 % body)
+    
     STOP
 
   END SUBROUTINE abort_now
@@ -167,30 +185,42 @@ CONTAINS
     CHARACTER(*), OPTIONAL  :: msg
 
     TYPE(fatal_err) :: msg2
-    INTEGER :: n,m,i,mn
+    INTEGER :: n,m,i,mn,i_nn,nn,nn_old,nlast
     INTEGER, PARAMETER :: nl=66
     INTEGER, SAVE :: counter=0
+    CHARACTER(len=max_char) :: vector0
+    CHARACTER(len=max_char), POINTER :: vector(:)=>NULL()
     
     IF(PRESENT(msg)) THEN
-       n=LEN_TRIM(msg)
+       n=LEN_TRIM(msg)+1 ! Add a space to stop DO WHILE at the end of the string
 
-       m=INT(CEILING(FLOAT(n)/FLOAT(nl)))
-       ! Make error box
-       
-       ALLOCATE(msg2%body(m))
-       
-       msg2%body(:)=' '
-       msg2%body(:)(1:1)='*'
-       msg2%body(:)(74:74)='*'
+!!$-- Make the error box
 
-       DO i=1,m-1
-          msg2%body(i)(5:nl+5-1)=msg((i-1)*nl+1:i*nl)
+       nn=0
+       nlast=0
+       nn_old=0
+       IF(.NOT. Node_()) STOP
+
+       DO WHILE(nn_old+nlast < n)
+          nn_old=nn
+          nlast=MIN(nn_old+nl,n)
+          nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
+          i_nn=nn-1-nn_old
+          vector0=' '
+          vector0(1:1)='*'
+          vector0(74:74)='*'
+          vector0(5:i_nn+5-1)=msg(nn_old+1:nn-1)
+          CALL Node__Push(vector0)
        END DO
-       mn=nl
-       IF(MOD(n,nl) /= 0) mn=MOD(n,nl)
        
-       msg2%body(m)(5:nl+5-1)=' '
-       msg2%body(m)(5:5+mn-1)=msg((m-1)*nl+1:n)
+       m=Node__Size()
+
+       ALLOCATE(msg2 % body(m))
+       i=0
+       DO WHILE(Node__Pop(vector))
+          i=i+1
+          msg2%body(i)=vector(1)
+       END DO
 
        IF(counter == 0) WRITE(*,'(2x,a)') msg2%top
        WRITE(*,'(2x,a)') msg2%intrabodies
@@ -199,8 +229,10 @@ CONTAINS
        WRITE(*,'(2x,a)') msg2%bottom
     END IF
     counter=counter+1
+    IF(ASSOCIATED(vector)) DEALLOCATE(vector)
+    IF(ALLOCATED(msg2 % body)) DEALLOCATE(msg2 % body)
   END SUBROUTINE abort_later
-  SUBROUTINE Warning(msg)
+  SUBROUTINE Warning(msg, reset)
 !!$!*******************************************************************
 !!$!                                                                  *
 !!$!  Warn.                                                           *
@@ -209,45 +241,90 @@ CONTAINS
 !!$!*******************************************************************
     IMPLICIT NONE
     CHARACTER(*), OPTIONAL  :: msg
+    INTEGER, OPTIONAL  :: reset
 
     TYPE(warning_err) :: msg2
-    INTEGER :: n,m,i,mn
+    INTEGER :: n,m,i,mn,i_nn,nn,nn_old,nlast
     INTEGER, PARAMETER :: nl=66
     INTEGER, SAVE :: counter=0
+    CHARACTER(len=max_char) :: vector0
+    CHARACTER(len=max_char), POINTER :: vector(:)=>NULL()
 
+
+    IF(PRESENT(reset)) THEN
+       counter=0    
+       RETURN
+    END IF
     IF(PRESENT(msg)) THEN
-       n=LEN_TRIM(msg)
+       n=LEN_TRIM(msg)+1 ! Add a space to stop DO WHILE at the end of the string
        
-       m=INT(CEILING(FLOAT(n)/FLOAT(nl)))
-
 !!$-- Make the error box
-       
-       ALLOCATE(msg2%body(m))
-       
-       msg2%body(:)=' '
-       msg2%body(:)(1:1)='*'
-       msg2%body(:)(74:74)='*'
-       
-       DO i=1,m-1
-          msg2%body(i)(5:nl+5-1)=msg((i-1)*nl+1:i*nl)
+
+       nn=0
+       nlast=0
+       nn_old=0
+       IF(.NOT. Node_()) STOP
+
+       DO WHILE(nn_old+nlast < n)
+          nn_old=nn
+          nlast=MIN(nn_old+nl,n)
+          nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
+          i_nn=nn-1-nn_old
+          vector0=' '
+          vector0(1:1)='*'
+          vector0(74:74)='*'
+          vector0(5:i_nn+5-1)=msg(nn_old+1:nn-1)
+          CALL Node__Push(vector0)
        END DO
-       mn=nl
-       IF(MOD(n,nl) /= 0) mn=MOD(n,nl)
        
-       msg2%body(m)(5:nl+5-1)=' '
-       msg2%body(m)(5:5+mn-1)=msg((m-1)*nl+1:n)
-       
+       m=Node__Size()
+
+       ALLOCATE(msg2 % body(m))
+       i=0
+       DO WHILE(Node__Pop(vector))
+          i=i+1
+          msg2%body(i)=vector(1)
+       END DO
+
        IF(counter == 0) WRITE(*,'(2x,a)') msg2%top
        WRITE(*,'(2x,a)') msg2%intrabodies
        WRITE(*,'(2x,a)') msg2%body(1:m)
     ELSE
        WRITE(*,'(2x,a)') msg2%bottom
     END IF
+    IF(ASSOCIATED(vector)) DEALLOCATE(vector)
+    IF(ALLOCATED(msg2 % body)) DEALLOCATE(msg2 % body)
     counter=counter+1
   END SUBROUTINE Warning
+  SUBROUTINE Print_Warnings()
+    LOGICAL :: warnings_found
+    CHARACTER(len=max_err_long) :: error
+    CHARACTER(len=10) :: dummy
+    INTEGER :: No,count,No_Warn
+
+    error=' '
+    No_Warn=0
+    warnings_found=.FALSE.
+    current=>root
+    DO WHILE(ASSOCIATED(current % next))
+       No=current % tag
+       count=current % count
+       WRITE(dummy,'(i3,'') --'')') count
+       Error=TRIM(dummy)//' '//current % err_text
+       IF(No > 0) THEN
+          No_Warn=No_Warn+1
+          IF(No_Warn == 1) CALL Warning(' ',0)
+          CALL Warning(Error)
+          warnings_found=.TRUE.
+       END IF
+       current=>current % next
+    END DO
+    IF(warnings_found) THEN
+       CALL Warning(); CALL CleanUp()
+    END IF
+  END SUBROUTINE Print_Warnings
   SUBROUTINE Print_Errors()
-    IMPLICIT none
-    LOGICAL :: stop_run,warnings_found
+    LOGICAL :: stop_run
     CHARACTER(len=max_err_long) :: error
     CHARACTER(len=10) :: dummy
     INTEGER :: No,count
@@ -256,8 +333,6 @@ CONTAINS
     error=' '
     IF(.NOT. ASSOCIATED(root)) RETURN
     stop_run=.FALSE.
-    warnings_found=.FALSE.
-
     current=>root    
     DO WHILE(ASSOCIATED(current % next))
        No=current % tag
@@ -270,24 +345,10 @@ CONTAINS
        END IF
        current=>current % next
     END DO
-    current=>root    
-    DO WHILE(ASSOCIATED(current % next))
-       No=current % tag
-       count=current % count
-       WRITE(dummy,'(i3,'') --'')') count
-       Error=TRIM(dummy)//' '//current % err_text
-       IF(No > 0) THEN
-          CALL Warning(Error)
-          warnings_found=.TRUE.
-       END IF
-       current=>current % next
-    END DO
     IF(stop_run) THEN
        CALL Abort_Later
        STOP
     END IF
-    IF(warnings_found) CALL Warning()
-    counter=0 ; CALL Start()
   END SUBROUTINE Print_Errors
   SUBROUTINE Setup_Errors
     ALLOCATE(error_args % g (4),error_unr % g (4), error_file % g (1)&

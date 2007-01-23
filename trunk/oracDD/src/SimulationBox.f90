@@ -56,7 +56,7 @@ MODULE SimulationBox
   USE AtomBox
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SimulationBox_,nmol_Slv
+  PUBLIC :: SimulationBox_,nunits_Slv
   TYPE(Atombox__), ALLOCATABLE, SAVE, TARGET :: Atoms_InBox(:)
   TYPE(Atombox__), POINTER, SAVE :: Slv_InBox(:)=>NULL(),Slt_InBox(:)=>NULL()
 
@@ -67,7 +67,7 @@ MODULE SimulationBox
   TYPE(AtomBox__), POINTER, SAVE :: Total(:)=>NULL()
   TYPE(AtomBox__), POINTER, SAVE :: Slv(:)=>NULL(),Slt(:)=>NULL()
   REAL(8), PARAMETER :: Cube_length=6.0D0
-  INTEGER, SAVE :: nato_Slv,nato_Slt,nmol_Slv,nmol_SlvI
+  INTEGER, SAVE :: nato_Slv,nato_Slt,nunits_Slv,nunits_SlvI
   REAL(8), SAVE :: rcut
 CONTAINS
   SUBROUTINE SimulationBox_
@@ -150,6 +150,7 @@ CONTAINS
           Atoms_InBox=Slv
           CALL AtomBox__ChgFrame(-1,Atoms_InBox)
           Slv_InBox=>atoms_InBox
+          nunits_Slv=SIZE(Slv)/nato_Slv
           DEALLOCATE(Slv)
        END IF
     END IF
@@ -162,11 +163,11 @@ CONTAINS
       LOGICAL, ALLOCATABLE :: ok_mol(:)
       LOGICAL :: ok
       
-      nmol_Slv=SIZE(Slv)/nato_Slv
-      ALLOCATE(ok_mol(nmol_Slv))
+      nunits_Slv=SIZE(Slv)/nato_Slv
+      ALLOCATE(ok_mol(nunits_Slv))
       ok_mol=.TRUE.
 
-      DO n=1,nmol_Slv
+      DO n=1,nunits_Slv
          ok=.TRUE.
          DO m=1,nato_Slv
             nn=(n-1)*nato_Slv + m
@@ -192,7 +193,7 @@ CONTAINS
                      l=chainp(l)
                      CYCLE
                   END IF
-                  sqcut=((Total(l) % sigma+Slv(nn) % sigma)*0.5D0)**2
+                  sqcut=(Solute__Exclusion*(Total(l) % sigma+Slv(nn) % sigma)*0.5D0)**2
                   x2=x1-Total(l) % x
                   y2=y1-Total(l) % y
                   z2=z1-Total(l) % z
@@ -220,13 +221,13 @@ CONTAINS
          END IF
       END DO
 
-      nmol_SlvI=nmol_Slv
-      nmol_Slv=COUNT(ok_mol)
-      Size_Total=nato_Slt+nmol_Slv*nato_Slv
+      nunits_SlvI=nunits_Slv
+      nunits_Slv=COUNT(ok_mol)
+      Size_Total=nato_Slt+nunits_Slv*nato_Slv
       WRITE(*,'(a)') ' Inserting solute into solvent ====>'
       WRITE(*,'(a,i5,a,i5,a,i5, a)') ' Eliminated '&
-           &,nmol_SlvI-nmol_Slv,' molecules over ', nmol_SlvI&
-           &,' remain ',nmol_Slv,' solvent molecules '
+           &,nunits_SlvI-nunits_Slv,' solvent units over ', nunits_SlvI&
+           &,' remain ',nunits_Slv,' units '
       ALLOCATE(Temp(SIZE(Total)))
       Temp=Total
       
@@ -234,7 +235,7 @@ CONTAINS
       Atoms_InBox(1:nato_Slt)=Temp(1:nato_Slt)
 
       count_a=0
-      DO n=1,nmol_Slv
+      DO n=1,nunits_Slv
          IF(.NOT. ok_mol(n)) CYCLE
          DO m=1,nato_Slv
             count_a=count_a+1

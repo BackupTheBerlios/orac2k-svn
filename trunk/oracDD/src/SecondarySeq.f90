@@ -47,7 +47,8 @@ MODULE SecondarySeq
   USE Node
   IMPLICIT none
   PRIVATE
-  PUBLIC SecondarySeq_, Secondary, SecondarySeq__type, SecondarySeq__AddSlv
+  PUBLIC SecondarySeq_, Secondary, SecondarySeq__type, SecondarySeq__AddSlv&
+       &,SecondarySeq__Read, SecondarySeq__Write
   TYPE :: SecondarySeq__Type
      CHARACTER(len=max_char) :: Type
      CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE :: line
@@ -102,7 +103,7 @@ CONTAINS
        Secondary(ip) % line (c) = TRIM(line)
     END DO
   END SUBROUTINE SecondarySeq_
-  SUBROUTINE Secondaryseq__AddSlv(nunits)
+  SUBROUTINE SecondarySeq__AddSlv(nunits)
     INTEGER :: nunits
     INTEGER :: n,m,begins,ends
 
@@ -120,7 +121,41 @@ CONTAINS
        Secondary(2) % line=Temp % line
     END IF
   END SUBROUTINE Secondaryseq__AddSlv
+  SUBROUTINE SecondarySeq__Write(kbinary)
+    INTEGER :: kbinary
+    INTEGER :: n,s
+    DO n=1,2
+       s=0
+       IF(ALLOCATED(Secondary(n) % line)) s=SIZE(Secondary(n) % line)
+       WRITE(kbinary) s
+       IF(s /= 0) THEN
+          WRITE(kbinary) Secondary(n) % line
+       END IF
+    END DO
+  END SUBROUTINE SecondarySeq__Write
+  FUNCTION SecondarySeq__Read(kbinary) RESULT(out)
+    INTEGER :: kbinary
+    LOGICAL :: out
+    INTEGER :: n,s
 
+    DO n=1,2
+       READ(kbinary, ERR=100, END=200) s
+       IF(s /= 0) THEN
+          ALLOCATE(Secondary(n) % line (s))
+          READ(kbinary, ERR=100, END=200) Secondary(n) % line
+       END IF
+    END DO
+    out=.TRUE.
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN    
+  END FUNCTION SecondarySeq__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SecondarySeq

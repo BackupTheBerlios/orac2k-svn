@@ -37,6 +37,7 @@ PROGRAM OracDD
 
 !!$======================== DECLARATIONS ================================*
 
+  USE Errors,ONLY: Print_Errors, Print_Warnings
   USE Tree, ONLY: Tree__Start
   USE Inputs
   USE Grammars
@@ -47,6 +48,8 @@ PROGRAM OracDD
   USE SystemTpg
   USE SystemPrm
   USE SimulationBox
+  USE Parameters
+  USE SecondarySeq
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -80,22 +83,7 @@ PROGRAM OracDD
 !!$======================================================================
 
   CALL Process_
-
-  CALL Tops_
-
-  CALL AtomCnt_
-
-  CALL SystemTpg_
-
-  CALL SystemPrm_
-  
-  CALL SimulationBox_
-
-  CALL AtomCnt__Update(nmol_Slv)
-
-  CALL SystemTpg__Update(nmol_Slv)
-
-  CALL SystemPrm__Update
+  CALL BuildSystem
 
 !!$
 !!$  CALL Topology__SetupTpg
@@ -107,5 +95,31 @@ PROGRAM OracDD
 !!$  CALL Run_oracS
 
   STOP
+CONTAINS
+  SUBROUTINE BuildSystem
+    IF(Called_Tpg .AND. Called_Prm) THEN
+       CALL Tops_       
+       CALL AtomCnt_       
+       CALL SystemTpg_       
+       CALL SystemPrm_       
+       CALL SimulationBox_
+       CALL AtomCnt__Update(nunits_Slv)       
+       CALL SystemTpg__Update(nunits_Slv)       
+       CALL SystemPrm__Update
+       CALL SecondarySeq__AddSlv(nunits_Slv)
+       IF(Called_Binary) THEN
+          CALL AtomCnt__Write
+          CALL SystemTpg__Write
+          CALL SystemPrm__Write
+          CALL SecondarySeq__Write(kbinary)
+       END IF
+    ELSE
+       IF(.NOT. AtomCnt__Read()) Call Print_Errors()
+       IF(.NOT. SystemTpg__Read()) Call Print_Errors()
+       CALL SystemPrm__Read
+       IF(.NOT. SecondarySeq__Read(kbinary)) Call Print_Errors()
+    END IF
+    CALL Print_Warnings()
+  END SUBROUTINE BuildSystem
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 END PROGRAM OracDD

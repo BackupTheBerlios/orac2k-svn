@@ -43,9 +43,11 @@ MODULE ImpropersPrm
   USE PrmUtilities
   USE Strings
   USE Node
+  USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC :: ImpropersPrm_,ImpropersPrm__Param
+  PUBLIC :: ImpropersPrm_,ImpropersPrm__Param, ImpropersPrm__Write&
+       &, ImpropersPrm__Read
   TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: ImpropersPrm__Param(:)
   TYPE(SystemPrm__Chain2), POINTER, SAVE :: share(:)=>NULL()
 CONTAINS
@@ -81,9 +83,47 @@ CONTAINS
     END IF
     out=>ImpropersPrm__Param
     IF(ALLOCATED(ImpropersPrm__Param)) THEN
-       WRITE(*,*) 'Total improper dihedral Parameters No. =====>',SIZE(ImpropersPrm__Param)
+       WRITE(*,*) 'Total improper dihedral Parameters No. =====>'&
+            &,SIZE(ImpropersPrm__Param)
     END IF
   END FUNCTION ImpropersPrm_
+  SUBROUTINE ImpropersPrm__Write
+    INTEGER :: n,p,m    
+    p=0
+    IF(ALLOCATED(ImpropersPrm__Param)) p=SIZE(ImpropersPrm__Param)
+    WRITE(kbinary) p
+    IF(p == 0) RETURN
+    DO n=1,p
+       m=0
+       IF(ALLOCATED(ImpropersPrm__Param(n) % g)) m=SIZE(ImpropersPrm__Param(n) % g)
+       WRITE(kbinary) m
+       IF(m == 0) CYCLE
+       WRITE(kbinary) ImpropersPrm__Param(n) % pt, ImpropersPrm__Param(n) % g
+    END DO
+  END SUBROUTINE ImpropersPrm__Write
+  FUNCTION ImpropersPrm__Read() RESULT(out)
+    TYPE(SystemPrm__Chain), POINTER :: out(:)
+    INTEGER :: n,p,m
+    out=>NULL()
+    READ(kbinary,ERR=100,END=200) p
+    IF(p == 0) RETURN
+    ALLOCATE(ImpropersPrm__Param(p))
+    DO n=1,p
+       READ(kbinary,ERR=100,END=200) m
+       IF(m == 0) CYCLE
+       ALLOCATE(ImpropersPrm__Param(n) % g (m))
+       READ(kbinary,ERR=100,END=200) ImpropersPrm__Param(n) % pt&
+            &, ImpropersPrm__Param(n) % g
+    END DO
+    out=>ImpropersPrm__Param
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN    
+  END FUNCTION ImpropersPrm__Read
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
@@ -112,9 +152,11 @@ MODULE TorsionsPrm
   USE PrmUtilities
   USE Strings
   USE Node
+  USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC :: TorsionsPrm_,TorsionsPrm__Param
+  PUBLIC :: TorsionsPrm_,TorsionsPrm__Param, TorsionsPrm__Read&
+       &, Torsionsprm__Write
   TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: TorsionsPrm__Param(:)
   TYPE(SystemPrm__Chain2), POINTER, SAVE :: share(:)=>NULL()
 CONTAINS
@@ -160,6 +202,43 @@ CONTAINS
        WRITE(*,*) 'Total Torsion Parameters No. =====>',SIZE(TorsionsPrm__Param)
     END IF
   END FUNCTION TorsionsPrm_
+  SUBROUTINE TorsionsPrm__Write
+    INTEGER :: n,p,m    
+    p=0
+    IF(ALLOCATED(TorsionsPrm__Param)) p=SIZE(TorsionsPrm__Param)
+    WRITE(kbinary) p
+    IF(p == 0) RETURN
+    DO n=1,p
+       m=0
+       IF(ALLOCATED(TorsionsPrm__Param(n) % g)) m=SIZE(TorsionsPrm__Param(n) % g)
+       WRITE(kbinary) m
+       IF(m == 0) CYCLE
+       WRITE(kbinary) TorsionsPrm__Param(n) % pt, TorsionsPrm__Param(n) % g
+    END DO
+  END SUBROUTINE TorsionsPrm__Write
+  FUNCTION TorsionsPrm__Read() RESULT(out)
+    TYPE(SystemPrm__Chain), POINTER :: out(:)
+    INTEGER :: n,p,m
+    out=>NULL()
+    READ(kbinary,ERR=100,END=200) p
+    IF(p == 0) RETURN
+    ALLOCATE(TorsionsPrm__Param(p))
+    DO n=1,p
+       READ(kbinary,ERR=100,END=200) m
+       IF(m == 0) CYCLE
+       ALLOCATE(TorsionsPrm__Param(n) % g (m))
+       READ(kbinary,ERR=100,END=200) TorsionsPrm__Param(n) % pt&
+            &, TorsionsPrm__Param(n) % g
+    END DO
+    out=>TorsionsPrm__Param
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN    
+  END FUNCTION TorsionsPrm__Read
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
@@ -188,9 +267,10 @@ MODULE AnglesPrm
   USE PrmUtilities
   USE Strings
   USE Node
+  USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC :: AnglesPrm_,AnglesPrm__Param
+  PUBLIC :: AnglesPrm_,AnglesPrm__Param,AnglesPrm__Read, AnglesPrm__Write
   TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: AnglesPrm__Param(:)
   TYPE(SystemPrm__Chain2), POINTER, SAVE :: share(:)=>NULL()
 CONTAINS
@@ -236,6 +316,43 @@ CONTAINS
        WRITE(*,*) 'Total Angle Parameters No. =====>',SIZE(AnglesPrm__Param)
     END IF
   END FUNCTION AnglesPrm_
+  SUBROUTINE AnglesPrm__Write
+    INTEGER :: n,p,m    
+    p=0
+    IF(ALLOCATED(AnglesPrm__Param)) p=SIZE(AnglesPrm__Param)
+    WRITE(kbinary) p
+    IF(p == 0) RETURN
+    DO n=1,p
+       m=0
+       IF(ALLOCATED(AnglesPrm__Param(n) % g)) m=SIZE(AnglesPrm__Param(n) % g)
+       WRITE(kbinary) m
+       IF(m == 0) CYCLE
+       WRITE(kbinary) AnglesPrm__Param(n) % pt, AnglesPrm__Param(n) % g
+    END DO
+  END SUBROUTINE AnglesPrm__Write
+  FUNCTION AnglesPrm__Read() RESULT(out)
+    TYPE(SystemPrm__Chain), POINTER :: out(:)
+    INTEGER :: n,p,m
+    out=>NULL()
+    READ(kbinary,ERR=100,END=200) p
+    IF(p == 0) RETURN
+    ALLOCATE(AnglesPrm__Param(p))
+    DO n=1,p
+       READ(kbinary,ERR=100,END=200) m
+       IF(m == 0) CYCLE
+       ALLOCATE(AnglesPrm__Param(n) % g (m))
+       READ(kbinary,ERR=100,END=200) AnglesPrm__Param(n) % pt&
+            &, AnglesPrm__Param(n) % g
+    END DO
+    out=>AnglesPrm__Param
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN    
+  END FUNCTION AnglesPrm__Read
   
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
@@ -264,9 +381,10 @@ MODULE BondsPrm
   USE PrmUtilities
   USE Strings
   USE Node
+  USE Parameters
   IMPLICIT none
   PRIVATE
-  PUBLIC :: BondsPrm_,BondsPrm__Param
+  PUBLIC :: BondsPrm_,BondsPrm__Param, BondsPrm__Read, BondsPrm__Write
   TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: BondsPrm__Param(:)
   TYPE(SystemPrm__Chain2), POINTER, SAVE :: share(:)=>NULL()
 CONTAINS
@@ -304,6 +422,44 @@ CONTAINS
        WRITE(*,*) 'Total Stretching Parameters No. =====>',SIZE(BondsPrm__Param)
     END IF
   END FUNCTION BondsPrm_
+  SUBROUTINE BondsPrm__Write
+    INTEGER :: n,p,m    
+    p=0
+    IF(ALLOCATED(BondsPrm__Param)) p=SIZE(BondsPrm__Param)
+    WRITE(kbinary) p
+    IF(p == 0) RETURN
+    DO n=1,p
+       m=0
+       IF(ALLOCATED(BondsPrm__Param(n) % g)) m=SIZE(BondsPrm__Param(n) % g)
+       WRITE(kbinary) m
+       IF(m == 0) CYCLE
+       WRITE(kbinary) BondsPrm__Param(n) % pt, BondsPrm__Param(n) % g
+    END DO
+  END SUBROUTINE BondsPrm__Write
+  FUNCTION BondsPrm__Read() RESULT(out)
+    TYPE(SystemPrm__Chain), POINTER :: out(:)
+    INTEGER :: n,p,m
+    out=>NULL()
+    READ(kbinary,ERR=100,END=200) p
+    IF(p == 0) RETURN
+    ALLOCATE(BondsPrm__Param(p))
+    DO n=1,p
+       READ(kbinary,ERR=100,END=200) m
+       IF(m == 0) CYCLE
+       ALLOCATE(BondsPrm__Param(n) % g (m))
+       READ(kbinary,ERR=100,END=200) BondsPrm__Param(n) % pt&
+            &, BondsPrm__Param(n) % g
+    END DO
+    out=>BondsPrm__Param
+    RETURN
+100 errmsg_f='Error while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN
+200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    RETURN    
+  END FUNCTION BondsPrm__Read
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE BondsPrm
