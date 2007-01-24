@@ -52,19 +52,19 @@ MODULE Banner
        &'=                                                                              =',&
        &'=                                                                              =',&
        &'=                                            oooooooooo.   oooooooooo.         =',&
-       &'=                                            `888'   `Y8b  `888'   `Y8b        =',&
+       &'=                                            `888''   `Y8b  `888''   `Y8b        =',&
        &'=      .ooooo.  oooo d8b  .oooo.    .ooooo.   888      888  888      888       =',&
-       &'=     d88' `88b `888""8P `P  )88b  d88' `"Y8  888      888  888      888       =',&
+       &'=     d88'' `88b `888""8P `P  )88b  d88'' `"Y8  888      888  888      888       =',&
        &'=     888   888  888      .oP"888  888        888      888  888      888       =',&
-       &'=     888   888  888     d8(  888  888   .o8  888     d88'  888     d88'       =',&
-       &'=     `Y8bod8P' d888b    `Y888""8o `Y8bod8P' o888bood8P'   o888bood8P'         =',&
+       &'=     888   888  888     d8(  888  888   .o8  888     d88''  888     d88''       =',&
+       &'=     `Y8bod8P'' d888b    `Y888""8o `Y8bod8P'' o888bood8P''   o888bood8P''         =',&
        &'=                                                                              =',&
        &'=                              (Version 0.1)                                   =',&
        &'=                                                                              =',&
-       &'=     Copyright  © 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>         =',&
+       &'=     Copyright (C) 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>        =',&
        &'=                                                                              =',&
-       &'=                   Commissariat a l'Energie Atomique                          =',&
-       &'=                       Centre d'Etudes de Saclay                              =',&
+       &'=                   Commissariat a l''Energie Atomique                          =',&
+       &'=                       Centre d''Etudes de Saclay                              =',&
        &'=                         Gif-sur-Yvette, FRANCE                               =',&
        &'=                                                                              =',&
        &'=     "A parallel computer program to simulate and model complex               =',&

@@ -63,6 +63,7 @@ PROGRAM OracDD
   USE SecondarySeq
   USE IndSequence
   USE Groups
+  USE Banner
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -72,6 +73,7 @@ PROGRAM OracDD
   REAL(8) :: Time_Begin,Time_End
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+!!$  CALL Banner_
   CALL Units_
 
 !!$======================================================================
@@ -100,6 +102,7 @@ PROGRAM OracDD
   CALL BuildSystem
 
   IF(.NOT. Groups_()) STOP
+
 !!$
 !!$  CALL Topology__SetupTpg
 !!$

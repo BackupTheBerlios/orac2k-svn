@@ -53,7 +53,8 @@ MODULE Groups
   PRIVATE
   PUBLIC Groups_, Groups__Chain, Groups__Pot, Grp_A,Grp_L
   TYPE :: Groups__Base
-     REAL(8) :: x,y,z      ! Coordinates
+     REAL(8) :: x,y,z      ! Coordinates orthogonal frame
+     REAL(8) :: xa,ya,za   ! Coordinates reduced frame
      INTEGER ::  AtSt,AtEn ! Atom Start, Atom End
      INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv
   END TYPE Groups__Base
