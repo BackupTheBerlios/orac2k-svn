@@ -113,7 +113,8 @@ CONTAINS
     END DO
     CALL Validate
     CONTAINS
-      SUBROUTINE Validate        
+      SUBROUTINE Validate
+        LOGICAL :: ex
         IF(Called_Tpg .NEQV. Called_Prm) THEN
            errmsg_f='Both Topology and Parameter files are needed. &
                 &It seems that one is read but the other is not'
@@ -123,12 +124,23 @@ CONTAINS
               errmsg_f='System topology and parameters are not avalaible&
                    & for this run: Need a binary Topology and Parameter file'
               CALL Add_Errors(-1,errmsg_f)
+           ELSE
+              INQUIRE(file=fbinary, exist=ex)
+              IF(.NOT. ex) THEN
+                 errmsg_f='Binary topology/parameter file is needed for the run,&
+                      & but file '//TRIM(fbinary)//' does not exist.'
+                 CALL Add_Errors(-1,errmsg_f)
+              ELSE
+                 OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='OLD', action='READ')
+              END IF
            END IF
         ELSE IF(Called_Tpg .AND. Called_Prm) THEN
            IF(.NOT. Called_Binary) THEN
               errmsg_w='You are not saving the system topology and parameters&
                    & on a binary file. Do you really want this?'
               CALL Add_Errors(1,errmsg_w)
+           ELSE
+              OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',action='WRITE')
            END IF
            IF(.NOT. Called_join) THEN
               errmsg_f='The command ''JOIN'' has not been used: &
@@ -148,12 +160,10 @@ CONTAINS
     CASE(1)
        CALL CHANNEL(io)
        kbinary=io
-       OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='UNKNOWN')
     CASE(2) 
        CALL CHANNEL(io)
        kbinary=io
        fbinary=TRIM(strngs(2))
-       OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='UNKNOWN')
     CASE DEFAULT
        errmsg_f=error_args % g (2)//' 0 or 1 '
        CALL Add_Errors(-1,errmsg_f)

@@ -52,6 +52,7 @@ MODULE IndSequence
 !!$======================== DECLARATIONS ================================*
 
   USE Parameters_Globals
+  USE Parameters
   USE Errors, ONLY: Add_Errors=>Add, errmsg_f, Print_errors
   USE Constants
   USE SecondarySeq
@@ -61,7 +62,8 @@ MODULE IndSequence
   IMPLICIT none
   PRIVATE
   PUBLIC IndSequence_, IndSequence__type, IndSequence__Grp, IndSequence__Res&
-       &, IndSequence__Pickres, Indsequence__SltSlv_Res, Indsequence__SltSlv_Grp
+       &, IndSequence__Pickres, Indsequence__SltSlv_Res, Indsequence__SltSlv_Grp&
+       &, IndSequence__Update, IndSequence__Read, IndSequence__Write
   TYPE IndSequence__Type
      INTEGER, DIMENSION(:), ALLOCATABLE :: i
   END TYPE IndSequence__Type
@@ -69,8 +71,6 @@ MODULE IndSequence
   INTEGER, ALLOCATABLE, SAVE, TARGET :: Res_Atm(:,:)
   INTEGER, ALLOCATABLE, SAVE, TARGET :: Grp_Atm(:,:)  
   INTEGER, SAVE, TARGET :: SltSlv_Res(2,2),SltSlv_Grp(2,2)
-
-  LOGICAL, ALLOCATABLE, TARGET, SAVE :: ok_Residue(:)
 CONTAINS
   FUNCTION IndSequence_() RESULT(out)
     TYPE(IndSequence__Type), DIMENSION(:), POINTER :: out
@@ -144,6 +144,26 @@ CONTAINS
        END DO
     END DO
   END FUNCTION IndSequence_
+
+  SUBROUTINE  IndSequence__Destroy() 
+
+    INTEGER :: n
+    IF(ALLOCATED(Res_Atm)) DEALLOCATE(Res_Atm)
+    IF(ALLOCATED(Grp_Atm)) DEALLOCATE(Grp_Atm)
+    SltSlv_Res=0
+    SltSlv_Grp=0
+    DO n=1,SIZE(Indexa)
+       IF(ALLOCATED(Indexa(n) % i)) DEALLOCATE(Indexa(n) % i)
+    END DO
+  END SUBROUTINE IndSequence__Destroy
+  SUBROUTINE IndSequence__Update
+    LOGICAL :: out
+    TYPE(IndSequence__Type), DIMENSION(:), POINTER :: inds=>NULL()
+    
+    CALL IndSequence__Destroy
+    inds=>IndSequence_()
+    inds=>NULL()
+  END SUBROUTINE IndSequence__Update
   FUNCTION IndSequence__Assign() RESULT(out)
     TYPE(IndSequence__Type), DIMENSION(:), POINTER :: out
     out=>NULL()
@@ -187,6 +207,64 @@ CONTAINS
     END DO
     out=i_found
   END FUNCTION IndSequence__PickRes
+  SUBROUTINE IndSequence__Write
+    INTEGER :: n,m
+
+    WRITE(kbinary) SltSlv_Res,SltSlv_Grp
+    DO n=1,SIZE(Indexa)
+       m=0
+       IF(ALLOCATED(Indexa(n) % i)) m=SIZE(Indexa(n) % i )
+       WRITE(kbinary) m
+       IF(m /= 0) THEN
+          WRITE(kbinary) Indexa(n) % i
+       END IF
+    END DO
+    n=0
+    IF(ALLOCATED(Res_Atm)) n=SIZE(Res_Atm,2)
+    WRITE(kbinary) n
+    IF(n /= 0) WRITE(kbinary) Res_Atm
+
+    n=0
+    IF(ALLOCATED(Grp_Atm)) n=SIZE(Grp_Atm,2)
+    WRITE(kbinary) n
+    IF(n /= 0) WRITE(kbinary) Grp_Atm
+  END SUBROUTINE IndSequence__Write
+
+  FUNCTION IndSequence__Read() RESULT(out)
+    LOGICAL :: out
+    INTEGER :: n,m
+
+    out=.TRUE.
+    READ(kbinary,ERR=100,END=200) SltSlv_Res,SltSlv_Grp
+    DO n=1,SIZE(Indexa)
+       READ(kbinary,ERR=100,END=200) m
+       IF(m == 0) CYCLE
+       ALLOCATE(Indexa(n) % i (m))
+       READ(kbinary,ERR=100,END=200) Indexa(n) % i
+    END DO
+    READ(kbinary,ERR=100,END=200) n
+    IF(n /= 0) THEN
+       ALLOCATE(Res_Atm(2,n))
+       READ(kbinary,ERR=100,END=200) Res_Atm
+    END IF
+
+    READ(kbinary,ERR=100,END=200) n
+    IF(n /= 0) THEN
+       ALLOCATE(Grp_Atm(2,n))
+       READ(kbinary,ERR=100,END=200) Grp_Atm
+    END IF
+    RETURN
+100 errmsg_f='Error while reading IndSequence Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN
+200 errmsg_f='End of file found while reading IndSequence Parameters'
+    CALL Add_Errors(-1,errmsg_f)
+    out=.FALSE.
+    RETURN    
+  END FUNCTION IndSequence__Read
+
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE IndSequence

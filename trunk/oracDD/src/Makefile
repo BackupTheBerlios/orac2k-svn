@@ -34,7 +34,11 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.14  2007/01/24 16:51:53  mmarchi
+# *** empty log message ***
+#
 # Revision 1.13  2007/01/23 18:07:40  mmarchi
+#
 # Added License statement in the header of each module or routine
 #
 # Revision 1.12  2007/01/23 16:43:47  mmarchi
@@ -155,7 +159,8 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	Numerics.o Units.o PDB.o Setups.o Process.o Hash_Tops.o Tops.o SecondarySeq.o\
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
-	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o Utilities.o oracDD.o 
+	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o Utilities.o Groups.o \
+	Banner.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
 

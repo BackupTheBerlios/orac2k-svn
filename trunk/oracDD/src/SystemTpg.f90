@@ -758,11 +758,11 @@ CONTAINS
     END IF
     out=.TRUE.
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading SystemTpg Parameters'
     CALL Add_Errors(-1,errmsg_f)
     out=.FALSE.
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading SystemTpg Parameters'
     CALL Add_Errors(-1,errmsg_f)
     out=.FALSE.
     RETURN

@@ -61,7 +61,7 @@ MODULE SystemPrm
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SystemPrm_, SystemPrm__Type,SystemPrm__Chain, Prm, SystemPrm__Update&
+  PUBLIC :: SystemPrm_, SystemPrm__Type, Prm, SystemPrm__Update&
        &, SystemPrm__Read, SystemPrm__Write
   TYPE :: SystemPrm__Type
      TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),angles(:)=>NULL(),&

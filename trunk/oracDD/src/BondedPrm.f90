@@ -128,10 +128,10 @@ CONTAINS
     END DO
     out=>ImpropersPrm__Param
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading Improper Torsion Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading Improper Torsion Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN    
   END FUNCTION ImpropersPrm__Read
@@ -243,10 +243,10 @@ CONTAINS
     END DO
     out=>TorsionsPrm__Param
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading Torsional Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading Torsional Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN    
   END FUNCTION TorsionsPrm__Read
@@ -357,10 +357,10 @@ CONTAINS
     END DO
     out=>AnglesPrm__Param
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading Angle Bending Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading Angle Bending Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN    
   END FUNCTION AnglesPrm__Read
@@ -463,10 +463,10 @@ CONTAINS
     END DO
     out=>BondsPrm__Param
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading Stretching Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading Stretching Parameters'
     CALL Add_Errors(-1,errmsg_f)
     RETURN    
   END FUNCTION BondsPrm__Read

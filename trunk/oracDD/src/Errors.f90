@@ -152,21 +152,19 @@ CONTAINS
 
     nn=0
     nlast=0
-    nn_old=0
     IF(.NOT. Node_()) STOP
-    
-    DO WHILE(nn_old+nlast < n)
-       nn_old=nn
-       nlast=MIN(nn_old+nl,n)
+    DO WHILE(nlast /= n)
+       nn_old=nn          
+       nlast=MIN(nn+nl,n)
        nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
-       i_nn=nn-1-nn_old
+       i_nn=nn-nn_old-1
        vector0=' '
        vector0(1:1)='*'
        vector0(74:74)='*'
        vector0(5:i_nn+5-1)=msg(nn_old+1:nn-1)
        CALL Node__Push(vector0)
     END DO
-    
+        
     m=Node__Size()
     
     ALLOCATE(msg2 % body(m))
@@ -209,14 +207,12 @@ CONTAINS
 
        nn=0
        nlast=0
-       nn_old=0
        IF(.NOT. Node_()) STOP
-
-       DO WHILE(nn_old+nlast < n)
-          nn_old=nn
-          nlast=MIN(nn_old+nl,n)
+       DO WHILE(nlast /= n)
+          nn_old=nn          
+          nlast=MIN(nn+nl,n)
           nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
-          i_nn=nn-1-nn_old
+          i_nn=nn-nn_old-1
           vector0=' '
           vector0(1:1)='*'
           vector0(74:74)='*'
@@ -225,7 +221,6 @@ CONTAINS
        END DO
        
        m=Node__Size()
-
        ALLOCATE(msg2 % body(m))
        i=0
        DO WHILE(Node__Pop(vector))
@@ -271,16 +266,15 @@ CONTAINS
        
 !!$-- Make the error box
 
+
        nn=0
        nlast=0
-       nn_old=0
        IF(.NOT. Node_()) STOP
-
-       DO WHILE(nn_old+nlast < n)
-          nn_old=nn
-          nlast=MIN(nn_old+nl,n)
+       DO WHILE(nlast /= n)
+          nn_old=nn          
+          nlast=MIN(nn+nl,n)
           nn=SCAN(msg(1:nlast),' ',BACK=.TRUE.)
-          i_nn=nn-1-nn_old
+          i_nn=nn-nn_old-1
           vector0=' '
           vector0(1:1)='*'
           vector0(74:74)='*'
@@ -289,7 +283,6 @@ CONTAINS
        END DO
        
        m=Node__Size()
-
        ALLOCATE(msg2 % body(m))
        i=0
        DO WHILE(Node__Pop(vector))

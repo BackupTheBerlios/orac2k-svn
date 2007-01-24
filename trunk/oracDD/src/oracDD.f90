@@ -61,6 +61,8 @@ PROGRAM OracDD
   USE SimulationBox
   USE Parameters
   USE SecondarySeq
+  USE IndSequence
+  USE Groups
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -97,6 +99,7 @@ PROGRAM OracDD
 
   CALL BuildSystem
 
+  IF(.NOT. Groups_()) STOP
 !!$
 !!$  CALL Topology__SetupTpg
 !!$
@@ -119,17 +122,20 @@ CONTAINS
        CALL SystemTpg__Update(nunits_Slv)       
        CALL SystemPrm__Update
        CALL SecondarySeq__AddSlv(nunits_Slv)
+       CALL IndSequence__Update
        IF(Called_Binary) THEN
           CALL AtomCnt__Write
           CALL SystemTpg__Write
           CALL SystemPrm__Write
           CALL SecondarySeq__Write(kbinary)
+          CALL IndSequence__Write
        END IF
     ELSE
        IF(.NOT. AtomCnt__Read()) Call Print_Errors()
        IF(.NOT. SystemTpg__Read()) Call Print_Errors()
        CALL SystemPrm__Read
        IF(.NOT. SecondarySeq__Read(kbinary)) Call Print_Errors()
+       IF(.NOT. IndSequence__Read()) Call Print_Errors()
     END IF
     CALL Print_Warnings()
   END SUBROUTINE BuildSystem

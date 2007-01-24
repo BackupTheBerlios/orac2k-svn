@@ -287,11 +287,11 @@ CONTAINS
        END IF
     END DO
     RETURN
-100 errmsg_f='Error while reading Lennard-Jones Parameters'
+100 errmsg_f='Error while reading AtomCnt Parameters'
     CALL Add_Errors(-1,errmsg_f)
     out=.FALSE.
     RETURN
-200 errmsg_f='End of file found while reading Lennard-Jones Parameters'
+200 errmsg_f='End of file found while reading AtomCnt Parameters'
     CALL Add_Errors(-1,errmsg_f)
     out=.FALSE.
     RETURN    
