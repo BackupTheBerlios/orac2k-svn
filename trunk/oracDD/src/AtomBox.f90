@@ -57,13 +57,13 @@ MODULE AtomBox
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame, AtomBox__Center
+  PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame&
+       &, AtomBox__Center, AtomBox__AtomPDB
   TYPE :: AtomBox__
      INTEGER :: Serial
      REAL(8) :: sigma
      REAL(8) :: x,y,z
   END TYPE AtomBox__
-  TYPE(Atombox__), ALLOCATABLE, SAVE :: Atoms(:)
   INTEGER, SAVE :: nSlv=0
 CONTAINS
   SUBROUTINE AtomBox_(PDB__Coords, Coords)
@@ -212,6 +212,17 @@ CONTAINS
     Coords(:) % y = Coords(:) % y - ycm
     Coords(:) % z = Coords(:) % z - zcm
   END SUBROUTINE AtomBox__Center
+  
+  SUBROUTINE AtomBox__AtomPDB(Coords, PDB__Coords)
+    TYPE(AtomBox__) :: Coords(:)
+    TYPE(AtomPdb), POINTER :: PDB__Coords(:)
+    INTEGER :: n,m
+    ALLOCATE(PDB__Coords(SIZE(Coords)))
+    PDB__Coords(:) % x = Coords(:) % x
+    PDB__Coords(:) % y = Coords(:) % y
+    PDB__Coords(:) % z = Coords(:) % z
+    PDB__Coords(:) % Serial = Coords(:) % Serial
+  END SUBROUTINE AtomBox__AtomPDB
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE AtomBox

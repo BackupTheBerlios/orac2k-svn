@@ -30,112 +30,109 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE PDB
-
+MODULE Atom
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-13 01:09:49 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Wed Dec 20 2006 -                                     *
+!!$              - Thu Jan 25 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
-!!$---- This subroutine is part of the program ORAC ----*
-!!$======================== DECLARATIONS ================================*
 
-  USE IndSequence
+!!$---- This module is part of the program oracDD ----*
+
+  USE Constants
+  USE Errors, ONLY: Add_Errors=>Add, errmsg_f
   USE SystemTpg
-  USE Constants, ONLY: max_pars,max_data,max_char, Used
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_w, errmsg_f
-  USE Strings, ONLY: My_Fam, MyRead, MyPutNum
-  USE Node
-  USE MyParse
-  USE STRPAK
   USE Cell
+  USE AtomCnt
+  USE AtomBox
+  USE SimulationBox
+  USE PDB
   IMPLICIT none
   PRIVATE
-  PUBLIC PDB_, AtomPdb, PDB__Write
-  TYPE :: AtomPDB
-     INTEGER :: Serial
-     REAL(8) :: x,y,z
-     CHARACTER(len=4) :: AtmName
-  END TYPE AtomPDB
-  TYPE ResiduePDB
-     INTEGER :: No
-     CHARACTER(len=3) :: ResName
-     TYPE(AtomPdb), DIMENSION(:), ALLOCATABLE :: atm
-  END TYPE ResiduePDB
-  INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
-  INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
-  TYPE :: Name_Exception
-     SEQUENCE
-     CHARACTER(len=max_char), ALLOCATABLE :: res(:)
-     CHARACTER(len=max_char), ALLOCATABLE :: lab(:)
-  END TYPE Name_Exception
-  TYPE(Name_Exception), SAVE :: ex(4)
-  TYPE(ResiduePDB), ALLOCATABLE :: ResPdb(:)
-  INTEGER, SAVE, POINTER :: SltSlv(:,:)=>NULL()
-  INTEGER, SAVE :: Res_Begins,Res_Ends
+  PUBLIC Atom_, Atom__PDB, Atom__InitCoords
+  TYPE :: Atom__
+     CHARACTER(len=max_atm) :: Res, beta, betab
+     INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv, Mol
+     REAL(8) :: x,y,z      ! Coordinates orthogonal frame
+     REAL(8) :: xa,ya,za   ! Coordinates reduced frame
+     REAL(8) :: vx,vy,vz      ! Velocities orthogonal frame
+     REAL(8) :: vxa,vya,vza   ! Velocities reduced frame
+     REAL(8) :: chg, mass
+  END TYPE Atom__
+  TYPE(Atom__), ALLOCATABLE, SAVE :: Atoms(:)
 CONTAINS
-  FUNCTION PDB_(Type, PDB_String, PDB__Coords) RESULT(out)
+  FUNCTION Atom_() RESULT(out)
     LOGICAL :: out
-    CHARACTER(len=*) :: Type
-    INTEGER :: Res_Begins, Res_End
-    CHARACTER(len=max_char)  :: PDB_string(:)
-    TYPE(AtomPDB), POINTER :: PDB__Coords(:)
+    INTEGER :: n,m,s,nato
 
     out=.TRUE.
-    CALL PDB__Init(Type, PDB__Coords)
-    IF(.NOT. PDB__Read(Type, PDB_String)) THEN
-       out=.FALSE.
-       RETURN
-    ELSE IF(.NOT. PDB__Validate(Type, PDB__Coords)) THEN
+    IF(.NOT. ALLOCATED(AtomCnts)) THEN
+       errmsg_f='The No. of Atoms of the system is unknown'
+       CALL Add_Errors(-1,errmsg_f)
        out=.FALSE.
        RETURN
     END IF
-  END FUNCTION PDB_
-  SUBROUTINE PDB__Init(Type, PDB__Coords)
-    CHARACTER(len=*) :: Type
-    TYPE(AtomPDB), POINTER :: PDB__Coords(:)
-    INTEGER :: nato
-!!$
-!!$--- Get the beginning and the end of each residue atom
-!!$    
-    Res_Atm=>IndSequence__Res()
+    nato=SIZE(AtomCnts)
+    ALLOCATE(Atoms(nato))
+    DO n=1,nato
+       Atoms(n) % Grp_No = AtomCnts(n) % Grp_No
+       Atoms(n) % Res_No = AtomCnts(n) % Res_No
+       Atoms(n) % Id_Type = AtomCnts(n) % Id_Type
+       Atoms(n) % Id_Slv = AtomCnts(n) % Id_Slv
+       Atoms(n) % Id_Res = AtomCnts(n) % Id_Res
+       Atoms(n) % chg = AtomCnts(n) % chg
+       Atoms(n) % mass = AtomCnts(n) % mass
+       Atoms(n) % Res = AtomCnts(n) % Res
+       Atoms(n) % beta = AtomCnts(n) % Beta
+       Atoms(n) % betab = AtomCnts(n) % Betab
+    END DO
+    DO n=1,SIZE(Tpg % Mol_Atm)
+       DO m=1,SIZE(Tpg % Mol_Atm(n) % g)
+          s=Tpg % Mol_Atm(n) % g (m)
+          Atoms(s) % Mol = n
+       END DO
+    END DO    
+  END FUNCTION Atom_
+  FUNCTION Atom__InitCoords() RESULT(out)
+    LOGICAL :: out
+    INTEGER :: n
 
-!!$
-!!$--- Get the beginning and the end of residue for each PDB Type
-!!$    
-    SltSlv=>IndSequence__sltslv_Res()
-    IF(TRIM(Type) == 'Solute' .OR. TRIM(Type) == 'Template') THEN
-       Res_Begins=SltSlv(1,1)
-       Res_Ends=SltSlv(2,1)
-    ELSE IF(TRIM(Type) == 'Solvent') THEN
-       Res_Begins=SltSlv(1,2)
-       Res_Ends=SltSlv(2,2)
-    ELSE IF(TRIM(Type) == 'System') THEN
-       Res_Begins=1
-       Res_Ends=SIZE(Res_Atm,2)
+    out=.TRUE.
+    IF(.NOT. ALLOCATED(Atoms_InBox)) THEN
+       errmsg_f='Cannot initialize atomic coordinates: Initial&
+            & coordinates were expected, but none were either &
+            &built or read in by SimulationBox Module.'
+       CALL Add_Errors(-1,errmsg_f)
+       out=.FALSE.
+       RETURN
     END IF
+    
+    Atoms(:) % xa = Atoms_InBox(:) % x 
+    Atoms(:) % ya = Atoms_InBox(:) % y 
+    Atoms(:) % za = Atoms_InBox(:) % z 
+    Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
+    Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
+    Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
 
-    nato=Res_Atm(2,Res_Ends)-Res_Atm(1,Res_Begins)+1
-    IF(ASSOCIATED(PDB__Coords)) DEALLOCATE(PDB__Coords)
-    ALLOCATE(PDB__Coords(nato))
-    PDB__Coords(:) % x = 1.0D10
-    PDB__Coords(:) % y = 1.0D10
-    PDB__Coords(:) % z = 1.0D10
-    PDB__Coords(:) % AtmName = 'h'    
-    PDB__Coords(:) % Serial = 0
+  END FUNCTION Atom__InitCoords
+  SUBROUTINE Atom__PDB(unit)
+    INTEGER :: unit
+    TYPE(AtomPdb), ALLOCATABLE :: PDB__Coords(:)
+    INTEGER :: n
 
-  END SUBROUTINE PDB__Init
-
-  INCLUDE 'PDB__Read.f90'
-  INCLUDE 'PDB__Write.f90'
-  INCLUDE 'PDB__Validate.f90'
-  
-END MODULE PDB
+    ALLOCATE(PDB__Coords(SIZE(Atoms)))
+    DO n=1,SIZE(Atoms)
+       PDB__Coords(n) % x = Atoms(n) % x
+       PDB__Coords(n) % y = Atoms(n) % y
+       PDB__Coords(n) % z = Atoms(n) % z
+       PDB__Coords(n) % Serial =n 
+    END DO
+    CALL PDB__Write(unit,PDB__Coords)
+    DEALLOCATE(PDB__Coords)
+  END SUBROUTINE Atom__PDB
+END MODULE Atom

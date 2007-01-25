@@ -30,41 +30,93 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
+MODULE Inout
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Thu Jan 25 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program  ----*
+!!$---- This module is part of the program oracDD ----*
 
-  USE Parameters
-  USE Setup
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
+  USE Constants
   USE Tree
-  USE InOut
+  USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&
+       &, errmsg_f, errmsg_w
+  USE Strings, ONLY: MY_Fxm
+  USE Myparse 
+  USE STRPAK
   IMPLICIT none
   PRIVATE
-  PUBLIC Process_
+  PUBLIC Inout__Scan, Inout__, Inout__PDB
+  TYPE :: Inout__
+     CHARACTER(len=max_char) :: tag=' '
+     INTEGER :: unit=0
+     REAL(8) :: freq=0.0D0
+     CHARACTER(len=max_char) :: file=' '
+  END TYPE Inout__
+  TYPE(Inout__), SAVE :: Inout__PDB
 CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+  SUBROUTINE Inout__Scan
+    CHARACTER(len=max_pars) :: line,linea
+    INTEGER :: n,nword,iflags,io
+    TYPE(Branch), SAVE :: check
+
+    CALL Tree__Check_Tree('&INOUT',check)
+    IF(.NOT. ASSOCIATED(check%children)) RETURN
+    DO n=1,SIZE(check%children)
+       line=TRIM(check%children(n))
+       nword=MYParse_(line)
+       linea=strngs(1)
+       
+       IF(MY_Fxm('PDB',linea)) THEN
+          SELECT CASE(nword)
+          CASE(3)
+             CALL SP_Getnum(strngs(2),Inout__PDB % freq,iflags)
+             IF(iflags /= 0) THEN
+                errmsg_f='Internal reading error: Module Cell'
+                CALL Add_Errors(-1,errmsg_f)
+                RETURN
+             END IF
+             Inout__PDB % File=TRIM(ADJUSTL(strngs(3)))
+             CALL CHANNEL(io)
+             Inout__PDB % unit = io
+             OPEN(unit=io,file=Inout__PDB  % File,form='FORMATTED'&
+                  &,status='UNKNOWN', action='WRITE')
+          CASE(4)
+             IF(My_Fxm('WSC',strngs(2))) THEN
+                CALL SP_Getnum(strngs(2),Inout__PDB  % freq,iflags)
+                IF(iflags /= 0) THEN
+                   errmsg_f='Internal reading error: Module Cell'
+                   CALL Add_Errors(-1,errmsg_f)
+                   RETURN
+                END IF
+                Inout__PDB % File=TRIM(ADJUSTL(strngs(3)))            
+                Inout__PDB  % tag = 'WSC'
+                CALL CHANNEL(io)
+                Inout__PDB  % unit = io
+                OPEN(unit=io,file=Inout__PDB % File,form='FORMATTED'&
+                     &,status='UNKNOWN', action='WRITE')
+             ELSE
+                errmsg_f=error_unr % g (3)//' : '//TRIM(strngs(2))&
+                     &//' is not a defined keword '
+                CALL Add_Errors(-1,errmsg_f)                
+             END IF
+          CASE DEFAULT 
+             errmsg_f=error_args % g (4)//' 1, 3 or 6'
+             CALL Add_Errors(-1,errmsg_f)
+          END SELECT
+       ELSE IF(MY_Fxm('DUMP',linea)) THEN
+          CONTINUE
+       ELSE
+          errmsg_f='Illegal commmands found:'//TRIM(linea)
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    END DO
+  END SUBROUTINE Inout__Scan
+END MODULE Inout

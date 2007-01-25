@@ -60,6 +60,11 @@ CONTAINS
        CALL SP_Getnum(strngs(4),c,iflags)
        beta=alpha
        gamma=alpha
+       IF(iflags /= 0) THEN
+          errmsg_f='Internal reading error: Module Cell'
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
     CASE(7)
        CALL SP_Getnum(strngs(2),a,iflags)
        CALL SP_Getnum(strngs(3),b,iflags)
@@ -67,6 +72,11 @@ CONTAINS
        CALL SP_Getnum(strngs(5),alpha,iflags)
        CALL SP_Getnum(strngs(6),beta,iflags)
        CALL SP_Getnum(strngs(7),gamma,iflags)
+       IF(iflags /= 0) THEN
+          errmsg_f='Internal reading error: Module Cell'
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
     CASE DEFAULT 
        errmsg_f=error_args % g (4)//' 1, 3 or 6'
        CALL Add_Errors(-1,errmsg_f)
@@ -416,12 +426,14 @@ MODULE Setup
   USE Cell
   USE Solute
   USE Solvent
+  USE ReadStore
 
 !!$---- DATA Statements -------------------------------------------------*
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Setups__Scan
+  PUBLIC Setups__Scan, Setup__PDB
+  CHARACTER(len=max_char), ALLOCATABLE, SAVE :: Setup__PDB(:)
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
@@ -446,6 +458,8 @@ CONTAINS
           CALL Solute_(TRIM(line))
        ELSE IF(MY_Fxm('SOLV',linea)) THEN
           CALL Solvent_(TRIM(line))
+       ELSE IF(My_Fxm('PDB',linea)) THEN 
+          CALL Store_SystemPDB
 !!$       ELSE IF(MY_Fxm('RESET',linea)) THEN
 !!$          CALL Reset_CM
        ELSE
@@ -453,5 +467,13 @@ CONTAINS
           CALL Add_Errors(-1,errmsg_f)
        END IF
     END DO
+  CONTAINS
+    SUBROUTINE Store_SystemPDB
+      WRITE(*,*) 'Storing System .pdb ====>'
+      IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
+      ALLOCATE(Setup__PDB(SIZE(RS__string)))
+      Setup__PDB=RS__string
+      CALL ReadStore__Delete
+    END SUBROUTINE Store_SystemPDB
   END SUBROUTINE Setups__Scan
 END MODULE Setup

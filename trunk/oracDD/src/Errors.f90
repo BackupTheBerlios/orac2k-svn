@@ -304,7 +304,7 @@ CONTAINS
     LOGICAL :: warnings_found
     CHARACTER(len=max_err_long) :: error
     CHARACTER(len=10) :: dummy
-    INTEGER :: No,count,No_Warn
+    INTEGER :: No,No_Warn,count
 
     error=' '
     No_Warn=0
@@ -316,6 +316,7 @@ CONTAINS
        WRITE(dummy,'(i3,'') --'')') count
        Error=TRIM(dummy)//' '//current % err_text
        IF(No > 0) THEN
+          current % tag = 0
           No_Warn=No_Warn+1
           IF(No_Warn == 1) CALL Warning(' ',0)
           CALL Warning(Error)
@@ -324,7 +325,7 @@ CONTAINS
        current=>current % next
     END DO
     IF(warnings_found) THEN
-       CALL Warning(); CALL CleanUp()
+       CALL Warning(); count_w=0
     END IF
   END SUBROUTINE Print_Warnings
   SUBROUTINE Print_Errors()

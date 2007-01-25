@@ -135,6 +135,10 @@ CONTAINS
              DO j=1,jm
                 nato=nato+1
                 AtomCnts(nato) % Res = App_Char(i_F) % Type
+                nword=MyParse_(App_Char(i_F) % Type)
+                IF(My_Fam('link', strngs(1))) &
+                     &AtomCnts(nato) % Res = TRIM(ADJUSTL(strngs(2)))
+
                 AtomCnts(nato) % Res_No = Res_No
                 AtomCnts(nato) % Id_Res = i_F
                 AtomCnts(nato) % Grp_No = Grp_No
@@ -199,7 +203,8 @@ CONTAINS
     INTEGER :: New_Units
     INTEGER, POINTER :: SltSlv(:,:)=>NULL()
     TYPE(AtomCnt__Type), POINTER :: TempAtoms(:)
-    INTEGER :: n,m,l,o,offset,nato,new_dim,old_dim,Res_Begins,Res_Ends
+    INTEGER :: n,m,l,o,offset,nato,new_dim,old_dim,Res_Begins,Res_Ends&
+         &,offset2,No_Res_Unit
 
 
     SltSlv=>IndSequence__SltSlv_Res()
@@ -229,6 +234,8 @@ CONTAINS
 
     AtomCnts(1:old_Dim-nato)=TempAtoms(1:old_Dim-nato)
     offset=0
+    offset2=0
+    No_res_Unit=Res_Ends-Res_Begins+1
 
     DO l=1,New_Units
        DO n=Res_Begins,Res_Ends
@@ -238,7 +245,9 @@ CONTAINS
                 ALLOCATE(AtomCnts(m+offset) % cnt(o))
              END IF
              AtomCnts(m+offset) = TempAtoms(m)
+             AtomCnts(m+offset) % Res_no = TempAtoms(m) % Res_No + offset2
           END DO
+          offset2=offset2+No_Res_Unit
        END DO
        offset=offset+nato
     END DO

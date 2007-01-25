@@ -131,7 +131,8 @@ CONTAINS
                       & but file '//TRIM(fbinary)//' does not exist.'
                  CALL Add_Errors(-1,errmsg_f)
               ELSE
-                 OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED',status='OLD', action='READ')
+                 OPEN(unit=kbinary,file=fbinary,form='UNFORMATTED'&
+                      &,status='OLD', action='READ')
               END IF
            END IF
         ELSE IF(Called_Tpg .AND. Called_Prm) THEN

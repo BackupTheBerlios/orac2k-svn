@@ -52,6 +52,8 @@ MODULE SimulationBox
 !!$======================== DECLARATIONS ================================*
 
 
+  USE Setup
+  USE Inout
   USE Neighbors
   USE AddHydrogens_
   USE SystemTpg
@@ -65,9 +67,10 @@ MODULE SimulationBox
   USE SystemPrm
   USE AtomCnt
   USE AtomBox
+
   IMPLICIT none
   PRIVATE
-  PUBLIC :: SimulationBox_,nunits_Slv
+  PUBLIC :: SimulationBox_,nunits_Slv, Atoms_InBox,SimulationBox__Read
   TYPE(Atombox__), ALLOCATABLE, SAVE, TARGET :: Atoms_InBox(:)
   TYPE(Atombox__), POINTER, SAVE :: Slv_InBox(:)=>NULL(),Slt_InBox(:)=>NULL()
 
@@ -76,9 +79,10 @@ MODULE SimulationBox
 !!$
 
   TYPE(AtomBox__), POINTER, SAVE :: Total(:)=>NULL()
-  TYPE(AtomBox__), POINTER, SAVE :: Slv(:)=>NULL(),Slt(:)=>NULL()
+  TYPE(AtomBox__), POINTER, SAVE :: Slv(:)=>NULL(),Slt(:)=>NULL()&
+       &,Sys(:)=>NULL()
   REAL(8), PARAMETER :: Cube_length=6.0D0
-  INTEGER, SAVE :: nato_Slv,nato_Slt,nunits_Slv,nunits_SlvI
+  INTEGER, SAVE :: nato_Slv,nato_Slt,nunits_Slv,nunits_SlvOld
   REAL(8), SAVE :: rcut
 CONTAINS
   SUBROUTINE SimulationBox_
@@ -86,6 +90,10 @@ CONTAINS
     INTEGER :: nato_Slv,nato_Slt
     LOGICAL :: Exist_Slv, Exist_Slt
     TYPE(AtomPdb), POINTER :: PDB__Coords(:)=>NULL()
+
+!!$
+!!$--- Need to build a box
+!!$
 
     Exist_Slt=ALLOCATED(Secondary(1) % Line)
     Exist_Slv=ALLOCATED(Secondary(2) % Line)
@@ -101,14 +109,22 @@ CONTAINS
 
        
        IF(ASSOCIATED(PDB__Coords)) THEN
-          CALL PDB__Write(PDB__Coords)
-          IF(ALLOCATED(Secondary(2) % Line)) THEN
-             CALL AtomBox_(PDB__Coords,Slt)
-          END IF
+          CALL AtomBox_(PDB__Coords,Slt)
           DEALLOCATE(PDB__Coords)
        END IF
+
        nato_Slt=SIZE(Slt)
        IF(Solvent__Param % Build) CALL AtomBox__Center(Slt)
+
+       IF( .NOT. Exist_Slv) THEN
+          m=SIZE(Slt)
+          ALLOCATE(Atoms_InBox(m))
+          Atoms_InBox=Slt
+          CALL AtomBox__ChgFrame(-1,Atoms_InBox)
+          Slt_InBox=>atoms_InBox
+          DEALLOCATE(Slt)
+          RETURN
+       END IF
     END IF
 
     IF(Exist_Slv) THEN
@@ -121,17 +137,22 @@ CONTAINS
        IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
 
        IF(ASSOCIATED(PDB__Coords)) THEN
-          CALL PDB__Write(PDB__Coords)
           CALL AtomBox_(PDB__Coords,Slv)
           nato_Slv=SIZE(Slv)
           DEALLOCATE(PDB__Coords)
           IF(Solvent__Param % Build) CALL AtomBox__Center(Slv)
        END IF
 
-       IF(Solvent__Param % added /= 0) RETURN
-
-       IF(.NOT. Solvent__Param % Build) RETURN
-
+       IF(Solvent__Param % added /= 0 .OR. (.NOT. Solvent__Param % Build) ) THEN
+          m=SIZE(Slv)
+          ALLOCATE(Atoms_InBox(m))
+          Atoms_InBox=Slv
+          CALL AtomBox__ChgFrame(-1,Atoms_InBox)
+          Slv_InBox=>atoms_InBox
+          nunits_Slv=SIZE(Slv)/nato_Slv
+          DEALLOCATE(Slv)
+          RETURN
+       END IF
 
        IF(.NOT. AtomBox__BuildSlv(Slv)) CALL Print_Errors()
        
@@ -232,12 +253,12 @@ CONTAINS
          END IF
       END DO
 
-      nunits_SlvI=nunits_Slv
+      nunits_SlvOld=nunits_Slv
       nunits_Slv=COUNT(ok_mol)
       Size_Total=nato_Slt+nunits_Slv*nato_Slv
       WRITE(*,'(a)') ' Inserting solute into solvent ====>'
       WRITE(*,'(a,i5,a,i5,a,i5, a)') ' Eliminated '&
-           &,nunits_SlvI-nunits_Slv,' solvent units over ', nunits_SlvI&
+           &,nunits_SlvOld-nunits_Slv,' solvent units over ', nunits_SlvOld&
            &,' remain ',nunits_Slv,' units '
       ALLOCATE(Temp(SIZE(Total)))
       Temp=Total
@@ -246,13 +267,13 @@ CONTAINS
       Atoms_InBox(1:nato_Slt)=Temp(1:nato_Slt)
 
       count_a=0
-      DO n=1,nunits_Slv
+      DO n=1,nunits_SlvOld
          IF(.NOT. ok_mol(n)) CYCLE
          DO m=1,nato_Slv
             count_a=count_a+1
             nn=(n-1)*nato_Slv + m
-            Atoms_InBox(count_a) = Temp(nn+nato_Slt)
-            Atoms_InBox(count_a) % Serial = count_a+nato_Slt
+            Atoms_InBox(count_a+nato_Slt) = Temp(nn+nato_Slt)
+            Atoms_InBox(count_a+nato_Slt) % Serial = count_a+nato_Slt
          END DO
       END DO
 
@@ -269,6 +290,28 @@ CONTAINS
       out=ANINT(0.5D0*x)
     END FUNCTION PBC
   END SUBROUTINE SimulationBox_
+  SUBROUTINE SimulationBox__Read
+    INTEGER :: m
+    TYPE(AtomPdb), POINTER :: PDB__Coords(:)=>NULL()
+
+!!$
+!!$--- Do not need to build a box: Read from PDB File the entire coordinates set
+!!$
+
+    IF(ALLOCATED(Setup__PDB)) THEN
+       IF(.NOT. PDB_('System', Setup__PDB, PDB__Coords)) CALL Print_Errors()
+       IF(.NOT. AddHydrogens__(PDB__Coords)) CALL Print_Errors()
+       CALL AtomBox_(PDB__Coords,Sys)
+       DEALLOCATE(PDB__Coords)
+       m=SIZE(Sys)
+       ALLOCATE(Atoms_InBox(m))
+       Atoms_InBox=Sys
+       CALL AtomBox__ChgFrame(-1,Atoms_InBox)
+       DEALLOCATE(Sys)
+       RETURN
+    END IF
+
+  END SUBROUTINE SimulationBox__Read
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
 END MODULE SimulationBox

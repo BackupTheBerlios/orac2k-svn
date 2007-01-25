@@ -105,7 +105,7 @@
     m=0
     id_old=Id_Res0
     DO n=1,SIZE(PDB_string)
-       IF(PDB_string(n)(1:6) == 'ATOM  ' .OR. PDB_string(n)(1:6) == 'HETATM') THEN
+       IF(PDB_string(n)(1:5) == 'ATOM ' .OR. PDB_string(n)(1:5) == 'HETAT') THEN
 
           labs1=PDB_string(n)(23:26)
           CALL MyRead(labs1,Id_New)
@@ -115,7 +115,7 @@
           END IF
        END IF
     END DO
-
+    
     ALLOCATE(ResPDB(m+1))
 
     m=0
@@ -124,8 +124,14 @@
     count_out=0
     Id_old=Id_Res0
     DO n=1,SIZE(PDB_string)
-       IF(PDB_string(n)(1:6) == 'ATOM  ' .OR. PDB_string(n)(1:6) == 'HETATM') THEN
-          labs1=PDB_string(n)(23:26)
+       IF(PDB_string(n)(1:5) == 'ATOM ' .OR. PDB_string(n)(1:5) == 'HETAT') THEN
+
+          IF(Its_a_Number(PDB_string(n)(22:22))) THEN
+             labs1=PDB_string(n)(22:26)
+          ELSE
+             labs1=PDB_string(n)(23:26)
+          END IF
+
           CALL MyRead(labs1,Id_New)
           IF(Id_New /= Id_old) THEN
              m=m+1
@@ -153,7 +159,12 @@
       count_A=0
       DO WHILE(Node__Pop(line1))
          count_A=count_A+1
-         labs1=line1(1)(7:11)
+
+         IF(Its_a_Number(line1(1)(6:6))) THEN
+            labs1=line1(1)(6:11)
+         ELSE
+            labs1=line1(1)(7:11)
+         END IF
          CALL Myread(labs1,Serial)
 
          AtmName=line1(1)(13:16)
@@ -162,10 +173,12 @@
          CALL TRANLC(AtmName)
          CALL TRANLC(ResName)
 
-
-         labs1=Line1(1)(23:26)
+         IF(Its_a_Number(line1(1)(22:22))) THEN 
+            labs1=Line1(1)(22:26)
+         ELSE
+            labs1=Line1(1)(23:26)
+         END IF
          CALL Myread(labs1,ResSeq)
-
          labs1=ADJUSTL(Line1(1)(31:38))
          CALL Myread(labs1,x)
 
@@ -184,4 +197,11 @@
       END DO
       CALL Node__Delete()
     END SUBROUTINE Get_it
+    FUNCTION Its_a_Number(char) RESULT(out)
+      CHARACTER(len=1) :: char
+      LOGICAL :: out
+      out=.FALSE.
+      IF(ICHAR(char) >= 49 .AND. ICHAR(char) <= 57) out=.TRUE.
+    END FUNCTION Its_a_Number
+      
   END FUNCTION PDB__Read
