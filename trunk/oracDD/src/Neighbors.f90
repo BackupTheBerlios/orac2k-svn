@@ -53,20 +53,29 @@ MODULE Neighbors
   USE Cell
   IMPLICIT none
   PRIVATE
-  PUBLIC Neighbors_, Neighbors__Atoms, ind_xyz, Neighbors__Ind&
-       &, chainp, headp, cellpi, cellpj, cellpk
+  PUBLIC Neighbors_, Neighbors__Particles, ind_xyz, Neighbors__Ind&
+       &, chain_xyz, Head_xyz
+
   TYPE :: Neighbors__Ind
      INTEGER :: i,j,k
-  END TYPE Neighbors__Ind
-     
+  END TYPE Neighbors__Ind     
+  TYPE :: Neighbors__Chain
+     INTEGER :: i,j,k
+     INTEGER :: p
+  END TYPE Neighbors__Chain
+  TYPE(Neighbors__Ind), ALLOCATABLE, SAVE :: Ind_xyz(:)
+  TYPE(Neighbors__Chain), ALLOCATABLE, SAVE :: Chain_xyz(:)
+  INTEGER, ALLOCATABLE, SAVE :: Head_xyz(:)
   INTEGER, SAVE :: ncx,ncy,ncz
-  TYPE(Neighbors__Ind), ALLOCATABLE, SAVE :: ind_xyz(:)
-  INTEGER, ALLOCATABLE, SAVE :: Chainp(:),Cellpi(:),Cellpj(:),Cellpk(:),Headp(:)
 CONTAINS
+!!$
+!!$--- Constructor for Ind_xyz
+!!$
   FUNCTION Neighbors_(rcut,nx,ny,nz) RESULT(out)
     LOGICAL :: out
     INTEGER :: nx,ny,nz
     REAL(8) :: rcut
+
     INTEGER :: vect0(3)
     INTEGER, POINTER :: vect(:)
     REAL(8) :: sqcut,dx,dy,dz,rmin
@@ -74,9 +83,9 @@ CONTAINS
          &,nxmax, nymax,nzmax,nind
 
     IF(ALLOCATED(ind_xyz)) DEALLOCATE(ind_xyz)
-    
+
     out=.TRUE.
-    ncx=nx; ncy=ny; ncz=nz    
+    ncx=nx; ncy=ny; ncz=nz
 
     sqcut=rcut**2
 
@@ -89,7 +98,6 @@ CONTAINS
 
     vect0=(/0, 0, 0/) 
     IF(.NOT. Node_()) STOP
-
 
     CALL Node__Push(vect0)   
 
@@ -249,7 +257,10 @@ CONTAINS
       out=dmin
     END FUNCTION dist_ijk
   END FUNCTION Neighbors_
-  FUNCTION Neighbors__Atoms(x,y,z) RESULT(out)
+!!$
+!!$--- Constructor for Chain_xyz and Head_xyz
+!!$
+  FUNCTION Neighbors__Particles(x,y,z) RESULT(out)
     LOGICAL :: out
     REAL(8) :: x(:),y(:),z(:)
     REAL(8) :: x1,y1,z1,dx,dy,dz
@@ -262,16 +273,16 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        RETURN
     END IF
-    IF(.NOT. ALLOCATED(headp)) THEN
-       ALLOCATE(headp(ncx*ncy*ncz))
+    IF(.NOT. ALLOCATED(Head_xyz)) THEN
+       ALLOCATE(Head_xyz(ncx*ncy*ncz))
        natp=SIZE(x)
-       ALLOCATE(chainp(natp),cellpi(natp),cellpj(natp),cellpk(natp))
+       ALLOCATE(Chain_xyz(natp))
     END IF
-    headp=0
-    chainp=0
+    Head_xyz=0
+    Chain_xyz (:) % p = 0
 
 !!$=======================================================================
-!!$     Compute chain list for system
+!!$     Compute chain list for the system
 !!$=======================================================================
 
     dx=2.d0/ncx
@@ -289,17 +300,16 @@ CONTAINS
        nx=MOD(MOD(nx,ncx)+ncx,ncx)
        ny=MOD(MOD(ny,ncy)+ncy,ncy)
        nz=MOD(MOD(nz,ncz)+ncz,ncz)
-       cellpi(n)=nx
-       cellpj(n)=ny
-       cellpk(n)=nz
+       Chain_xyz (n) % i=nx
+       Chain_xyz (n) % j=ny
+       Chain_xyz (n) % k=nz
        numcell=nz+ncz*(ny+ncy*nx)+1
-       chainp(n)=headp(numcell)
-       headp(numcell)=n
+       Chain_xyz (n) % p=Head_xyz(numcell)
+       Head_xyz(numcell)=n
     END DO
-  END FUNCTION Neighbors__Atoms
+  END FUNCTION Neighbors__Particles
   SUBROUTINE Neighbors__Delete
-    DEALLOCATE(ind_xyz)
-    DEALLOCATE(Chainp,Cellpi,Cellpj,Cellpk,Headp)
+    DEALLOCATE(Ind_xyz,Chain_xyz,Head_xyz)
   END SUBROUTINE Neighbors__Delete
   FUNCTION Neighbors__Valid() RESULT(out)
     LOGICAL :: out

@@ -48,6 +48,7 @@ MODULE PDB
 !!$---- This subroutine is part of the program ORAC ----*
 !!$======================== DECLARATIONS ================================*
 
+  USE Cell
   USE IndSequence
   USE SystemTpg
   USE Constants, ONLY: max_pars,max_data,max_char, Used

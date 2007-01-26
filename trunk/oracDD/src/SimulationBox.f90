@@ -173,7 +173,7 @@ CONTAINS
           IF(.NOT. Neighbors_(rcut, nccx, nccy, nccz)) CALL Print_Errors()
 
           CALL AtomBox__ChgFrame(-1,Total)
-          IF(.NOT. Neighbors__Atoms(Total(:) % x&
+          IF(.NOT. Neighbors__Particles(Total(:) % x&
                &, Total(:) % y, Total(:) % z)) CALL Print_Errors()
           CALL Insert
        ELSE
@@ -207,9 +207,9 @@ CONTAINS
             y1=Slv(nn) % y
             z1=Slv(nn) % z
             nv=0
-            i=cellpi(Slv (nn) % Serial)
-            j=cellpj(Slv (nn) % Serial)
-            k=cellpk(Slv (nn) % Serial)
+            i=Chain_xyz(Slv (nn) % Serial) % i
+            j=Chain_xyz(Slv (nn) % Serial) % j
+            k=Chain_xyz(Slv (nn) % Serial) % k
             DO o=1,SIZE(Ind_xyz)
                iv=Ind_xyz(o) % i
                jv=Ind_xyz(o) % j
@@ -219,10 +219,10 @@ CONTAINS
                nz=mod(mod(k+kv,nccz)+nccz,nccz)
                numcell=nz+nccz*(ny+nccy*nx)+1
                IF(numcell > nccx*nccy*nccz) STOP
-               l=headp(numcell)
+               l=Head_xyz(numcell)
                DO WHILE(l > 0)
                   IF(l > nato_Slt) THEN
-                     l=chainp(l)
+                     l=Chain_xyz(l) % p
                      CYCLE
                   END IF
                   sqcut=(Solute__Exclusion*(Total(l) % sigma+Slv(nn) % sigma)*0.5D0)**2
@@ -242,7 +242,7 @@ CONTAINS
                      ok=.FALSE.
                      EXIT
                   ENDIF
-                  l=chainp(l)
+                  l=Chain_xyz(l) % p
                END DO
                IF(.NOT. ok) EXIT
             END DO

@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE NeighCells
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -43,23 +43,20 @@ MODULE MDRun
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
-  USE PI_Communicate
+  
+  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
+  USE Node
+  USE Cell
+  USE Neighbors
   IMPLICIT none
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC NeighCells_
 CONTAINS
-  SUBROUTINE MDRun_
+!!$
+!!$--- Constructor
+!!$
+  FUNCTION NeighCells_() RESULT(out)
+    IF(ALLOCATED(
+  END FUNCTION NeighCells_
 
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    CALL PI__PickDecomposition(4)
-
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+END MODULE NeighCells

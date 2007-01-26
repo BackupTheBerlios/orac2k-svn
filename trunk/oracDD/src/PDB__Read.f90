@@ -81,9 +81,11 @@
     CHARACTER(len=max_char) :: Res0,labs1
     INTEGER, ALLOCATABLE :: Ids(:)
     INTEGER :: Serial,ResSeq,Id_Old,Id_New,count_out,count_a
-    REAL(8) :: x,y,z
+    REAL(8) :: x,y,z,a0,b0,c0,alpha0,beta0,gamma0
     CHARACTER(len=5) :: AtmName,ResName
     LOGICAL :: end_of_list
+    REAL(8), PARAMETER :: eps=5.0D-2
+    CHARACTER(len=max_Char) :: labs0
 
     out=.TRUE.
     n=1
@@ -94,9 +96,21 @@
           out=.FALSE.
           RETURN
        END IF
+       IF(PDB_string(n)(1:6) == 'CRYST1') THEN
+          READ(PDB_string(n),'(6x,3f9.3,3f7.2)') a0,b0,c0,alpha0,beta0,gamma0
+          IF(ABS(a0-a) > eps .OR. ABS(b0-b) > eps &
+               &.OR. ABS(c0-c) > eps .OR. ABS(alpha0-alpha) > eps &
+               &.OR. ABS(beta0-beta) > eps .OR. ABS(gamma0-gamma) > eps) THEN
+             WRITE(labs0,'(3f9.3,3f7.2)') a,b,c,alpha,beta,gamma
+             errmsg_w='Cell parameters in .pdb file are different from those in the input. '&
+                  &//' In .pdb: '//TRIM(PDB_string(n)(7:55))//'; Whereas from the input: '&
+                  &//TRIM(labs0)//' Hope this is ok...'
+             CALL Add_Errors(1,errmsg_w)
+          END IF
+       END IF
        n=n+1
     END DO
-   
+
     Res0=PDB_string(n)(18:20)
     CALL TRANLC(Res0)
 
