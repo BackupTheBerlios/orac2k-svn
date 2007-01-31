@@ -34,7 +34,7 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
-# Revision 1.17  2007/01/26 17:36:24  mmarchi
+# Revision 1.18  2007/01/31 17:10:51  mmarchi
 # *** empty log message ***
 #
 # Revision 1.16  2007/01/26 06:58:17  mmarchi
@@ -110,10 +110,10 @@
 #CC = gcc
 #LD = /usr/local/bin/gfortran
 
-#FC = g95
-#F90 = g95
-#CC = gcc
-#LD = g95
+FC = g95
+F90 = g95
+CC = gcc
+LD = g95
 
 #FC = f90
 #F90 = f90
@@ -125,10 +125,10 @@
 #CC = gcc
 #LD = pgf90
 
-FC = ifort
-F90 = ifort
-CC = gcc
-LD = ifort
+#FC = ifort
+#F90 = ifort
+#CC = gcc
+#LD = ifort
 
 CFLAGS = -O
 SHELL = /bin/sh
@@ -169,7 +169,8 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
 	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o Utilities.o Groups.o \
-	Banner.o Atom.o Inout.o MDRun.o PI_Communicate.o FactorizeNo.o oracDD.o 
+	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Communicate.o NeighCells.o\
+	oracDD.o 
 
 OBJS_f = AddH.o duni.o
 

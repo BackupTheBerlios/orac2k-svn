@@ -30,65 +30,90 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Neighbors
-
+MODULE NeighCells
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-19 18:57:55 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 18 2007 -                                     *
+!!$              - Thu Jan 25 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This subroutine is part of the program oracDD ----*
-
+!!$---- This module is part of the program oracDD ----*
+  
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Node
   USE Cell
+  USE PI_Communicate
   IMPLICIT none
   PRIVATE
-  PUBLIC Neighbors_, Neighbors__Particles, ind_xyz, Neighbors__Ind&
-       &, chain_xyz, Head_xyz
-
-  TYPE :: Neighbors__Ind
+  PUBLIC NeighCells_
+  TYPE :: NeighCell__Ind
      INTEGER :: i,j,k
-  END TYPE Neighbors__Ind     
-  TYPE :: Neighbors__Chain
+  END TYPE NeighCell__Ind
+  TYPE :: NeighCell__Chain
      INTEGER :: i,j,k
      INTEGER :: p
-  END TYPE Neighbors__Chain
-  TYPE(Neighbors__Ind), ALLOCATABLE, SAVE :: Ind_xyz(:)
-  TYPE(Neighbors__Chain), ALLOCATABLE, SAVE :: Chain_xyz(:)
+  END TYPE NeighCell__Chain
+  TYPE(NeighCell__Ind), ALLOCATABLE, SAVE :: Ind_xyz(:)
+  TYPE(NeighCell__Chain), ALLOCATABLE, SAVE :: Chain_xyz(:)
   INTEGER, ALLOCATABLE, SAVE :: Head_xyz(:)
   INTEGER, SAVE :: ncx,ncy,ncz
+  INTEGER :: nproc,npx,npy,npz
 CONTAINS
 !!$
-!!$--- Constructor for Ind_xyz
+!!$--- Constructor
 !!$
-  FUNCTION Neighbors_(rcut,nx,ny,nz) RESULT(out)
+  FUNCTION NeighCells_(rcut) RESULT(out)
     LOGICAL :: out
     INTEGER :: nx,ny,nz
     REAL(8) :: rcut
+    out=.TRUE.
+    IF(.NOT. ALLOCATED(PE)) THEN
+       errmsg_f='Need to set up communications before NeighCell can be called'
+       CALL Add_Errors(-1,errmsg_f)
+       out=.FALSE.
+       RETURN
+    END IF
+    CALL PI__GetParameters(nproc,npx,npy,npz)
 
+    nx=NINT(a/rcut)
+    ny=NINT(b/rcut)
+    nz=NINT(c/rcut)
+    IF(DBLE(MOD(nx,npx))/DBLE(npx) <= 0.5D0) THEN
+       ncx=nx-MOD(nx,npx)
+    ELSE
+       ncx=nx+MOD(npx-MOD(nx,npx),npx)
+    END IF
+
+    IF(DBLE(MOD(ny,npy))/DBLE(npy) <= 0.5D0) THEN
+       ncy=ny-MOD(ny,npy)
+    ELSE
+       ncy=ny+MOD(npy-MOD(ny,npy),npy)
+    END IF
+
+    IF(DBLE(MOD(nz,npz))/DBLE(npz) <= 0.5D0) THEN
+       ncz=nz-MOD(nz,npz)
+    ELSE
+       ncz=nz+MOD(npz-MOD(nz,npz),npz)
+    END IF
+  END FUNCTION NeighCells_
+
+  FUNCTION NeighCells__Index(rcut) RESULT(out)
+    LOGICAL :: out
+    REAL(8) :: rcut
     INTEGER :: vect0(3)
     INTEGER, POINTER :: vect(:)
     REAL(8) :: sqcut,dx,dy,dz,rmin
     INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
          &,nxmax, nymax,nzmax,nind
 
-    IF(ALLOCATED(ind_xyz)) DEALLOCATE(ind_xyz)
-
     out=.TRUE.
-    ncx=nx; ncy=ny; ncz=nz
 
     sqcut=rcut**2
-
     dx=2.d0/ncx
     dy=2.d0/ncy
     dz=2.d0/ncz
@@ -252,65 +277,6 @@ CONTAINS
 
       out=dmin
     END FUNCTION dist_ijk
-  END FUNCTION Neighbors_
-!!$
-!!$--- Constructor for Chain_xyz and Head_xyz
-!!$
-  FUNCTION Neighbors__Particles(x,y,z) RESULT(out)
-    LOGICAL :: out
-    REAL(8) :: x(:),y(:),z(:)
-    REAL(8) :: x1,y1,z1,dx,dy,dz
-    INTEGER :: n,nx,ny,nz,natp,numcell,l
-    
-    out=.TRUE.
-    IF(.NOT. Neighbors__Valid()) THEN
-       out=.FALSE.
-       errmsg_f='Must construct cell indeces before atomic indeces can be obtained'
-       CALL Add_Errors(-1,errmsg_f)
-       RETURN
-    END IF
-    IF(.NOT. ALLOCATED(Head_xyz)) THEN
-       ALLOCATE(Head_xyz(ncx*ncy*ncz))
-       natp=SIZE(x)
-       ALLOCATE(Chain_xyz(natp))
-    END IF
-    Head_xyz=0
-    Chain_xyz (:) % p = 0
+  END FUNCTION NeighCells__Index
 
-!!$=======================================================================
-!!$     Compute chain list for the system
-!!$=======================================================================
-
-    dx=2.d0/ncx
-    dy=2.d0/ncy
-    dz=2.d0/ncz
-
-    
-    DO n=1,natp
-       x1=x(n)/dx
-       y1=y(n)/dy
-       z1=z(n)/dz
-       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
-       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
-       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
-       nx=MOD(MOD(nx,ncx)+ncx,ncx)
-       ny=MOD(MOD(ny,ncy)+ncy,ncy)
-       nz=MOD(MOD(nz,ncz)+ncz,ncz)
-       Chain_xyz (n) % i=nx
-       Chain_xyz (n) % j=ny
-       Chain_xyz (n) % k=nz
-       numcell=nz+ncz*(ny+ncy*nx)+1
-       Chain_xyz (n) % p=Head_xyz(numcell)
-       Head_xyz(numcell)=n
-    END DO
-  END FUNCTION Neighbors__Particles
-  SUBROUTINE Neighbors__Delete
-    DEALLOCATE(Ind_xyz,Chain_xyz,Head_xyz)
-  END SUBROUTINE Neighbors__Delete
-  FUNCTION Neighbors__Valid() RESULT(out)
-    LOGICAL :: out
-    out=ALLOCATED(ind_xyz)
-  END FUNCTION Neighbors__Valid
-!!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
-
-END MODULE Neighbors
+END MODULE NeighCells

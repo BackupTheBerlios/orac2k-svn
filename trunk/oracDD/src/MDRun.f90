@@ -49,17 +49,18 @@ MODULE MDRun
   USE Atom
   USE Inout
   USE PI_Communicate
+  USE NeighCells
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
 CONTAINS
   SUBROUTINE MDRun_
-
+    LOGICAL :: ok
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    CALL PI__PickDecomposition(4)
-
+    CALL PI__PickDecomposition(20)
+    ok=NeighCells_(8.0D0)
   END SUBROUTINE MDRun_
 END MODULE MDRun
