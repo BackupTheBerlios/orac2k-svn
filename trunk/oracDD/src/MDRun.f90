@@ -60,7 +60,7 @@ CONTAINS
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    CALL PI__PickDecomposition(20)
-    ok=NeighCells_(8.0D0)
+    CALL PI__PickDecomposition(12.0D0,128)
+
   END SUBROUTINE MDRun_
 END MODULE MDRun

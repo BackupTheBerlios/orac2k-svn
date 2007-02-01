@@ -302,6 +302,7 @@ CONTAINS
        numcell=nz+ncz*(ny+ncy*nx)+1
        Chain_xyz (n) % p=Head_xyz(numcell)
        Head_xyz(numcell)=n
+       
     END DO
   END FUNCTION Neighbors__Particles
   SUBROUTINE Neighbors__Delete

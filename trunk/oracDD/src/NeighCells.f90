@@ -44,239 +44,199 @@ MODULE NeighCells
 
 !!$---- This module is part of the program oracDD ----*
   
+  USE Constants
+  USE Neighbors
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Node
   USE Cell
-  USE PI_Communicate
   IMPLICIT none
   PRIVATE
-  PUBLIC NeighCells_
-  TYPE :: NeighCell__Ind
-     INTEGER :: i,j,k
-  END TYPE NeighCell__Ind
-  TYPE :: NeighCell__Chain
-     INTEGER :: i,j,k
-     INTEGER :: p
-  END TYPE NeighCell__Chain
-  TYPE(NeighCell__Ind), ALLOCATABLE, SAVE :: Ind_xyz(:)
-  TYPE(NeighCell__Chain), ALLOCATABLE, SAVE :: Chain_xyz(:)
-  INTEGER, ALLOCATABLE, SAVE :: Head_xyz(:)
+  PUBLIC NeighCells_, NeighCells__Map, NeighCells__MapLarge, NeighCells__Neigh&
+       &, Ind_Large, Ind_Small, Nei
+
+  TYPE :: NeighCells__Map
+     INTEGER :: nx,ny,nz
+  END TYPE NeighCells__Map
+
+  TYPE :: NeighCells__MapLarge
+     TYPE(NeighCells__Map), ALLOCATABLE :: pt(:)
+  END TYPE NeighCells__MapLarge
+  TYPE :: NeighCells__Neigh
+     INTEGER, ALLOCATABLE :: c(:,:)
+  END TYPE NeighCells__Neigh
+
+  TYPE(NeighCells__MapLarge), ALLOCATABLE, SAVE :: Ind_Large(:,:,:)
+  TYPE(NeighCells__Map), ALLOCATABLE, SAVE :: Ind_Small(:,:,:)
+  TYPE(NeighCells__Neigh), ALLOCATABLE, SAVE :: Nei(:)
   INTEGER, SAVE :: ncx,ncy,ncz
-  INTEGER :: nproc,npx,npy,npz
 CONTAINS
 !!$
 !!$--- Constructor
 !!$
-  FUNCTION NeighCells_(rcut) RESULT(out)
+  FUNCTION NeighCells_(rcut,nprocs,npx,npy,npz) RESULT(out)
+    INTEGER :: nprocs,npx,npy,npz
     LOGICAL :: out
-    INTEGER :: nx,ny,nz
+    INTEGER :: nx,ny,nz,mx,my,mz,i,j,k,n,np,count0&
+         &,count1,o,iv,jv,kv
     REAL(8) :: rcut
+    INTEGER, POINTER :: Ind_x(:,:,:)
+    REAL(8) :: dx,dy,dz,ddx,ddy,ddz,x1,y1,z1
+    CHARACTER(len=max_char) :: labs0
+    LOGICAL, POINTER :: mask(:,:,:)
+    INTEGER :: vec0(3)
+    INTEGER, POINTER :: vec(:)=>NULL()
+    LOGICAL, SAVE :: first_time=.TRUE.
     out=.TRUE.
-    IF(.NOT. ALLOCATED(PE)) THEN
-       errmsg_f='Need to set up communications before NeighCell can be called'
-       CALL Add_Errors(-1,errmsg_f)
-       out=.FALSE.
-       RETURN
+    IF(First_Time) THEN
+       nx=NINT(a/rcut)
+       ny=NINT(b/rcut)
+       nz=NINT(c/rcut)
+       IF(nx < npx .OR. ny < npy .OR. nz < npz) THEN
+          IF(nx < npx) THEN
+             WRITE(labs0,'(i3,i3)') nx,npx
+             errmsg_f='Number of neighbor list cells along X is smaller than&
+                  & the number of processors: There are '//labs0(1:3)//' neighbor &
+                  &list cells and '//labs0(4:6)//' No. processors on X'
+          ELSE IF(ny < npy) THEN
+             WRITE(labs0,'(i3,i3)') ny,npy
+             errmsg_f='Number of neighbor list cells along Y is smaller than&
+                  & the number of processors: There are '//labs0(1:3)//' neighbor &
+                  &list cells and '//labs0(4:6)//' No. processors on Y'
+          ELSE IF(nz < npz) THEN
+             WRITE(labs0,'(i3,i3)') nz,npz
+             errmsg_f='Number of neighbor list cells along Z is smaller than&
+                  & the number of processors: There are '//labs0(1:3)//' neighbor &
+                  &list cells and '//labs0(4:6)//' No. processors on Z'
+          END IF
+          CALL Add_Errors(-1,errmsg_f)
+          out=.FALSE.
+          RETURN
+       END IF
+       
+       IF(DBLE(MOD(nx,npx))/DBLE(npx) <= 0.5D0) THEN
+          ncx=nx-MOD(nx,npx)
+       ELSE
+          ncx=nx+MOD(npx-MOD(nx,npx),npx)
+       END IF
+       
+       IF(DBLE(MOD(ny,npy))/DBLE(npy) <= 0.5D0) THEN
+          ncy=ny-MOD(ny,npy)
+       ELSE
+          ncy=ny+MOD(npy-MOD(ny,npy),npy)
+       END IF
+       
+       IF(DBLE(MOD(nz,npz))/DBLE(npz) <= 0.5D0) THEN
+          ncz=nz-MOD(nz,npz)
+       ELSE
+          ncz=nz+MOD(npz-MOD(nz,npz),npz)
+       END IF
+       ALLOCATE(Ind_Large(npx,npy,npz))
+       ALLOCATE(Ind_X(npx,npy,npz))
+       ALLOCATE(Ind_Small(ncx,ncy,ncz))
+       dx=2.d0/ncx
+       dy=2.d0/ncy
+       dz=2.d0/ncz
+       ddx=2.d0/npx
+       ddy=2.d0/npy
+       ddz=2.d0/npz
+       Ind_X=0
+       DO i=1,ncx
+          x1=(i-1)*dx/ddx
+          DO j=1,ncy
+             y1=(j-1)*dy/ddy
+             DO k=1,ncz
+                z1=(k-1)*dz/ddz
+                mx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
+                my=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
+                mz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
+                mx=MOD(MOD(mx,npx)+npx,npx)+1
+                my=MOD(MOD(my,npy)+npy,npy)+1
+                mz=MOD(MOD(mz,npz)+npz,npz)+1
+                Ind_Small(i,j,k) % nx = mx
+                Ind_Small(i,j,k) % ny = my
+                Ind_Small(i,j,k) % nz = mz
+                Ind_X(mx,my,mz) = Ind_X(mx,my,mz) + 1
+             END DO
+          END DO
+       END DO
+       DO i=1,npx
+          DO j=1,npy
+             DO k=1,npz
+                ALLOCATE(Ind_Large(i,j,k) % pt(Ind_X(i,j,k)))
+             END DO
+          END DO
+       END DO
+       Ind_X=0
+       DO i=1,ncx
+          x1=(i-1)*dx/ddx
+          DO j=1,ncy
+             y1=(j-1)*dy/ddy
+             DO k=1,ncz
+                z1=(k-1)*dz/ddz
+                mx=INT(x1)+(SIGN(1.0D0,x1-INT(x1))-1.0D0)/2
+                my=INT(y1)+(SIGN(1.0D0,y1-INT(y1))-1.0D0)/2
+                mz=INT(z1)+(sign(1.0D0,z1-int(z1))-1.0D0)/2
+                mx=MOD(MOD(mx,npx)+npx,npx)+1
+                my=MOD(MOD(my,npy)+npy,npy)+1
+                mz=MOD(MOD(mz,npz)+npz,npz)+1
+                Ind_X(mx,my,mz) = Ind_X(mx,my,mz) +1
+                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nx = i
+                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % ny = j
+                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nz = k
+             END DO
+          END DO
+       END DO
+       First_Time=.FALSE.
     END IF
-    CALL PI__GetParameters(nproc,npx,npy,npz)
 
-    nx=NINT(a/rcut)
-    ny=NINT(b/rcut)
-    nz=NINT(c/rcut)
-    IF(DBLE(MOD(nx,npx))/DBLE(npx) <= 0.5D0) THEN
-       ncx=nx-MOD(nx,npx)
-    ELSE
-       ncx=nx+MOD(npx-MOD(nx,npx),npx)
-    END IF
+    IF(.NOT. Neighbors_(rcut-1.5D0,ncx,ncy,ncz)) CALL Print_Errors()
 
-    IF(DBLE(MOD(ny,npy))/DBLE(npy) <= 0.5D0) THEN
-       ncy=ny-MOD(ny,npy)
-    ELSE
-       ncy=ny+MOD(npy-MOD(ny,npy),npy)
-    END IF
-
-    IF(DBLE(MOD(nz,npz))/DBLE(npz) <= 0.5D0) THEN
-       ncz=nz-MOD(nz,npz)
-    ELSE
-       ncz=nz+MOD(npz-MOD(nz,npz),npz)
-    END IF
-  END FUNCTION NeighCells_
-
-  FUNCTION NeighCells__Index(rcut) RESULT(out)
-    LOGICAL :: out
-    REAL(8) :: rcut
-    INTEGER :: vect0(3)
-    INTEGER, POINTER :: vect(:)
-    REAL(8) :: sqcut,dx,dy,dz,rmin
-    INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
-         &,nxmax, nymax,nzmax,nind
-
-    out=.TRUE.
-
-    sqcut=rcut**2
-    dx=2.d0/ncx
-    dy=2.d0/ncy
-    dz=2.d0/ncz
-    imax=0
-    jmax=0
-    kmax=0
-
-    vect0=(/0, 0, 0/) 
-    IF(.NOT. Node_()) STOP
-
-    CALL Node__Push(vect0)   
-
-    istart=1-ncx
-    DO i=istart,ncx-1
-       jstart=1-ncy
-       DO j=jstart,ncy-1
-          kstart=1-ncz
-          DO k=kstart,ncz-1
-             rmin=dist_ijk(i,j,k,dx,dy,dz)
-             IF(rmin < sqcut) then
-                vect0=(/i, j, k/) 
-                IF(imax < abs(i)) imax=abs(i)
-                IF(jmax < abs(j)) jmax=abs(j)
-                IF(kmax < abs(k)) kmax=abs(k)
-                IF(.NOT. (i == 0 .AND. j == 0 .AND. k == 0)) THEN
-                   CALL Node__Push(vect0)
-                END IF
-             END IF
+    ALLOCATE(Nei(nprocs))
+    ALLOCATE(mask(ncx,ncy,ncz))
+    DO mx=1,npx
+       DO my=1,npy
+          DO mz=1,npz
+             np=SIZE(Ind_Large(mx,my,mz) % pt)
+             count0=(mx-1)*npy*npz+(my-1)*npz+mz
+             mask=.TRUE.
+             DO n=1,np
+                i=Ind_Large(mx,my,mz) % pt (n) % nx 
+                j=Ind_Large(mx,my,mz) % pt (n) % ny 
+                k=Ind_Large(mx,my,mz) % pt (n) % nz
+                mask(i,j,k)=.FALSE.
+             END DO
+             IF(.NOT. Node_()) STOP
+             DO n=1,np
+                i=Ind_Large(mx,my,mz) % pt (n) % nx-1
+                j=Ind_Large(mx,my,mz) % pt (n) % ny-1
+                k=Ind_Large(mx,my,mz) % pt (n) % nz-1
+                DO o=1,SIZE(Ind_xyz)
+                   iv=Ind_xyz(o) % i
+                   jv=Ind_xyz(o) % j
+                   kv=Ind_xyz(o) % k
+                   nx=mod(mod(i+iv,ncx)+ncx,ncx)+1
+                   ny=mod(mod(j+jv,ncy)+ncy,ncy)+1
+                   nz=mod(mod(k+kv,ncz)+ncz,ncz)+1
+                   IF(.NOT. mask(nx,ny,nz)) CYCLE
+                   mask(nx,ny,nz)=.FALSE.
+                   vec0(1)=nx; vec0(2)=ny; vec0(3)=nz
+                   CALL Node__Push(vec0)
+                END DO
+             END DO
+             count1=Node__Size()
+             ALLOCATE(Nei(count0) % c (3,count1))
+             count1=0
+             DO WHILE(Node__Pop(vec))
+                count1=count1+1
+                Nei(count0) % c(:,count1) = vec
+                nx=Ind_Small(vec(1),vec(2),vec(3)) % nx 
+                ny=Ind_Small(vec(1),vec(2),vec(3)) % ny
+                nz=Ind_Small(vec(1),vec(2),vec(3)) % nz
+             END DO
           END DO
        END DO
     END DO
-    nind=Node__Size()
-    ALLOCATE(ind_xyz(nind))
-    nind=0
-    DO WHILE(Node__Pop(vect))
-       nind=nind+1
-       ind_xyz(nind) % i=vect(1)
-       ind_xyz(nind) % j=vect(2)
-       ind_xyz(nind) % k=vect(3)
-    END DO
 
-    nxmax=(ncx+1)/2
-    nymax=(ncy+1)/2
-    nzmax=(ncz+1)/2
-    warnx=0
-    warny=0
-    warnz=0
-    IF(imax.ge.nxmax) warnx=1
-    IF(jmax.ge.nymax) warny=1
-    IF(kmax.ge.nzmax) warnz=1
-    IF(warnx == 1 .OR. warny == 1 .OR. warnz == 1) THEN
-       errmsg_f='Neighbor cells might be counted twice: Lower the&
-            & cutoff or increase the No. of cell '
-       IF(warnx == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along x '
-       END IF
-       IF(warny == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along y '
-       END IF
-       IF(warnz == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along z '
-       END IF
-       CALL Add_Errors(-1,errmsg_f)
-       out=.TRUE. 
-    END IF
-  CONTAINS
-    FUNCTION dist_ijk(ni,nj,nk,dx,dy,dz) RESULT(out)
-      REAL(8) :: out
-      REAL(8) ::  dx,dy,dz
-      INTEGER ::  ni,nj,nk
-
-      REAL(8) ::  d,dmin,dt
-      REAL(8) ::  lx,ly,lz
-      REAL(8) ::  mx,my,mz
-      REAL(8) ::  dmx,dmy,dmz
-      REAL(8) ::  msq,dmsq,lambda,s
-
-      INTEGER, PARAMETER :: nv(8,3)=RESHAPE((/&
-           & 0, 1, 0, 0, 1, 1, 0, 1 &
-           &,0, 0, 1, 0, 1, 0, 1, 1 &
-           &,0, 0, 0, 1, 0, 1, 1, 1 &
-           &/),(/8, 3/))
-      INTEGER ::  i,j,imin,jmin
-      INTEGER, SAVE ::  ndtmax=0
-
-!!$
-!!$--- Minimum distance between corners of the cells (0, 0, 0) and 
-!!$--- (ni, nj, nk)
-!!$
-
-      dmin=1.0D8
-      do i=1,8
-         do j=1,8
-            lx=(ni+nv(j,1)-nv(i,1))*dx
-            ly=(nj+nv(j,2)-nv(i,2))*dy
-            lz=(nk+nv(j,3)-nv(i,3))*dz
-
-            mx=co(1,1)*lx+co(1,2)*ly+co(1,3)*lz
-            my=co(2,1)*lx+co(2,2)*ly+co(2,3)*lz
-            mz=co(3,1)*lx+co(3,2)*ly+co(3,3)*lz
-
-            d=mx*mx+my*my+mz*mz
-            if(d.lt.dmin) then
-               dmin=d
-               imin=i
-               jmin=j
-            endif
-
-         end do
-      end do
-!!$
-!!$--- Check if the minimal distance is not on the edge of the cube 
-!!$
-
-      lx=(ni+nv(jmin,1)-nv(imin,1))*dx
-      ly=(nj+nv(jmin,2)-nv(imin,2))*dy
-      lz=(nk+nv(jmin,3)-nv(imin,3))*dz
-
-      mx=co(1,1)*lx+co(1,2)*ly+co(1,3)*lz
-      my=co(2,1)*lx+co(2,2)*ly+co(2,3)*lz
-      mz=co(3,1)*lx+co(3,2)*ly+co(3,3)*lz
-
-      msq=mx*mx+my*my+mz*mz
-!!$
-!!$--- Loop on the three edges
-!!$
-
-      do i=1,3
-         dt=sign(1.,0.5-nv(imin,i))*dx
-         
-         dmx=co(1,i)*dt
-         dmy=co(2,i)*dt
-         dmz=co(3,i)*dt
-         
-         s=mx*dmx+my*dmy+mz*dmz
-         dmsq=dmx*dmx+dmy*dmy+dmz*dmz
-         lambda=-s/dmsq
-         
-         if((lambda.gt.0.) .and. (lambda.lt.1.)) then
-            d=msq-s*s/dmsq
-            if(d.lt.dmin) dmin=d
-         endif
-      enddo
-
-      do i=1,3
-         dt=sign(1.,0.5-nv(jmin,i))*dx
-         
-         dmx=co(1,i)*dt
-         dmy=co(2,i)*dt
-         dmz=co(3,i)*dt
-         
-         s=mx*dmx+my*dmy+mz*dmz
-         dmsq=dmx*dmx+dmy*dmy+dmz*dmz
-         lambda=-s/dmsq
-         
-         if((lambda.gt.0.) .and. (lambda.lt.1.)) then
-            d=msq-s*s/dmsq
-            if(d.lt.dmin) dmin=d
-         endif
-      enddo
-
-      out=dmin
-    END FUNCTION dist_ijk
-  END FUNCTION NeighCells__Index
+  END FUNCTION NeighCells_
 
 END MODULE NeighCells
