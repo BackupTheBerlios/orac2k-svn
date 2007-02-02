@@ -55,9 +55,11 @@ MODULE PI_Communicate
   PUBLIC PI__PickDecomposition, PI__Topology, pe, PI__GetParameters
   INTEGER, SAVE :: nprocs,npx,npy,npz
   TYPE :: PI__Topology
-     INTEGER :: nx,ny,nz !-- 3-D label
+     LOGICAL :: ok=.FALSE.
+     INTEGER, ALLOCATABLE :: exc(:,:)
   END TYPE PI__Topology
-  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe(:)
+  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe(:,:)
+
   REAL(8), PARAMETER :: nv(8,3)=RESHAPE((/&
        & 0.0D0, 1.0D0, 0.0D0, 0.0D0, 1.0D0, 1.0D0, 0.0D0, 1.0D0 &
        &,0.0D0, 0.0D0, 1.0D0, 0.0D0, 1.0D0, 0.0D0, 1.0D0, 1.0D0 &
@@ -135,22 +137,10 @@ CONTAINS
        npx=n_combs; npy=m_combs; npz=l_combs
     END IF
     WRITE(*,*) ' nprocs, nx, ny, nz ',nprocs,npx,npy,npz
-    ALLOCATE(Pe(nprocs))
-    dx=boxl/DBLE(npx)
-    dy=boxl/DBLE(npy)
-    dz=boxl/DBLE(npz)
-    count0=0
-    DO n1=1,npx
-       DO n2=1,npy
-          DO n3=1,npz
-             count0=count0+1
-             Pe(count0) % nx=n1
-             Pe(count0) % ny=n2
-             Pe(count0) % nz=n3
-          END DO
-       END DO
-    END DO
     IF(.NOT. NeighCells_(rcut,nprocs,npx,npy,npz)) CALL Print_Errors()
+    WRITE(*,*) 'illa'
+    IF(.NOT. NeighCells_(rcut,nprocs,npx,npy,npz)) CALL Print_Errors()
+    CALL Make_Comm
   CONTAINS
     RECURSIVE SUBROUTINE Combinations(Prod, Mask, vect)
       INTEGER :: vect(:)
@@ -172,9 +162,56 @@ CONTAINS
          END IF
       END DO
     END SUBROUTINE Combinations
+    SUBROUTINE Make_Comm
+      INTEGER :: n,nx,ny,nz,mp,m,np,i,j,k,ox,oy,oz,mpe
+      INTEGER, POINTER :: ind_x(:)=>NULL(),ind_y(:)=>NULL()
+
+      np=nprocs
+      ALLOCATE(Pe(np,np))
+      ALLOCATE(ind_x(np), ind_y(np))
+      DO n=1,np
+         ind_x=0
+         ind_y=0
+         mp=SIZE(Nei(n) % c,2)
+         DO m=1,mp
+            ox=Nei(n) % c(1,m)
+            oy=Nei(n) % c(2,m)
+            oz=Nei(n) % c(3,m)
+            i=Ind_Small(ox,oy,oz) % nx - 1
+            j=Ind_Small(ox,oy,oz) % ny - 1
+            k=Ind_Small(ox,oy,oz) % nz - 1
+
+            mpe=k+npz*(i*npy+j)+1
+            ind_y(m)=mpe
+            ind_x(mpe)=ind_x(mpe)+1
+         END DO
+         DO m=1,np
+            IF(ind_x(m) /= 0) THEN
+               ALLOCATE(Pe(n,m) % exc (3,ind_x(m)))
+            END IF
+         END DO
+         ind_x=0
+         DO m=1,mp
+            ox=Nei(n) % c(1,m)
+            oy=Nei(n) % c(2,m)
+            oz=Nei(n) % c(3,m)
+            mpe=ind_y(m)
+            ind_x(mpe)=ind_x(mpe)+1
+            Pe(n,mpe) % exc (:,ind_x(mpe)) = (/ ox, oy, oz /)
+         END DO
+      END DO
+!!$      DO m=1,np
+!!$         IF(ALLOCATED(Pe(m,48) % exc)) THEN
+!!$            WRITE(*,*) ' m = ',m
+!!$            WRITE(*,*) (Pe (m,48) % exc(:,mpe),mpe=1,SIZE(Pe(m,48) %&
+!!$                 & exc,2))
+!!$         END IF
+!!$      END DO
+
+    END SUBROUTINE Make_Comm
   END SUBROUTINE PI__PickDecomposition
   SUBROUTINE PI__GetParameters(nprocsa,npxa,npya,npza)
     INTEGER :: nprocsa,npxa,npya,npza
-    nprocsa=nprocs;npxa=npx;npya=npy;npza=npz
+    nprocsa=nprocs; npxa=npx; npya=npy; npza=npz
   END SUBROUTINE PI__GetParameters
 END MODULE PI_Communicate

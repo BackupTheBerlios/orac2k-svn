@@ -65,8 +65,23 @@ MODULE NeighCells
      INTEGER, ALLOCATABLE :: c(:,:)
   END TYPE NeighCells__Neigh
 
+!!$
+!!$--- List of small lattice units contained in each larger unit
+!!$
+
   TYPE(NeighCells__MapLarge), ALLOCATABLE, SAVE :: Ind_Large(:,:,:)
+
+!!$
+!!$--- For each small lattice unit gives the corresponding large
+!!$--- lattice unit it belongs to
+!!$
+
   TYPE(NeighCells__Map), ALLOCATABLE, SAVE :: Ind_Small(:,:,:)
+
+!!$
+!!$--- For each large lattice unit give the list of neighboring small units
+!!$
+
   TYPE(NeighCells__Neigh), ALLOCATABLE, SAVE :: Nei(:)
   INTEGER, SAVE :: ncx,ncy,ncz
 CONTAINS
@@ -82,7 +97,7 @@ CONTAINS
     INTEGER, POINTER :: Ind_x(:,:,:)
     REAL(8) :: dx,dy,dz,ddx,ddy,ddz,x1,y1,z1
     CHARACTER(len=max_char) :: labs0
-    LOGICAL, POINTER :: mask(:,:,:)
+    LOGICAL, POINTER :: mask(:,:,:)=>NULL()
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
     LOGICAL, SAVE :: first_time=.TRUE.
@@ -188,11 +203,11 @@ CONTAINS
        END DO
        First_Time=.FALSE.
     END IF
-
     IF(.NOT. Neighbors_(rcut-1.5D0,ncx,ncy,ncz)) CALL Print_Errors()
+       
 
-    ALLOCATE(Nei(nprocs))
-    ALLOCATE(mask(ncx,ncy,ncz))
+    IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
+    ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
     DO mx=1,npx
        DO my=1,npy
           DO mz=1,npz
@@ -229,9 +244,6 @@ CONTAINS
              DO WHILE(Node__Pop(vec))
                 count1=count1+1
                 Nei(count0) % c(:,count1) = vec
-                nx=Ind_Small(vec(1),vec(2),vec(3)) % nx 
-                ny=Ind_Small(vec(1),vec(2),vec(3)) % ny
-                nz=Ind_Small(vec(1),vec(2),vec(3)) % nz
              END DO
           END DO
        END DO
