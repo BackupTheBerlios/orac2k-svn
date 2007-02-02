@@ -52,7 +52,7 @@ MODULE NeighCells
   IMPLICIT none
   PRIVATE
   PUBLIC NeighCells_, NeighCells__Map, NeighCells__MapLarge, NeighCells__Neigh&
-       &, Ind_Large, Ind_Small, Nei
+       &, Ind_Large, Ind_Small, Nei, NeighCells__Param
 
   TYPE :: NeighCells__Map
      INTEGER :: nx,ny,nz
@@ -250,5 +250,8 @@ CONTAINS
     END DO
 
   END FUNCTION NeighCells_
-
+  SUBROUTINE NeighCells__Param(np,ncxa,ncya,ncza)
+    INTEGER :: np,ncxa,ncya,ncza
+    np=ncx*ncy*ncz; ncxa=ncx; ncya=ncy; ncza=ncz
+  END SUBROUTINE NeighCells__Param
 END MODULE NeighCells

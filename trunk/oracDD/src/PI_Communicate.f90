@@ -163,12 +163,13 @@ CONTAINS
       END DO
     END SUBROUTINE Combinations
     SUBROUTINE Make_Comm
-      INTEGER :: n,nx,ny,nz,mp,m,np,i,j,k,ox,oy,oz,mpe
+      INTEGER :: n,nx,ny,nz,mp,m,np,i,j,k,ox,oy,oz,mpe,ncx,ncy,ncz
       INTEGER, POINTER :: ind_x(:)=>NULL(),ind_y(:)=>NULL()
 
       np=nprocs
       ALLOCATE(Pe(np,np))
-      ALLOCATE(ind_x(np), ind_y(np))
+      CALL NeighCells__Param(mp,ncx,ncy,ncz)
+      ALLOCATE(ind_x(np), ind_y(mp))
       DO n=1,np
          ind_x=0
          ind_y=0

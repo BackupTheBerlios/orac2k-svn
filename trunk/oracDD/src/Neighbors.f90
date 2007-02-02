@@ -54,7 +54,7 @@ MODULE Neighbors
   IMPLICIT none
   PRIVATE
   PUBLIC Neighbors_, Neighbors__Particles, ind_xyz, Neighbors__Ind&
-       &, chain_xyz, Head_xyz
+       &, Neighbors__Chain, chain_xyz, Head_xyz
 
   TYPE :: Neighbors__Ind
      INTEGER :: i,j,k
