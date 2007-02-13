@@ -52,14 +52,17 @@ MODULE PI_Communicate
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC PI__Decomposition_NB, PI__Topology, PI__GetParameters
+  PUBLIC PI__Decomposition_NB, PI__Topology, PI__GetParameters, PI__Type
   INTEGER, SAVE :: nprocs,npx,npy,npz
-  TYPE :: PI__Topology
+  TYPE :: PI__Type
      LOGICAL :: ok=.FALSE.
      INTEGER, ALLOCATABLE :: exc(:,:)
+  END TYPE PI__Type
+  TYPE :: PI__Topology
+     TYPE(PI__Type), ALLOCATABLE :: tbl(:,:)
   END TYPE PI__Topology
-  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe_nb(:,:)
-  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe_bb(:,:)
+  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe_nb(:)
+  TYPE(PI__Topology), SAVE :: pe_bb
 
   REAL(8), PARAMETER :: nv(8,3)=RESHAPE((/&
        & 0.0D0, 1.0D0, 0.0D0, 0.0D0, 1.0D0, 1.0D0, 0.0D0, 1.0D0 &
@@ -68,10 +71,9 @@ MODULE PI_Communicate
        &/),(/8, 3/))
 CONTAINS
   SUBROUTINE PI__Decomposition_nb(rcut,nprocsa, npxa,npya,npza)
-    REAL(8) :: rcut
+    REAL(8) :: rcut(3)
     INTEGER, OPTIONAL :: npxa,npya,npza
     INTEGER :: nprocsa
-    REAL(8) :: rcuut
     INTEGER, POINTER :: vect(:)=>NULL()
     LOGICAL, POINTER :: Mask(:)
     INTEGER :: o0, Ic,  Jc, Kc, n, count0, m, l
@@ -138,8 +140,17 @@ CONTAINS
        npx=n_combs; npy=m_combs; npz=l_combs
     END IF
     WRITE(*,*) ' nprocs, nx, ny, nz ',nprocs,npx,npy,npz
-    IF(.NOT. NeighCells_(rcut,nprocs,npx,npy,npz)) CALL Print_Errors()
-    CALL Make_Comm
+    ALLOCATE(Pe_nb(3))
+    DO n=1,3
+       IF(rcut(n) > 0.0D0) THEN
+          IF(.NOT. NeighCells_(rcut(n),nprocs,npx,npy,npz)) CALL Print_Errors()       
+          CALL Make_Comm(n)
+       END IF
+    END DO
+    IF(rcut(2) > 0.0D0) THEN
+       IF(.NOT. NeighCells_(rcut(2),nprocs,npx,npy,npz)) CALL Print_Errors()       
+       CALL Make_Comm(2)
+    END IF
   CONTAINS
     RECURSIVE SUBROUTINE Combinations(Prod, Mask, vect)
       INTEGER :: vect(:)
@@ -161,13 +172,15 @@ CONTAINS
          END IF
       END DO
     END SUBROUTINE Combinations
-    SUBROUTINE Make_Comm
+    SUBROUTINE Make_Comm(i_n)
+      INTEGER :: i_n
       INTEGER :: n,nx,ny,nz,mp,m,np,i,j,k,ox,oy,oz&
            &,mpe,ncx,ncy,ncz,count0
       INTEGER, POINTER :: ind_x(:)=>NULL(),ind_y(:)=>NULL()
 
       np=nprocs
-      ALLOCATE(Pe_nb(np,np))
+      IF(ALLOCATED(Pe_nb(i_n) % tbl)) DEALLOCATE(Pe_nb(i_n) % tbl)
+      ALLOCATE(Pe_nb(i_n) % tbl(np,np))
       CALL NeighCells__Param(mp,ncx,ncy,ncz)
       WRITE(*,*) ' mp, ncx, ncy, ncz ',mp,ncx,ncy,ncz
       ALLOCATE(ind_x(np), ind_y(mp))
@@ -189,7 +202,7 @@ CONTAINS
          END DO
          DO m=1,np
             IF(ind_x(m) /= 0) THEN
-               ALLOCATE(Pe_nb(n,m) % exc (3,ind_x(m)))
+               ALLOCATE(Pe_nb(i_n) % tbl (n,m) % exc (3,ind_x(m)))
             END IF
          END DO
          ind_x=0
@@ -199,22 +212,23 @@ CONTAINS
             oz=Nei(n) % c(3,m)
             mpe=ind_y(m)
             ind_x(mpe)=ind_x(mpe)+1
-            Pe_nb(n,mpe) % exc (:,ind_x(mpe)) = (/ ox, oy, oz /)
+            Pe_nb(i_n) % tbl (n,mpe) % exc (:,ind_x(mpe)) = (/ ox, oy, oz /)
          END DO
       END DO
       count0=0
       DO n=1,np
          DO m=1,np
-            IF(ALLOCATED(Pe_nb(n,m) % exc)) THEN
+            IF(ALLOCATED(Pe_nb(i_n) % tbl (n,m) % exc)) THEN
                count0=count0+1
             END IF
          END DO
       END DO
       WRITE(*,*) count0,' parallel communications are estimated'
+
 !!$      DO m=1,np
-!!$         IF(ALLOCATED(Pe_nb(m,48) % exc)) THEN
+!!$         IF(ALLOCATED(Pe_nb(i_n) % tbl (m,48) % exc)) THEN
 !!$            WRITE(*,*) ' m = ',m
-!!$            WRITE(*,*) (Pe (m,48) % exc(:,mpe),mpe=1,SIZE(Pe_nb(m,48) %&
+!!$            WRITE(*,*) (Pe_nb(i_n) % tbl (m,48) % exc(:,mpe),mpe=1,SIZE(Pe_nb(i_n) % tbl (m,48) %&
 !!$                 & exc,2))
 !!$         END IF
 !!$      END DO

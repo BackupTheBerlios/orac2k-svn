@@ -64,19 +64,27 @@ MODULE NeighCells
   TYPE :: NeighCells__Neigh
      INTEGER, ALLOCATABLE :: c(:,:)
   END TYPE NeighCells__Neigh
+  TYPE :: NodeN
+     REAL(8) :: rcut=0.0D0
+     INTEGER :: npx=0,npy=0,npz=0,ncx=0,ncy=0,ncz=0
+     TYPE(NeighCells__Map), ALLOCATABLE :: Ind_S(:,:,:)
+     TYPE(NeighCells__MapLarge), ALLOCATABLE :: Ind_L(:,:,:)
+     TYPE(NodeN), POINTER :: next
+  END TYPE NodeN
+  TYPE(NodeN), POINTER :: Root, Current, new_node
 
 !!$
 !!$--- List of small lattice units contained in each larger unit
 !!$
 
-  TYPE(NeighCells__MapLarge), ALLOCATABLE, SAVE :: Ind_Large(:,:,:)
+  TYPE(NeighCells__MapLarge), POINTER :: Ind_Large(:,:,:)=>NULL()
 
 !!$
 !!$--- For each small lattice unit gives the corresponding large
 !!$--- lattice unit it belongs to
 !!$
 
-  TYPE(NeighCells__Map), ALLOCATABLE, SAVE :: Ind_Small(:,:,:)
+  TYPE(NeighCells__Map), POINTER :: Ind_Small(:,:,:)=>NULL()
 
 !!$
 !!$--- For each large lattice unit give the list of neighboring small units
@@ -88,11 +96,10 @@ CONTAINS
 !!$
 !!$--- Constructor
 !!$
-  FUNCTION NeighCells_(rcut,nprocs,npx,npy,npz) RESULT(out)
-    INTEGER :: nprocs,npx,npy,npz
+  FUNCTION NeighCells_(rcut,nprocs,npax,npay,npaz) RESULT(out)
+    INTEGER :: nprocs,npax,npay,npaz
     LOGICAL :: out
-    INTEGER :: nx,ny,nz,mx,my,mz,i,j,k,n,np,count0&
-         &,count1,o,iv,jv,kv
+    INTEGER :: nx,ny,nz,mx,my,mz,i,j,k,n,np,count1,o,iv,jv,kv
     REAL(8) :: rcut
     INTEGER, POINTER :: Ind_x(:,:,:)
     REAL(8) :: dx,dy,dz,ddx,ddy,ddz,x1,y1,z1
@@ -100,9 +107,41 @@ CONTAINS
     LOGICAL, POINTER :: mask(:,:,:)=>NULL()
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
-    LOGICAL, SAVE :: first_time=.TRUE.
+    INTEGER, SAVE :: count0=0
+    INTEGER :: npx,npy,npz
     out=.TRUE.
-    IF(First_Time) THEN
+
+    npx=npax; npy=npay; npz=npaz
+
+    IF(count0 == 0) THEN
+       ALLOCATE(root)
+       NULLIFY(root%next)
+    ELSE
+       current=>root
+       Ind_Large=>NULL()
+       Ind_Small=>NULL()
+       count1=0
+       current=>current % next
+       DO WHILE(ASSOCIATED(current))
+          IF(current % rcut == rcut) THEN
+             Ind_Large=>current % Ind_L
+             Ind_Small=>current % Ind_S
+             ncx=current % ncx
+             ncy=current % ncy
+             ncz=current % ncz
+             npx=current % npx
+             npy=current % npy
+             npz=current % npz
+             EXIT
+          END IF
+          count1=count1+1
+          current=>current % next
+       END DO
+    END IF
+    IF(.NOT. ASSOCIATED(Ind_Small)) THEN
+       ALLOCATE(new_node)
+       NULLIFY(new_node % next)
+       new_node % rcut = rcut
        nx=NINT(a/rcut)
        ny=NINT(b/rcut)
        nz=NINT(c/rcut)
@@ -145,9 +184,9 @@ CONTAINS
        ELSE
           ncz=nz+MOD(npz-MOD(nz,npz),npz)
        END IF
-       ALLOCATE(Ind_Large(npx,npy,npz))
+       ALLOCATE(new_node % Ind_L(npx,npy,npz))
+       ALLOCATE(new_node % Ind_S(ncx,ncy,ncz))
        ALLOCATE(Ind_X(npx,npy,npz))
-       ALLOCATE(Ind_Small(ncx,ncy,ncz))
        dx=2.d0/ncx
        dy=2.d0/ncy
        dz=2.d0/ncz
@@ -167,9 +206,9 @@ CONTAINS
                 mx=MOD(MOD(mx,npx)+npx,npx)+1
                 my=MOD(MOD(my,npy)+npy,npy)+1
                 mz=MOD(MOD(mz,npz)+npz,npz)+1
-                Ind_Small(i,j,k) % nx = mx
-                Ind_Small(i,j,k) % ny = my
-                Ind_Small(i,j,k) % nz = mz
+                new_node % Ind_S(i,j,k) % nx = mx
+                new_node % Ind_S(i,j,k) % ny = my
+                new_node % Ind_S(i,j,k) % nz = mz
                 Ind_X(mx,my,mz) = Ind_X(mx,my,mz) + 1
              END DO
           END DO
@@ -177,7 +216,7 @@ CONTAINS
        DO i=1,npx
           DO j=1,npy
              DO k=1,npz
-                ALLOCATE(Ind_Large(i,j,k) % pt(Ind_X(i,j,k)))
+                ALLOCATE(new_node % Ind_L(i,j,k) % pt(Ind_X(i,j,k)))
              END DO
           END DO
        END DO
@@ -195,17 +234,33 @@ CONTAINS
                 my=MOD(MOD(my,npy)+npy,npy)+1
                 mz=MOD(MOD(mz,npz)+npz,npz)+1
                 Ind_X(mx,my,mz) = Ind_X(mx,my,mz) +1
-                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nx = i
-                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % ny = j
-                Ind_Large(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nz = k
+                new_node % Ind_L(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nx = i
+                new_node % Ind_L(mx,my,mz) % pt (Ind_X(mx,my,mz)) % ny = j
+                new_node % Ind_L(mx,my,mz) % pt (Ind_X(mx,my,mz)) % nz = k
              END DO
           END DO
        END DO
-       First_Time=.FALSE.
-    END IF
-    IF(.NOT. Neighbors_(rcut-1.5D0,ncx,ncy,ncz)) CALL Print_Errors()
-       
 
+       current=>root
+       DO WHILE(ASSOCIATED(current % next))
+          current=>current % next
+       END DO
+       count0=count0+1
+       current % next => new_node
+       current => current % next
+
+       Ind_Large=>current % Ind_L
+       Ind_Small=>current % Ind_S
+       current % ncx=ncx
+       current % ncy=ncy
+       current % ncz=ncz
+       current % npx=npx
+       current % npy=npy
+       current % npz=npz
+    END IF
+       
+    IF(.NOT. Neighbors_(rcut,ncx,ncy,ncz)) CALL Print_Errors()
+       
     IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
     ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
     DO mx=1,npx

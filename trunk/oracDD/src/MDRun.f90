@@ -56,11 +56,13 @@ MODULE MDRun
 CONTAINS
   SUBROUTINE MDRun_
     LOGICAL :: ok
+    REAL(8) :: rcut(3)
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    CALL PI__Decomposition_NB(4.0D0,128)
+    rcut=(/4.0D0, 5.9D0, 12.0D0/)
+    CALL PI__Decomposition_NB(rcut,128)
 
   END SUBROUTINE MDRun_
 END MODULE MDRun
