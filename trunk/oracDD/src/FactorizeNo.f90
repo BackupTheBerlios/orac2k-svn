@@ -5,19 +5,22 @@ MODULE FactorizeNo
   PUBLIC FactorizeNo_
   INTEGER, ALLOCATABLE, TARGET, SAVE :: Factors(:)
 CONTAINS
-  FUNCTION FactorizeNo_(No) RESULT(out)
+  FUNCTION FactorizeNo_(No, N_Maxa) RESULT(out)
     IMPLICIT None
+    INTEGER, OPTIONAL :: N_Maxa
     INTEGER :: No
     INTEGER, POINTER :: out(:)
-    
-    INTEGER, ALLOCATABLE :: p(:),q(:)
-    INTEGER, PARAMETER :: N_Max=2048
+
+    INTEGER, PARAMETER :: pq_Max=2048
+    INTEGER :: p(pq_Max),q(pq_Max)
     INTEGER :: i,j,n,ii
     INTEGER :: m0,count0
     INTEGER, POINTER :: m(:)=>NULL()
-    
-    IF(.NOT. ALLOCATED(p)) ALLOCATE(p(N_Max))
-    IF(.NOT. ALLOCATED(q)) ALLOCATE(q(N_Max))
+    INTEGER :: N_max
+
+    n_Max=pq_Max
+    IF(PRESENT(N_Maxa)) N_Max=N_Maxa
+
     IF(ALLOCATED(Factors)) DEALLOCATE(Factors)
     out=>NULL()
     
@@ -25,6 +28,7 @@ CONTAINS
     !beginning prime numbers are used for factorization:
     
     II=0
+    p=0
     q=1
     DO I=2,40
        IF (q(I)  == 1) THEN
@@ -64,7 +68,6 @@ CONTAINS
     END DO
     out=>Factors
     CALL Node__Delete()
-    DEALLOCATE(q,p)
   END FUNCTION FactorizeNo_
   SUBROUTINE FactorizeNo__Destroy
     DEALLOCATE(Factors)

@@ -34,6 +34,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.19  2007/02/15 16:17:17  mmarchi
+# *** empty log message ***
+#
 # Revision 1.18  2007/01/31 17:10:51  mmarchi
 # *** empty log message ***
 #
@@ -170,7 +173,7 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
 	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o Utilities.o Groups.o \
 	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Communicate.o NeighCells.o\
-	oracDD.o 
+	Potential.o Ewald.o Parallel.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
 

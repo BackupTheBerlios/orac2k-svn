@@ -122,9 +122,9 @@ CONTAINS
           combs(count0)=vect1(1)
        END DO
        d_Min=1.0D10
-       DO n=1,count0
+       DO l=1,count0
           DO m=1,count0
-             DO l=1,count0
+             DO n=1,count0
                 IF(combs(n)*combs(m)*combs(l) == nprocs) THEN
                    d_x=DSQRT(DBLE(Ic-combs(n))**2+DBLE(Jc-combs(m))**2+DBLE(Kc-combs(l))**2)
                    IF(d_x < d_Min) THEN

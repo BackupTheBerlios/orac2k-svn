@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE Ewald
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,38 +38,56 @@ MODULE MDRun
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Wed Feb 14 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
+  
   USE PI_Communicate
-  USE NeighCells
-  USE Ewald
-  USE Parallel
+  USE FactorizeNo
+  USE Potential
   IMPLICIT none
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC Ewald__Validate
 CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: rcut(3)
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(npx == 0) THEN
-       IF(nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut,nprocs)
-          WRITE(*,*) 'out '
-       END IF
-    END IF
-    CALL Ewald__Validate
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+  SUBROUTINE Ewald__Validate
+    INTEGER, PARAMETER :: n_Max=7
+    INTEGER :: n,nx,ny,nz,nprocs,npx,npy,npz
+
+    IF(Ewald__Param % do_not_change) RETURN
+
+    CALL PI__GetParameters(nprocs,npx,npy,npz)
+    nx=Ewald__Param % nx
+    ny=Ewald__Param % ny
+    nz=Ewald__Param % nz
+    CALL FindGrid(nx)
+    CALL FindGrid(ny)
+    nz=NINT(DBLE(nz)/DBLE(nprocs))*nprocs
+    Ewald__Param % nx = nx
+    Ewald__Param % ny = ny
+    Ewald__Param % nz = nz
+    WRITE(*,*) 'Ewald Grid has been changed. New grid:  X = ',nx,' Y = ',ny,' Z = ',nz
+  CONTAINS
+    SUBROUTINE FindGrid(nxy)
+      INTEGER :: nxy
+      LOGICAL :: ok,ok_i
+      INTEGER, POINTER :: vect(:)=>NULL()
+
+      ok=.FALSE.
+      DO WHILE(.NOT. ok) 
+         vect=>FactorizeNo_(nxy, n_Max)
+         ok_i=.TRUE.
+         DO n=1,SIZE(vect)
+            IF(vect(n) > n_Max) ok_i=.FALSE.
+         END DO
+         IF(.NOT. ok_i) THEN
+            nxy=nxy+1
+         ELSE
+            ok=.TRUE.
+         END IF
+      END DO
+      nxy=PRODUCT(vect)
+    END SUBROUTINE FindGrid
+  END SUBROUTINE Ewald__Validate
+END MODULE Ewald

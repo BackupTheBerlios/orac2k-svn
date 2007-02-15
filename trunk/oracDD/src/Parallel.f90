@@ -30,46 +30,102 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE Parallel
+
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
+!!$   Time-stamp: <2007-01-09 10:56:45 marchi>                           *
+!!$                                                                      *
+!!$                                                                      *
+!!$                                                                      *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Thu Nov 23 2006 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program oracDD ----*
+!!$---- This module is part of the program ORAC ----*
 
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
-  USE PI_Communicate
-  USE NeighCells
-  USE Ewald
-  USE Parallel
+!!$---- DATA Only Modules -----------------------------------------------*
+
+  USE Constants, ONLY: max_pars,max_data, max_char
+  USE Parameters_globals
+
+!!$---- Modules ---------------------------------------------------------*
+
+  USE Tree
+  USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&
+       &, errmsg_f, Print_Errors
+  USE Strings, ONLY: MY_Fxm
+  USE Myparse 
+  USE STRPAK
+
+!!$---- DATA Statements -------------------------------------------------*
+
   IMPLICIT none
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC Parallel__Scan,nprocs,npx,npy,npz
+  INTEGER :: nprocs=0, npx=0, npy=0, npz=0
 CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: rcut(3)
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(npx == 0) THEN
-       IF(nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut,nprocs)
-          WRITE(*,*) 'out '
+
+!!$---- EXTECUTABLE Statements ------------------------------------------*
+
+  SUBROUTINE Parallel__Scan
+    CHARACTER(len=max_pars) :: line,linea
+    INTEGER :: n,nword
+    TYPE(Branch), SAVE :: check
+    CALL Tree__Check_Tree('&PARALLEL',check)
+    IF(.NOT. ASSOCIATED(check%children)) RETURN
+
+    DO n=1,SIZE(check%children)
+       line=TRIM(check%children(n))
+       nword=MYParse_(line)
+       
+       linea=strngs(1)
+
+       IF(MY_Fxm('PROC',linea)) THEN
+          CALL Procs
+       ELSE
+          errmsg_f='Illegal commmands found:'//TRIM(linea)
+          CALL Add_Errors(-1,errmsg_f)
        END IF
-    END IF
-    CALL Ewald__Validate
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+    END DO
+    CALL Validate
+    CONTAINS
+      SUBROUTINE Validate
+        LOGICAL :: ex
+      END SUBROUTINE Validate
+    END SUBROUTINE Parallel__Scan
+  SUBROUTINE Procs
+    INTEGER ::  nword,iflags
+
+    nword=SIZE(strngs)
+    SELECT CASE(nword-1)
+    CASE(1)
+       CALL SP_Getnum(strngs(2),nprocs,iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(2))//' '//TRIM(strngs(3))&
+               &//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    CASE(4)
+       CALL SP_Getnum(strngs(2),nprocs,iflags)
+       CALL SP_Getnum(strngs(3),npx,iflags)
+       CALL SP_Getnum(strngs(4),npy,iflags)
+       CALL SP_Getnum(strngs(5),npz,iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(2))//' '//TRIM(strngs(3))&
+               &//' '//TRIM(strngs(4))//' '//TRIM(strngs(6))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    CASE DEFAULT 
+       errmsg_f=error_args % g (4)//' 2 or 4'
+       CALL Add_Errors(-1,errmsg_f)
+    END SELECT
+    CALL Print_Errors()    
+  END SUBROUTINE Procs
+END MODULE Parallel

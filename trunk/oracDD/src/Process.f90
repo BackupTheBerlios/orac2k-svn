@@ -48,8 +48,10 @@ MODULE Process
 
 !!$---- This module is part of the program  ----*
 
+  USE Parallel
   USE Parameters
   USE Setup
+  USE Potential
   USE Grammars
   USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
   USE Tree
@@ -65,6 +67,8 @@ CONTAINS
     CALL Setups__Scan
     CALL Parameters__Scan
     CALL Inout__Scan
+    CALL Potential__Scan
+    CALL Parallel__Scan
     CALL Print_Errors()
   END SUBROUTINE Process_
 END MODULE Process
