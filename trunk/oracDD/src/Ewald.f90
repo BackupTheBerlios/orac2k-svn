@@ -44,50 +44,58 @@ MODULE Ewald
 
 !!$---- This module is part of the program oracDD ----*
   
-  USE PI_Communicate
+  USE PI_Decompose
   USE FactorizeNo
   USE Potential
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
-  PUBLIC Ewald__Validate
+  PUBLIC Ewald__Validate, Ewald__Param
 CONTAINS
   SUBROUTINE Ewald__Validate
     INTEGER, PARAMETER :: n_Max=7
     INTEGER :: n,nx,ny,nz,nprocs,npx,npy,npz
 
     IF(Ewald__Param % do_not_change) RETURN
+    WRITE(*,*) Ewald__Param % nx, Ewald__Param % ny, Ewald__Param % nz
 
     CALL PI__GetParameters(nprocs,npx,npy,npz)
     nx=Ewald__Param % nx
     ny=Ewald__Param % ny
     nz=Ewald__Param % nz
-    CALL FindGrid(nx)
-    CALL FindGrid(ny)
-    nz=NINT(DBLE(nz)/DBLE(nprocs))*nprocs
+    nx=FindGrid(Ewald__Param % nx)
+    ny=FindGrid(Ewald__Param % ny)
+    nz=NINT(DBLE(Ewald__Param % nz)/DBLE(nprocs))*nprocs
+    IF(nx /= Ewald__Param % nx .OR. ny /= Ewald__Param % ny .OR. nz &
+         &/= Ewald__Param % nz) THEN
+       WRITE(kprint,*) 'Ewald Grid has been changed. New grid:  X = '&
+            &,nx,' Y = ',ny,' Z = ',nz
+    END IF
     Ewald__Param % nx = nx
     Ewald__Param % ny = ny
     Ewald__Param % nz = nz
-    WRITE(*,*) 'Ewald Grid has been changed. New grid:  X = ',nx,' Y = ',ny,' Z = ',nz
   CONTAINS
-    SUBROUTINE FindGrid(nxy)
+    FUNCTION FindGrid(nxy) RESULT(out)
+      INTEGER :: out
       INTEGER :: nxy
       LOGICAL :: ok,ok_i
       INTEGER, POINTER :: vect(:)=>NULL()
 
+      out=nxy
       ok=.FALSE.
       DO WHILE(.NOT. ok) 
-         vect=>FactorizeNo_(nxy, n_Max)
+         vect=>FactorizeNo_(out, n_Max)
          ok_i=.TRUE.
          DO n=1,SIZE(vect)
             IF(vect(n) > n_Max) ok_i=.FALSE.
          END DO
          IF(.NOT. ok_i) THEN
-            nxy=nxy+1
+            out=out+1
          ELSE
             ok=.TRUE.
          END IF
       END DO
-      nxy=PRODUCT(vect)
-    END SUBROUTINE FindGrid
+      out=PRODUCT(vect)
+    END FUNCTION FindGrid
   END SUBROUTINE Ewald__Validate
 END MODULE Ewald

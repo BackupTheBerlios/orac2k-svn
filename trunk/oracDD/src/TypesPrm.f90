@@ -54,6 +54,7 @@ MODULE TypesPrm
   USE Strings
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC TypesPrm_, TypesPrm__Types, TypesPrm__Number, TypesPrm__Write&
@@ -109,7 +110,7 @@ CONTAINS
        END IF
     END DO
     out=>TypesPrm__Types
-    WRITE(*,*) 'Total atomic types No. =====>',SIZE(out)
+    WRITE(kprint,*) 'Total atomic types No. =====>',SIZE(out)
   CONTAINS
     FUNCTION Types__Valid() RESULT(out)
       LOGICAL :: out

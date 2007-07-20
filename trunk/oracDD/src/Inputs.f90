@@ -52,6 +52,7 @@ MODULE Inputs
   USE STRPAK
   USE Types
   USE Strings, ONLY: MY_Fam, ST_Clean_Line
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC Inputs_,Inputs__String,Inputs__Filename
@@ -94,7 +95,7 @@ CONTAINS
        DO WHILE(iflag == 0) 
           CALL STR_RAS(CHAR(09),'   ',line,iflag)
        END DO
-       IF(prints) WRITE(*,*) TRIM(line)
+       IF(prints) WRITE(kprint,*) TRIM(line)
        c=c+1
     END DO
     ALLOCATE(data(c),ind(c))
@@ -189,8 +190,13 @@ CONTAINS
     LOGICAL :: ok
 
     n=0
-!!$    ntot=IARGC()
+
+#ifdef HAVE_F2003_EXT
     ntot=COMMAND_ARGUMENT_COUNT()
+#else
+    ntot=IARGC()
+#endif
+
     IF(ntot == 0) THEN
        CALL GETARG(0,line)
        errmsg='Usage: '//TRIM(line)//' [-V] input > output '

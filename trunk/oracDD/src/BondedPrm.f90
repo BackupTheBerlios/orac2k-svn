@@ -55,6 +55,7 @@ MODULE ImpropersPrm
   USE Strings
   USE Node
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: ImpropersPrm_,ImpropersPrm__Param, ImpropersPrm__Write&
@@ -94,7 +95,7 @@ CONTAINS
     END IF
     out=>ImpropersPrm__Param
     IF(ALLOCATED(ImpropersPrm__Param)) THEN
-       WRITE(*,*) 'Total improper dihedral Parameters No. =====>'&
+       WRITE(kprint,*) 'Total improper dihedral Parameters No. =====>'&
             &,SIZE(ImpropersPrm__Param)
     END IF
   END FUNCTION ImpropersPrm_
@@ -164,6 +165,7 @@ MODULE TorsionsPrm
   USE Strings
   USE Node
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: TorsionsPrm_,TorsionsPrm__Param, TorsionsPrm__Read&
@@ -210,7 +212,7 @@ CONTAINS
     END IF
     out=>TorsionsPrm__Param
     IF(ALLOCATED(TorsionsPrm__Param)) THEN
-       WRITE(*,*) 'Total Torsion Parameters No. =====>',SIZE(TorsionsPrm__Param)
+       WRITE(kprint,*) 'Total Torsion Parameters No. =====>',SIZE(TorsionsPrm__Param)
     END IF
   END FUNCTION TorsionsPrm_
   SUBROUTINE TorsionsPrm__Write
@@ -279,6 +281,7 @@ MODULE AnglesPrm
   USE Strings
   USE Node
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: AnglesPrm_,AnglesPrm__Param,AnglesPrm__Read, AnglesPrm__Write
@@ -324,7 +327,7 @@ CONTAINS
     END IF
     out=>AnglesPrm__Param
     IF(ALLOCATED(AnglesPrm__Param)) THEN
-       WRITE(*,*) 'Total Angle Parameters No. =====>',SIZE(AnglesPrm__Param)
+       WRITE(kprint,*) 'Total Angle Parameters No. =====>',SIZE(AnglesPrm__Param)
     END IF
   END FUNCTION AnglesPrm_
   SUBROUTINE AnglesPrm__Write
@@ -393,6 +396,7 @@ MODULE BondsPrm
   USE Strings
   USE Node
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: BondsPrm_,BondsPrm__Param, BondsPrm__Read, BondsPrm__Write
@@ -430,7 +434,7 @@ CONTAINS
     END IF
     out=>BondsPrm__Param
     IF(ALLOCATED(BondsPrm__Param)) THEN
-       WRITE(*,*) 'Total Stretching Parameters No. =====>',SIZE(BondsPrm__Param)
+       WRITE(kprint,*) 'Total Stretching Parameters No. =====>',SIZE(BondsPrm__Param)
     END IF
   END FUNCTION BondsPrm_
   SUBROUTINE BondsPrm__Write

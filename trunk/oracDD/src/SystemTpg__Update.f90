@@ -66,8 +66,8 @@
     Grp_Begins=SltSlv_Grp(1,2)
     Grp_Ends=SltSlv_Grp(2,2)
 
-    WRITE(*,*) '<---- Update topology Adding solvent molecules if any ---->' 
-    WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
+    WRITE(kprint,*) '<---- Update topology Adding solvent molecules if any ---->' 
+    WRITE(kprint,*) 'Atoms No. =====>',SIZE(atm_cnt)
 
 
     o=SHAPE(Tpg % Grp_Atm)
@@ -107,8 +107,8 @@
     END DO
     DEALLOCATE(Temp)
 
-    WRITE(*,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
-    WRITE(*,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
+    WRITE(kprint,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
+    WRITE(kprint,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
 
     DEALLOCATE(Tpg % atm)
     ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
@@ -134,7 +134,7 @@
           offset=offset+q
           nato=nato+natop
        END DO
-       WRITE(*,*) 'New Bonds No. =====>',SIZE(Tpg % bonds,2)
+       WRITE(kprint,*) 'New Bonds No. =====>',SIZE(Tpg % bonds,2)
        DEALLOCATE(Temp)
     END IF
     IF(ALLOCATED(Tpg % Angles)) THEN
@@ -156,7 +156,7 @@
           nato=nato+natop
        END DO
        DEALLOCATE(Temp)
-       WRITE(*,*) 'New Angles No. =====>',SIZE(Tpg % Angles,2)
+       WRITE(kprint,*) 'New Angles No. =====>',SIZE(Tpg % Angles,2)
     END IF
     IF(ALLOCATED(Tpg % Dihed)) THEN
        o=SHAPE(Tpg % Dihed)
@@ -177,7 +177,7 @@
           nato=nato+natop
        END DO
        DEALLOCATE(Temp)
-       WRITE(*,*) 'New Torsions No. =====>',SIZE(Tpg % Dihed,2)
+       WRITE(kprint,*) 'New Torsions No. =====>',SIZE(Tpg % Dihed,2)
     END IF
     IF(ALLOCATED(Tpg % Imph)) THEN
        o=SHAPE(Tpg % Imph)
@@ -198,7 +198,7 @@
           nato=nato+natop
        END DO
        DEALLOCATE(Temp)
-       WRITE(*,*) 'New ITors No. =====>',SIZE(Tpg % imph ,2)
+       WRITE(kprint,*) 'New ITors No. =====>',SIZE(Tpg % imph ,2)
     END IF
     IF(ALLOCATED(Tpg % Int14)) THEN
        o=SHAPE(Tpg % Int14)
@@ -219,7 +219,7 @@
           nato=nato+natop
        END DO
        DEALLOCATE(Temp)
-       WRITE(*,*) 'New Int14 No. =====>',SIZE(Tpg % Int14,2)
+       WRITE(kprint,*) 'New Int14 No. =====>',SIZE(Tpg % Int14,2)
     END IF
 
     IF(ALLOCATED(Tpg % Mol_Atm)) THEN
@@ -250,7 +250,7 @@
           nato=nato+natop
        END DO       
        DEALLOCATE(Temp1)
-       WRITE(*,*) 'New Molecule No. =====>',SIZE(Tpg % Mol_Atm)
+       WRITE(kprint,*) 'New Molecule No. =====>',SIZE(Tpg % Mol_Atm)
     END IF
 
   END SUBROUTINE SystemTpg__Update

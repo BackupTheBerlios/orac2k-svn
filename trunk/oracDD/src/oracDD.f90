@@ -65,6 +65,7 @@ PROGRAM OracDD
   USE IndSequence
   USE Banner
   USE Atom
+  USE PI_
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -74,7 +75,9 @@ PROGRAM OracDD
   REAL(8) :: Time_Begin,Time_End
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-!!$  CALL Banner_
+  CALL PI__
+
+  CALL Banner_
   CALL Units_
 
 !!$======================================================================
@@ -113,7 +116,8 @@ PROGRAM OracDD
 
 !!$  CALL Run_oracS
 
-  STOP
+  CALL PI__Finalize
+
 CONTAINS
   SUBROUTINE BuildSystem
     IF(Called_Tpg .AND. Called_Prm) THEN

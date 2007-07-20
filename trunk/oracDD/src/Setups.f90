@@ -181,6 +181,7 @@ MODULE Solute
   USE Strings, ONLY: MY_Fxm
   USE Myparse
   USE STRPAK, ONLY: SP_Getnum
+  USE Print_Defs
   IMPLICIT NONE 
   PRIVATE
   PUBLIC :: Solute_,PDB_Solute, PDB_Template, Solute__Exclusion
@@ -211,7 +212,7 @@ CONTAINS
              RETURN
           END IF
 
-          WRITE(*,*) 'Storing SOLUTE .pdb ====>'
+          WRITE(kprint,*) 'Storing SOLUTE .pdb ====>'
           IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
           ALLOCATE(PDB_Solute(SIZE(RS__string)))
           PDB_Solute=RS__string
@@ -224,7 +225,7 @@ CONTAINS
              CALL Add_Errors(-1,errmsg_f)
              RETURN
           END IF
-          WRITE(*,*) 'Storing TEMPLATE .pdb ====>'
+          WRITE(kprint,*) 'Storing TEMPLATE .pdb ====>'
           IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
           ALLOCATE(PDB_Template(SIZE(RS__string)))
           PDB_Template=RS__string
@@ -262,6 +263,7 @@ MODULE Solvent
   USE Strings, ONLY: MY_Fxm
   USE Myparse
   USE STRPAK
+  USE Print_Defs
   IMPLICIT NONE 
   PRIVATE
   CHARACTER(len=max_char), DIMENSION(:), ALLOCATABLE, SAVE :: PDB_Solvent
@@ -320,7 +322,7 @@ CONTAINS
              CALL Add_Errors(-1,errmsg_f)
              CYCLE
           END IF
-          WRITE(*,*) 'Storing SOLVENT .pdb ====>'
+          WRITE(kprint,*) 'Storing SOLVENT .pdb ====>'
           IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
           ALLOCATE(PDB_Solvent(SIZE(RS__string)))
           PDB_Solvent=RS__string
@@ -430,6 +432,7 @@ MODULE Setup
 
 !!$---- DATA Statements -------------------------------------------------*
 
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC Setups__Scan, Setup__PDB
@@ -469,7 +472,7 @@ CONTAINS
     END DO
   CONTAINS
     SUBROUTINE Store_SystemPDB
-      WRITE(*,*) 'Storing System .pdb ====>'
+      WRITE(kprint,*) 'Storing System .pdb ====>'
       IF(.NOT. ReadStore_(strngs(2))) CALL Print_Errors()
       ALLOCATE(Setup__PDB(SIZE(RS__string)))
       Setup__PDB=RS__string

@@ -23,7 +23,7 @@ CONTAINS
 
     IF(ALLOCATED(Factors)) DEALLOCATE(Factors)
     out=>NULL()
-    
+
     !First generate all prime numbers less than N_Max - these
     !beginning prime numbers are used for factorization:
     

@@ -60,6 +60,7 @@ MODULE Tops
   USE STRPAK
   USE Parameters_Globals
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
+  USE Print_Defs
   PRIVATE
   PUBLIC Tops_, Tops__Type, App_Char
   TYPE :: Tops__Type
@@ -142,7 +143,7 @@ CONTAINS
     END DO
     CALL Newresidues_
     CALL CPU_TIME(Time_End)
-    WRITE(*,*) 'CPU Time = ',Time_End-Time_Begin,' in s '
+    WRITE(kprint,*) 'CPU Time = ',Time_End-Time_Begin,' in s '
 
   CONTAINS
     INCLUDE 'Tops_Orac.f90'

@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE Print_Defs
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,43 +38,12 @@ MODULE MDRun
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Thu Apr  5 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program oracDD ----*
+!!$---- This module is part of the program OracDD ----*
 
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
-  USE PI_Decompose
-  USE PI_
-  USE NeighCells
-  USE Ewald
-  USE Parallel
-  USE Print_Defs
   IMPLICIT none
-  PRIVATE
-  PUBLIC MDRun_
-CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: rcut(3)
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(npx == 0) THEN
-       IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut)
-       END IF
-    END IF
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
-       CALL Ewald__Validate
-    END IF
-    
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+  INTEGER, SAVE :: kprint=6
+END MODULE Print_Defs

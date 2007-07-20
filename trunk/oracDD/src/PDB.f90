@@ -58,6 +58,7 @@ MODULE PDB
   USE MyParse
   USE STRPAK
   USE Cell
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC PDB_, AtomPdb, PDB__Write

@@ -60,6 +60,7 @@ MODULE SystemTpg
   USE Node
   USE Tops
   USE Utilities
+  USE Print_Defs
 
   IMPLICIT none
   PRIVATE
@@ -127,15 +128,15 @@ CONTAINS
     END SUBROUTINE Used_Residues
     SUBROUTINE Atoms
       INTEGER :: n
-      WRITE(*,*)
+      WRITE(kprint,*)
 
-      WRITE(*,*) 'Atoms No. =====>',SIZE(atm_cnt)
+      WRITE(kprint,*) 'Atoms No. =====>',SIZE(atm_cnt)
       ALLOCATE(Tpg % atm(SIZE(atm_cnt)))
       ALLOCATE(Tpg % Grp_Atm(SIZE(Grp_Atm,1),SIZE(Grp_Atm,2)))
       ALLOCATE(Tpg % Res_Atm(SIZE(Res_Atm,1),SIZE(Res_Atm,2)))
       
-      WRITE(*,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
-      WRITE(*,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
+      WRITE(kprint,*) 'Residue No. =====>',SIZE(Tpg % Res_Atm,2)
+      WRITE(kprint,*) 'Group No. =====>',SIZE(Tpg % Grp_Atm,2)
       Tpg % Grp_Atm = Grp_Atm
       Tpg % Res_Atm = Res_Atm
       DO n=1,SIZE(atm_cnt)
@@ -191,7 +192,7 @@ CONTAINS
       END DO
       DEALLOCATE(t_bonds)
       Tpg % s_bonds=get_Slv(Tpg % bonds)
-      WRITE(*,*) 'Bonds No. =====>',count_A
+      WRITE(kprint,*) 'Bonds No. =====>',count_A
       
       IF(ASSOCIATED(p_bonds)) DEALLOCATE(p_bonds)
     END SUBROUTINE Bonds
@@ -295,7 +296,7 @@ CONTAINS
          END IF
       END DO
       DEALLOCATE(t_angles)
-      WRITE(*,*) 'Angles No. =====>',count_A
+      WRITE(kprint,*) 'Angles No. =====>',count_A
       IF(ASSOCIATED(p_bends)) DEALLOCATE(p_bends)
       Tpg % s_angles=get_Slv(Tpg % angles)
 
@@ -411,7 +412,7 @@ CONTAINS
          END IF
       END DO
       DEALLOCATE(t_tors)
-      WRITE(*,*) 'Torsions No. =====>',SIZE(Tpg % dihed,2)
+      WRITE(kprint,*) 'Torsions No. =====>',SIZE(Tpg % dihed,2)
       Tpg % s_dihed=get_Slv(Tpg % dihed)
 
       IF(.NOT. Node_()) STOP
@@ -494,7 +495,7 @@ CONTAINS
       IF(ASSOCIATED(p_tors)) DEALLOCATE(p_tors)
       IF(ASSOCIATED(p_Int14)) DEALLOCATE(p_Int14)      
 
-      WRITE(*,*) 'Int14 No. =====>',SIZE(Tpg % Int14,2)
+      WRITE(kprint,*) 'Int14 No. =====>',SIZE(Tpg % Int14,2)
     END SUBROUTINE Torsions
     SUBROUTINE ITorsions
       LOGICAL ::  end_of_list
@@ -565,7 +566,7 @@ CONTAINS
          count_A=count_A+1
          Tpg % imph (:, count_a) = p_itors
       END DO
-      WRITE(*,*) 'ITors No. =====>',count_A
+      WRITE(kprint,*) 'ITors No. =====>',count_A
       Tpg % s_imph=get_Slv(Tpg % imph)
       IF(ASSOCIATED(p_itors)) DEALLOCATE(p_itors)
     END SUBROUTINE ITorsions
@@ -636,7 +637,7 @@ CONTAINS
        END IF
     END DO
     IF(ASSOCIATED(p_mols)) DEALLOCATE(p_mols)
-    WRITE(*,*) 'Molecule No. =====>',SIZE(Tpg % Mol_Atm)
+    WRITE(kprint,*) 'Molecule No. =====>',SIZE(Tpg % Mol_Atm)
   CONTAINS
     RECURSIVE SUBROUTINE Next_Connection(ia)
       INTEGER, INTENT(IN) :: ia

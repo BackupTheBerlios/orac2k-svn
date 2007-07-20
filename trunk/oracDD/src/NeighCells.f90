@@ -45,7 +45,7 @@ MODULE NeighCells
 !!$---- This module is part of the program oracDD ----*
   
   USE Constants
-  USE Neighbors
+  USE Neighbors_S
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Node
   USE Cell
@@ -108,15 +108,22 @@ CONTAINS
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
     INTEGER, SAVE :: count0=0
-    INTEGER :: npx,npy,npz
+    INTEGER :: npx,npy,npz,i_n
     out=.TRUE.
 
     npx=npax; npy=npay; npz=npaz
+
+!!$
+!!$--- If it the first time allocate space for root
+!!$
 
     IF(count0 == 0) THEN
        ALLOCATE(root)
        NULLIFY(root%next)
     ELSE
+!!$
+!!$--- Search if a cutoff match
+!!$
        current=>root
        Ind_Large=>NULL()
        Ind_Small=>NULL()
@@ -138,6 +145,11 @@ CONTAINS
           current=>current % next
        END DO
     END IF
+
+!!$
+!!$--- If a cutoff does not match, Ind_Large and Ind_Small are not associated
+!!$
+
     IF(.NOT. ASSOCIATED(Ind_Small)) THEN
        ALLOCATE(new_node)
        NULLIFY(new_node % next)
@@ -259,8 +271,10 @@ CONTAINS
        current % npz=npz
     END IF
        
-    IF(.NOT. Neighbors_(rcut,ncx,ncy,ncz)) CALL Print_Errors()
-       
+    IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()
+    
+    
+    
     IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
     ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
     DO mx=1,npx
@@ -280,10 +294,10 @@ CONTAINS
                 i=Ind_Large(mx,my,mz) % pt (n) % nx-1
                 j=Ind_Large(mx,my,mz) % pt (n) % ny-1
                 k=Ind_Large(mx,my,mz) % pt (n) % nz-1
-                DO o=1,SIZE(Ind_xyz)
-                   iv=Ind_xyz(o) % i
-                   jv=Ind_xyz(o) % j
-                   kv=Ind_xyz(o) % k
+                DO o=1,SIZE(clst(i_n) % Ind_xyz)
+                   iv=clst(i_n) % Ind_xyz(o) % i
+                   jv=clst(i_n) % Ind_xyz(o) % j
+                   kv=clst(i_n) % Ind_xyz(o) % k
                    nx=mod(mod(i+iv,ncx)+ncx,ncx)+1
                    ny=mod(mod(j+jv,ncy)+ncy,ncy)+1
                    nz=mod(mod(k+kv,ncz)+ncz,ncz)+1

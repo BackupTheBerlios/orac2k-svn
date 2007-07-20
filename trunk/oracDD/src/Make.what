@@ -1,0 +1,79 @@
+# Parallel 
+PARA_DEFS = -DHAVE_MPI
+
+# Compilers
+
+COMPILER = INTEL
+
+#COMPILER = PGI
+#COMPILER = G95
+#COMPILER = gfortran
+
+
+########################################################################
+
+CFLAGS = -O
+SHELL = /bin/sh
+
+CPP = /lib/cpp -traditional
+CC = cc
+LIB = nolib
+CURDIR = `pwd`
+DIST_DIR = tmp_dir/orac2k/src
+LIBRARIES = NONE
+
+
+ifeq ($(COMPILER), INTEL)
+COMPILER_DEFS = -DHAVE_F2003_EXT
+endif
+ifeq ($(COMPILER), G95)
+COMPILER_DEFS = -DHAVE_F2003_EXT
+endif
+
+FFLAGS = $(PARA_DEFS) $(COMPILER_DEFS)
+
+ifeq ($(COMPILER), INTEL)
+  FC = ifort
+  F90 = ifort
+  CC = gcc
+  LD = ifort
+  FFLAGS += -fpp -O3
+endif
+
+ifeq ($(COMPILER), PGI)
+  FC = pgf90
+  F90 = pgf90
+  CC = gcc
+  LD = pgf90
+  FFLAGS += -O3
+endif
+ifeq ($(COMPILER), G95)
+  FC = g95
+  F90 = g95
+  CC = gcc
+  LD = g95
+  FFLAGS += -O3
+endif
+ifeq ($(COMPILER), gfortran)
+  FC = /usr/local/bin/gfortran
+  F90 = /usr/local/bin/gfortran
+  CC = gcc
+  LD = /usr/local/bin/gfortran
+  FFLAGS += -O3
+endif 
+
+ifdef PARA_DEFS 
+   FC = mpif90
+   F90 = mpif90
+   CC = mpicc
+   LD = mpif90
+endif
+
+
+
+#FFLAGS = -g 
+#FFLAGS = -g -fbounds-check 
+#FFLAGS = -g -Mbounds -Mchkstk -Mchkfpstk
+
+#FFLAGS = -O3
+#FFLAGS = -g -C

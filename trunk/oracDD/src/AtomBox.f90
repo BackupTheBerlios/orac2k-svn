@@ -55,6 +55,7 @@ MODULE AtomBox
   USE SystemPrm
   USE Solvent
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC AtomBox_, AtomBox__BuildSlv, AtomBox__, AtomBox__ChgFrame&
@@ -139,7 +140,7 @@ CONTAINS
     
 
     ALLOCATE(Coords0 (Solvent__Box(i_Type) % nt*Ic*Jc*Kc*SIZE(Coords)))
-    WRITE(*,'(a,f12.3)') ' Solvent imposed molecular volume ======> '&
+    WRITE(kprint,'(a,f12.3)') ' Solvent imposed molecular volume ======> '&
          &,volume/DBLE(Solvent__Box(i_Type) % nt*Ic*Jc*Kc)
 
     m=0

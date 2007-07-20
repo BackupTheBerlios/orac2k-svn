@@ -44,6 +44,7 @@ MODULE Banner
 
 !!$---- This module is part of the program oracDD ----*
 
+  USE Print_Defs
   IMPLICIT none
   CHARACTER(len=80), DIMENSION(31) :: Banner__Page=&
        &(/&
@@ -80,6 +81,6 @@ MODULE Banner
        &'================================================================================'/)
 CONTAINS
   SUBROUTINE Banner_
-    WRITE(*,'(a80)') Banner__Page
+    WRITE(kprint,'(a80)') Banner__Page
   END SUBROUTINE Banner_
 END MODULE Banner

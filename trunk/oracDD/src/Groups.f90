@@ -85,7 +85,6 @@ CONTAINS
     out=.TRUE.
     Grp_Atm=>IndSequence__Grp()
     ALLOCATE(Grp_A(SIZE(Grp_Atm)))
-
     Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds)
     DO n=1,SIZE(Grp_Local)
        s=0
@@ -101,6 +100,10 @@ CONTAINS
           Grp_A(n) % bonds (m) % np = o1
           Grp_A(n) % bonds (m) % bd = Grp_Local(n) % Tpg (m) % bd
           Grp_A(n) % bonds (m) % p  = Grp_Local(n) % Tpg (m) % p
+       END DO
+
+       DO m=1,s
+          o1=Grp_A(n) % bonds(m) % nbd
        END DO
     END DO
     Grp_Local=>Do_Copy(Prm % angles, Tpg % angles)

@@ -34,6 +34,9 @@
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
 # $Header$
 # $Log$
+# Revision 1.20  2007/07/20 14:07:43  mmarchi
+# *** empty log message ***
+#
 # Revision 1.19  2007/02/15 16:17:17  mmarchi
 # *** empty log message ***
 #
@@ -108,48 +111,9 @@
 # initial import into CVS
 #
 
-#FC = /usr/local/bin/gfortran
-#F90 = /usr/local/bin/gfortran
-#CC = gcc
-#LD = /usr/local/bin/gfortran
 
-FC = g95
-F90 = g95
-CC = gcc
-LD = g95
+include Make.what
 
-#FC = f90
-#F90 = f90
-#CC = gcc
-#LD = f90
-
-#FC = pgf90
-#F90 = pgf90
-#CC = gcc
-#LD = pgf90
-
-#FC = ifort
-#F90 = ifort
-#CC = gcc
-#LD = ifort
-
-CFLAGS = -O
-SHELL = /bin/sh
-DESCRIPTION = Merge version MAX-PIE. Unit of time is fs.
-STATUS = beta version 
-RELEASE = 1.0
-CPP = /lib/cpp -traditional
-CC = cc
-LIB = nolib
-CURDIR = `pwd`
-DIST_DIR = tmp_dir/orac/source
-LIBRARIES = NONE
-#FFLAGS = -g 
-#FFLAGS = -g -fbounds-check 
-#FFLAGS = -g -Mbounds -Mchkstk -Mchkfpstk
-FFLAGS = -O3
-#FFLAGS = -O3
-#FFLAGS = -g -C
 #==========================================================================
 # Define default rules
 #==========================================================================
@@ -171,9 +135,9 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	Numerics.o Units.o PDB.o Setups.o Process.o Hash_Tops.o Tops.o SecondarySeq.o\
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
-	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors.o Utilities.o Groups.o \
-	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Communicate.o NeighCells.o\
-	Potential.o Ewald.o Parallel.o oracDD.o 
+	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors_S.o Neighbors.o Utilities.o Groups.o \
+	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o\
+	NeighCells.o Potential.o Ewald.o Parallel.o Print_Defs.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
 

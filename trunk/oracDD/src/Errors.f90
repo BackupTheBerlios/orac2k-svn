@@ -32,6 +32,7 @@
 !!$----------------------------------------------------------------------/
 MODULE ERROR_List
   USE CONSTANTS, ONLY: max_char,max_data
+  USE Print_Defs
   IMPLICIT NONE 
   INTEGER, SAVE :: counter=0, count_f=0, count_w=0
   INTEGER, PARAMETER :: max_err=4*max_char, max_err_long=12000
@@ -174,9 +175,9 @@ CONTAINS
        msg2%body(i)=vector(1)
     END DO
     
-    WRITE(*,'(2x,a)') msg2%top
-    WRITE(*,'(2x,a)') msg2%body(1:m)
-    WRITE(*,'(2x,a)') msg2%bottom
+    WRITE(kprint,'(2x,a)') msg2%top
+    WRITE(kprint,'(2x,a)') msg2%body(1:m)
+    WRITE(kprint,'(2x,a)') msg2%bottom
     IF(ASSOCIATED(vector)) DEALLOCATE(vector)
     IF(ALLOCATED(msg2 % body)) DEALLOCATE(msg2 % body)
     
@@ -228,11 +229,11 @@ CONTAINS
           msg2%body(i)=vector(1)
        END DO
 
-       IF(counter == 0) WRITE(*,'(2x,a)') msg2%top
-       WRITE(*,'(2x,a)') msg2%intrabodies
-       WRITE(*,'(2x,a)') msg2%body(1:m)
+       IF(counter == 0) WRITE(kprint,'(2x,a)') msg2%top
+       WRITE(kprint,'(2x,a)') msg2%intrabodies
+       WRITE(kprint,'(2x,a)') msg2%body(1:m)
     ELSE
-       WRITE(*,'(2x,a)') msg2%bottom
+       WRITE(kprint,'(2x,a)') msg2%bottom
     END IF
     counter=counter+1
     IF(ASSOCIATED(vector)) DEALLOCATE(vector)
@@ -290,11 +291,11 @@ CONTAINS
           msg2%body(i)=vector(1)
        END DO
 
-       IF(counter == 0) WRITE(*,'(2x,a)') msg2%top
-       WRITE(*,'(2x,a)') msg2%intrabodies
-       WRITE(*,'(2x,a)') msg2%body(1:m)
+       IF(counter == 0) WRITE(kprint,'(2x,a)') msg2%top
+       WRITE(kprint,'(2x,a)') msg2%intrabodies
+       WRITE(kprint,'(2x,a)') msg2%body(1:m)
     ELSE
-       WRITE(*,'(2x,a)') msg2%bottom
+       WRITE(kprint,'(2x,a)') msg2%bottom
     END IF
     IF(ASSOCIATED(vector)) DEALLOCATE(vector)
     IF(ALLOCATED(msg2 % body)) DEALLOCATE(msg2 % body)

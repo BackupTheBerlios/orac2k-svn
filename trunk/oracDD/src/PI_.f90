@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE PI_
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,43 +38,94 @@ MODULE MDRun
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Thu Apr  5 2007 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program oracDD ----*
+!!$---- This module is part of the program ORAC ----*
 
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
-  USE PI_Decompose
-  USE PI_
-  USE NeighCells
-  USE Ewald
-  USE Parallel
   USE Print_Defs
   IMPLICIT none
+#ifdef HAVE_MPI
+  include 'mpif.h'
+#endif
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC :: PI__, PI__Finalize, PI_Comm,PI_Node,PI_nprocs,PI_npx&
+       &,PI_npy,PI_npz, PI_Comm_Cart,PI__Node, PI__Ranks,&
+       & PI__Get_Ranks, PI_Node_Cart
+  INTEGER, SAVE :: PI_Comm,PI_node=0,PI_nprocs,PI_npx=1,PI_npy=1&
+       &,PI_npz=1, PI_Comm_Cart, PI_Node_Cart
+  TYPE :: PI__Node
+     INTEGER :: n, nx, ny, nz
+  END TYPE PI__Node
+  TYPE(PI__Node), ALLOCATABLE :: PI__Ranks(:)
 CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: rcut(3)
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(npx == 0) THEN
-       IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut)
-       END IF
+  SUBROUTINE PI__
+    INTEGER :: ierr
+#ifdef HAVE_MPI
+    CALL MPI_Init( ierr )
+    PI_comm=MPI_COMM_WORLD
+    call MPI_COMM_RANK( PI_comm, PI_node, ierr )
+    call MPI_COMM_SIZE( PI_comm, PI_nprocs, ierr )
+    IF(PI_node /=0 ) THEN
+       OPEN(unit=kprint,file="/dev/null")
     END IF
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
-       CALL Ewald__Validate
-    END IF
+#endif
+  END SUBROUTINE PI__
+  SUBROUTINE PI__Nodes
+#ifdef HAVE_MPI
     
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+#endif
+  END SUBROUTINE PI__Nodes
+  SUBROUTINE PI__Finalize
+    INTEGER :: ierr
+
+#ifdef HAVE_MPI
+    CALL MPI_Finalize( ierr )
+#endif
+
+  END SUBROUTINE PI__Finalize
+  SUBROUTINE PI__Get_Ranks
+
+    INTEGER :: dims(3),ierr,coord(3)
+    INTEGER :: m,n,mx,my,mz,npx,npy,npz
+    LOGICAL :: periods(3)=(/.TRUE., .TRUE., .TRUE. /)
+    LOGICAL :: reorder=.TRUE.
+    INTEGER, POINTER :: coords(:,:)
+    
+#ifdef HAVE_MPI
+
+    dims(1)=PI_npx
+    dims(2)=PI_npy
+    dims(3)=PI_npz
+
+
+    ALLOCATE(coords(3,PI_Nprocs))
+    ALLOCATE(PI__Ranks(PI_Nprocs))
+
+    CALL MPI_CART_CREATE(PI_Comm, 3, dims, periods, reorder, PI_Comm_Cart, ierr)
+
+    CALL MPI_COMM_RANK(PI_Comm_Cart, PI_Node_Cart, ierr)
+
+    CALL MPI_CART_COORDS(PI_Comm_Cart, PI_Node_Cart, 3, coord, ierr)
+
+    CALL MPI_ALLGATHER(coord,3,MPI_INTEGER4,coords,3,MPI_INTEGER4&
+         &,PI_Comm_Cart, ierr)
+
+    npx=PI_npx
+    npy=PI_npy
+    npz=PI_npz
+ 
+    DO m=1,PI_nprocs
+       n=m-1
+       mx=coords(1,m)+1
+       my=coords(2,m)+1
+       mz=coords(3,m)+1
+       PI__Ranks (m) % n = (mx-1)*npy*npz+(my-1)*npz+mz
+       PI__Ranks (m) % nx = mx-1
+       PI__Ranks (m) % ny = my-1
+       PI__Ranks (m) % nz = mz-1
+    END DO
+#endif
+  END SUBROUTINE PI__Get_Ranks
+END MODULE PI_

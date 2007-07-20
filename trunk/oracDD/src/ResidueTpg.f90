@@ -56,6 +56,7 @@ MODULE ResidueTpg
   USE Myparse
   USE Node
   USE Tops
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: ResidueTpg_,Res_Tpg, ResidueTpg__Type
@@ -113,7 +114,7 @@ CONTAINS
        Res_Tpg (i_F) % Grp_Atm(2,Grp_No)=nato
     END DO
     i=Find_Atom(0,' ', Res_Tpg (i_F) % atm)
-    IF(First_Time) WRITE(*,'(''Computing residue topology ====>'')')
+    IF(First_Time) WRITE(kprint,'(''Computing residue topology ====>'')')
     CALL bonds
     CALL Angles
     CALL Torsions
@@ -150,9 +151,9 @@ CONTAINS
        END DO
        
        IF(.NOT. ok) THEN
-          WRITE(*,*) n,Res_Tpg (i_F) % atm(n) % Res
-          WRITE(*,*) n,Res_Tpg (i_F) % atm(n) % beta
-          WRITE(*,*) n,Res_Tpg (i_F) % atm(n) % betab
+          WRITE(kprint,*) n,Res_Tpg (i_F) % atm(n) % Res
+          WRITE(kprint,*) n,Res_Tpg (i_F) % atm(n) % beta
+          WRITE(kprint,*) n,Res_Tpg (i_F) % atm(n) % betab
           STOP
        END IF
     END DO
@@ -216,7 +217,7 @@ CONTAINS
          Res_Tpg (i_F) % atm(i1) % cnt(ind_x(i1)) = i2
          Res_Tpg (i_F) % atm(i2) % cnt(ind_x(i2)) = i1
       END DO
-      WRITE(*,'(''.'')',ADVANCE='NO')
+      WRITE(kprint,'(''.'')',ADVANCE='NO')
       
       DEALLOCATE(ind_x)
       IF(ASSOCIATED(p_bonds)) DEALLOCATE(p_bonds)
@@ -317,7 +318,7 @@ CONTAINS
       DEALLOCATE(t_angles)
       IF(ASSOCIATED(p_angles)) DEALLOCATE(p_angles)
       
-      WRITE(*,'(''.'')',ADVANCE='NO') 
+      WRITE(kprint,'(''.'')',ADVANCE='NO') 
       
     END SUBROUTINE Angles
     SUBROUTINE Torsions
@@ -408,7 +409,7 @@ CONTAINS
       END DO
       DEALLOCATE(t_Tors)
       IF(ASSOCIATED(p_tors)) DEALLOCATE(p_tors)
-      WRITE(*,'(''.'')',ADVANCE='NO') 
+      WRITE(kprint,'(''.'')',ADVANCE='NO') 
       
     END SUBROUTINE Torsions
     SUBROUTINE Int14
@@ -481,7 +482,7 @@ CONTAINS
       DEALLOCATE(t_Int14)
       IF(ASSOCIATED(p_Int14)) DEALLOCATE(p_Int14)
       
-      WRITE(*,'(''.'')',ADVANCE='NO') 
+      WRITE(kprint,'(''.'')',ADVANCE='NO') 
     END SUBROUTINE Int14
     FUNCTION Pick_Res(res,Res_C) RESULT (out)
       TYPE(Tops__Type), DIMENSION(:) :: Res_C

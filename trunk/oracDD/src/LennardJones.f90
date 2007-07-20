@@ -59,6 +59,7 @@ MODULE LennardJones
   USE Strings
   USE MyParse
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC  LennardJones_, LennardJones__Type, LennardJones__SigmaEps&
@@ -238,7 +239,7 @@ CONTAINS
        END DO
     END DO
     out=>LennardJones__Par
-    WRITE(*,*) 'Total Lennard-Jones Parameter &
+    WRITE(kprint,*) 'Total Lennard-Jones Parameter &
          &types No. =====>',SIZE(LennardJones__Par % C12)
     DEALLOCATE(LJ,oks)
   CONTAINS

@@ -49,6 +49,7 @@ MODULE AtomCnt
 !!$---- This module is part of the program ORAC ----*
 
 
+  USE PI_
   USE IndPatch
   USE Constants
   USE Indsequence
@@ -60,6 +61,7 @@ MODULE AtomCnt
   USE Node
   USE Strings, ONLY: My_Fxm,My_Fam
   USE Parameters
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: AtomCnt_, AtomCnt__Type, AtomCnts, AtomCnt__Find, AtomCnt__Update&
@@ -256,29 +258,35 @@ CONTAINS
   END SUBROUTINE AtomCnt__Update
   SUBROUTINE AtomCnt__Write
     INTEGER :: n,m
-    WRITE(kbinary) SIZE(AtomCnts)
-    DO n=1,SIZE(AtomCnts)
-       WRITE(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
-            & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
-            & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
-            & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
-            & mass
-       IF(ALLOCATED(AtomCnts(n) % cnt)) THEN
-          m=SIZE(AtomCnts(n) % cnt)
-          WRITE(kbinary) m
-          WRITE(kbinary) AtomCnts(n) % cnt
-       ELSE
-          m=0
-          WRITE(kbinary) m
-       END IF
-    END DO
-    WRITE(*,*) 'Writing Binary topology/parameter file for system ====>'
+    INTEGER :: ierr
+    IF(PI_node == 0) THEN
+       WRITE(kbinary) SIZE(AtomCnts)
+       DO n=1,SIZE(AtomCnts)
+          WRITE(kbinary) AtomCnts(n) % Res, AtomCnts(n) % beta, AtomCnts(n) %&
+               & Betab, AtomCnts(n) % Res_no, AtomCnts(n) % Grp_No,&
+               & AtomCnts(n) % Id_Res, AtomCnts(n) % Id_Type,&
+               & AtomCnts(n) % Id_Slv, AtomCnts(n) % chg, AtomCnts(n) %&
+               & mass
+          IF(ALLOCATED(AtomCnts(n) % cnt)) THEN
+             m=SIZE(AtomCnts(n) % cnt)
+             WRITE(kbinary) m
+             WRITE(kbinary) AtomCnts(n) % cnt
+          ELSE
+             m=0
+             WRITE(kbinary) m
+          END IF
+       END DO
+    END IF
+#ifdef HAVE_MPI
+    CALL MPI_Barrier(PI_Comm, ierr)
+#endif
+    WRITE(kprint,*) 'Writing Binary topology/parameter file for system ====>'
   END SUBROUTINE AtomCnt__Write
   FUNCTION AtomCnt__Read() RESULT(out)
     LOGICAL :: out
     INTEGER :: n,o,p
 
-    WRITE(*,*) 'Read Binary topology/parameter file for system ====>'
+    WRITE(kprint,*) 'Read Binary topology/parameter file for system ====>'
     out=.TRUE.
     READ(kbinary,ERR=100,END=200) o
     IF(o == 0) RETURN

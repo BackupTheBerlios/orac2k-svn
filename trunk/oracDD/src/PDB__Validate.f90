@@ -63,7 +63,7 @@ FUNCTION PDB__Validate(Type, PDB__Coords) RESULT(out)
     CHARACTER(len=max_char) :: lab_p,lab_m,res_n,lab_m0,res_m
     CHARACTER(len=max_char), POINTER  :: new_name(:)
 
-    WRITE(*,*) ' Validating .pdb file ====>'
+    WRITE(kprint,*) ' Validating .pdb file ====>'
     IF(.NOT. ASSOCIATED(PDB__Coords)) THEN
        errmsg_f='PDB__Init should be called before PDB__Validate'
        CALL Add_Errors(-1,errmsg_f)

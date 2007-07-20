@@ -59,6 +59,7 @@ MODULE IndSequence
   USE IndPatch
   USE Tops
   
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC IndSequence_, IndSequence__type, IndSequence__Grp, IndSequence__Res&

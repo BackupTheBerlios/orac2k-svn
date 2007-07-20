@@ -61,6 +61,7 @@ MODULE AddHydrogens_
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors
   USE AtomCnt
   USE PDB
+  USE Print_Defs
   IMPLICIT none
   PRIVATE!!$/---------------------------------------------------------------------\
 !!$                                                                      |
@@ -152,7 +153,7 @@ CONTAINS
                    ind_y(nh)=o
                 END IF
              END DO
-             IF(nna == 3 .AND. nh == 1) WRITE(*,*) nnh,blist
+             IF(nna == 3 .AND. nh == 1) WRITE(kprint,*) nnh,blist
              CALL AddH(1,nnh,nh,blist,xh,yh,zh,PDB__Coords(n) %AtmName&
                   &, x0, y0, z0, iret, errmsg)
 

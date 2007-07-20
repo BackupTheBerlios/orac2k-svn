@@ -58,6 +58,7 @@ MODULE Resid
   USE MyParse
   USE Strings, ONLY: MY_Fam
   USE STRPAK
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC Resid_, Resids, Topology, Paras
@@ -155,10 +156,10 @@ CONTAINS
           END DO
        END DO
 !!$       DO k=1,SIZE(Topology)
-!!$          WRITE(*,*) TRIM(Topology  (k)% Type),' ',TRIM(Topology  (k)% Residue)&
+!!$          WRITE(kprint,*) TRIM(Topology  (k)% Type),' ',TRIM(Topology  (k)% Residue)&
 !!$               &,' ',TRIM(Topology  (k)% FField)
 !!$          DO m=1,SIZE(Topology (k) % line)
-!!$             WRITE(*,*) TRIM(Topology (k)% line(m))
+!!$             WRITE(kprint,*) TRIM(Topology (k)% line(m))
 !!$          END DO
 !!$       END DO
 
@@ -177,10 +178,10 @@ CONTAINS
           Keys = Keyword__Pop()          
        END DO
 !!$       DO k=1,SIZE(Paras)
-!!$          WRITE(*,*) 'x ',TRIM(Paras (k)% Type),' x ',TRIM(Paras  (k)% Residue)&
+!!$          WRITE(kprint,*) 'x ',TRIM(Paras (k)% Type),' x ',TRIM(Paras  (k)% Residue)&
 !!$               &,' x ',TRIM(Paras  (k)% FField),' x '
 !!$          DO m=1,SIZE(paras(k) % line)
-!!$             WRITE(*,*) TRIM(Paras (k)% line(m))
+!!$             WRITE(kprint,*) TRIM(Paras (k)% line(m))
 !!$          END DO
 !!$       END DO
        DO k=1,SIZE(Paras)
