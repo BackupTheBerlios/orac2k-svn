@@ -1148,7 +1148,7 @@ c$$$     &        -ucek/1000.0D0-pecek,U_Thole*efact/1000.0D0
      x  6x,3(f11.4,1x),3x,3(f10.5,1x))
 
 40000 FORMAT(//80('=')/'=',78x,'='/
-     &'=                      Averages over  ',f9.1,
+     &'=                      Averages over  ',f12.1,
      &' fs of Simulation               ='/'=',78x,'='/80('=')//)
 40100 FORMAT(/26x,'**********************************'/
      x        26x,'*                                *'/

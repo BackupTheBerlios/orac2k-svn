@@ -272,14 +272,14 @@
      x'==============  P A R A M E T E R S    F O R   T H E',
      x'    R U N  ================='//)
 1000  FORMAT(10x,' Reject =',i6,1x,'Steps',5x,'Run =',i6,1x,
-     x'Steps'/10x,' Maxrun =',i6,1x,'Steps'/)
+     x'Steps'/10x,' Maxrun =',i9,1x,'Steps'/)
 2000  FORMAT(10x,' Save Subaverages every ',i6,1x,'Steps'/
      x10x,' Save Restart file every',i6,1x,'Steps'/
      x10x,' Save PLOT file every   ',i6,1x,'Steps'/
      x10x,' Save PDB  file every   ',i6,1x,'Steps'/
      x10x,' Save DUMP file every   ',i6,1x,'Steps')
 1005  FORMAT(10x,' Reject =',i6,1x,'H-Steps',5x,'Run =',i6,1x,
-     x'H-Steps'/10x,' Maxrun =',i6,1x,'H-Steps'/)
+     x'H-Steps'/10x,' Maxrun =',i9,1x,'H-Steps'/)
 2005  FORMAT(10x,' Save Subaverages every ',i6,1x,'M-Steps'/
      x10x,' Save Restart file every',i6,1x,'H-Steps'/
      x10x,' Save PLOT file every   ',i6,1x,'M-Steps'/

@@ -14,7 +14,6 @@ F90 = f90
 CC = cc
 CPP = /usr/bin/cpp
 CFLAGS = -O3 -DXLF
-OTHER_LIBS = /dev/null
 FFTW_LIB = /usr/local/fftw_cc/lib
 LLFLAGS = -lrfftw -lfftw 
 endif

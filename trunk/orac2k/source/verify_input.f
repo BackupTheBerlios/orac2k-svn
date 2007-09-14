@@ -1,7 +1,7 @@
 #include "pressure.h"
       SUBROUTINE verify_input(fmaxstp,fscale,fprint,fsave,fplot,fascii
      &     ,fprop,fplot_fragm,fplot_center,frject,fconf,fmaxrun,fupdte
-     &     ,fxrms,fvi,favg,favg_xrms,fcavities,ftop_print
+     &     ,fxrms,fvi,favg,favg_xrms,fvoronoi,fcavities,ftop_print
      &     ,gofr_fprint,gofr_favg,gofr_fcomp,sofk_fprint,sofk_fcomp
      &     ,fprtvaf,ftotvaf,fnovaf,fdipole,fnative,ffragm_dist,fhbonds
      &     ,fhhisto,frms,fgyr,fabmd,freq_ef,freq_dp,fxslt,finst_fit
@@ -26,15 +26,14 @@
 
 
 *======================== DECLARATIONS ================================*
-      
-      USE VORONOI_Mod, ONLY: voronoi,nvoronoi
+
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
 
       REAL*8  fmaxstp,fscale,fprint,fsave,fplot,fascii,fprop,fplot_fragm
      &     ,fplot_center,frject,fconf,fmaxrun,fupdte,fxrms,favg
-     &     ,favg_xrms,fcavities,ftop_print,gofr_fprint
+     &     ,favg_xrms,fvoronoi,fcavities,ftop_print,gofr_fprint
      &     ,gofr_favg,gofr_fcomp,fprtvaf,ftotvaf,fnovaf,fdipole,fnative
      &     ,fvi,ffragm_dist,fhbonds,fhhisto,frms,fgyr,fabmd,freq_ef
      &     ,freq_dp,fxslt,finst_fit,fcalc_cofm,finst_lda,flda_flu
@@ -235,6 +234,7 @@ c$$$            nsevere = nsevere + 1
          ngyr=IDNINT(fgyr/n_timestep)
          navg_str=IDNINT(favg/n_timestep)
          navg_str_xrms=IDNINT(favg_xrms/n_timestep)
+         nvoronoi=IDNINT(fvoronoi/n_timestep)
          ncavities=IDNINT(fcavities/n_timestep)
          ntop_print=IDNINT(ftop_print/n_timestep)
          gofr_nprint=NINT(gofr_fprint/n_timestep)
@@ -262,6 +262,7 @@ c$$$            nsevere = nsevere + 1
          nnative=IDNINT(fnative)
          navg_str=IDNINT(favg)
          navg_str_xrms=IDNINT(favg_xrms)
+         nvoronoi=IDNINT(fvoronoi)
          ncavities=IDNINT(fcavities)
          ntop_print=IDNINT(ftop_print)
          gofr_nprint=IDNINT(gofr_fprint)
@@ -954,6 +955,14 @@ c$$$            nsevere = nsevere + 1
          errmsg=
      &   'Cannot compute Voronoi volumes without'
      &   / /' update frequency defined in UPDATE(&ANALYSIS).'
+         call xerror(errmsg,80,1,20)
+         nsevere = nsevere + 1 
+      END IF
+
+      IF(voronoi  .AND. nvoronoi .EQ. 0) THEN
+         errmsg=
+     &   'An output file for the Voronoi volumes'
+     &   / /' must be defined.'
          call xerror(errmsg,80,1,20)
          nsevere = nsevere + 1 
       END IF

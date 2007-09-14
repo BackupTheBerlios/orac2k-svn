@@ -2,7 +2,7 @@
      &     ,xp0,yp0,zp0,co,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2006-10-24 14:42:07 marchi>                             *
+*   Time-stamp: <99/05/19 18:15:50 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -20,8 +20,6 @@
 
 *======================== DECLARATIONS ================================*
 
-      USE VORONOI_Mod, ONLY: nnlpp_vor,area_vor,volume_vor,maxpla,maxver
-     &     ,only_water,rsq_nnlpp_vor
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -34,13 +32,16 @@
 *----------------------- VARIABLES IN COMMON --------------------------*
 
       INCLUDE 'parst.h'
-      REAL(8), ALLOCATABLE :: pla(:,:),vrt(:,:,:),area(:),d2(:)
+      INCLUDE 'voronoi.h'
+      REAL*8   pla(4,maxpla),vrt(3,maxver,maxpla),area(maxpla),d2(maxpla
+     &     )
 #if defined _CRAY_ | defined T3E
-      INTEGER(8), ALLOCATABLE ::  nver(:)
+      INTEGER*8  nver(maxpla)
 #else
-      INTEGER, ALLOCATABLE ::  nver(:)
+      INTEGER  nver(maxpla)
 #endif
-      INTEGER, ALLOCATABLE ::  iver(:)
+      INTEGER  iver(maxpla)
+      COMMON /rag1/ nver,iver,pla,vrt,area,d2
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -51,11 +52,6 @@
       INCLUDE 'pbc.h'
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
-
-
-      ALLOCATE(nver(maxpla),iver(maxpla))
-      ALLOCATE(pla(4,maxpla),vrt(3,maxver,maxpla),area(maxpla),d2(maxpla
-     &     ))
 
       iret=0
       frac=0.5D0
@@ -98,6 +94,7 @@
             nver(j)=0
             iver(j)=j1
          END DO
+
          CALL vstart(pla,vrt,nver)
 
          DO j=1,maxpla
@@ -135,8 +132,6 @@
             area_vor(j+1,o)=area(j)
          END DO
       END DO
-      DEALLOCATE(nver,iver)
-      DEALLOCATE(pla,vrt,area,d2)
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

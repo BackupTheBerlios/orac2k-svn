@@ -1,7 +1,7 @@
 MODULE DENSITY_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-04-26 11:42:49 marchi>                           *
+!!$   Time-stamp: <2005-10-19 11:09:50 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -76,7 +76,7 @@ CONTAINS
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   END SUBROUTINE Initialize_Ar
-  SUBROUTINE Compute(xp0,yp0,zp0,volume)
+  SUBROUTINE Compute(xp0,yp0,zp0,co)
 
 !!$======================== DECLARATIONS ================================*
 
@@ -84,12 +84,12 @@ CONTAINS
 
 !!$----------------------------- ARGUMENTS ------------------------------*
 
-    REAL(8) :: xp0(*),yp0(*),zp0(*),volume
+    REAL(8) :: xp0(*),yp0(*),zp0(*),co(3,3)
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
     INTEGER :: nx,ny,nz
-    REAL(8) :: x1,y1,z1,xc,yc,zc,Dvolume
+    REAL(8) :: x1,y1,z1,xc,yc,zc
     INTEGER :: n,nc2x,nc2y,nc2z
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
@@ -98,7 +98,6 @@ CONTAINS
 !!$*     Compute chain list for system
 !!$*=======================================================================
 
-    Dvolume=Volume/DBLE(ncx*ncy*ncz)
     DO n=1,natom
        IF(Mask(n)) THEN
           x1=xp0(n)*0.5D0
@@ -107,7 +106,7 @@ CONTAINS
           nx=INT(DBLE(ncx-1)*(x1-ANINT(x1)+0.5D0)+0.5D0)
           ny=INT(DBLE(ncy-1)*(y1-ANINT(y1)+0.5D0)+0.5D0)
           nz=INT(DBLE(ncz-1)*(z1-ANINT(z1)+0.5D0)+0.5D0)
-          Density(nx+1,ny+1,nz+1)=Density(nx+1,ny+1,nz+1)+atmass(n)/Dvolume
+          Density(nx+1,ny+1,nz+1)=Density(nx+1,ny+1,nz+1)+atmass(n)
        END IF
     END DO
     counter=counter+1
@@ -146,7 +145,7 @@ CONTAINS
     zcm=-(co(3,1)+co(3,2)+co(3,3))/a0
 
     Dvolume=Volume/DBLE(ncx*ncy*ncz)
-    fact=1.0D0/avogad/unitcm**3/DBLE(counter)
+    fact=1.0D0/avogad/unitcm**3/DBLE(counter)/Dvolume
     CLOSE(kdensity)
     OPEN(unit=kdensity,file=filename,form='FORMATTED',status='OLD')
 

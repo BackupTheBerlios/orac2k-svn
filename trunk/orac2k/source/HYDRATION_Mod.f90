@@ -1,6 +1,6 @@
 MODULE HYDRATION_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2005-10-14 21:14:29 marchi>                           *
+!!$   Time-stamp: <2007-09-14 11:44:25 abel>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -19,7 +19,7 @@ MODULE HYDRATION_Mod
   INTEGER, SAVE :: nstart,nend,nlocal,ngrp,nbun,node=0,nprocs=1&
        &,nlocal_neigh
   INTEGER, SAVE :: n_neighbors=1,khydration=0,ncx=10,ncy=10,ncz=10&
-       &,n_write=1
+       &,n_write=1,kbinary=0
   REAL(8), SAVE :: coeff=1.0D0,cutoff_max=4.0D0
   LOGICAL, SAVE :: hydration=.FALSE.
   LOGICAL, DIMENSION (:), ALLOCATABLE, SAVE :: tags_sv
@@ -369,15 +369,25 @@ CONTAINS
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
     IF(node == 0) THEN
-       WRITE(khydration,'(''Solvation at '',f12.3,'' fs '')') fstep
+       IF(Kbinary == 0) THEN
+          WRITE(khydration,'(''Solvation at '',f12.3,'' fs '')') fstep
+       ELSE
+          WRITE(khydration) fstep
+       END IF
     END IF
     CALL Exchange
     IF(node == 0) THEN
        DO ii=1,SIZE(neigh_sm)
           m=neigh_sm(ii) % no
-          WRITE(khydration,'(2i6)') index_st(ii+1),m
-          IF(m /=0) WRITE(khydration,'(12i6)') (neigh_sm(ii) % nb (n)&
-               &, n=1,m)
+          IF(Kbinary == 0) THEN
+             WRITE(khydration,'(2i6)') index_st(ii+1),m
+             IF(m /=0) WRITE(khydration,'(12i6)') (neigh_sm(ii) % nb (n)&
+                  &, n=1,m)
+          ELSE
+             WRITE(khydration) index_st(ii+1),m
+             IF(m /=0) WRITE(khydration) (neigh_sm(ii) % nb (n)&
+                  &, n=1,m)
+          END IF
        END DO
     END IF
   CONTAINS

@@ -4,7 +4,7 @@
      &     ,iret,errmsg,node,nprocs,ncube,ibyte)
 
 ************************************************************************
-*   Time-stamp: <2005-03-25 16:05:11 marchi>                             *
+*   Time-stamp: <2007-08-08 15:47:19 abel>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -58,6 +58,9 @@
 #endif
 
 #ifdef OSF1
+      recl1=recla/4
+#endif      
+#ifdef IFC
       recl1=recla/4
 #endif      
 
@@ -212,6 +215,9 @@
 
       recl2=reclb
 #ifdef OSF1
+      recl2=reclb/4
+#endif
+#ifdef IFC
       recl2=reclb/4
 #endif
 

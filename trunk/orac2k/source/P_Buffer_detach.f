@@ -3,9 +3,9 @@
       IMPLICIT none
 
       INTEGER MPIBufferSize,MPIBufferSize_p,ierr
-      PARAMETER (MPIBufferSize_p=1024*1024)
+      PARAMETER (MPIBufferSize_p=1024)
       REAL*8 MPIBuffer(MPIBufferSize_p)
-      COMMON /mpibuffer/ MPIBuffer,MPIBufferSize
+      COMMON /mpibuffer/ MPIBufferSize,MPIBuffer
 
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*

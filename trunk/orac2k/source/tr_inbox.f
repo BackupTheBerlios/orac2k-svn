@@ -1,7 +1,7 @@
       SUBROUTINE tr_inbox(xp0,yp0,zp0,xp1,yp1,zp1,mass,nprot,protl)
 
 ************************************************************************
-*   Time-stamp: <2006-08-01 10:06:26 marchi>                             *
+*   Time-stamp: <98/03/19 16:40:12 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *

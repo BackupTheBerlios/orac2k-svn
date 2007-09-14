@@ -1,7 +1,7 @@
       SUBROUTINE write_vacf_phi(buffer_time,nstep,fstep,vacf,phi)
 
 ************************************************************************
-*   Time-stamp: <97/12/15 13:52:59 marchi>                             *
+*   Time-stamp: <2007-08-09 18:26:26 abel>                             *
 *                                                                      *
 *  Write velocity autocorrelation function and spectra for solvent     *
 *  and solute                                                          *
@@ -55,13 +55,13 @@
 
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
-100   FORMAT(72('*')/'*',70(' '),'*'/
-     &     '*         Velocity autocorrelation function and power',
-     &     ' spectrum         *'/'*',70(' '),'*'/
-     &     '*             Time in femtoseconds and frequency',
-     &     ' in cm-1               *'/'*',70(' '),'*'/72('*')/)
-200   FORMAT(/'                        > S O L U T E <'/)
-300   FORMAT(/'                        > S O L V E N T <'/)
+100   FORMAT('#',72('*')/'#*',70(' '),'*'/
+     &     '#*         Velocity autocorrelation function and power',
+     &     ' spectrum         *'/'#*',70(' '),'*'/
+     &     '#*             Time in femtoseconds and frequency',
+     &     ' in cm-1               *'/'#*',70(' '),'*'/72('*')/)
+200   FORMAT(/'#                        > S O L U T E <'/)
+300   FORMAT(/'#                        > S O L V E N T <'/)
 400   FORMAT(3x,f11.3,1x,e15.7,4x,f11.3,1x,e15.7)
       RETURN
       END

@@ -1,4 +1,5 @@
 Module xerror_mod
+
   TYPE fatal_err
      CHARACTER(74), DIMENSION (6) :: top= &
           (/ '**************************************************************************' &
@@ -86,7 +87,7 @@ CONTAINS
     WRITE(*,'(2x,a)') msg2%top
     WRITE(*,'(2x,a)') msg2%body(1:m)
     WRITE(*,'(2x,a)') msg2%bottom
-    CALL ORAC_Finalize
+    STOP
 
   END SUBROUTINE abort_now
   SUBROUTINE write_error(msg,write_msgs,type)

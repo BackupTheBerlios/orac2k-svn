@@ -8,7 +8,7 @@
      &     ,coul_bnd_slt_n1,self_slt,pucek,urcsp_h,urcsp_l,urcsp_m
      &     ,ucosp_h,ucosp_l,ucosp_m,ucnsp_h,ucnsp_l,ucnsp_m,eer_m,eer_l
      &     ,eer_h,nmol,nato,ntap,nstep,ktest,lfirst,maxstp,cpress,volume
-     &     ,pext,ucepr,thermos,uceh,hpot)
+     &     ,pext,ucepr,thermos,uceh,hpot,mass)
 
 ****Beta Version: Procacci at CECAM   **********************************
 *                                                                      *
@@ -39,10 +39,11 @@ c----------------------- ARGUMENTS -------------------------------------
      &     ,coul_bnd_slv_n1,self_slt,self_slv,uslvtor,uslvitor,volume
      &     ,pext,ucepr,uceh,hpot
 
-      REAL*8 efact,timesec
+      REAL*8 efact,timesec,total_mass
       REAL*8 fpx_h(*),fpx_l(*),fpx_m(*),fpx_n(*)
       INTEGER  node,ntmtss(*),ntmtsp(*),nmol,nato,ntap,nstep,ktest
      &     ,maxstp
+      REAL*8 mass(*)
       LOGICAL lfirst,cpress,thermos
 
 c----------------------- LOCAL VARIABLES -------------------------------
@@ -64,8 +65,11 @@ c----------------------- LOCAL VARIABLES -------------------------------
       REAL*8 Nfpx_h(5),Nfpx_l(5),Nfpx_m(5),Nfpx_n(5)
       INTEGER  nav,k,kp,j,i
       logical lskip
+      REAL*8 cell_box_density
 
       tim=timesec*nstep
+      total_mass=0.0
+      cell_box_density=0.0
 
       lskip=.false.
 
@@ -178,6 +182,19 @@ c------------------------------------------------------------------------
       IF(node .EQ. 0) WRITE(*,400) tim,utot,ustot,uptot,upstot,ektot
      &     ,pottot
 400   FORMAT(' Total energy test',f12.3,3f15.3/15x,3f15.3)
+
+c######## print out the instaneous density
+c       IF (node .EQ. 0) THEN
+         do i=1,ntap
+            total_mass=total_mass+mass(i)
+         enddo
+c       ENDIF
+       cell_box_density=1.661*(total_mass/volume)
+      IF(node .EQ. 0) WRITE(*,410) tim, volume,total_mass
+     &       ,cell_box_density
+410   FORMAT(' Box density at Tstep=',f12.3,f15.3,f15.3
+     &                                   ,f12.5)
+c###  End
 
       if(lskip) return
 

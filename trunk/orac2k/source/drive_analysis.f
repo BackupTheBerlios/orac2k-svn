@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2006-10-24 13:07:02 marchi>                             *
+*   Time-stamp: <2007-08-09 18:23:54 abel>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -42,15 +42,6 @@
 
 *======================= DECLARATIONS ==================================
 
-      USE VORONOI_Mod, ONLY: voronoi, VOR_Init=>Init, VOR_cut=>cutoff
-     &     ,VOR_Heavy=>heavy, VOR_fluct=>fluct,VOR_access=>access
-     &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,maxpla,maxver
-     &     ,kvoronoi,nvoronoi,VOR_Fluctuations=>Fluctuations
-     &     ,VOR_compress=>compress,VOR_Density=>Density,VOR_print
-     &     =>print_density,VOR_Shell=>Volume_Shell,VOR_Dynamics
-     &     =>Dynamics,VOR_Collect=>Collect_Dynamics,VOR_hbonds=>hbonds
-     &     ,only_water,VOR_Water_Density=>Water_Density,VOR_Water_Print
-     &     =>Water_Print
       USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
      &     HYD_Initialize_P=>Initialize_P,
      &     HYD_Initialize_Array=>Initialize_Array,
@@ -81,7 +72,7 @@
       USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_init
      &     =>Init, GE_compute=>Compute,GE_Write=>n_write,GE_output
      &     =>Write_it 
-      
+      USE IOBUFFER_Mod
       IMPLICIT none
       
       include 'parst.h'
@@ -102,7 +93,7 @@
       include 'fourier.h'
       include 'pme.h'
       INCLUDE 'lc_list.h'
-      INCLUDE 'iobuffer.h'
+      INCLUDE 'voronoi.h'
       INCLUDE 'analysis.h'
       INCLUDE 'unit.h'
       
@@ -182,18 +173,15 @@
       REAL*8  ucns_p,ucos_p,virs_p,virsp_p,ucnp_p,ucop_p,ucnsp_p,ucosp_p
      &     ,fpx_p,fpy_p,fpz_p,stressd_p,cpu_h,gr,gra,uconf,enout,fpx(m1)
      &     ,fpy(m1),fpz(m1),ffwork(2),InstRotMat(3,3),Ixpcc,Iypcc,Izpcc
-     &     ,xpi,ypi,zpi,xc,yc,zc
       INTEGER offset,nnstep,start_time,end_time,length_run,length_tot
      &     ,length_fft,iatom,iatom0,niatom,naux,i_old,i_start
      &     ,i_end,typei,nato1,nato2,jmax_cav,mqq,mma,ncpu_h,mmb
       INTEGER nat_listp,nat_cntactp,nat_list(2,nores),nat_cntact(nores)
 
-      COMMON /dynam/ w1,w2,mapdn,nmapdn,worka,nnlpp0
-     &     ,a_mask,d_mask,xpc,ypc,zpc,vxpc,vypc,vzpc,vxpd,vypd,vzpd,list
-     &     ,hlist,rlist,wsave1,spline_x,spline_y
+      COMMON /dynam/ mapdn,nmapdn,worka,nnlpp0,a_mask,d_mask,list,hlist
+     &     ,rlist
 
-      COMMON /rag2/ vacf_data,rms_disp,tot_rms_disp,xpb,ypb,zpb,xpcc
-     &     ,ypcc,zpcc,xpo,ypo,zpo,RotMat,xau,yau,zau,xpa,ypa,zpa,xpga
+      COMMON /rag2/ xpo,ypo,zpo,xau,yau,zau,xpa,ypa,zpa,xpga
      &     ,ypga,zpga,xpcma,ypcma,zpcma,wca,whe,wbc,errca,errhe,errbc
      &     ,erral,drpca,drpbc,drphe,drpal,xp_avg,yp_avg,zp_avg,xp_avg2
      &     ,yp_avg2,zp_avg2,tmass
@@ -326,14 +314,6 @@ c$$$====================================================================
 
       CALL mapnl_divide(node,nstart_h,nend_h,grppt,mapnl)
 
-*=======================================================================
-*----- Decide where to start to read -----------------------------------
-*=======================================================================
-
-      nstep=0
-      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
-      IF(start_anl .NE. 0) nstep=start_anl-1
-
 *========================================================================
 *==== Calls init routine for conventional kspace Ewald or PME -----------
 *========================================================================
@@ -362,10 +342,8 @@ c$$$====================================================================
          ELSE
             mma=ntap/(nprocs-1)+10
          END IF
-         aux=rcuth+rtolh+rneih
-
-         CALL VOR_Init(node,mma,ntap,nbun,mres,grppt,ss_index,pnbd1
-     &        ,nbtype,aux,prsymb,mend,stop_anl-start_anl+1)
+         ALLOCATE(nnlpp_vor(pnnlpp_vor,mma),ig_nnl(pig_nnl,mma))
+         ALLOCATE(area_vor(pnnlpp_vor,mma), volume_vor(ntap))
       END IF
       IF(cavities) THEN
          IF(nprocs .EQ. 1) THEN
@@ -378,8 +356,7 @@ c$$$====================================================================
      &        ,cavity_r(mqq))
       END IF
       IF(voronoi) THEN
-         IF(node .EQ. 0 .AND. (.NOT. VOR_fluct)) CALL
-     &        write_voronoi_header(kvoronoi)
+         IF(node .EQ. 0) CALL write_voronoi_header(kvoronoi)
       END IF
       IF(cavities) THEN
          CALL initialize_cavities(ss_index,ntap,nres(1,1),bin_size_cav
@@ -424,7 +401,7 @@ c$$$====================================================================
       END IF
 
       IF(GR_Groups) THEN
-         CALL GR_Init(ntap,nbun,grppt,mres)
+         CALL GR_Init(ntap,nbun,mres)
       END IF
       IF(GE_Groups) THEN
          CALL GE_Init(ntap)
@@ -600,6 +577,14 @@ c$$$====================================================================
       ffstep=fstep
       IF((.NOT. dmprnd_i)) STOP
 
+*=======================================================================
+*----- Decide where to start to read -----------------------------------
+*=======================================================================
+
+      nstep=0
+      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
+      IF(start_anl .NE. 0) nstep=start_anl-1
+
       CALL timer(vfcp,tfcp,elapse)
       gcpu=tfcp
 
@@ -632,6 +617,7 @@ c$$$====================================================================
 *--- Check the length of the simulation --------------------------------
 *=======================================================================
 
+
          IF(start_anl .NE. 0) CALL check_length_sim(start_anl,stop_anl
      &        ,buffer_time,buffer_fft,start_time,end_time,length_run
      &        ,length_tot,length_fft,iret,errmsg)
@@ -650,6 +636,7 @@ c$$$====================================================================
 *=======================================================================
 
          CALL coordinate_spline_init(spline_x,fstep,length_tot)
+         
 
 *=======================================================================
 *--- Reinitialize length of simulation and fft's if necessary ----------
@@ -698,6 +685,7 @@ c$$$====================================================================
      &              ,xpcc(nnstep),ypcc(nnstep),zpcc(nnstep)
      &              ,RotMat(1,1,nnstep),xt_cm,yt_cm,zt_cm,nato_slt)
 
+               WRITE(*,*) 'Nstep =',nnstep,istep
             END DO
          END IF
 
@@ -727,7 +715,7 @@ c$$$====================================================================
                iatom=corr_atoms(1+iatom0)
             END IF
             typei=ss_index(iatom)
-            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
+c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
 *=======================================================================
 *---- Read coordinates of each atom as a function of time --------------
 *=======================================================================
@@ -860,7 +848,7 @@ c$$$====================================================================
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau,yau,zau,ntap
      &                 ,fstep,nstep,end,err,divide_records,atom_record)
 
-                  IF(template .AND. (.NOT. voronoi)) THEN
+                  IF(template) THEN
                      CALL calc_RotMat(whe,xpt0,ypt0,zpt0,xp0,yp0,zp0
      &                    ,Ixpcc,Iypcc,Izpcc,InstRotMat(1,1),xt_cm,yt_cm
      &                    ,zt_cm,nato_slt)
@@ -1016,7 +1004,6 @@ c$$$====================================================================
      &                 ,zpga)
                   CALL change_frame(co,oc,-1,nprot,xpcm,ypcm,zpcm,xpcma
      &                 ,ypcma,zpcma)
-
                   
 *=======================================================================
 *--- Compute neighbor lists --------------------------------------------
@@ -1031,12 +1018,12 @@ c$$$====================================================================
                            IF(linked_cell) THEN
                               CALL lc_index(indxyz,ncx,ncy,ncz,nind
      &                             ,indxi,indxj,indxk,aux,co)
-                              
                               IF(voronoi) THEN
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,worka,kprint,.FALSE.)
+     &                                ,ncube,nnlpp0,npp_u,npp,worka
+     &                                ,kprint,.FALSE.)
                               ELSE IF(prot_hyd) THEN
                                  CALL lc_list2(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
@@ -1055,7 +1042,8 @@ c$$$====================================================================
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,worka,kprint,.TRUE.)
+     &                                ,ncube,nnlpp0,npp_u,npp,worka
+     &                                ,kprint,.TRUE.)
                               END IF 
                            ELSE
 *----- Compute neighbors
@@ -1066,8 +1054,9 @@ c$$$====================================================================
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,worka,cpu_h,ncpu_h
-     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
+     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
+     &                                ,worka,cpu_h,ncpu_h,nstart_h
+     &                                ,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               ELSE
@@ -1076,8 +1065,9 @@ c$$$====================================================================
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,worka,cpu_h,ncpu_h
-     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
+     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
+     &                                ,worka,cpu_h,ncpu_h,nstart_h
+     &                                ,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               END IF
@@ -1124,12 +1114,11 @@ c$$$====================================================================
                   
                   IF(voronoi) THEN
                      IF(MOD(nstep,nvoronoi) .EQ. 0) THEN
-                        WRITE(kprint,93000) 
+                        WRITE(*,93000) 
                         CALL zero_voronoi
-                        CALL VOR_hbonds(co,xpa,ypa,zpa)
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
-     &                       ,nend_ah,VOR_heavy,beta,ntap,ngrp,grppt
-     &                       ,VOR_cut,xpa,ypa,zpa,xpga,ypga
+     &                       ,nend_ah,heavy_vor,beta,ntap,ngrp,grppt
+     &                       ,nnlpp0,cutoff_vor,xpa,ypa,zpa,xpga,ypga
      &                       ,zpga,co,iret,errmsg)
 #ifdef PARALLEL
                         CALL P_get_errmsg(iret,errmsg,80,node,nprocs
@@ -1137,34 +1126,22 @@ c$$$====================================================================
 #else
                         IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
 #endif
-                        IF(.NOT. VOR_dynamics) THEN
-                           CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
-     &                          ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret
-     &                          ,errmsg)
+                        CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
+     &                       ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret,errmsg
+     &                       )
+                        IF(voronoi_volume .OR. voronoi_access .OR.
+     &                       voronoi_contact .OR. voronoi_neighbor) THEN
                            CALL analyse_voronoi(nstart_ah,nend_ah
-     &                          ,nlocal_ah,nstart_uh,nend_uh
-     &                          ,nlocal_uh,node,nprocs,ncube,fstep
-     &                          ,volume,ss_index,ss_point(1,1),grppt
-     &                          ,mend,protl,nprot,ntap,nbun,beta
-     &                          ,atomp,nres(1,1),nres(1,2),mres
-     &                          ,prsymb,iret,errmsg)
+     &                          ,nlocal_ah,nstart_uh,nend_uh,nlocal_uh
+     &                          ,node,nprocs,ncube,fstep,volume
+     &                          ,voronoi_volume,voronoi_access
+     &                          ,voronoi_contact,voronoi_neighbor
+     &                          ,ncontact_slt,contact_slt,voronoi_res
+     &                          ,kvoronoi,ss_index,ss_point(1,1),grppt
+     &                          ,mend,protl,nprot,ntap,nbun,beta,atomp
+     &                          ,nres(1,1),nres(1,2),mres,prsymb,iret
+     &                          ,errmsg)
                            IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
-                           IF(VOR_fluct) THEN
-                              CALL VOR_Fluctuations(kprint,xp0,yp0,zp0)
-                           END IF
-                           IF(VOR_compress) THEN
-                              IF(.NOT. only_water) THEN
-                                 CALL VOR_Density(volume)
-                                 CALL VOR_Shell(volume,co,xpa,ypa,zpa)
-                                 CALL VOR_print
-                              ELSE
-                                 CALL VOR_Water_Density(nstart_ah
-     &                                ,nend_ah)
-                                 CALL VOR_Water_Print
-                              END IF
-                           END IF
-                        ELSE
-                           CALL VOR_Collect
                         END IF
                      END IF
                   END IF
@@ -1342,7 +1319,7 @@ c--------------------------
             DO WHILE(.NOT. end .AND. nstep .LT. stop_anl)
                nstep=nstep+1
                nnstep=nnstep+1
-               IF(MOD(nstep,GE_write) /= 0) CYCLE
+            
 *=======================================================================
 *----- Read trajectory file by row -------------------------------------
 *=======================================================================
@@ -1429,7 +1406,7 @@ c--------------------------
 
                   IF(node .EQ. 0) THEN
                      IF(Density_Calc) THEN                     
-                        CALL DEN_Compute(xpa,ypa,zpa,Volume)
+                        CALL DEN_Compute(xpa,ypa,zpa,co)
                         IF(MOD(nstep,DEN_write) == 0) THEN
                            CALL DEN_write_it(Volume,co)
                         END IF
@@ -1437,8 +1414,8 @@ c--------------------------
                   END IF
                   IF(node .EQ. 0) THEN
                      IF(GE_Groups) THEN
+                        CALL GE_Compute(xpa,ypa,zpa,mass,co)
                         IF(MOD(nstep,GE_write) == 0) THEN
-                           CALL GE_Compute(xpa,ypa,zpa,mass,co)
                            CALL GE_output(fstep)
                         END IF
                      END IF

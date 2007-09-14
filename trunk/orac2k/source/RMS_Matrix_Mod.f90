@@ -1,6 +1,6 @@
 MODULE RMS_Matrix_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2006-04-05 16:10:01 marchi>                           *
+!!$   Time-stamp: <2006-01-31 16:49:22 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -205,6 +205,7 @@ CONTAINS
     REAL(8), DIMENSION (:,:), ALLOCATABLE, SAVE :: rms
     INTEGER(8) :: lda,info
 
+    WRITE(*,*) N_Calls,N_rms
     IF(MOD(N_Calls,Write_Freq) == 0) THEN
        REWIND(krms_matrix)
        ALLOCATE(xxii(N_rms))

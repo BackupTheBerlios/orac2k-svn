@@ -192,7 +192,6 @@ c--   local stuff is dumped in a scratch common
       IF(nprocs .GT. 1) CALL P_merge_i(nvtot)
 #endif
       WRITE(kprint,10000) nvtot
-
 *================= END OF EXECUTABLE STATEMENTS ========================
 
 10000 FORMAT(/'Neighbor Lists Dimensions *neighbor(',i8,')* '/)

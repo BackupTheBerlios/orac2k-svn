@@ -1,7 +1,7 @@
 MODULE GROUPS_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-15 16:08:46 marchi2>                           *
+!!$   Time-stamp: <2006-02-09 12:07:01 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -30,7 +30,7 @@ MODULE GROUPS_Mod
   TYPE(group), DIMENSION(:), ALLOCATABLE, SAVE :: molecs
 
 CONTAINS
-  SUBROUTINE Init(ntap,nbun,grppt,mres)
+  SUBROUTINE Init(ntap,nbun,mres)
 
 !!$======================== DECLARATIONS ================================*
 
@@ -38,12 +38,12 @@ CONTAINS
 
 !!$----------------------------- ARGUMENTS ------------------------------*
 
-    INTEGER :: ntap,nbun,mres(:,:),grppt(:,:)
+    INTEGER :: ntap,nbun,mres(:,:)
     CHARACTER(80) :: errmsg
 
 !!$----------------------- VARIABLES IN COMMON --------------------------*
     
-    INTEGER :: i,k,l,n,m,count
+    INTEGER :: i,k,n,m,count
     INTEGER, DIMENSION(:), ALLOCATABLE :: index
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
@@ -72,18 +72,15 @@ CONTAINS
              ELSE
                 m=molecs(i)%index(n)
                 DO k=mres(1,m),mres(2,m)
-                   DO l=grppt(1,k),grppt(2,k)
-                      count=count+1
-                      index(count)=l
-                   END DO
+                   count=count+1
+                   index(count)=k
                 END DO
              END IF
           END DO
           DEALLOCATE(molecs(i)%index)
           ALLOCATE(molecs(i)%index(count))
           molecs(i)%index=index
-          molecs(i)%n=count
-       END SELECT       
+       END SELECT
        i=i+1
     END DO
     DEALLOCATE(index)
