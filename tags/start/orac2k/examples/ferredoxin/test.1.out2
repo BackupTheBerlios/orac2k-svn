@@ -1,0 +1,331 @@
+================================================================================
+=                                                                              =
+=               oooooo       rrrrrrr        aaaaa          ccccccc             =
+=             oooooooooo     rrrrrrrr     aaaaaaaaa       ccccccccc            =
+=            ooo      ooo    rr    rrr    aaa   aaa      ccc                   =
+=            oo        oo    rr    rr    aaa     aaa     cc                    =
+=            oo        oo    rr rrr      aaaaaaaaaaa     cc                    =
+=            ooo      ooo    rr  rrr     aaaaaaaaaaa     ccc                   =
+=             oooooooooo     rr    rr    aa       aa      ccccccccc            =
+=               oooooo       rr    rrr   aa       aa       ccccccc             =
+=                                                                              =
+=                              (Version 5.0.0)                                 =
+=                                                                              =
+=     "A Molecular Dynamics Program to Simulate Complex Molecular Systems"     =
+=                                                                              =
+=                     Copyright(C) 1989 - 1999                                 =
+=                                                                              =
+=                        All Right Reserved                                    =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=   ORAC is provided "as is" and without any warranty express or implied.      =
+=   The user assumes all risks of using ORAC.                                  =
+=                                                                              =
+=   The user may make copies of ORAC for his/her own use, and modify those     =
+=   copies. The user MAY NOT distribute any copy of the original or            =
+=   modified source code to any users at any sites other than his/her own.     =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                      Centre  d'Etudes Saclay                                 =
+=                       Gif sur Yvette, FRANCE                                 =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+================================================================================
+
+
+=========================== INPUT TO THE RUN ===================================
+=                                                                              =
+=&SETUP                                                                        =
+=   CRYSTAL   56.7 56.7 56.7 109.47122 109.47122 109.47122                     =
+=&END                                                                          =
+=&PARAMETERS                                                                   =
+=   READ_TPGPRM_BIN protein_noions_water.prmtpg                                =
+=&END                                                                          =
+=&SIMULATION                                                                   =
+=   MDSIM                                                                      =
+=   TEMPERATURE   300.0 50.0                                                   =
+=   WRITE_PRESSURE                                                             =
+=   SCALING GROUP                                                              =
+=   THERMOS                                                                    =
+=       solute  30.0                                                           =
+=       solvent 30.0                                                           =
+=       cofm    30.0                                                           =
+=       temp_limit 8000.0                                                      =
+=   END                                                                        =
+=&END                                                                          =
+=&INTEGRATOR                                                                   =
+=   TIMESTEP       12.0                                                        =
+=   MTS_RESPA                                                                  =
+=      step intra 2                                                            =
+=      step intra 2                                                            =
+=      step nonbond 2  4.7                                                     =
+=      step nonbond 3  7.3   reciprocal                                        =
+=      step nonbond 1  9.7                                                     =
+=   END                                                                        =
+=&END                                                                          =
+=                                                                              =
+=#                                                                             =
+=#                                                                             =
+=&POTENTIAL                                                                    =
+=   EWALD       PME    0.45  64 64 64 5                                        =
+=   UPDATE      40.0   1.5                                                     =
+=   STRETCHING HEAVY                                                           =
+=   QQ-FUDGE  1.0                                                              =
+=   LJ-FUDGE  1.0                                                              =
+=   LINKED_CELL 8 8 8                                                          =
+=&END                                                                          =
+=&RUN                                                                          =
+=   CONTROL      2                                                             =
+=   PROPERTY     3000.0                                                        =
+=   REJECT        120.0                                                        =
+=   TIME            0.0                                                        =
+=   PRINT           2.0                                                        =
+=&END                                                                          =
+=&INOUT                                                                        =
+=   RESTART                                                                    =
+=    read     run.1.rst                                                        =
+=   END 	                                                                      =
+=&END                                                                          =
+=                                                                              =
+================================================================================
+
+
+     Checking Input ......              ---->
+
+  * * * W A R N I N G * * * 
+     You are reading from a restart file, but writing to none. Is this is correct?   
+
+
+ ********* W A R N I N G  W A R N I N G ************
+ *  1 ERRORS WHILE EXECUTING VERIFY_INPUT                                          
+ ******** Recoverable Error Program Continues ******
+
+
+
+
+     <------ Reading Topology-Parameter File ------->
+
+
+     Found Charge -19.00100 on Solute Molecule      1
+
+
+<------ Reading Restart File ------->
+<------ Restart File Read in ------->
+
+
+
+
+
+********************************************************************************
+*                                                                              *
+*              I n p u t   O p e r a t i o n s   C o m p l e t e d             *
+*                                                                              *
+*              I n p u t   O p e r a t i o n s   C o m p l e t e d             *
+*                                                                              *
+*                                                                              *
+********************************************************************************
+
+
+
+Neighbor Lists Dimensions     *neighbor( 494060)* 
+
+
+
+
+
+*******************************************************************************
+*                                                                             *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*                                                                             *
+*******************************************************************************
+
+
+==============  P A R A M E T E R S    F O R   T H E    R U N  =================
+
+
+           The Simulation will be run starting from a RESTART file.
+                         Averages will NOT be zeroed. 
+           Reject =    10 H-Steps     Run =     0 H-Steps
+           Maxrun =     0 H-Steps
+
+           Save Subaverages every    250 M-Steps
+           Save Restart file every     0 H-Steps
+           Save PLOT file every        0 M-Steps
+           Save PDB  file every        0 M-Steps
+           Save DUMP file every        0 M-Steps
+
+          potential truncation distance =10.0000 ang
+
+          time-step = 1.2000E+01 fs.
+
+-------------------------- Statistical Ensemble --------------------------------
+
+                   ** N V T **                                     
+
+           Number of atoms   = 25963
+
+                    CO-matrix
+
+                         28.35000  -9.45000  -9.45000
+                          0.00000  26.72864 -13.36432
+                          0.00000   0.00000  23.14768
+
+           Volume            =     140322.494  Ang**3
+
+           Temperature       =        300.000  Kelvin
+
+ 1 Thermostat Mass (cofm)    =     226829.688 a.m.u. A**2
+ 2 Thermostat Mass (solute)  =      21651.925 a.m.u. A**2
+ 3 Thermostat Mass (solvent) =     191492.997 a.m.u. A**2
+
+
+ 1 Thermostat Ndf (cofm)    =   14520        Coordinates 
+ 2 Thermostat Ndf (solute)  =    1386        Coordinates 
+ 3 Thermostat Ndf (solvent) =   12258        Coordinates 
+
+
+-------------------------  Non Bonded Potential --------------------------------
+
+           PME    :  alpha  =    0.450 AA^-1     grid =    64   64   64
+                     order  =      5
+
+           r-RESPA: N0-time =    0.500 fs 
+                    N1-time =    1.000 fs 
+                     M-time =    2.000 fs 
+                     L-time =    4.000 fs 
+                     H-time =   12.000 fs 
+
+           r-RESPA:  M-cut  =    4.700 AA --  0.30  0.40
+                     L-cut  =    7.300 AA --  0.30  0.50
+                     H-cut  =    9.700 AA --  0.30  1.50
+
+           r-RESPA: shl-pme =       l
+
+----------------------------- Neighbor List ------------------------------------
+
+           UPDATE every     3 Steps
+
+           Dispersion+Electrostatics  rspcut  =    11.50
+
+
+
+     ************************************************************************
+     *                        System  TOPOLOGY  List                        *
+     *                                                                      *
+     *           13705 Atoms         13723 Bonds        772 FLexible Bonds  *
+     *           12951 Rigid Bonds    2643 Angles      4087 P-Torsions      *
+     *             253 I-Torsions     3828 1-4 Inter.  4645 Atomic Groups   *
+     *            4185 Units          4840 Molecules                        *
+     *                                                                      *
+     ************************************************************************
+
+
+
+================================================================================
+
+
+
+
+
+********************************************************************************
+*                                                                              *
+*                M . D.   I n t e r m e d i a t e   R e s u l t s              *
+*                                                                              *
+*                M . D.   I n t e r m e d i a t e   R e s u l t s              *
+*                                                                              *
+*                                                                              *
+********************************************************************************
+
+
+
+
+     CPUtime for linked cell indexing =     0.010
+
+Neighbor Lists Dimensions *neighbor(  494064)* 
+
+
+     CPUtime for update          =     0.090
+
+
+
+          * * * * r - R E S P A  i s  O N  * * * *
+
+
+
+     CPUtime for m-contribution: RECP =    0.00 DIR =  0.030 TOT =  0.030
+   7.0002000000000120E-002
+
+     CPUtime for l-contribution: RECP =    0.07 DIR =  0.070 TOT =  0.140
+
+     CPUtime for h-contribution: RECP =    0.00 DIR =  0.070 TOT =  0.070
+
+     THEORIC SPEED UP FOR NON BONDED PART =    2.15
+
+     CPUtime for n1-contribution  =   0.0100
+
+     CPUtime for n0-contribution  =   0.0000
+
+     OVERALL THEORIC SPEED UP =    7.59
+
+
+     Expected CPU time for the RUN:   0 hours and  0 min
+
+      Expected average time per M step:    0.14 sec.
+
+      Expected average time per femto :    0.07 sec.
+
+
+          ===========================================
+
+
+
+           Tstep    =       2.000 Total    = -119843.182 SlvPot   = -167848.763
+           SlvNonbd = -167848.763 SlvCoul  = -186217.268 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2481.031 SltPot   =   -6970.343
+           SltCoul  =  -12945.932 SltL-J   =    -591.204 SltHyd   =       0.000
+           SltBond  =    6566.792 SltStr   =    1187.115 SltBen   =    3212.880
+           SltItor  =     233.897 SltPtor  =    1932.901 S-SPot   =   -1896.896
+           S-SCoul  =   -1324.363 Erecip   =    6398.370 SltTemp  =     296.026
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.852
+           Hoover   =      78.635
+
+           TotPre   =      -41.14 ConPre   =     -186.01 KinPre   =      144.86
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -19.9866       2.9612      -0.9233
+ ABC   109.4712   109.4712   109.4712         3.7845      -6.0226     -11.5725
+       ........   ........   ........         1.3548      -1.8033     -15.1346
+
+
+           Tstep    =       4.000 Total    = -119841.672 SlvPot   = -167729.030
+           SlvNonbd = -167729.030 SlvCoul  = -186093.088 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2479.409 SltPot   =   -6979.327
+           SltCoul  =  -12946.351 SltL-J   =    -578.692 SltHyd   =       0.000
+           SltBond  =    6545.716 SltStr   =    1161.400 SltBen   =    3227.656
+           SltItor  =     225.004 SltPtor  =    1931.657 S-SPot   =   -1880.703
+           S-SCoul  =   -1319.143 Erecip   =    6398.370 SltTemp  =     296.725
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.793
+           Hoover   =      79.215
+
+           TotPre   =      -38.98 ConPre   =     -183.91 KinPre   =      144.93
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -20.3709       0.8636       3.4379
+ ABC   109.4712   109.4712   109.4712         4.7429      -3.3757      -8.1142
+       ........   ........   ........        -1.1369      -3.4261     -15.2313

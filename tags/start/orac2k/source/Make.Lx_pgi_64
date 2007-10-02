@@ -1,0 +1,17 @@
+########################################################################
+#                                                                      #
+#                    Cluster AMD Opteron "Tantale "                    #
+#                                                                      #
+########################################################################
+
+TARGET0 = PGI
+TARGET1 = 'OPTERON'
+FFTS = _GPFFT_
+##FFTS = _PDFFT_
+FC = mpif90
+LD = mpif90
+F90 = mpif90
+CC = cc
+CFLAGS = -O3 -DPGI
+FFTW_LIB = /usr/local/soft/fftw-2.1.5/lib
+LLFLAGS= -ldrfftw_mpi -ldrfftw -ldfftw_mpi -ldfftw -lm

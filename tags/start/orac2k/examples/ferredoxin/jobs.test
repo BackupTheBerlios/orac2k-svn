@@ -1,0 +1,14 @@
+#!/bin/csh
+#BSUB -n 8
+#BSUB -q test32
+#BSUB -J ferredoxin
+#BSUB -c 0:30
+#BSUB -L /bin/csh        
+#BSUB -o ferredoxin.%J
+
+cd /workdir/marchi/Tantale/ferredoxin/
+
+prun -v -n 4 sh -c ' /workdir/marchi/Tantale/source_massimo/orac_OSF < test.1 > test.1a.out'
+prun -v -n 4 sh -c ' /workdir/marchi/Tantale/source_massimo_new/orac_OSF < test.1 > test.1b.out'
+prun -v -n 8 sh -c ' /workdir/marchi/Tantale/source_massimo/orac_OSF < test.1 > test.1c.out'
+prun -v -n 8 sh -c ' /workdir/marchi/Tantale/source_massimo_new/orac_OSF < test.1 > test.1d.out'

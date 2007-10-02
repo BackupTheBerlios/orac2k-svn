@@ -1,0 +1,44 @@
+&SETUP
+   RESET_CM
+   CRYSTAL    500.0 500.0 500.0 90.0 90.0 60.0
+   READ_PDB   1AAY_initial.pdb
+&END
+&PARAMETERS
+   READ_TPGPRM_BIN  dna-zincfinger.prmtpg
+&END
+&SIMULATION
+   MDSIM
+   MINIMIZE 
+      CG 0.1
+   END
+   TEMPERATURE 0.01  5.0
+&END
+&INTEGRATOR 
+   TIMESTEP          1.0
+   MTS_RESPA
+     step intra      3
+     step  intra     2
+     step  nonbond   1  40.2   0.3   0.4  reciprocal
+   END
+&END
+&POTENTIAL
+   EWALD          OFF PME 0.43 64 64 64 4
+   UPDATE         40.0   1.5
+   STRETCHING
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   CUTOFF 100.0 1.0
+&END
+&RUN
+   CONTROL      2
+   PROPERTY     100.0
+   REJECT       12.0
+   TIME         200.0
+   PRINT        1.0
+&END
+&INOUT
+   RESTART
+     write  100.0  OPEN    4bna.1.rst
+   END
+   ASCII   100.0  OPEN   1AAY_minimize.pdb
+&END

@@ -1,0 +1,4 @@
+cd /home/marchi/workdir/Tantale/ferredoxin/
+prun -v -n 2 sh -c ' /home/marchi/COMPAQ_P/copy/source_sterpone_old/orac_OSF < test.1 '
+
+

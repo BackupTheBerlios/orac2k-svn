@@ -1,0 +1,1344 @@
+nickel6>bsub -I -n 4 < ttt
+Job <362507> is submitted to default queue <test32>.
+<<Waiting for dispatch ...>>
+<<Starting on nickeld1>>
+================================================================================
+=                                                                              =
+=               oooooo       rrrrrrr        aaaaa          ccccccc             =
+=             oooooooooo     rrrrrrrr     aaaaaaaaa       ccccccccc            =
+=            ooo      ooo    rr    rrr    aaa   aaa      ccc                   =
+=            oo        oo    rr    rr    aaa     aaa     cc                    =
+=            oo        oo    rr rrr      aaaaaaaaaaa     cc                    =
+=            ooo      ooo    rr  rrr     aaaaaaaaaaa     ccc                   =
+=             oooooooooo     rr    rr    aa       aa      ccccccccc            =
+=               oooooo       rr    rrr   aa       aa       ccccccc             =
+=                                                                              =
+=                              (Version 5.0.0)                                 =
+=                                                                              =
+=     "A Molecular Dynamics Program to Simulate Complex Molecular Systems"     =
+=                                                                              =
+=                     Copyright(C) 1989 - 1999                                 =
+=                                                                              =
+=                        All Right Reserved                                    =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=   ORAC is provided "as is" and without any warranty express or implied.      =
+=   The user assumes all risks of using ORAC.                                  =
+=                                                                              =
+=   The user may make copies of ORAC for his/her own use, and modify those     =
+=   copies. The user MAY NOT distribute any copy of the original or            =
+=   modified source code to any users at any sites other than his/her own.     =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                      Centre  d'Etudes Saclay                                 =
+=                       Gif sur Yvette, FRANCE                                 =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+=                                                                              =
+================================================================================
+
+
+=========================== INPUT TO THE RUN ===================================
+=                                                                              =
+=&SETUP                                                                        =
+=   CRYSTAL   56.7 56.7 56.7 109.47122 109.47122 109.47122                     =
+=&END                                                                          =
+=&PARAMETERS                                                                   =
+=   READ_TPGPRM_BIN protein_noions_water.prmtpg                                =
+=&END                                                                          =
+=&PARALLEL                                                                     =
+=   P_update                                                                   =
+=&END                                                                          =
+=                                                                              =
+=&SIMULATION                                                                   =
+=   MDSIM                                                                      =
+=   TEMPERATURE   300.0 50.0                                                   =
+=   WRITE_PRESSURE                                                             =
+=   SCALING GROUP                                                              =
+=   THERMOS                                                                    =
+=       solute  30.0                                                           =
+=       solvent 30.0                                                           =
+=       cofm    30.0                                                           =
+=       temp_limit 8000.0                                                      =
+=   END                                                                        =
+=&END                                                                          =
+=&INTEGRATOR                                                                   =
+=   TIMESTEP       12.0                                                        =
+=   MTS_RESPA                                                                  =
+=      step intra 2                                                            =
+=      step intra 2                                                            =
+=      step nonbond 2  4.7                                                     =
+=      step nonbond 3  7.3   reciprocal                                        =
+=      step nonbond 1  9.7                                                     =
+=   END                                                                        =
+=&END                                                                          =
+=                                                                              =
+=#                                                                             =
+=#                                                                             =
+=&POTENTIAL                                                                    =
+=   EWALD       PME    0.45  64 64 64 5                                        =
+=   UPDATE      40.0   1.5                                                     =
+=   STRETCHING HEAVY                                                           =
+=   QQ-FUDGE  1.0                                                              =
+=   LJ-FUDGE  1.0                                                              =
+=   LINKED_CELL 8 8 8                                                          =
+=&END                                                                          =
+=&RUN                                                                          =
+=   CONTROL      2                                                             =
+=   PROPERTY     3000.0                                                        =
+=   REJECT       3600.0                                                        =
+=   TIME            0.0                                                        =
+=   PRINT         96.0                                                         =
+=&END                                                                          =
+=&INOUT                                                                        =
+=   RESTART                                                                    =
+=    read     run.1.rst                                                        =
+=   END 	                                                                      =
+=&END                                                                          =
+=                                                                              =
+================================================================================
+
+
+     Checking Input ......              ---->
+
+  * * * W A R N I N G * * * 
+     You are reading from a restart file, but writing to none. Is this is correct?   
+
+
+ ********* W A R N I N G  W A R N I N G ************
+ *  1 ERRORS WHILE EXECUTING VERIFY_INPUT                                          
+ ******** Recoverable Error Program Continues ******
+
+
+
+
+     <------ Reading Topology-Parameter File ------->
+
+
+     Found Charge -19.00100 on Solute Molecule      1
+
+
+<------ Reading Restart File ------->
+<------ Restart File Read in ------->
+
+
+
+
+
+********************************************************************************
+*                                                                              *
+*              I n p u t   O p e r a t i o n s   C o m p l e t e d             *
+*                                                                              *
+*              I n p u t   O p e r a t i o n s   C o m p l e t e d             *
+*                                                                              *
+*                                                                              *
+********************************************************************************
+
+
+
+Neighbor Lists Dimensions     *neighbor( 494060)* 
+
+
+
+
+
+*******************************************************************************
+*                                                                             *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*         M.D. simulation for an aggregate composed of 1447 atoms             *
+*         and solvated in         4086 polyatomic molecules                   *
+*                                                                             *
+*******************************************************************************
+
+
+==============  P A R A M E T E R S    F O R   T H E    R U N  =================
+
+
+           The Simulation will be run starting from a RESTART file.
+                         Averages will NOT be zeroed. 
+           Reject =   300 H-Steps     Run =     0 H-Steps
+           Maxrun =     0 H-Steps
+
+           Save Subaverages every    250 M-Steps
+           Save Restart file every     0 H-Steps
+           Save PLOT file every        0 M-Steps
+           Save PDB  file every        0 M-Steps
+           Save DUMP file every        0 M-Steps
+
+          potential truncation distance =10.0000 ang
+
+          time-step = 1.2000E+01 fs.
+
+-------------------------- Statistical Ensemble --------------------------------
+
+                   ** N V T **                                     
+
+           Number of atoms   = 25963
+
+                    CO-matrix
+
+                         28.35000  -9.45000  -9.45000
+                          0.00000  26.72864 -13.36432
+                          0.00000   0.00000  23.14768
+
+           Volume            =     140322.494  Ang**3
+
+           Temperature       =        300.000  Kelvin
+
+ 1 Thermostat Mass (cofm)    =     226829.688 a.m.u. A**2
+ 2 Thermostat Mass (solute)  =      21651.925 a.m.u. A**2
+ 3 Thermostat Mass (solvent) =     191492.997 a.m.u. A**2
+
+
+ 1 Thermostat Ndf (cofm)    =   14520        Coordinates 
+ 2 Thermostat Ndf (solute)  =    1386        Coordinates 
+ 3 Thermostat Ndf (solvent) =   12258        Coordinates 
+
+
+-------------------------  Non Bonded Potential --------------------------------
+
+           PME    :  alpha  =    0.450 AA^-1     grid =    64   64   64
+                     order  =      5
+
+           r-RESPA: N0-time =    0.500 fs 
+                    N1-time =    1.000 fs 
+                     M-time =    2.000 fs 
+                     L-time =    4.000 fs 
+                     H-time =   12.000 fs 
+
+           r-RESPA:  M-cut  =    4.700 AA --  0.30  0.40
+                     L-cut  =    7.300 AA --  0.30  0.50
+                     H-cut  =    9.700 AA --  0.30  1.50
+
+           r-RESPA: shl-pme =       l
+
+----------------------------- Neighbor List ------------------------------------
+
+           UPDATE every     3 Steps
+
+           Dispersion+Electrostatics  rspcut  =    11.50
+
+
+
+     ************************************************************************
+     *                        System  TOPOLOGY  List                        *
+     *                                                                      *
+     *           13705 Atoms         13723 Bonds        772 FLexible Bonds  *
+     *           12951 Rigid Bonds    2643 Angles      4087 P-Torsions      *
+     *             253 I-Torsions     3828 1-4 Inter.  4645 Atomic Groups   *
+     *            4185 Units          4840 Molecules                        *
+     *                                                                      *
+     ************************************************************************
+
+
+
+================================================================================
+
+
+
+
+
+********************************************************************************
+*                                                                              *
+*                M . D.   I n t e r m e d i a t e   R e s u l t s              *
+*                                                                              *
+*                M . D.   I n t e r m e d i a t e   R e s u l t s              *
+*                                                                              *
+*                                                                              *
+********************************************************************************
+
+
+
+
+     CPUtime for linked cell indexing =     0.007
+
+Neighbor Lists Dimensions *neighbor(  494064)* 
+
+
+     CPUtime for update          =     0.059
+
+
+
+          * * * * r - R E S P A  i s  O N  * * * *
+
+
+
+     CPUtime for m-contribution: RECP =    0.00 DIR =  0.026 TOT =  0.026
+
+     CPUtime for l-contribution: RECP =    0.06 DIR =  0.074 TOT =  0.136
+
+     CPUtime for h-contribution: RECP =    0.00 DIR =  0.072 TOT =  0.072
+
+     CPUtime for Communications: H-Sh =   0.0018 L-Sh =    0.0000 M-Sh =   0.0047
+
+     THEORIC SPEED UP FOR NON BONDED PART =    2.21
+
+     CPUtime for n1-contribution  =   0.0020
+
+     CPUtime for n0-contribution  =   0.0010
+
+     OVERALL THEORIC SPEED UP =    8.32
+
+
+     Expected CPU time for the RUN:   0 hours and  3 min
+
+      Expected average time per M step:    0.12 sec.
+
+      Expected average time per femto :    0.06 sec.
+
+
+          ===========================================
+
+
+Neighbor Lists Dimensions *neighbor(  494132)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494083)* 
+
+
+
+           Tstep    =      96.000 Total    = -119835.518 SlvPot   = -167018.386
+           SlvNonbd = -167018.386 SlvCoul  = -184772.308 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2520.806 SltPot   =   -6851.157
+           SltCoul  =  -12908.157 SltL-J   =    -593.575 SltHyd   =       0.000
+           SltBond  =    6650.575 SltStr   =    1215.450 SltBen   =    3224.103
+           SltItor  =     258.082 SltPtor  =    1952.940 S-SPot   =   -1969.751
+           S-SCoul  =   -1710.164 Erecip   =    6412.216 SltTemp  =     285.544
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     296.051
+           Hoover   =      99.554
+
+           TotPre   =      -49.04 ConPre   =     -189.84 KinPre   =      140.80
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -14.2742      -2.0032      -5.3049
+ ABC   109.4712   109.4712   109.4712        -0.8047     -19.5416       1.2203
+       ........   ........   ........        -5.5244      -0.9465     -15.2238
+
+Neighbor Lists Dimensions *neighbor(  494097)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494206)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494261)* 
+
+
+
+           Tstep    =     192.000 Total    = -119831.058 SlvPot   = -167135.516
+           SlvNonbd = -167135.516 SlvCoul  = -185054.132 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2423.935 SltPot   =   -6969.202
+           SltCoul  =  -13005.685 SltL-J   =    -591.886 SltHyd   =       0.000
+           SltBond  =    6628.370 SltStr   =    1325.791 SltBen   =    3103.375
+           SltItor  =     236.721 SltPtor  =    1962.483 S-SPot   =   -1795.933
+           S-SCoul  =   -1246.120 Erecip   =    6430.544 SltTemp  =     299.715
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     297.652
+           Hoover   =     116.343
+
+           TotPre   =      -73.80 ConPre   =     -217.80 KinPre   =      144.00
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -35.7154      -9.0952      -8.6415
+ ABC   109.4712   109.4712   109.4712         5.0141     -12.6981      10.8998
+       ........   ........   ........         0.0052      -1.4297     -25.3844
+
+Neighbor Lists Dimensions *neighbor(  494193)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494256)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494306)* 
+
+
+
+           Tstep    =     288.000 Total    = -119834.632 SlvPot   = -166982.187
+           SlvNonbd = -166982.187 SlvCoul  = -184321.091 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2443.050 SltPot   =   -7104.852
+           SltCoul  =  -12988.557 SltL-J   =    -608.533 SltHyd   =       0.000
+           SltBond  =    6492.238 SltStr   =    1207.406 SltBen   =    3134.213
+           SltItor  =     219.260 SltPtor  =    1931.360 S-SPot   =   -1823.591
+           S-SCoul  =   -1518.635 Erecip   =    6374.006 SltTemp  =     307.400
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     299.013
+           Hoover   =     248.163
+
+           TotPre   =      -73.12 ConPre   =     -214.16 KinPre   =      141.04
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -35.5585      -8.5256       4.2965
+ ABC   109.4712   109.4712   109.4712       -11.2746     -19.5809      -7.4560
+       ........   ........   ........         5.5753      -8.3134     -17.9852
+
+Neighbor Lists Dimensions *neighbor(  494361)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494410)* 
+
+
+
+           Tstep    =     384.000 Total    = -119804.650 SlvPot   = -166897.564
+           SlvNonbd = -166897.564 SlvCoul  = -184311.027 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2434.278 SltPot   =   -6875.357
+           SltCoul  =  -12969.836 SltL-J   =    -617.401 SltHyd   =       0.000
+           SltBond  =    6711.879 SltStr   =    1216.418 SltBen   =    3281.493
+           SltItor  =     235.834 SltPtor  =    1978.134 S-SPot   =   -1634.944
+           S-SCoul  =   -1002.991 Erecip   =    6585.602 SltTemp  =     292.845
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     296.730
+           Hoover   =     236.446
+
+           TotPre   =      -91.97 ConPre   =     -233.74 KinPre   =      141.77
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -25.9962       2.4978       9.3023
+ ABC   109.4712   109.4712   109.4712       -14.1917     -37.1900      -4.5773
+       ........   ........   ........         9.2423     -12.2982     -28.7795
+
+Neighbor Lists Dimensions *neighbor(  494353)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494285)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494174)* 
+
+
+
+           Tstep    =     480.000 Total    = -119820.673 SlvPot   = -167047.158
+           SlvNonbd = -167047.158 SlvCoul  = -184493.357 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2320.853 SltPot   =   -6947.718
+           SltCoul  =  -12952.321 SltL-J   =    -682.748 SltHyd   =       0.000
+           SltBond  =    6687.351 SltStr   =    1284.218 SltBen   =    3243.812
+           SltItor  =     213.164 SltPtor  =    1946.157 S-SPot   =   -1958.119
+           S-SCoul  =   -1508.204 Erecip   =    6389.010 SltTemp  =     305.096
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.999
+           Hoover   =     158.741
+
+           TotPre   =      -94.98 ConPre   =     -240.17 KinPre   =      145.19
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -17.5475       9.0652       7.3391
+ ABC   109.4712   109.4712   109.4712         3.3102     -42.2923      -1.7363
+       ........   ........   ........         9.9222      -1.9012     -35.1409
+
+Neighbor Lists Dimensions *neighbor(  494172)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494170)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494136)* 
+
+
+
+           Tstep    =     576.000 Total    = -119845.140 SlvPot   = -166964.242
+           SlvNonbd = -166964.242 SlvCoul  = -184495.368 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2279.259 SltPot   =   -6870.911
+           SltCoul  =  -12965.553 SltL-J   =    -588.123 SltHyd   =       0.000
+           SltBond  =    6682.765 SltStr   =    1282.960 SltBen   =    3187.156
+           SltItor  =     256.238 SltPtor  =    1956.411 S-SPot   =   -1895.398
+           S-SCoul  =   -1432.489 Erecip   =    6372.207 SltTemp  =     302.774
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.794
+           Hoover   =      22.643
+
+           TotPre   =      -74.35 ConPre   =     -218.80 KinPre   =      144.46
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -31.8240      -4.2373      -6.1321
+ ABC   109.4712   109.4712   109.4712       -11.2933     -37.5143       1.1404
+       ........   ........   ........         4.9084       6.1868      -5.0096
+
+Neighbor Lists Dimensions *neighbor(  494028)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493859)* 
+
+
+
+           Tstep    =     672.000 Total    = -119800.568 SlvPot   = -167248.345
+           SlvNonbd = -167248.345 SlvCoul  = -185243.120 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2265.825 SltPot   =   -6986.619
+           SltCoul  =  -12990.361 SltL-J   =    -646.329 SltHyd   =       0.000
+           SltBond  =    6650.072 SltStr   =    1299.096 SltBen   =    3229.771
+           SltItor  =     196.574 SltPtor  =    1924.631 S-SPot   =   -1756.993
+           S-SCoul  =   -1202.659 Erecip   =    6443.341 SltTemp  =     311.290
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     304.421
+           Hoover   =      13.740
+
+           TotPre   =      -55.58 ConPre   =     -199.33 KinPre   =      143.75
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -13.9126      -1.6487       3.9591
+ ABC   109.4712   109.4712   109.4712        -7.3043     -21.5388      -7.4816
+       ........   ........   ........         4.5906      -4.7522     -20.1288
+
+Neighbor Lists Dimensions *neighbor(  494073)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494125)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494038)* 
+
+
+
+           Tstep    =     768.000 Total    = -119832.742 SlvPot   = -167412.009
+           SlvNonbd = -167412.009 SlvCoul  = -184596.125 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2269.197 SltPot   =   -6914.437
+           SltCoul  =  -12899.687 SltL-J   =    -670.218 SltHyd   =       0.000
+           SltBond  =    6655.468 SltStr   =    1340.870 SltBen   =    3143.474
+           SltItor  =     200.482 SltPtor  =    1970.642 S-SPot   =   -1818.429
+           S-SCoul  =   -1467.477 Erecip   =    6421.782 SltTemp  =     306.308
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     305.048
+           Hoover   =      11.377
+
+           TotPre   =     -102.67 ConPre   =     -246.64 KinPre   =      143.97
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -26.9795      10.2030      19.0824
+ ABC   109.4712   109.4712   109.4712        -5.5307     -38.6621       7.4457
+       ........   ........   ........        14.8438       5.6268     -37.0306
+
+Neighbor Lists Dimensions *neighbor(  493933)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494134)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494113)* 
+
+
+
+           Tstep    =     864.000 Total    = -119843.365 SlvPot   = -167136.219
+           SlvNonbd = -167136.219 SlvCoul  = -184212.986 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2236.872 SltPot   =   -6837.680
+           SltCoul  =  -12895.160 SltL-J   =    -676.528 SltHyd   =       0.000
+           SltBond  =    6734.007 SltStr   =    1309.976 SltBen   =    3238.938
+           SltItor  =     227.622 SltPtor  =    1957.472 S-SPot   =   -1847.436
+           S-SCoul  =   -1432.473 Erecip   =    6424.809 SltTemp  =     303.378
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.467
+           Hoover   =      54.042
+
+           TotPre   =      -87.02 ConPre   =     -229.22 KinPre   =      142.20
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -36.3103      -1.9612      -3.5374
+ ABC   109.4712   109.4712   109.4712         2.3107     -10.8295       8.6075
+       ........   ........   ........        -1.5337       7.3181     -39.8777
+
+Neighbor Lists Dimensions *neighbor(  494188)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494185)* 
+
+
+
+           Tstep    =     960.000 Total    = -119814.398 SlvPot   = -166813.548
+           SlvNonbd = -166813.548 SlvCoul  = -184142.866 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2321.586 SltPot   =   -6833.810
+           SltCoul  =  -12988.862 SltL-J   =    -596.661 SltHyd   =       0.000
+           SltBond  =    6751.713 SltStr   =    1359.217 SltBen   =    3317.974
+           SltItor  =     160.081 SltPtor  =    1914.440 S-SPot   =   -1849.411
+           S-SCoul  =   -1360.762 Erecip   =    6380.996 SltTemp  =     297.536
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     298.237
+           Hoover   =      98.646
+
+           TotPre   =      -91.87 ConPre   =     -233.10 KinPre   =      141.23
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -38.4390       5.9981      -3.0811
+ ABC   109.4712   109.4712   109.4712        19.7012     -21.6964      16.5767
+       ........   ........   ........         3.0045     -10.8390     -31.7352
+
+Neighbor Lists Dimensions *neighbor(  494264)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494274)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494107)* 
+
+
+
+           Tstep    =    1056.000 Total    = -119821.379 SlvPot   = -167215.297
+           SlvNonbd = -167215.297 SlvCoul  = -184489.012 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2330.492 SltPot   =   -6862.991
+           SltCoul  =  -12953.053 SltL-J   =    -527.135 SltHyd   =       0.000
+           SltBond  =    6617.197 SltStr   =    1228.440 SltBen   =    3245.011
+           SltItor  =     169.773 SltPtor  =    1973.972 S-SPot   =   -2010.258
+           S-SCoul  =   -1570.835 Erecip   =    6337.192 SltTemp  =     298.873
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.885
+           Hoover   =     170.713
+
+           TotPre   =      -84.82 ConPre   =     -227.89 KinPre   =      143.07
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -36.0274       2.5680      -6.0584
+ ABC   109.4712   109.4712   109.4712        -4.8484     -29.2247      -1.0832
+       ........   ........   ........         2.7713      13.7791     -19.5642
+
+Neighbor Lists Dimensions *neighbor(  494086)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494158)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494147)* 
+
+
+
+           Tstep    =    1152.000 Total    = -119829.485 SlvPot   = -167384.471
+           SlvNonbd = -167384.471 SlvCoul  = -185642.371 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2281.401 SltPot   =   -6777.347
+           SltCoul  =  -13084.085 SltL-J   =    -580.919 SltHyd   =       0.000
+           SltBond  =    6887.658 SltStr   =    1355.144 SltBen   =    3389.988
+           SltItor  =     196.969 SltPtor  =    1945.557 S-SPot   =   -1763.628
+           S-SCoul  =   -1267.785 Erecip   =    6506.918 SltTemp  =     296.463
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.298
+           Hoover   =     169.698
+
+           TotPre   =      -62.28 ConPre   =     -206.94 KinPre   =      144.66
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -26.6311      16.1298       2.0359
+ ABC   109.4712   109.4712   109.4712         3.5860     -27.4198       0.3253
+       ........   ........   ........        -3.5498       2.0399      -8.2255
+
+Neighbor Lists Dimensions *neighbor(  494113)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494153)* 
+
+
+
+           Tstep    =    1248.000 Total    = -119847.301 SlvPot   = -167211.263
+           SlvNonbd = -167211.263 SlvCoul  = -184826.494 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2328.729 SltPot   =   -6886.953
+           SltCoul  =  -12856.093 SltL-J   =    -703.017 SltHyd   =       0.000
+           SltBond  =    6672.157 SltStr   =    1225.461 SltBen   =    3353.749
+           SltItor  =     206.289 SltPtor  =    1886.658 S-SPot   =   -1841.837
+           S-SCoul  =   -1411.884 Erecip   =    6432.718 SltTemp  =     300.570
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.852
+           Hoover   =     131.652
+
+           TotPre   =      -78.35 ConPre   =     -222.89 KinPre   =      144.54
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -17.0493      19.2242      14.8603
+ ABC   109.4712   109.4712   109.4712        15.4048     -18.0435       9.0163
+       ........   ........   ........        -4.7286       0.3405     -43.2530
+
+Neighbor Lists Dimensions *neighbor(  494267)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494183)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494131)* 
+
+
+
+           Tstep    =    1344.000 Total    = -119853.047 SlvPot   = -167282.598
+           SlvNonbd = -167282.598 SlvCoul  = -184416.751 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2276.057 SltPot   =   -6915.611
+           SltCoul  =  -12922.476 SltL-J   =    -636.692 SltHyd   =       0.000
+           SltBond  =    6643.556 SltStr   =    1319.311 SltBen   =    3191.125
+           SltItor  =     179.915 SltPtor  =    1953.206 S-SPot   =   -1805.317
+           S-SCoul  =   -1407.772 Erecip   =    6448.603 SltTemp  =     305.933
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.633
+           Hoover   =     151.525
+
+           TotPre   =     -103.08 ConPre   =     -245.28 KinPre   =      142.20
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -44.7661       7.7663      -0.9330
+ ABC   109.4712   109.4712   109.4712        22.1488     -23.2848      13.2147
+       ........   ........   ........       -16.6031       1.2273     -35.0329
+
+Neighbor Lists Dimensions *neighbor(  494240)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494300)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494320)* 
+
+
+
+           Tstep    =    1440.000 Total    = -119826.472 SlvPot   = -167521.382
+           SlvNonbd = -167521.382 SlvCoul  = -184798.050 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2280.542 SltPot   =   -6675.802
+           SltCoul  =  -13066.297 SltL-J   =    -520.828 SltHyd   =       0.000
+           SltBond  =    6911.323 SltStr   =    1358.484 SltBen   =    3330.554
+           SltItor  =     219.826 SltPtor  =    2002.459 S-SPot   =   -1976.744
+           S-SCoul  =   -1455.415 Erecip   =    6395.563 SltTemp  =     289.824
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.094
+           Hoover   =     158.396
+
+           TotPre   =      -78.18 ConPre   =     -222.70 KinPre   =      144.52
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -26.9150       9.1736     -12.1323
+ ABC   109.4712   109.4712   109.4712        19.9884     -31.1990       5.2683
+       ........   ........   ........         6.0627      12.7129     -20.0660
+
+Neighbor Lists Dimensions *neighbor(  494143)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494185)* 
+
+
+
+           Tstep    =    1536.000 Total    = -119842.235 SlvPot   = -167067.334
+           SlvNonbd = -167067.334 SlvCoul  = -184942.774 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2320.875 SltPot   =   -6944.137
+           SltCoul  =  -13026.531 SltL-J   =    -656.237 SltHyd   =       0.000
+           SltBond  =    6738.631 SltStr   =    1332.416 SltBen   =    3272.707
+           SltItor  =     181.322 SltPtor  =    1952.185 S-SPot   =   -1953.122
+           S-SCoul  =   -1539.395 Erecip   =    6402.610 SltTemp  =     304.858
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.181
+           Hoover   =     141.343
+
+           TotPre   =      -64.21 ConPre   =     -207.22 KinPre   =      143.01
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -19.4574      -1.3343      -1.7051
+ ABC   109.4712   109.4712   109.4712         5.9983     -18.8647       6.2992
+       ........   ........   ........         2.6319       5.5951     -25.8869
+
+Neighbor Lists Dimensions *neighbor(  494157)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494062)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494246)* 
+
+
+
+           Tstep    =    1632.000 Total    = -119825.934 SlvPot   = -167101.424
+           SlvNonbd = -167101.424 SlvCoul  = -185390.397 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2447.738 SltPot   =   -6971.531
+           SltCoul  =  -13017.502 SltL-J   =    -626.055 SltHyd   =       0.000
+           SltBond  =    6672.026 SltStr   =    1399.094 SltBen   =    3096.093
+           SltItor  =     208.565 SltPtor  =    1968.274 S-SPot   =   -1927.321
+           S-SCoul  =   -1513.521 Erecip   =    6370.722 SltTemp  =     298.299
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.600
+           Hoover   =      53.267
+
+           TotPre   =      -51.29 ConPre   =     -194.33 KinPre   =      143.03
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000        -9.8660      10.2016      17.2400
+ ABC   109.4712   109.4712   109.4712        -2.6114     -20.7587       6.7844
+       ........   ........   ........         7.7589      -2.2873     -20.6690
+
+Neighbor Lists Dimensions *neighbor(  494226)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494379)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494293)* 
+
+
+
+           Tstep    =    1728.000 Total    = -119839.502 SlvPot   = -167106.475
+           SlvNonbd = -167106.475 SlvCoul  = -184672.463 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2451.632 SltPot   =   -6853.580
+           SltCoul  =  -12931.692 SltL-J   =    -553.088 SltHyd   =       0.000
+           SltBond  =    6631.199 SltStr   =    1315.377 SltBen   =    3162.375
+           SltItor  =     208.989 SltPtor  =    1944.459 S-SPot   =   -1945.865
+           S-SCoul  =   -1510.556 Erecip   =    6344.310 SltTemp  =     290.265
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     299.433
+           Hoover   =      36.839
+
+           TotPre   =      -73.30 ConPre   =     -217.10 KinPre   =      143.80
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -21.4965      -8.5900       5.9338
+ ABC   109.4712   109.4712   109.4712        -1.6676     -19.9027      11.6379
+       ........   ........   ........         9.8654       7.3763     -31.9039
+
+Neighbor Lists Dimensions *neighbor(  493941)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493877)* 
+
+
+
+           Tstep    =    1824.000 Total    = -119841.136 SlvPot   = -167282.139
+           SlvNonbd = -167282.139 SlvCoul  = -184961.979 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2486.439 SltPot   =   -6911.001
+           SltCoul  =  -13023.399 SltL-J   =    -562.909 SltHyd   =       0.000
+           SltBond  =    6675.307 SltStr   =    1260.055 SltBen   =    3243.655
+           SltItor  =     189.381 SltPtor  =    1982.217 S-SPot   =   -1976.313
+           S-SCoul  =   -1481.908 Erecip   =    6400.284 SltTemp  =     291.756
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.425
+           Hoover   =      47.694
+
+           TotPre   =      -64.83 ConPre   =     -208.33 KinPre   =      143.51
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -21.7827       3.5272      -1.4576
+ ABC   109.4712   109.4712   109.4712        -3.5162     -30.6011      -4.5883
+       ........   ........   ........        13.8757       1.5568     -12.4440
+
+Neighbor Lists Dimensions *neighbor(  493746)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493932)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494097)* 
+
+
+
+           Tstep    =    1920.000 Total    = -119840.734 SlvPot   = -166819.413
+           SlvNonbd = -166819.413 SlvCoul  = -184314.029 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2479.494 SltPot   =   -6854.476
+           SltCoul  =  -13015.445 SltL-J   =    -625.910 SltHyd   =       0.000
+           SltBond  =    6786.879 SltStr   =    1320.283 SltBen   =    3226.493
+           SltItor  =     217.689 SltPtor  =    2022.413 S-SPot   =   -1967.027
+           S-SCoul  =   -1546.888 Erecip   =    6325.947 SltTemp  =     288.487
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     296.724
+           Hoover   =     141.782
+
+           TotPre   =      -66.34 ConPre   =     -209.21 KinPre   =      142.87
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -21.3049      -2.9903      16.1385
+ ABC   109.4712   109.4712   109.4712        13.7978      -4.0497      13.8500
+       ........   ........   ........         0.5112      -9.4042     -40.9859
+
+Neighbor Lists Dimensions *neighbor(  494200)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494313)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494262)* 
+
+
+
+           Tstep    =    2016.000 Total    = -119843.648 SlvPot   = -167079.093
+           SlvNonbd = -167079.093 SlvCoul  = -184505.313 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2437.682 SltPot   =   -6810.647
+           SltCoul  =  -12866.205 SltL-J   =    -761.329 SltHyd   =       0.000
+           SltBond  =    6816.886 SltStr   =    1325.437 SltBen   =    3255.859
+           SltItor  =     258.577 SltPtor  =    1977.013 S-SPot   =   -1909.052
+           S-SCoul  =   -1558.131 Erecip   =    6450.898 SltTemp  =     288.354
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     298.249
+           Hoover   =     227.515
+
+           TotPre   =      -92.03 ConPre   =     -234.23 KinPre   =      142.20
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -31.1284     -13.3375       3.9240
+ ABC   109.4712   109.4712   109.4712        -9.4702     -16.7461       8.8072
+       ........   ........   ........        -5.0176     -10.5683     -44.1556
+
+Neighbor Lists Dimensions *neighbor(  494308)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494269)* 
+
+
+
+           Tstep    =    2112.000 Total    = -119813.268 SlvPot   = -167055.189
+           SlvNonbd = -167055.189 SlvCoul  = -184494.547 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2401.961 SltPot   =   -6952.271
+           SltCoul  =  -13027.101 SltL-J   =    -616.662 SltHyd   =       0.000
+           SltBond  =    6691.492 SltStr   =    1329.225 SltBen   =    3152.658
+           SltItor  =     193.410 SltPtor  =    2016.200 S-SPot   =   -1903.581
+           S-SCoul  =   -1349.745 Erecip   =    6404.641 SltTemp  =     300.048
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.001
+           Hoover   =     385.295
+
+           TotPre   =      -56.23 ConPre   =     -200.29 KinPre   =      144.06
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -19.3669       2.4009      -0.9496
+ ABC   109.4712   109.4712   109.4712        -3.0409     -23.3793      -1.3547
+       ........   ........   ........         7.9626       1.3039     -13.4836
+
+Neighbor Lists Dimensions *neighbor(  494048)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494025)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494116)* 
+
+
+
+           Tstep    =    2208.000 Total    = -119802.148 SlvPot   = -167137.991
+           SlvNonbd = -167137.991 SlvCoul  = -185598.456 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2314.565 SltPot   =   -6767.097
+           SltCoul  =  -12980.624 SltL-J   =    -685.821 SltHyd   =       0.000
+           SltBond  =    6899.348 SltStr   =    1382.500 SltBen   =    3351.649
+           SltItor  =     219.778 SltPtor  =    1945.421 S-SPot   =   -2001.566
+           S-SCoul  =   -1593.681 Erecip   =    6467.334 SltTemp  =     293.600
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.421
+           Hoover   =     401.763
+
+           TotPre   =      -34.58 ConPre   =     -178.29 KinPre   =      143.72
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000        -5.4571       4.0822      -1.9995
+ ABC   109.4712   109.4712   109.4712         7.8423      -7.4911       6.3369
+       ........   ........   ........       -15.5701      -6.0028     -21.6300
+
+Neighbor Lists Dimensions *neighbor(  494158)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494102)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494172)* 
+
+
+
+           Tstep    =    2304.000 Total    = -119821.621 SlvPot   = -167246.300
+           SlvNonbd = -167246.300 SlvCoul  = -184578.273 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2316.748 SltPot   =   -6882.781
+           SltCoul  =  -12974.255 SltL-J   =    -571.109 SltHyd   =       0.000
+           SltBond  =    6662.582 SltStr   =    1219.175 SltBen   =    3279.413
+           SltItor  =     198.366 SltPtor  =    1965.628 S-SPot   =   -1858.507
+           S-SCoul  =   -1600.961 Erecip   =    6476.617 SltTemp  =     301.085
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.017
+           Hoover   =     348.456
+
+           TotPre   =      -74.98 ConPre   =     -217.51 KinPre   =      142.53
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -15.5442     -12.5066       3.2251
+ ABC   109.4712   109.4712   109.4712        -0.0666     -26.8379       3.8260
+       ........   ........   ........        -2.1208      -8.2450     -32.6021
+
+Neighbor Lists Dimensions *neighbor(  494087)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494119)* 
+
+
+
+           Tstep    =    2400.000 Total    = -119834.814 SlvPot   = -167304.453
+           SlvNonbd = -167304.453 SlvCoul  = -185063.695 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2295.284 SltPot   =   -6942.650
+           SltCoul  =  -12921.013 SltL-J   =    -453.423 SltHyd   =       0.000
+           SltBond  =    6431.786 SltStr   =    1320.663 SltBen   =    3059.176
+           SltItor  =     184.263 SltPtor  =    1867.684 S-SPot   =   -1894.266
+           S-SCoul  =   -1418.377 Erecip   =    6399.052 SltTemp  =     306.448
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.310
+           Hoover   =     316.396
+
+           TotPre   =      -76.25 ConPre   =     -219.94 KinPre   =      143.69
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -28.7455      -2.7169      -9.3577
+ ABC   109.4712   109.4712   109.4712         7.8692     -24.6094       3.6552
+       ........   ........   ........        -5.0830      -5.9020     -22.8964
+
+Neighbor Lists Dimensions *neighbor(  494051)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494085)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493986)* 
+
+
+
+           Tstep    =    2496.000 Total    = -119809.275 SlvPot   = -166959.403
+           SlvNonbd = -166959.403 SlvCoul  = -184938.123 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2254.722 SltPot   =   -6867.167
+           SltCoul  =  -12975.077 SltL-J   =    -511.576 SltHyd   =       0.000
+           SltBond  =    6619.486 SltStr   =    1337.496 SltBen   =    3159.115
+           SltItor  =     230.325 SltPtor  =    1892.550 S-SPot   =   -1978.143
+           S-SCoul  =   -1469.501 Erecip   =    6369.880 SltTemp  =     304.145
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     299.829
+           Hoover   =     270.860
+
+           TotPre   =      -58.84 ConPre   =     -200.53 KinPre   =      141.70
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -21.6904       5.1447      -5.9068
+ ABC   109.4712   109.4712   109.4712         8.8720     -20.0852      -3.1155
+       ........   ........   ........        -6.1841      -2.9574     -17.0633
+
+Neighbor Lists Dimensions *neighbor(  493922)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493930)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493686)* 
+
+
+
+           Tstep    =    2592.000 Total    = -119829.442 SlvPot   = -167224.032
+           SlvNonbd = -167224.032 SlvCoul  = -184782.791 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2228.688 SltPot   =   -6798.658
+           SltCoul  =  -12949.993 SltL-J   =    -531.742 SltHyd   =       0.000
+           SltBond  =    6683.076 SltStr   =    1210.611 SltBen   =    3328.706
+           SltItor  =     223.779 SltPtor  =    1919.980 S-SPot   =   -1892.470
+           S-SCoul  =   -1379.761 Erecip   =    6483.289 SltTemp  =     301.344
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.004
+           Hoover   =     190.419
+
+           TotPre   =      -71.07 ConPre   =     -213.92 KinPre   =      142.85
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -44.1814     -12.1449     -25.4854
+ ABC   109.4712   109.4712   109.4712         7.1182     -12.6563      23.5237
+       ........   ........   ........       -12.7780       3.6630     -14.2366
+
+Neighbor Lists Dimensions *neighbor(  493761)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493762)* 
+
+
+
+           Tstep    =    2688.000 Total    = -119853.417 SlvPot   = -167277.753
+           SlvNonbd = -167277.753 SlvCoul  = -184850.636 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2276.569 SltPot   =   -6707.402
+           SltCoul  =  -12836.841 SltL-J   =    -632.074 SltHyd   =       0.000
+           SltBond  =    6761.514 SltStr   =    1361.655 SltBen   =    3240.341
+           SltItor  =     174.395 SltPtor  =    1985.123 S-SPot   =   -1862.847
+           S-SCoul  =   -1328.907 Erecip   =    6442.770 SltTemp  =     292.169
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     300.299
+           Hoover   =     195.016
+
+           TotPre   =     -106.72 ConPre   =     -248.72 KinPre   =      142.00
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -26.0469      -4.4960      -9.1495
+ ABC   109.4712   109.4712   109.4712       -15.2918     -29.9855      -1.4377
+       ........   ........   ........       -24.0809     -14.7363     -50.6846
+
+Neighbor Lists Dimensions *neighbor(  493552)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493711)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493905)* 
+
+
+
+           Tstep    =    2784.000 Total    = -119817.618 SlvPot   = -167510.735
+           SlvNonbd = -167510.735 SlvCoul  = -185201.662 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2195.020 SltPot   =   -6745.203
+           SltCoul  =  -12903.086 SltL-J   =    -582.122 SltHyd   =       0.000
+           SltBond  =    6740.005 SltStr   =    1315.317 SltBen   =    3228.122
+           SltItor  =     231.947 SltPtor  =    1964.618 S-SPot   =   -1876.838
+           S-SCoul  =   -1493.457 Erecip   =    6384.065 SltTemp  =     300.039
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.572
+           Hoover   =     136.663
+
+           TotPre   =      -75.31 ConPre   =     -218.82 KinPre   =      143.50
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -32.3625      -2.6445       3.9402
+ ABC   109.4712   109.4712   109.4712        18.4630     -18.2043      16.2663
+       ........   ........   ........        -2.5069      -1.4402     -24.7480
+
+Neighbor Lists Dimensions *neighbor(  493718)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493717)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493831)* 
+
+
+
+           Tstep    =    2880.000 Total    = -119838.532 SlvPot   = -167193.347
+           SlvNonbd = -167193.347 SlvCoul  = -184576.402 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2238.185 SltPot   =   -6680.738
+           SltCoul  =  -13049.656 SltL-J   =    -492.010 SltHyd   =       0.000
+           SltBond  =    6860.927 SltStr   =    1255.762 SltBen   =    3409.714
+           SltItor  =     210.231 SltPtor  =    1985.220 S-SPot   =   -1856.502
+           S-SCoul  =   -1291.161 Erecip   =    6336.358 SltTemp  =     292.942
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     298.071
+           Hoover   =      50.981
+
+           TotPre   =      -64.09 ConPre   =     -204.41 KinPre   =      140.32
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000        -7.2797     -11.9453      12.9337
+ ABC   109.4712   109.4712   109.4712        -2.8599     -23.5706     -10.4371
+       ........   ........   ........        11.1039      -7.6453     -33.2425
+
+Neighbor Lists Dimensions *neighbor(  493772)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493983)* 
+
+
+
+           Tstep    =    2976.000 Total    = -119812.810 SlvPot   = -167497.376
+           SlvNonbd = -167497.376 SlvCoul  = -185654.397 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2236.953 SltPot   =   -6791.266
+           SltCoul  =  -12955.971 SltL-J   =    -588.620 SltHyd   =       0.000
+           SltBond  =    6753.326 SltStr   =    1312.885 SltBen   =    3281.040
+           SltItor  =     209.258 SltPtor  =    1950.143 S-SPot   =   -1924.658
+           S-SCoul  =   -1280.180 Erecip   =    6347.905 SltTemp  =     300.312
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     301.708
+           Hoover   =      54.186
+
+           TotPre   =      -77.16 ConPre   =     -221.81 KinPre   =      144.65
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -18.2896       8.6353      -6.8983
+ ABC   109.4712   109.4712   109.4712         8.0049     -33.7357       4.3580
+       ........   ........   ........        -2.7687       4.5867     -25.1302
+
+Neighbor Lists Dimensions *neighbor(  493839)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493837)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493911)* 
+
+
+
+           Tstep    =    3072.000 Total    = -119823.175 SlvPot   = -167421.709
+           SlvNonbd = -167421.709 SlvCoul  = -184668.338 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2176.762 SltPot   =   -6583.349
+           SltCoul  =  -12950.879 SltL-J   =    -618.700 SltHyd   =       0.000
+           SltBond  =    6986.230 SltStr   =    1405.587 SltBen   =    3389.935
+           SltItor  =     225.984 SltPtor  =    1964.724 S-SPot   =   -2083.374
+           S-SCoul  =   -1549.486 Erecip   =    6228.459 SltTemp  =     290.571
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     299.541
+           Hoover   =      96.433
+
+           TotPre   =     -106.04 ConPre   =     -248.48 KinPre   =      142.44
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -52.4820     -10.8366      -6.5333
+ ABC   109.4712   109.4712   109.4712         7.1119     -21.5466      19.9380
+       ........   ........   ........        -4.5839       9.2926     -32.0146
+
+Neighbor Lists Dimensions *neighbor(  493849)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493875)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494033)* 
+
+
+
+           Tstep    =    3168.000 Total    = -119861.209 SlvPot   = -166980.430
+           SlvNonbd = -166980.430 SlvCoul  = -185101.968 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2284.255 SltPot   =   -6938.121
+           SltCoul  =  -13005.817 SltL-J   =    -614.090 SltHyd   =       0.000
+           SltBond  =    6681.786 SltStr   =    1303.177 SltBen   =    3190.668
+           SltItor  =     190.513 SltPtor  =    1997.428 S-SPot   =   -2185.603
+           S-SCoul  =   -1846.732 Erecip   =    6310.798 SltTemp  =     306.876
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     298.586
+           Hoover   =     124.411
+
+           TotPre   =      -61.62 ConPre   =     -204.53 KinPre   =      142.91
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -19.6571      -0.5796       6.1314
+ ABC   109.4712   109.4712   109.4712        -3.1159     -13.2744       9.0809
+       ........   ........   ........        -5.4086      -6.7081     -28.6881
+
+Neighbor Lists Dimensions *neighbor(  493979)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494186)* 
+
+
+
+           Tstep    =    3264.000 Total    = -119843.573 SlvPot   = -167246.768
+           SlvNonbd = -167246.768 SlvCoul  = -185027.704 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2338.372 SltPot   =   -6862.351
+           SltCoul  =  -12958.817 SltL-J   =    -633.283 SltHyd   =       0.000
+           SltBond  =    6729.750 SltStr   =    1372.565 SltBen   =    3240.224
+           SltItor  =     205.898 SltPtor  =    1911.062 S-SPot   =   -2037.394
+           S-SCoul  =   -1449.918 Erecip   =    6347.318 SltTemp  =     298.312
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     298.624
+           Hoover   =     152.098
+
+           TotPre   =      -80.02 ConPre   =     -223.59 KinPre   =      143.57
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -44.5647      -7.7440      -7.0671
+ ABC   109.4712   109.4712   109.4712         1.9311     -18.3856      -0.4853
+       ........   ........   ........        -2.6771      -8.4973     -17.0719
+
+Neighbor Lists Dimensions *neighbor(  494164)* 
+
+
+Neighbor Lists Dimensions *neighbor(  493900)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494258)* 
+
+
+
+           Tstep    =    3360.000 Total    = -119827.213 SlvPot   = -167103.935
+           SlvNonbd = -167103.935 SlvCoul  = -185162.335 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2323.044 SltPot   =   -6931.957
+           SltCoul  =  -12966.469 SltL-J   =    -647.492 SltHyd   =       0.000
+           SltBond  =    6682.004 SltStr   =    1248.393 SltBen   =    3232.216
+           SltItor  =     208.064 SltPtor  =    1993.331 S-SPot   =   -1919.717
+           S-SCoul  =   -1504.914 Erecip   =    6438.283 SltTemp  =     303.912
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     296.857
+           Hoover   =     175.279
+
+           TotPre   =      -55.34 ConPre   =     -196.17 KinPre   =      140.83
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -20.4326      -9.9692       4.0554
+ ABC   109.4712   109.4712   109.4712         0.2075     -11.7935       7.6154
+       ........   ........   ........         3.6686       3.5787     -23.1165
+
+Neighbor Lists Dimensions *neighbor(  494065)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494067)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494143)* 
+
+
+
+           Tstep    =    3456.000 Total    = -119807.788 SlvPot   = -166787.098
+           SlvNonbd = -166787.098 SlvCoul  = -184637.591 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2437.972 SltPot   =   -6885.925
+           SltCoul  =  -13088.622 SltL-J   =    -597.543 SltHyd   =       0.000
+           SltBond  =    6800.241 SltStr   =    1353.892 SltBen   =    3256.965
+           SltItor  =     211.219 SltPtor  =    1978.164 S-SPot   =   -2008.607
+           S-SCoul  =   -1588.710 Erecip   =    6427.029 SltTemp  =     293.298
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     294.955
+           Hoover   =     149.720
+
+           TotPre   =      -59.10 ConPre   =     -199.56 KinPre   =      140.47
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000        -8.5668      -3.1035      17.5973
+ ABC   109.4712   109.4712   109.4712        -5.7919     -21.0636       5.1212
+       ........   ........   ........        11.7677      -6.5029     -29.4652
+
+Neighbor Lists Dimensions *neighbor(  494153)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494040)* 
+
+
+
+           Tstep    =    3552.000 Total    = -119827.337 SlvPot   = -167245.681
+           SlvNonbd = -167245.681 SlvCoul  = -184534.949 SlvBnded =       0.000
+           SlvStr   =       0.000 SlvBend  =       0.000 SlvPtor  =       0.000
+           SlvItor  =       0.000 SltTot   =   -2450.829 SltPot   =   -7050.541
+           SltCoul  =  -12972.598 SltL-J   =    -625.829 SltHyd   =       0.000
+           SltBond  =    6547.886 SltStr   =    1332.207 SltBen   =    3086.418
+           SltItor  =     189.683 SltPtor  =    1939.578 S-SPot   =   -2197.997
+           S-SCoul  =   -1808.694 Erecip   =    6282.924 SltTemp  =     303.305
+           TrasTem  =       0.000 RestTemp =       0.000 TotTemp  =     302.702
+           Hoover   =     152.204
+
+           TotPre   =     -104.26 ConPre   =     -248.04 KinPre   =      143.78
+           TmpPre   =        0.00 Volume   =   140322.49 PV       =      0.0000
+        .....  cell parameters  ....             ....       stress    .....
+ XYZ    56.7000    56.7000    56.7000       -25.5823      19.5447      -7.4240
+ ABC   109.4712   109.4712   109.4712         6.6775     -42.4574     -11.5058
+       ........   ........   ........        -5.4422      -6.3968     -36.2197
+
+Neighbor Lists Dimensions *neighbor(  494379)* 
+
+
+Neighbor Lists Dimensions *neighbor(  494266)* 
+
+
+                       Temperature has been rescaled     0 times 
+
+ 
+
+          ===========================================
+
+                Total cpu time for the run       =    243.491
+                Total elapsed time for the run   =    249.574
+                Averaged time per femtosecond    =      0.068
+                Averaged time in inner loop      =      0.008
+                Averaged time in m loop          =      0.018
+                Averaged time in l loop          =      0.028
+                Averaged time in h loop          =      0.013
+                Averaged time to rattle vel.     =      0.003
+                Averaged time to rattle coord.   =      0.003
+                Averaged elapsed per femtosecond =      0.069
+
+
+
+          ===========================================
+
+
+
+     ************************************************************************
+     *                                                                      *
+     *                        PROGRAM COMPLETED                             *
+     *                                                                      *
+     ************************************************************************
+
+
+
+          |--------------------------------------------------------------|
+          |    ``They're unfriendly.  Which is fortunate really;         |
+          |      they'd be difficult to love.''                          |
+          |                              . . . Avon    Blake's Seven     |
+          |                                                              |
+          |--------------------------------------------------------------|
+

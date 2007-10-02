@@ -1,0 +1,54 @@
+&SETUP
+   CRYSTAL   56.7 56.7 56.7 109.47122 109.47122 109.47122
+   READ_PDB Input_test.pdb
+&END
+&PARAMETERS
+   READ_TPGPRM_BIN protein_noions_water.prmtpg
+&END
+
+&SIMULATION
+   MDSIM
+   TEMPERATURE   300.0 50.0
+   WRITE_PRESSURE
+   SCALING GROUP
+#   THERMOS
+#       solute  30.0
+#       solvent 30.0
+#       cofm    30.0
+#       temp_limit 8000.0
+#   END
+&END
+&INTEGRATOR
+   TIMESTEP       12.0
+   MTS_RESPA
+      step intra 2
+      step intra 2
+      step nonbond 2  4.7
+      step nonbond 3  7.3   reciprocal
+      step nonbond 1  9.7
+   END
+&END
+
+#
+#
+&POTENTIAL
+   EWALD       PME    0.45  64 64 64 5
+   UPDATE      48.0   1.5
+   STRETCHING HEAVY
+   QQ-FUDGE  1.0
+   LJ-FUDGE  1.0
+   LINKED_CELL 8 8 8
+&END
+&RUN                                                                     
+   CONTROL      2
+   PROPERTY     3000.0
+   REJECT       120.0
+   TIME            0.0
+   PRINT         2.0
+&END                                                                     
+&INOUT                                                                   
+   RESTART
+    read input.1.rst
+    write 120.0 OPEN    input.2.rst
+   END 	
+&END                                                                     
