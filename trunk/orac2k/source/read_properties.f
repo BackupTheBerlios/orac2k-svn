@@ -41,6 +41,10 @@
       USE GROUPS_Mod, ONLY: GR_groups=>groups,GR_Input=>Read_it
       USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_input
      &     =>Read_it
+      USE HYDYNAMICS_Mod, ONLY: HYDD_coeff=>coeff, HYDD_cutoff
+     &     =>cutoff_max,HYDD_Initialize=>Initialize, hydynamics,
+     &     HYDD_n_neighbors=>n_neighbors,HYDD_n_write=>n_write
+     &     ,khydynamics
 
       IMPLICIT none
 
@@ -69,8 +73,9 @@
 
       INTEGER nword,i,j,m,nsevere,nwarning,n_res,n_bonds,NSec
      &     ,n_bendings,n_ptors,n_itors,n_atoms,naux1,naux2,pmol_efp
-     &     ,n_st_dummy,n_sv_dummy,read_err
+     &     ,n_st_dummy,n_sv_dummy,n_std_dummy,n_svd_dummy,read_err
       INTEGER, DIMENSION(:), ALLOCATABLE :: st_dummy,sv_dummy
+      INTEGER, DIMENSION(:), ALLOCATABLE :: std_dummy,svd_dummy
       CHARACTER*80 line,strngs(40),lined
       CHARACTER*8 fmt
       CHARACTER*1 sep(2),comm(2)
@@ -95,6 +100,8 @@ c=======================================================================
       n_atoms=0
       n_st_dummy=0
       n_sv_dummy=0
+      n_std_dummy=0
+      n_svd_dummy=0
       NSecStruct=1
       SecStructTotal=0
 
@@ -903,6 +910,100 @@ c--------------------------------------------------------------------
                nsevere = nsevere + 1                                   
             END IF                                                     
             GOTO 4100                                                  
+                                                                       
+                                                                       
+c==== END Command HYDRATION ===========================================
+
+c==== Command HYDYNAMICS  ==============================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'HYDYNAMICS' ) THEN
+            hydynamics=.TRUE.
+            not_time_corr=.TRUE.
+            ALLOCATE(std_dummy(nores+1),svd_dummy(nores+1))
+
+4200        READ(knlist,'(a78)',END=600) line(1:78)                    
+            CALL wrenc(kprint,line)
+            IF(line(1:1) .EQ. '#') GOTO 4200                           
+                                                                       
+            CALL parse(line,sep,2,comm,strngs,40,nword,iret,errmsg)    
+                                                                       
+c==== Subcommand hydynamics coeff ======================================  
+
+            IF(strngs(1).EQ. 'coeff') THEN
+               IF(nword .LT. 2) THEN
+                  errmsg=err_args(1)//'3'                              
+                  CALL xerror(errmsg,80,1,30)                          
+                  nsevere=nsevere+1                                    
+               ELSE                                                    
+                  CALL fndfmt(2,strngs(2),fmt)                         
+                  READ(strngs(2),fmt) HYDD_coeff
+               END IF                                                  
+
+c==== subcommand cutoff =============================================  
+
+            ELSE IF(strngs(1).EQ. 'cutoff' ) THEN
+               IF(nword.ne.1) THEN                                     
+                  CALL fndfmt(2,strngs(2),fmt)                         
+                  READ(strngs(2),fmt,err=20) HYDD_cutoff
+               END IF                                                  
+
+            ELSE IF(strngs(1).EQ. 'binary' ) THEN
+               HYD_Kbinary=1
+
+c==== subcommand solute =============================================  
+
+            ELSE IF(strngs(1).EQ. 'solute') THEN
+               CALL parse_numbers(err_unr,strngs,nword,std_dummy
+     &              ,n_std_dummy,nsevere)
+
+c==== subcommand solvent ============================================  
+
+            ELSE IF(strngs(1).EQ. 'solvent') THEN
+               CALL parse_numbers(err_unr,strngs,nword,svd_dummy
+     &              ,n_svd_dummy,nsevere)
+
+c==== subcommand neighbors ============================================  
+
+            ELSE IF(strngs(1).EQ. 'neighbors') THEN
+               IF(nword.ne.1) THEN                                     
+                  CALL fndfmt(2,strngs(2),fmt)
+                  READ(strngs(2),fmt,err=20) dummy
+                  HYDD_n_neighbors=IDINT(dummy)
+               END IF
+
+c==== subcommand write ==============================================  
+
+            ELSE IF(strngs(1).EQ. 'write' ) THEN
+               IF(nword.ne.1) THEN                                     
+                  CALL fndfmt(2,strngs(2),fmt)
+                  READ(strngs(2),fmt,err=20) dummy
+                  HYDD_n_write=IDINT(dummy)
+               END IF                                                  
+
+c--------------------------------------------------------------------  
+                                                                       
+            ELSE IF(strngs(1) .EQ. ' ') THEN                           
+               GOTO 4200                                               
+                                                                       
+            ELSE IF(strngs(1).EQ. 'END' ) THEN                         
+               strngs(2)='HYDYNAMICS_FILE'
+               INQUIRE(FILE=strngs(2),EXIST=exist)
+               IF(exist) THEN
+                  CALL openf(khydynamics,strngs(2),'UNFORMATTED',
+     &                 'OLD',0)
+               ELSE
+                  CALL openf(khydynamics,strngs(2),'UNFORMATTED'
+     &                 ,'NEW',0)
+               END IF
+               GOTO 100                                                
+                                                                       
+            ELSE
+               errmsg=err_unr(2)//strngs(2)//err_end(1:14)/            
+     &              /err_end(16:20)                                    
+               CALL xerror(errmsg,80,1,30)                             
+               nsevere = nsevere + 1                                   
+            END IF                                                     
+            GOTO 4200                                                  
                                                                        
                                                                        
 c==== END Command HYDRATION ===========================================
@@ -2170,7 +2271,12 @@ c--   syntax errors: abort without verifying input
          CALL HYD_Initialize(st_dummy,sv_dummy,khydration)
          DEALLOCATE(st_dummy,sv_dummy)
       END IF
-      
+      IF(Hydynamics) THEN
+         std_dummy(1)=n_std_dummy
+         svd_dummy(1)=n_svd_dummy
+         CALL HYDD_Initialize(std_dummy,svd_dummy,khydynamics)
+         DEALLOCATE(std_dummy,svd_dummy)
+      END IF
       RETURN
 
 c==============================================================================

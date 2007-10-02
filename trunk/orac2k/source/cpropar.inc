@@ -11,15 +11,15 @@
      $     ,gofr_nprint,gofr_navg,gofr_ncomp,sofk_nprint,sofk_navg
      $     ,sofk_ncomp,nmol_create,mim_lim,ndf_thermos,neta,navg_str
      $     ,nrms,navg_str_xrms,atoms_diss(2,2),mol_diss(2),diss_list
-     $     ,ncavities,ncontact_slt,contact_slt(2,pcontact_slt)
-     $     ,start_anl,stop_anl,update_anl,top_bonds(ntopol+1)
-     &     ,top_bendings(ntopol+1),top_ptors(ntopol+1),top_itors(ntopol
-     &     +1),ntop_print,nfragm_dist,nhbonds,nhhisto,nabmd,corr_atoms
-     &     ,nbinew,nstep_freq,nx_cav,ny_cav,nz_cav,nfreq_ef,nmol_ef
-     &     ,pmol_ef,nfreq_dp,nxslt,ncalc_cofm,nlda_mol,nlda_atm
-     &     ,nlda_zero,ninst_fit,ninst_lda,natms,patms,nlda_flu,nlda_hyd
-     &     ,nprot_hyd,min_hyd,max_hyd,min_lda,max_lda,nlda_grp,nprot_lda
-     &     ,Virtual_types,virtual_atoms
+     $     ,nvoronoi,ncavities,ncontact_slt,contact_slt(2,pcontact_slt)
+     $     ,start_anl,stop_anl,update_anl,voronoi_res(nores+1)
+     $     ,top_bonds(ntopol+1),top_bendings(ntopol+1),top_ptors(ntopol
+     $     +1),top_itors(ntopol+1),ntop_print,nfragm_dist,nhbonds
+     $     ,nhhisto,nabmd,corr_atoms,nbinew,nstep_freq,nx_cav,ny_cav
+     $     ,nz_cav,nfreq_ef,nmol_ef,pmol_ef,nfreq_dp,nxslt,ncalc_cofm
+     $     ,nlda_mol,nlda_atm,nlda_zero,ninst_fit,ninst_lda,natms,patms
+     $     ,nlda_flu,nlda_hyd,nprot_hyd,min_hyd,max_hyd,min_lda,max_lda
+     $     ,nlda_grp,nprot_lda,Virtual_types,virtual_atoms
 
 
       INTEGER lbnd_x,lconstr_x,lbndg_x,ltor_x,litr_x,int14_x,int13_x
@@ -69,7 +69,7 @@
       REAL*8  pext,masspr,wpr
       REAL*8  taut,taup,mu,compressibility
       REAL*8  rcuth,rcutl,rcutm,rtolh,rtoll,rtolm,rneil,rneim,rneih,kl
-     &     ,klt,km,kmt,distmax,abmd_tors_dir,abmd_cryst_dir
+     &     ,klt,km,kmt,distmax,cutoff_vor,abmd_tors_dir,abmd_cryst_dir
      &     ,abmd_kvect,P_nei_fact,abmd_nat_theta,abmd_nat_dir
      &     ,native_dist,native_theta,bfgs_factr
       LOGICAL linser,protei,solven,hydbnd,cutoff,mixrww,mixrwp,clewld,
@@ -85,7 +85,7 @@
      &     ,efield,lmol_ef,print_ef,print_dp,inst_fit,calc_cofm,latms
      &     ,sel_lda,avg_lda,lda_flu,lda_hyd,prot_hyd,res_time,prot_lda
      &     ,polar,EPotential,DoFreeEnergy,Virtual_residue,skip_step
-     &     ,scan_traj,Old_dipoles,mesos,old_tpg
+     &     ,scan_traj,Old_dipoles,mesos
       LOGICAL lfield,prtatl,prthbl,prtnbl,prtcnl,prtbal,prtptl,prtitl
      &     ,prtbndl,prtseq,prtipw,prtn14,fold,scharge,UnCharge,pfix
      &     ,nonbnd,noneq,wrtgyr,iobdmp,dmprnd_i,dmprnd_o,hoover,thermos
@@ -98,8 +98,9 @@
      &     ,lslvint,template,spectra,clean,start_conf,energy_then_die
      &     ,lgr,vacf_mts,replicate,gofr_avg,gofr_neighbor,gofr_intra
      &     ,gofr,s_of_k,restart_old,read_co,landersen,adjust_cnstr
-     &     ,readjust_cnstr,tpgprm_read,cavities
-     &     ,occupy_space,fragm_dist,hbonds_res,hbonds_tot,hbonds_vor
+     &     ,readjust_cnstr,tpgprm_read,voronoi,cavities,heavy_vor
+     &     ,occupy_space,voronoi_contact,voronoi_access,voronoi_volume
+     &     ,voronoi_neighbor,fragm_dist,hbonds_res,hbonds_tot,hbonds_vor
      &     ,ascii_nocell,ascii_wsc,restart_read,restart_write
      &     ,SecStructure,AddTime
       CHARACTER*80 titld0,gerald,cgroup,restart_in,restart_out
@@ -159,12 +160,12 @@
      &     ,stretch,stretch_heavy,recstrc,mdsim,minimize,frequencies
      &     ,conj_grad,steepest,write_grad,l_bfgs_b,md_respa,stoprun
      &     ,ltest_times,clean,start_conf,annealing,heating,Old_Dipoles
-     &     ,mesos,old_tpg,change_cell,resize_cell,energy_then_die,title0
+     &     ,mesos,change_cell,resize_cell,energy_then_die,title0
      &     ,linked_cell,restart_old,restart_read,restart_write,read_co
      &     ,landersen,adjust_cnstr,readjust_cnstr,tpgprm_read,equi
      &     ,P_dyn_update,native,check_native,SecStructure
       COMMON /rmolpr/ alphal,rkcut,delrg,rpass,rcuth,rcutl
-     &     ,rcutm,rtolh,rtoll,rtolm,rneil,rneim,rneih,kl,klt
+     &     ,rcutm,rtolh,rtoll,rtolm,rneil,rneim,rneih,cutoff_vor,kl,klt
      &     ,km,kmt,distmax,widom,shell_pme,P_dyn_update_shell
 
       COMMON /rpropr/ hrson,hrsoff,hanon,hanoff,rspon,rspoff,rspcut
@@ -172,7 +173,7 @@
      &     ,bfgs_factr,hstep_freq,size_atom_cav,bin_size_cav
      &     ,rmax_size_cav,erfc_bin,hhisto_bin,erfc_arr(4,mspline)
      &     ,erf_arr_corr(4,mspline),delew,rlew,ruew,chrge(m1),mass(m1)
-     &     ,pmass(m1),wcoef,potbe(m2,7),potbo(m9,2),potbo_cnst(m9,2)
+     &     ,pmass(m1),wcoef,potbe(m2,4),potbo(m9,2),potbo_cnst(m9,2)
      &     ,potto(m3,2),potit(m4,3),pnbd1(m6),pnbd2(m6),pnbd3(m6)
      &     ,pnbd4(m6),ecc6(m5),ecc12(m5),ecc146(m5),ecc1412(m5),c6pw(m7)
      &     ,c12pw(m7),deps(m7),phyd2(m5),phyd1(m5),csecp(4,m13,m14)
@@ -221,14 +222,15 @@
      &     ,cut_field,alphaf,anntom,annslv,ancorr,annpro,start_anl
      &     ,stop_anl,update_anl,nxrms,nrms,navg_str,navg_str_xrms,nvi
      &     ,ncofactor,ntop_print,nfragm_dist,nbinew,nhbonds,nhhisto
-     &     ,nfragm,fragm,ncavities,top_bonds,top_bendings,top_ptors
-     &     ,top_itors,ncontact_slt,contact_slt,ndipole,gofr_nprint
-     &     ,gofr_navg,gofr_ncomp,sofk_nprint,sofk_ncomp,divide_records
-     &     ,atom_record,divide_spline,anpoint(2,ndan1),corr_atoms(1+m1)
-     &     ,nxslt,anatom(ndan1),nfreq_ef,lmol_ef,nmol_ef,pmol_ef(f1
-     &     ,ndan1),nfreq_dp,ncalc_cofm,nlda_mol,nlda_atm,nlda_zero
-     &     ,ninst_fit,ninst_lda,natms,patms(2,ndan1),nlda_flu,nlda_hyd
-     &     ,nprot_hyd,min_hyd,max_hyd,min_lda,max_lda,nlda_grp,nprot_lda
+     &     ,nfragm,fragm,nvoronoi,ncavities,voronoi_res,top_bonds
+     &     ,top_bendings,top_ptors,top_itors,ncontact_slt,contact_slt
+     &     ,ndipole,gofr_nprint,gofr_navg,gofr_ncomp,sofk_nprint
+     &     ,sofk_ncomp,divide_records,atom_record,divide_spline
+     &     ,anpoint(2,ndan1),corr_atoms(1+m1),nxslt,anatom(ndan1)
+     &     ,nfreq_ef,lmol_ef,nmol_ef,pmol_ef(f1,ndan1),nfreq_dp
+     &     ,ncalc_cofm,nlda_mol,nlda_atm,nlda_zero,ninst_fit,ninst_lda
+     &     ,natms,patms(2,ndan1),nlda_flu,nlda_hyd,nprot_hyd,min_hyd
+     &     ,max_hyd,min_lda,max_lda,nlda_grp,nprot_lda
      &     ,coeff_lda,Ext_ef(3),plrzbij(m5),coeff_hyd,polar_scale
      &     ,polar_counter,nfreq_polar,NSecStruct,SecPointer
      &     ,SecStructTotal,NFreqPotential
@@ -238,8 +240,9 @@
       COMMON /anlysis2/ prot_lda,analys,gofr,s_of_k,gofr_avg
      &     ,gofr_neighbor,gofr_intra,anprot,anxrms,anxrms_cell,anrms
      &     ,anslv,anxca,anxbc,anxhe,anxal,avg_str,avg_ca,avg_he,avg_bc
-     &     ,avg_rms,write_ff_pars,diffusion,template,cavities
-     &     ,fragm_dist,hbonds_res
+     &     ,avg_rms,write_ff_pars,diffusion,template,voronoi,cavities
+     &     ,voronoi_neighbor,heavy_vor,occupy_space,voronoi_contact
+     &     ,voronoi_access,voronoi_volume,fragm_dist,hbonds_res
      &     ,hbonds_tot,hbonds_vor,ascii_nocell,ascii_wsc,polar,efield
      &     ,EPotential,print_ef,print_dp,latms,sel_lda,avg_lda,inst_fit
      &     ,calc_cofm,lda_flu,lda_hyd,prot_hyd,res_time,DoFreeEnergy

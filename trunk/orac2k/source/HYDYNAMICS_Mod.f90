@@ -1,6 +1,6 @@
-MODULE HYDRATION_Mod
+MODULE HYDYNAMICS_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2007-09-14 16:50:54 marchi>                           *
+!!$   Time-stamp: <2007-09-17 14:45:58 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -16,30 +16,34 @@ MODULE HYDRATION_Mod
   USE Module_Neighbors, ONLY: Neigh_Start=>Start, Neigh_Delete&
        &=>Delete, neigha, Neighbors
   USE xerror_mod
+  PRIVATE
+  PUBLIC :: khydynamics, coeff, cutoff_max, HyDynamics, Initialize,&
+       & Initialize_Array, Initialize_P, Compute, Write_It,&
+       & n_neighbors, n_write, Compute_Neighbors, Length
   INTEGER, SAVE :: nstart,nend,nlocal,ngrp,nbun,node=0,nprocs=1&
-       &,nlocal_neigh
-  INTEGER, SAVE :: n_neighbors=1,khydration=0,ncx=10,ncy=10,ncz=10&
-       &,n_write=1,kbinary=0
+       &,nlocal_neigh,length=0
+  INTEGER, SAVE :: n_neighbors=1,khydynamics=0,ncx=10,ncy=10,ncz=10&
+       &,n_write=1
   REAL(8), SAVE :: coeff=1.0D0,cutoff_max=4.0D0
-  LOGICAL, SAVE :: hydration=.FALSE.
+  LOGICAL, SAVE :: hyDynamics=.FALSE.
   LOGICAL, DIMENSION (:), ALLOCATABLE, SAVE :: tags_sv
-
   TYPE(Neighbors), DIMENSION (:), POINTER, SAVE :: neigh_s
+  TYPE(Neighbors), DIMENSION (:), POINTER, SAVE :: neigh_sm
   INTEGER, DIMENSION (:), ALLOCATABLE, SAVE :: index_st,index_sv
   INTEGER, SAVE :: indxyz,nind
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::  indxi,indxj,indxk
   INTEGER, DIMENSION (:,:), ALLOCATABLE, SAVE :: mres,grppt
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::  resg
-
+  REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: mass,charge
 CONTAINS
 
 !!$---- This subroutine is part of the program ORAC ----*
-  SUBROUTINE Initialize(index_a,index_b,khydration_a)
+  SUBROUTINE Initialize(index_a,index_b,khydynamics_a)
     IMPLICIT none
     
 !!$----------------------------- ARGUMENTS ------------------------------*
     
-    INTEGER :: index_a(*),index_b(*),khydration_a
+    INTEGER :: index_a(*),index_b(*),khydynamics_a
     
 !!$----------------------------- VARIABLES ------------------------------*
 
@@ -47,7 +51,7 @@ CONTAINS
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-    khydration=khydration_a
+    khydynamics=khydynamics_a
     m=index_a(1)
     ALLOCATE(index_st(m+1))
     index_st(1)=m
@@ -89,20 +93,24 @@ CONTAINS
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
     
   END SUBROUTINE Initialize_P
-  SUBROUTINE Initialize_Array(grppt_a,mres_a,resg_a)
+  SUBROUTINE Initialize_Array(grppt_a,mres_a,resg_a,charge_a,mass_a,ntap_a)
     IMPLICIT none
     
 !!$----------------------------- ARGUMENTS ------------------------------*
 
     INTEGER :: grppt_a(2,*),mres_a(2,*),resg_a(*)
-    INTEGER :: ntot
+    REAL(8) :: charge_a(*),mass_a(*)
+    INTEGER :: ntot,ntap_a
     
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-    ALLOCATE(grppt(2,ngrp),mres(2,nbun),resg(ngrp))
+    ALLOCATE(grppt(2,ngrp),mres(2,nbun),resg(ngrp),charge(ntap_a)&
+         &,mass(ntap_a))
     grppt(:,1:ngrp)=grppt_a(:,1:ngrp)
     resg(1:ngrp)=resg_a(1:ngrp)
     mres(:,1:nbun)=mres_a(:,1:nbun)
+    charge(1:ntap_a)=charge_a(1:ntap_a)
+    mass(1:ntap_a)=mass_a(1:ntap_a)
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
     
@@ -354,42 +362,104 @@ CONTAINS
     REAL(8) :: x
     PBC=DNINT(0.5D0*x)
   END FUNCTION PBC
-  SUBROUTINE Write_it(fstep)
+  SUBROUTINE Write_it(xp0,yp0,zp0,fstep,unitc)
     IMPLICIT NONE 
 
 !!$----------------------------- ARGUMENTS ------------------------------*
     
-    REAL(8) :: fstep
+    REAL(8) :: fstep,unitc
+    REAL(8) :: xp0(*),yp0(*),zp0(*)
     
 !!$----------------------------- VARIABLES ------------------------------*
 
-    INTEGER :: ii,n,m
-    TYPE(Neighbors), DIMENSION (:), POINTER :: neigh_sm
+    INTEGER :: ii,n,m,i1,i2,i
+    REAL(8) :: cm(3),dip(3),totmass
+
+    TYPE Dyna
+       REAL(8) :: x,y,z
+       REAL(8) :: dip_x,dip_y,dip_z
+    END TYPE Dyna
+
+    TYPE(Dyna), DIMENSION(:), ALLOCATABLE, SAVE :: Coord
+
+    INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: index1
+    LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE :: Mask
+
+    INTEGER, SAVE :: first_time=1,counter=0
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
-    IF(node == 0) THEN
-       IF(Kbinary == 0) THEN
-          WRITE(khydration,'(''Solvation at '',f12.3,'' fs '')') fstep
-       ELSE
-          WRITE(khydration) fstep
+    counter=counter+1
+    IF(first_time == 1) THEN
+       m=index_sv(1)
+       IF(node == 0) THEN
+          WRITE(khydynamics) m,length
+          WRITE(khydynamics) (index_sv(1+ii),ii=1,m)
        END IF
+       ALLOCATE(index1(SIZE(mass)))
+
+       index1=0
+       DO ii=1,m
+          index1(index_sv(1+ii))=ii
+       END DO
+       first_time=0
+       ALLOCATE(Coord(index_sv(1)))
+       ALLOCATE(mask(index_sv(1)))
     END IF
-    CALL Exchange
+    
     IF(node == 0) THEN
+       m=index_sv(1)
+       DO i1=1,m
+          dip=0.0D0
+          cm=0.0D0
+          totmass=0.0D0
+          DO i2=mres(1,i1),mres(2,i1)
+             DO i=grppt(1,i2),grppt(2,i2)
+                dip(1)=dip(1)+charge(i)*xp0(i)
+                dip(2)=dip(2)+charge(i)*yp0(i)
+                dip(3)=dip(3)+charge(i)*zp0(i)
+                cm(1)=cm(1)+mass(i)*xp0(i)
+                cm(2)=cm(2)+mass(i)*yp0(i)
+                cm(3)=cm(3)+mass(i)*zp0(i)
+                totmass=totmass+mass(i)
+             END DO
+          END DO
+
+          cm=cm/TotMass
+          dip=dip*unitc
+
+          Coord(i1) % x = cm(1)
+          Coord(i1) % y = cm(2)
+          Coord(i1) % z = cm(3)
+          Coord(i1) % dip_x = dip(1)
+          Coord(i1) % dip_y = dip(2)
+          Coord(i1) % dip_z = dip(3)
+       END DO
+       WRITE(khydynamics) fstep
+       WRITE(khydynamics) (Coord(i) % x, Coord(i) % y, Coord(i) % z,&
+            & Coord(i) % dip_x, Coord(i) % dip_y, Coord(i) % dip_z,&
+            & i=1,m)
+
+!!$       WRITE(*,*) (Coord(i) % x, Coord(i) % y, Coord(i) % z,&
+!!$            & Coord(i) % dip_x, Coord(i) % dip_y, Coord(i) % dip_z,&
+!!$            & i=1,m)
+    END IF
+
+    CALL Exchange
+
+    IF(node == 0) THEN
+       mask=.FALSE.
        DO ii=1,SIZE(neigh_sm)
           m=neigh_sm(ii) % no
-          IF(Kbinary == 0) THEN
-             WRITE(khydration,'(2i6)') index_st(ii+1),m
-             IF(m /=0) WRITE(khydration,'(12i6)') (neigh_sm(ii) % nb (n)&
-                  &, n=1,m)
-          ELSE
-             WRITE(khydration) index_st(ii+1),m
-             IF(m /=0) WRITE(khydration) (neigh_sm(ii) % nb (n)&
-                  &, n=1,m)
+          IF(m /=0) THEN
+             DO n=1,m
+                mask(index1(neigh_sm(ii) % nb (n)))=.TRUE.
+             END DO
           END IF
        END DO
+       WRITE(khydynamics) (mask(n),n=1,index_sv(1))
     END IF
+
   CONTAINS
     SUBROUTINE Exchange
       IMPLICIT NONE 
@@ -467,4 +537,4 @@ CONTAINS
 
   END SUBROUTINE Write_it
   
-END MODULE HYDRATION_Mod
+END MODULE HYDYNAMICS_Mod

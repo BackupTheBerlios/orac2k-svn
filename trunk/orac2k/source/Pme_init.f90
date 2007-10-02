@@ -2,7 +2,7 @@ SUBROUTINE Pme_init(node_first,nprocs,nfft1,nfft2,nfft3,nfft3_start&
      &,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-02-13 15:34:14 marchi>                           *
+!!$   Time-stamp: <2007-09-14 16:20:51 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -54,7 +54,10 @@ SUBROUTINE Pme_init(node_first,nprocs,nfft1,nfft2,nfft3,nfft3_start&
   
   IF(node_first == 0) WRITE(*,100) 
 
+  
+#ifdef PARALLEL 
   comm1d=MPI_COMM_WORLD
+#endif
 
   CALL do_rfft3d(0,dummy,nfft1,nfft2,nfft3,nfft3_start,nfft3_local&
        &,nfft2_start,nfft2_local,k1,k2,k3,comm1d)

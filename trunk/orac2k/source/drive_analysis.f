@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2007-08-09 18:23:54 abel>                             *
+*   Time-stamp: <2007-09-14 17:29:38 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -73,6 +73,15 @@
      &     =>Init, GE_compute=>Compute,GE_Write=>n_write,GE_output
      &     =>Write_it 
       USE IOBUFFER_Mod
+      USE HYDYNAMICS_Mod, ONLY: hydynamics,
+     &     HYDD_n_neighbors=>n_neighbors,
+     &     HYDD_Initialize_P=>Initialize_P,
+     &     HYDD_Initialize_Array=>Initialize_Array,
+     &     HYDD_Compute=>Compute,
+     &     HYDD_Compute_Neighbors=>Compute_Neighbors,
+     &     HYDD_n_write=>n_write,HYDD_write_it=>write_it,
+     &     HYDD_length=>length
+
       IMPLICIT none
       
       include 'parst.h'
@@ -233,6 +242,11 @@ c$$$====================================================================
       IF(hydration) THEN
          CALL HYD_Initialize_P(node,nprocs,ngrp,nbun)
          CALL HYD_Initialize_Array(grppt,mres,resg)
+      END IF
+      IF(hydynamics) THEN
+
+         CALL HYDD_Initialize_P(node,nprocs,ngrp,nbun)
+         CALL HYDD_Initialize_Array(grppt,mres,resg,chrge,mass,ntap)
       END IF
       IF(Density_Calc) THEN
          CALL DEN_Initialize(prsymb,nres(1,2),mass,ntap)
@@ -596,7 +610,9 @@ c$$$====================================================================
 
          CALL dcffti(length_fft,wsave1)
       END IF
-
+      IF(hydynamics) THEN
+         HYDD_length=(stop_anl-start_anl+1)/HYDD_n_write
+      END IF
       IF(time_corr) THEN
 
 *=======================================================================
@@ -1401,6 +1417,17 @@ c--------------------------
                      CALL HYD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
                      IF(MOD(nstep,HYD_n_write) == 0) THEN
                         CALL HYD_Write_it(fstep)
+                     END IF
+                  END IF
+
+                  IF(hydynamics) THEN
+                     IF(MOD(nstep,HYDD_n_neighbors) == 0) THEN
+                        CALL HYDD_Compute_Neighbors(xpga,ypga,zpga,co)
+                     END IF
+                     CALL HYDD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
+                     IF(MOD(nstep,HYDD_n_write) == 0) THEN
+                        aux=elechg*unitl/3.336D-30
+                        CALL HYDD_Write_it(xp0,yp0,zp0,fstep,aux)
                      END IF
                   END IF
 

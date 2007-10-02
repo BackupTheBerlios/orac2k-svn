@@ -216,7 +216,7 @@ PRECOMP_PP = P_whoami.f P_open_input.f P_nwrite.f P_nread.f\
 	P_pme_assign_node.f 
 
 PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
-	Pme_init.f90 HYDRATION_Mod.f90
+	Pme_init.f90 HYDRATION_Mod.f90 HYDYNAMICS_Mod.f90
 
 
 PRECOMP_F90 = $(PRE_F90) 
@@ -485,6 +485,14 @@ IFC :
 	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -O0 "
 	${MAKE} eigr_IFC "FFLAGS = -w95 -O1 "
 	${MAKE} recur_IFC "FFLAGS = -w95  "
+	${MAKE} orac_IFC 
+
+IFC_DBG :
+	${MAKE} obj_IFC "FFLAGS = -w95 -g " 
+	${MAKE} prepro_IFC "FFLAGS = -w95 -g" 
+	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -g "
+	${MAKE} eigr_IFC "FFLAGS = -w95 -g "
+	${MAKE} recur_IFC "FFLAGS = -w95 -g "
 	${MAKE} orac_IFC 
 
 INTEL :
@@ -774,7 +782,8 @@ delrfg.o: parst.h
 drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
 	parst.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
 	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
-	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o IOBUFFER_Mod.o
+	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o IOBUFFER_Mod.o\
+	HYDYNAMICS_Mod.CPP.o
 dspat.o: parst.h pbc.h
 dumptp.o: cpropar.h parst.h
 erf_corr_cutoff.o: unit.h
@@ -902,7 +911,7 @@ read_integrator.o: parst.h cpropar.h unit.h
 read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
 	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o GROUPS_Mod.o\
-	GEOM_groups_Mod.o
+	GEOM_groups_Mod.o HYDYNAMICS_Mod.CPP.o
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
@@ -1003,6 +1012,7 @@ rattle_correc_co.o: Module_Stress.o
 kinetic.o: Module_Stress.o
 Module_Extra_Forces.o: unit.h
 HYDRATION_Mod.CPP.o: HYDRATION_Mod.CPP.f90 mpi_size.h
+HYDYNAMICS_Mod.CPP.o: HYDYNAMICS_Mod.CPP.f90 mpi_size.h
 GROUPS_Mod.o: INPUT_Mod.o xerror_mod.o GROUPS_Readit.f90
 INPUT_Mod.o: xerror_mod.o
 GEOM_groups_Mod.o: GROUPS_Mod.o INPUT_Mod.o xerror_mod.o\

@@ -1,5 +1,5 @@
 #include "config.h"
-      INTEGER max_neigh,pig_nnl,pnnlpp_vor,maxpla,maxver
+      INTEGER max_neigh,pig_nnl,pnnlpp_vor,maxpla,maxver,maxcav
 
       PARAMETER (max_neigh=_MAX_NEIGH_,
      &          pig_nnl=_MAX_IG_NNL_,
