@@ -56,11 +56,8 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
 	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
-<<<<<<< Makefile
 	GEOM_groups_Mod.o WSC_Mod.o HEATING_Mod.o \
-=======
-	GEOM_groups_Mod.o PBC_Mod.o IOBUFFER_Mod.o\
->>>>>>> 1.25
+	PBC_Mod.o IOBUFFER_Mod.o\
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
