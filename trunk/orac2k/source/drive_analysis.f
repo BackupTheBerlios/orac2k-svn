@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2007-10-09 17:10:32 marchi>                             *
+*   Time-stamp: <2008-03-10 15:10:41 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -42,6 +42,15 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE VORONOI_Mod, ONLY: voronoi, VOR_Init=>Init, VOR_cut=>cutoff
+     &     ,VOR_Heavy=>heavy, VOR_fluct=>fluct,VOR_access=>access
+     &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,maxpla,maxver
+     &     ,kvoronoi,nvoronoi,VOR_Fluctuations=>Fluctuations
+     &     ,VOR_compress=>compress,VOR_Density=>Density,VOR_print
+     &     =>print_density,VOR_Shell=>Volume_Shell,VOR_Dynamics
+     &     =>Dynamics,VOR_Collect=>Collect_Dynamics,VOR_hbonds=>hbonds
+     &     ,only_water,VOR_Water_Density=>Water_Density,VOR_Water_Print
+     &     =>Water_Print
       USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
      &     HYD_Initialize_P=>Initialize_P,
      &     HYD_Initialize_Array=>Initialize_Array,
@@ -59,6 +68,7 @@
       USE DENSITY_Mod, ONLY: DEN_write=>n_write,Density_Calc
      &     ,DEN_Initialize=>Initialize,DEN_Initialize_Ar=>Initialize_Ar
      &     ,DEN_compute=>Compute,DEN_write_it=>write_it
+      USE POLAR_Mod, ONLY: POL_Init=>Init, Polar__,Polar_
       USE CENTER_SOL_Mod, ONLY: CEN_Center=>Center_Object, CEN_Compute
      &     =>Compute,CEN_Initialize=>Initialize
       USE PDBs_Mod, ONLY: PDB_pdbs=>PDBs, PDB_Initialize=>Initialize
@@ -72,7 +82,6 @@
       USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_init
      &     =>Init, GE_compute=>Compute,GE_Write=>n_write,GE_output
      &     =>Write_it 
-      USE IOBUFFER_Mod
       USE HYDYNAMICS_Mod, ONLY: hydynamics,
      &     HYDD_n_neighbors=>n_neighbors,
      &     HYDD_Initialize_P=>Initialize_P,
@@ -81,6 +90,11 @@
      &     HYDD_Compute_Neighbors=>Compute_Neighbors,
      &     HYDD_n_write=>n_write,HYDD_write_it=>write_it,
      &     HYDD_length=>length
+      USE PDB, ONLY: PDBB_Init=>Initialize, PDB_out=>Write_it, PDB_
+      USE WSC, ONLY: WSC_, WSC_Init=>Init, WSC__, WSC_Simple=>Simple
+
+      USE FIELD_Mod, ONLY: ELE_write=>n_write,Electric
+     &     ,ELE_Init=>Init,ELE_compute=>Compute
 
       IMPLICIT none
       
@@ -102,7 +116,7 @@
       include 'fourier.h'
       include 'pme.h'
       INCLUDE 'lc_list.h'
-      INCLUDE 'voronoi.h'
+      INCLUDE 'iobuffer.h'
       INCLUDE 'analysis.h'
       INCLUDE 'unit.h'
       
@@ -182,18 +196,25 @@
       REAL*8  ucns_p,ucos_p,virs_p,virsp_p,ucnp_p,ucop_p,ucnsp_p,ucosp_p
      &     ,fpx_p,fpy_p,fpz_p,stressd_p,cpu_h,gr,gra,uconf,enout,fpx(m1)
      &     ,fpy(m1),fpz(m1),ffwork(2),InstRotMat(3,3),Ixpcc,Iypcc,Izpcc
+     &     ,xpi,ypi,zpi,xc,yc,zc
       INTEGER offset,nnstep,start_time,end_time,length_run,length_tot
      &     ,length_fft,iatom,iatom0,niatom,naux,i_old,i_start
      &     ,i_end,typei,nato1,nato2,jmax_cav,mqq,mma,ncpu_h,mmb
       INTEGER nat_listp,nat_cntactp,nat_list(2,nores),nat_cntact(nores)
 
-      COMMON /dynam/ mapdn,nmapdn,worka,nnlpp0,a_mask,d_mask,list,hlist
-     &     ,rlist
+      COMMON /dynam/ w1,w2,mapdn,nmapdn,worka,nnlpp0
+     &     ,a_mask,d_mask,xpc,ypc,zpc,vxpc,vypc,vzpc,vxpd,vypd,vzpd,list
+     &     ,hlist,rlist,wsave1,spline_x,spline_y
 
-      COMMON /rag2/ xpo,ypo,zpo,xau,yau,zau,xpa,ypa,zpa,xpga
+      COMMON /rag2/ vacf_data,rms_disp,tot_rms_disp,xpb,ypb,zpb,xpcc
+     &     ,ypcc,zpcc,xpo,ypo,zpo,RotMat,xau,yau,zau,xpa,ypa,zpa,xpga
      &     ,ypga,zpga,xpcma,ypcma,zpcma,wca,whe,wbc,errca,errhe,errbc
      &     ,erral,drpca,drpbc,drphe,drpal,xp_avg,yp_avg,zp_avg,xp_avg2
      &     ,yp_avg2,zp_avg2,tmass
+      INTEGER, ALLOCATABLE, SAVE :: protl_m(:)
+      INTEGER, SAVE :: nprot_m
+      REAL(8), DIMENSION (:), POINTER ::  phi
+
 
 *==================== EXECUTABLE STATEMENTS ============================
 c$$$====================================================================
@@ -203,7 +224,10 @@ c$$$====================================================================
       ALLOCATE(xpo(ntap),ypo(ntap),zpo(ntap))
       ALLOCATE(xpa(ntap),ypa(ntap),zpa(ntap))
       ALLOCATE(xpga(ngrp),ypga(ngrp),zpga(ngrp))
-      ALLOCATE(xpcma(nprot),ypcma(nprot),zpcma(nprot))
+      ALLOCATE(xpcma(nprot),ypcma(nprot),zpcma(nprot),phi(ntap))
+      nprot_m=nprot
+      ALLOCATE(protl_m(SIZE(protl)))
+      protl_m=protl
 
 c$$$====================================================================
 c$$$-- 
@@ -221,7 +245,6 @@ c$$$====================================================================
       CALL Setup_fake_decompa(nstart_h,nend_h,nlocal_h,nstart_ah,nend_ah
      &     ,nlocal_ah,nstart_uh,nend_uh,nlocal_uh,ntap,ngrp,nbun)
 #endif
-
 
       IF(linked_cell) THEN
          indxyz=(2*(ncx-1)+1)*(2*(ncy-1)+1)*(2*(ncz-1)+1)
@@ -249,14 +272,26 @@ c$$$====================================================================
          CALL HYDD_Initialize_Array(grppt,mres,resg,chrge,mass,ntap)
       END IF
       IF(Density_Calc) THEN
-         CALL DEN_Initialize(prsymb,nres(1,2),mass,ntap)
+         CALL DEN_Initialize(node,prsymb,beta,nres(1,1),nres(1,2),mass
+     &        ,ntap)
          CALL DEN_Initialize_Ar
+      END IF
+      IF(Polar__) THEN
+         CALL POL_Init(ntap,protl,nprot,prsymb,nres(1,1),nres(1,2))
+      END IF
+      IF(WSC__) THEN
+         CALL fndgrp(nprot,ngrp,protl,grppt,atomg,protg,groupp,atomp,npm
+     &        ,iret,errmsg)
+         CALL WSC_Init(nprot,protl,atomp)
       END IF
       IF(CEN_Center) THEN
          CALL CEN_Initialize(prsymb,beta,nres(1,2),ss_index,ntap)
       END IF
       IF(PDB_pdbs) THEN
          CALL PDB_Initialize(chrge,prsymb,beta,nres(1,1),nres(1,2),ntap)
+      END IF
+      IF(PDB_) THEN
+         CALL PDBB_Init
       END IF
 
 *===  Check if the dimension of the work array are sufficient 
@@ -328,6 +363,14 @@ c$$$====================================================================
 
       CALL mapnl_divide(node,nstart_h,nend_h,grppt,mapnl)
 
+*=======================================================================
+*----- Decide where to start to read -----------------------------------
+*=======================================================================
+
+      nstep=0
+      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
+      IF(start_anl .NE. 0) nstep=start_anl-1
+
 *========================================================================
 *==== Calls init routine for conventional kspace Ewald or PME -----------
 *========================================================================
@@ -356,8 +399,10 @@ c$$$====================================================================
          ELSE
             mma=ntap/(nprocs-1)+10
          END IF
-         ALLOCATE(nnlpp_vor(pnnlpp_vor,mma),ig_nnl(pig_nnl,mma))
-         ALLOCATE(area_vor(pnnlpp_vor,mma), volume_vor(ntap))
+         aux=rcuth+rtolh+rneih
+
+         CALL VOR_Init(node,mma,ntap,nbun,mres,grppt,ss_index,pnbd1
+     &        ,nbtype,aux,prsymb,mend,stop_anl-start_anl+1)
       END IF
       IF(cavities) THEN
          IF(nprocs .EQ. 1) THEN
@@ -370,7 +415,8 @@ c$$$====================================================================
      &        ,cavity_r(mqq))
       END IF
       IF(voronoi) THEN
-         IF(node .EQ. 0) CALL write_voronoi_header(kvoronoi)
+         IF(node .EQ. 0 .AND. (.NOT. VOR_fluct)) CALL
+     &        write_voronoi_header(kvoronoi)
       END IF
       IF(cavities) THEN
          CALL initialize_cavities(ss_index,ntap,nres(1,1),bin_size_cav
@@ -415,7 +461,7 @@ c$$$====================================================================
       END IF
 
       IF(GR_Groups) THEN
-         CALL GR_Init(ntap,nbun,mres)
+         CALL GR_Init(ntap,nbun,grppt,mres)
       END IF
       IF(GE_Groups) THEN
          CALL GE_Init(ntap)
@@ -591,14 +637,6 @@ c$$$====================================================================
       ffstep=fstep
       IF((.NOT. dmprnd_i)) STOP
 
-*=======================================================================
-*----- Decide where to start to read -----------------------------------
-*=======================================================================
-
-      nstep=0
-      IF(.NOT. pdb_read .AND. start_anl .EQ. 0) start_anl=1
-      IF(start_anl .NE. 0) nstep=start_anl-1
-
       CALL timer(vfcp,tfcp,elapse)
       gcpu=tfcp
 
@@ -633,7 +671,6 @@ c$$$====================================================================
 *--- Check the length of the simulation --------------------------------
 *=======================================================================
 
-
          IF(start_anl .NE. 0) CALL check_length_sim(start_anl,stop_anl
      &        ,buffer_time,buffer_fft,start_time,end_time,length_run
      &        ,length_tot,length_fft,iret,errmsg)
@@ -652,7 +689,6 @@ c$$$====================================================================
 *=======================================================================
 
          CALL coordinate_spline_init(spline_x,fstep,length_tot)
-         
 
 *=======================================================================
 *--- Reinitialize length of simulation and fft's if necessary ----------
@@ -701,7 +737,6 @@ c$$$====================================================================
      &              ,xpcc(nnstep),ypcc(nnstep),zpcc(nnstep)
      &              ,RotMat(1,1,nnstep),xt_cm,yt_cm,zt_cm,nato_slt)
 
-               WRITE(*,*) 'Nstep =',nnstep,istep
             END DO
          END IF
 
@@ -731,7 +766,7 @@ c$$$====================================================================
                iatom=corr_atoms(1+iatom0)
             END IF
             typei=ss_index(iatom)
-c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
+            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
 *=======================================================================
 *---- Read coordinates of each atom as a function of time --------------
 *=======================================================================
@@ -859,12 +894,12 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
 *=======================================================================
 *----- Read trajectory file by row -------------------------------------
 *=======================================================================
-
+               
                IF(start_anl .NE. 0 .AND. dmprnd_i) THEN
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau,yau,zau,ntap
      &                 ,fstep,nstep,end,err,divide_records,atom_record)
 
-                  IF(template) THEN
+                  IF(template .AND. (.NOT. voronoi)) THEN
                      CALL calc_RotMat(whe,xpt0,ypt0,zpt0,xp0,yp0,zp0
      &                    ,Ixpcc,Iypcc,Izpcc,InstRotMat(1,1),xt_cm,yt_cm
      &                    ,zt_cm,nato_slt)
@@ -1020,6 +1055,7 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
      &                 ,zpga)
                   CALL change_frame(co,oc,-1,nprot,xpcm,ypcm,zpcm,xpcma
      &                 ,ypcma,zpcma)
+
                   
 *=======================================================================
 *--- Compute neighbor lists --------------------------------------------
@@ -1034,12 +1070,12 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
                            IF(linked_cell) THEN
                               CALL lc_index(indxyz,ncx,ncy,ncz,nind
      &                             ,indxi,indxj,indxk,aux,co)
+                              
                               IF(voronoi) THEN
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,nnlpp0,npp_u,npp,worka
-     &                                ,kprint,.FALSE.)
+     &                                ,ncube,worka,kprint,.FALSE.)
                               ELSE IF(prot_hyd) THEN
                                  CALL lc_list2(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
@@ -1058,8 +1094,7 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
                                  CALL lc_list(ncx,ncy,ncz,nind,indxi
      &                                ,indxj,indxk,aux,co,xpga,ypga,zpga
      &                                ,ngrp,nstart_h,nend_h,node,nprocs
-     &                                ,ncube,nnlpp0,npp_u,npp,worka
-     &                                ,kprint,.TRUE.)
+     &                                ,ncube,worka,kprint,.TRUE.)
                               END IF 
                            ELSE
 *----- Compute neighbors
@@ -1070,9 +1105,8 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
-     &                                ,worka,cpu_h,ncpu_h,nstart_h
-     &                                ,nend_h,nstart_ah,nend_ah
+     &                                ,phi,stressd_p,worka,cpu_h,ncpu_h
+     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               ELSE
@@ -1081,9 +1115,8 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
      &                                ,mapdn,nmapdn,ucns_p,ucos_p,virs_p
      &                                ,virsp_p,ucnp_p,ucop_p,ucnsp_p
      &                                ,ucosp_p,fpx_p,fpy_p,fpz_p
-     &                                ,stressd_p,nnlppf,nnlpp0,npp_u,npp
-     &                                ,worka,cpu_h,ncpu_h,nstart_h
-     &                                ,nend_h,nstart_ah,nend_ah
+     &                                ,phi,stressd_p,worka,cpu_h,ncpu_h
+     &                                ,nstart_h,nend_h,nstart_ah,nend_ah
      &                                ,nlocal_ah,node,nprocs,ncube
      &                                ,P_shell)
                               END IF
@@ -1130,11 +1163,12 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
                   
                   IF(voronoi) THEN
                      IF(MOD(nstep,nvoronoi) .EQ. 0) THEN
-                        WRITE(*,93000) 
+                        WRITE(kprint,93000) 
                         CALL zero_voronoi
+                        CALL VOR_hbonds(co,xpa,ypa,zpa)
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
-     &                       ,nend_ah,heavy_vor,beta,ntap,ngrp,grppt
-     &                       ,nnlpp0,cutoff_vor,xpa,ypa,zpa,xpga,ypga
+     &                       ,nend_ah,VOR_heavy,beta,ntap,ngrp,grppt
+     &                       ,VOR_cut,xpa,ypa,zpa,xpga,ypga
      &                       ,zpga,co,iret,errmsg)
 #ifdef PARALLEL
                         CALL P_get_errmsg(iret,errmsg,80,node,nprocs
@@ -1142,22 +1176,34 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
 #else
                         IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
 #endif
-                        CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
-     &                       ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret,errmsg
-     &                       )
-                        IF(voronoi_volume .OR. voronoi_access .OR.
-     &                       voronoi_contact .OR. voronoi_neighbor) THEN
-                           CALL analyse_voronoi(nstart_ah,nend_ah
-     &                          ,nlocal_ah,nstart_uh,nend_uh,nlocal_uh
-     &                          ,node,nprocs,ncube,fstep,volume
-     &                          ,voronoi_volume,voronoi_access
-     &                          ,voronoi_contact,voronoi_neighbor
-     &                          ,ncontact_slt,contact_slt,voronoi_res
-     &                          ,kvoronoi,ss_index,ss_point(1,1),grppt
-     &                          ,mend,protl,nprot,ntap,nbun,beta,atomp
-     &                          ,nres(1,1),nres(1,2),mres,prsymb,iret
+                        IF(.NOT. VOR_dynamics) THEN
+                           CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
+     &                          ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret
      &                          ,errmsg)
+                           CALL analyse_voronoi(nstart_ah,nend_ah
+     &                          ,nlocal_ah,nstart_uh,nend_uh
+     &                          ,nlocal_uh,node,nprocs,ncube,fstep
+     &                          ,volume,ss_index,ss_point(1,1),grppt
+     &                          ,mend,protl,nprot,ntap,nbun,beta
+     &                          ,atomp,nres(1,1),nres(1,2),mres
+     &                          ,prsymb,iret,errmsg)
                            IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
+                           IF(VOR_fluct) THEN
+                              CALL VOR_Fluctuations(kprint,xp0,yp0,zp0)
+                           END IF
+                           IF(VOR_compress) THEN
+                              IF(.NOT. only_water) THEN
+                                 CALL VOR_Density(volume)
+                                 CALL VOR_Shell(volume,co,xpa,ypa,zpa)
+                                 CALL VOR_print
+                              ELSE
+                                 CALL VOR_Water_Density(nstart_ah
+     &                                ,nend_ah)
+                                 CALL VOR_Water_Print
+                              END IF
+                           END IF
+                        ELSE
+                           CALL VOR_Collect
                         END IF
                      END IF
                   END IF
@@ -1335,7 +1381,8 @@ c--------------------------
             DO WHILE(.NOT. end .AND. nstep .LT. stop_anl)
                nstep=nstep+1
                nnstep=nnstep+1
-            
+               fstep=ffstep*DFLOAT(nstep)
+               IF(MOD(nstep,GE_write) /= 0) CYCLE
 *=======================================================================
 *----- Read trajectory file by row -------------------------------------
 *=======================================================================
@@ -1344,20 +1391,6 @@ c--------------------------
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau
      &                 ,yau,zau,ntap,fstep,nstep,end,err,divide_records
      &                 ,atom_record)
-
-                  IF(template) THEN
-                     CALL calc_RotMat(wca,xpt0,ypt0,zpt0,xp0,yp0,zp0
-     &                    ,Ixpcc,Iypcc,Izpcc,InstRotMat(1,1),xt_cm,yt_cm
-     &                    ,zt_cm,nato_slt)
-                     CALL RotCoordRow(ntap,xp0,yp0,zp0,Ixpcc,Iypcc,Izpcc
-     &                    ,xt_cm,yt_cm,zt_cm,InstRotMat)
-                     CALL CalcDistConf(xp0,yp0,zp0,xpt0,ypt0,zpt0,wca
-     &                    ,nato_slt,Dist)
-                     IF(node .EQ. 0) THEN
-                        WRITE(*,90200) DSQRT(Dist)
-                     END IF
-                  END IF
-
                ELSE IF(pdb_read .AND. start_anl .NE. 0) THEN
                   CALL rdcmac(kconf,kprint,nres(1,1),beta,xp0,yp0,zp0
      &                 ,ntap,.FALSE.,1,1,iret,errmsg)
@@ -1398,6 +1431,18 @@ c--------------------------
                      CALL CEN_Compute(xp0,yp0,zp0,xpa,ypa,zpa,co,oc
      &                    ,mass,ntap)
                   END IF
+                  IF(WSC__) THEN
+                     IF(.NOT. WSC_Simple) THEN
+                        CALL WSC_(node,xp0,yp0,zp0,co,oc)
+                     ELSE
+                        CALL change_frame(co,oc,-1,ntap,xp0,yp0,zp0,xpa
+     &                       ,ypa,zpa)
+                        CALL tr_wsc(co,xpa,ypa,zpa,xpo,ypo,zpo,mass
+     &                       ,nprot_m,protl_m)
+                        CALL change_frame(co,oc,1,ntap,xpo,ypo
+     &                       ,zpo,xp0,yp0,zp0)
+                     END IF
+                  END IF
 
                   CALL appbou(xp0,yp0,zp0,xpg,ypg,zpg,pmass,1,ngrp,grppt
      &                 )
@@ -1428,35 +1473,40 @@ c--------------------------
                      IF(MOD(nstep,HYD_n_neighbors) == 0) THEN
                         CALL HYD_Compute_Neighbors(xpga,ypga,zpga,co)
                      END IF
+
                      CALL HYD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
                      IF(MOD(nstep,HYD_n_write) == 0) THEN
                         CALL HYD_Write_it(fstep)
                      END IF
                   END IF
-
-                  IF(hydynamics) THEN
-                     IF(MOD(nstep,HYDD_n_neighbors) == 0) THEN
-                        CALL HYDD_Compute_Neighbors(xpga,ypga,zpga,co)
+                  IF(Electric) THEN
+                     
+                     IF(nnstep == 1) THEN
+                        CALL ELE_Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma
+     &                       ,ypcma,zpcma,co,oc,node,nprocs,prsymb,beta
+     &                       ,nres(1,1),nres(1,2),mass,ntap)
                      END IF
-                     CALL HYDD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
-                     IF(MOD(nstep,HYDD_n_write) == 0) THEN
-                        aux=elechg*unitl/3.336D-30
-                        CALL HYDD_Write_it(xp0,yp0,zp0,fstep,aux)
-                     END IF
+                     CALL ELE_Compute(xp0,yp0,zp0,xpa,ypa,zpa,xpga,ypga
+     &                    ,zpga,xpcma,ypcma,zpcma,co,oc,volume,fstep)
                   END IF
 
                   IF(node .EQ. 0) THEN
                      IF(Density_Calc) THEN                     
-                        CALL DEN_Compute(xpa,ypa,zpa,co)
+                        CALL DEN_Compute(xp0,yp0,zp0,volume)
                         IF(MOD(nstep,DEN_write) == 0) THEN
-                           CALL DEN_write_it(Volume,co)
+                           CALL DEN_write_it(fstep)
                         END IF
+                     END IF
+                  END IF
+                  IF(node == 0) THEN
+                     IF(Polar__) THEN
+                        CALL Polar_(xpa,ypa,zpa,co,oc)
                      END IF
                   END IF
                   IF(node .EQ. 0) THEN
                      IF(GE_Groups) THEN
-                        CALL GE_Compute(xpa,ypa,zpa,mass,co)
                         IF(MOD(nstep,GE_write) == 0) THEN
+                           CALL GE_Compute(xpa,ypa,zpa,mass,co)
                            CALL GE_output(fstep)
                         END IF
                      END IF
@@ -1703,6 +1753,7 @@ c----------
                            CALL dscal(nato_slt,fact,xpo,1)
                            CALL dscal(nato_slt,fact,ypo,1)
                            CALL dscal(nato_slt,fact,zpo,1)
+                           REWIND(kavg)
                            IF(avg_ca) WRITE(kavg,80000) 
                            IF(avg_he) WRITE(kavg,80100)
                            IF(avg_bc) WRITE(kavg,80101) 
@@ -1779,22 +1830,41 @@ c                           aux=elechg*unitl/3.336D-30
                      
                      IF(nascii .NE. 0) THEN
                         IF(MOD(nstep,nascii) .EQ. 0) THEN
-                           IF(ascii_nocell) THEN
-                              CALL change_frame(co,oc,1,ntap,xpa,ypa,zpa
-     &                             ,xpo,ypo,zpo)
-                           ELSE IF(ascii_wsc) THEN
-                              CALL tr_wsc(co,xpa,ypa,zpa,xpo,ypo,zpo
-     &                             ,mass,nprot,protl)
-                              CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo
-     &                             ,xpo,ypo,zpo)
+                           IF(WSC__) THEN
+                              CALL WSC_(node,xp0,yp0,zp0,co,oc)
+                              IF(PDB_) THEN
+                                 CALL PDB_out(fstep, kout, beta, xpo
+     &                                ,ypo,zpo,ntap,nres(1,1), co)
+                              ELSE
+                                 CALL plotc(co,abmd,gr,gra,fstep,beta
+     &                                ,xp0,yp0,zp0,ntap,nres,m1,prsymb
+     &                                ,chrge)
+                              END IF
                            ELSE
-                              CALL tr_inbox(xpa,ypa,zpa,xpo,ypo,zpo,mass
-     &                             ,nprot,protl)
-                              CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo
-     &                             ,xpo,ypo,zpo)
+
+                              IF(ascii_nocell) THEN
+                                 CALL change_frame(co,oc,1,ntap,xpa,ypa
+     &                                ,zpa,xpo,ypo,zpo)
+                              ELSE IF(ascii_wsc) THEN
+                                 CALL tr_wsc(co,xpa,ypa,zpa,xpo,ypo,zpo
+     &                                ,mass,nprot,protl)
+                                 CALL change_frame(co,oc,1,ntap,xpo,ypo
+     &                                ,zpo,xpo,ypo,zpo)
+                              ELSE
+                                 CALL tr_inbox(xpa,ypa,zpa,xpo,ypo,zpo
+     &                                ,mass,nprot,protl)
+                                 CALL change_frame(co,oc,1,ntap,xpo,ypo
+     &                                ,zpo,xpo,ypo,zpo)
+                              END IF
+                              IF(PDB_) THEN
+                                 CALL PDB_out(fstep, kout, beta, xpo
+     &                                ,ypo,zpo,ntap,nres(1,1), co)
+                              ELSE
+                                 CALL plotc(co,abmd,gr,gra,fstep,beta
+     &                                ,xpo,ypo,zpo,ntap,nres,m1,prsymb
+     &                                ,chrge)
+                              END IF
                            END IF
-                           CALL plotc(co,abmd,gr,gra,fstep,beta,xpo,ypo
-     &                          ,zpo,ntap,nres,m1,prsymb,chrge)
                         END IF
                      END IF
                      
@@ -1802,12 +1872,20 @@ c                           aux=elechg*unitl/3.336D-30
                      
                      IF(nplot_fragm .GT. 0) THEN
                         IF(MOD(nstep,nplot_fragm).EQ.0 ) THEN
-                           CALL tr_wsc(co,xpa,ypa,zpa,xpo,ypo,zpo
-     &                          ,mass,nprot,protl)
-                           CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo
-     &                          ,xpo,ypo,zpo)
-                           CALL plot_fragm(fstep,beta,nfragm,fragm,xpo
-     &                          ,ypo,zpo,ntap,nres,m1,prsymb,chrge)
+                           IF(WSC__) THEN
+                              CALL WSC_(node,xp0,yp0,zp0,co,oc)
+                              CALL plot_fragm(fstep,beta,nfragm,fragm
+     &                             ,xp0,yp0,zp0,ntap,nres,m1,prsymb
+     &                             ,chrge)
+                           ELSE
+                              CALL tr_wsc(co,xpa,ypa,zpa,xpo,ypo,zpo
+     &                             ,mass,nprot,protl)
+                              CALL change_frame(co,oc,1,ntap,xpo,ypo,zpo
+     &                             ,xpo,ypo,zpo)
+                              CALL plot_fragm(fstep,beta,nfragm,fragm
+     &                             ,xpo,ypo,zpo,ntap,nres,m1,prsymb
+     &                             ,chrge)
+                           END IF
                         END IF
                      END IF
                      
