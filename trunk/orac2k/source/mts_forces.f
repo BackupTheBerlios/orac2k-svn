@@ -1,6 +1,6 @@
       SUBROUTINE  mts_forces(rshell,xp0,yp0,zp0,xpg,ypg,zpg,xpcm,ypcm
      &     ,zpcm,mapnl,mapdn,nmapdn,ucns,ucos,virs,virsp,ucnp,ucop,ucnsp
-     &     ,ucosp,fpx,fpy,fpz,stress,worka
+     &     ,ucosp,fpx,fpy,fpz,phi,stress,worka
      &     ,cpu_h,ncpu_h,nstart,nend,nstart_a,nend_a,nlocal_a,node
      &     ,nprocs,ncube,P_shell)
 
@@ -31,7 +31,7 @@
 
       CHARACTER*1  rshell,P_shell
       REAL*8  xp0(*),yp0(*),zp0(*),fpx(*),fpy(*),fpz(*),xpg(*),ypg(*)
-     &     ,zpg(*),xpcm(*),ypcm(*),zpcm(*),cpu_h(*),stress(3,3)
+     &     ,zpg(*),xpcm(*),ypcm(*),zpcm(*),phi(*),cpu_h(*),stress(3,3)
       REAL*8  ucnp,ucop,ucns,ucos,ucnsp,ucosp,virs,virsp
       INTEGER ncpu_h,nstart,nend,node,nprocs,ncube,worka(*)
       INTEGER mapnl(*),mapdn(2,*),nmapdn(*),nstart_a,nend_a,nlocal_a
@@ -67,11 +67,11 @@
       flag=.TRUE.
       if(rshell.eq.'z') then
          iz1=0
-         ro=rcutl
-         ri=rcutl
+         ro=rcuth
+         ri=rcuth
          rto=0.d0
-         rti=rtoll
-         rni=rneil
+         rti=rtolh
+         rni=rneih
 
          CALL zero0(worka,ngrp)
       endif
@@ -140,7 +140,7 @@
      &     ,nbtype,type_table,m6,ntap,atomg,xpcm,ypcm,zpcm,groupp,atomp
      &     ,co,ecc12,ecc6,clewld,alphal,erfc_spline,erfc_bin,erfc_arr
      &     ,mapnl,ngrp,grppt,ucnp,ucns,ucnsp,ucop,ucos,ucosp,fpx,fpy,fpz
-     &     ,stress,rni,ri,ro,rti,rto,pmass,iz1,worka,nstart,nend
+     &     ,phi,stress,rni,ri,ro,rti,rto,pmass,iz1,worka,nstart,nend
      &     ,Boltz_Group,flag,iret,errmsg)
 
       CALL timer(vfcp_ff,tfcp_ff,elapse)
@@ -151,8 +151,6 @@
       CALL P_get_errmsg(iret,errmsg,80,node,nprocs,ncube,nbyte)
       CALL MPI_ALLGATHER(gcpu_ff,1,MPI_REAL8,cpu_h,1,MPI_REAL8
      &     ,MPI_COMM_WORLD,ierr)
-c$$$      WRITE(node+50,'(a,2x)') rshell
-c$$$      WRITE(node+50,'(8(e14.8,x))') (cpu_h(i),i=1,nprocs)
       ncpu_h=ncpu_h+1
 #endif
 

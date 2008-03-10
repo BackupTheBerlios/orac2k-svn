@@ -4,7 +4,7 @@
      &     ,iret,errmsg,node,nprocs,ncube,ibyte)
 
 ************************************************************************
-*   Time-stamp: <2007-10-02 13:56:10 marchi>                             *
+*   Time-stamp: <2007-11-07 11:02:21 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -37,7 +37,7 @@
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
-      INTEGER count,i,j,map,naux,nbyte
+      INTEGER count,i,j,map,naux,nbyte,reclbb
       INTEGER nword,nsevere,nrec,norec,strblk,nato
       CHARACTER*80 line,strngs(40)
       CHARACTER*8 fmt
@@ -60,9 +60,13 @@
 #ifdef OSF1
       recl1=recla/4
 #endif      
-c$$$#ifdef IFC
-c$$$      recl1=recla/4
-c$$$#endif      
+
+#ifdef IFC
+      recl1=recla/4
+#endif      
+#ifdef IFC_error
+      recl1=recla
+#endif
 
       WRITE(kprint,10000) 
 
@@ -153,7 +157,16 @@ c$$$#endif
          DO i=2,nwrite_dump
             count=count+no_records(i)
          END DO
-         reclb=atom_record*3*nbyte
+         reclbb=atom_record*3*nbyte
+#ifdef OSF1
+         reclb=reclbb/4
+#endif         
+#ifdef IFC
+         reclb=reclbb/4
+#ifdef IFC_error
+         reclb=reclbb
+#endif
+#endif         
       ELSE
 #ifdef PARALLEL
          IF(node .NE. 0) GOTO 1100
@@ -168,7 +181,16 @@ c$$$#endif
          IF(MOD(reclb,atom_record) .NE. 0) THEN
             divide_records=divide_records+1
          END IF
-         reclb=nbyte*3*atom_record
+         reclbb=nbyte*3*atom_record
+#ifdef OSF1
+         reclb=reclbb/4
+#endif         
+#ifdef IFC
+         reclb=reclbb/4
+#ifdef IFC_error
+         reclb=reclbb
+#endif
+#endif         
 
          norec=nrec/(count-1)
          norec=norec*divide_records
@@ -214,12 +236,6 @@ c$$$#endif
 *---  load reclb in recl2
 
       recl2=reclb
-#ifdef OSF1
-      recl2=reclb/4
-#endif
-c$$$#ifdef IFC
-c$$$      recl2=reclb/4
-c$$$#endif
 
       IF(nsevere .GT. 0) THEN
          call int_str(nsevere,fmt,j)

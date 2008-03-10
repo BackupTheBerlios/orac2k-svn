@@ -1,6 +1,8 @@
 #include "config.h"
 
-      INTEGER  maxbin,hhisto_maxbin,maxcav_atom,maxcav_bin,maxcav_nres
+      INTEGER  maxbin,hhisto_maxbin,maxcav_atom,maxcav_bin,maxcav_nres,
+     &     maxcav
+
       PARAMETER(maxbin=_MAX_BIN_,
      &     hhisto_maxbin=_MAX_HHISTO_BIN_,
      &     maxcav_atom=_MAX_CAVITIES_ATOM_,

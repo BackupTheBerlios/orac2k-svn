@@ -1,13 +1,15 @@
   SUBROUTINE Read_it(knlist,kprint,nsevere,nword,strngs,iret,errmsg&
-       &,read_err,mm1)
+       &,read_err)
 
 !!$======================== DECLARATIONS ================================*
 
     IMPLICIT none
+    INCLUDE 'parst.h'
+    INCLUDE 'cpropar.h'
 
 !!$----------------------------- ARGUMENTS ------------------------------*
 
-    INTEGER :: knlist,kprint,nword,nsevere,iret,read_err,mm1
+    INTEGER :: knlist,kprint,nword,nsevere,iret,read_err
     CHARACTER(80) :: strngs(:),errmsg
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
@@ -24,7 +26,8 @@
 
     line(79:80)='  '
     read_err=0
-    Density_Calc=.TRUE.
+
+    Polar__=.TRUE.                                              
     DO
        READ(knlist,'(a78)',END=600) line(1:78)
        CALL wrenc(kprint,line)
@@ -39,6 +42,56 @@
           CALL xerror(errmsg,80,1,30)
           nsevere = nsevere + 1
 
+
+       CASE('ewald')
+          IF(nword .EQ. 6) THEN
+             CALL Read_String(strngs(2),alphal)
+             CALL Read_String(strngs(3),nfft1)
+             CALL Read_String(strngs(4),nfft2)
+             CALL Read_String(strngs(5),nfft3)
+             CALL Read_String(strngs(6),pme_order)
+          ELSE                                                 
+             nsevere = nsevere + 1                             
+             errmsg=err_args(1) // '5 after keyword'     
+             CALL xerror(errmsg,80,1,30)                       
+          END IF
+
+!!$
+!!$==== subcommand target =============================================
+!!$
+       CASE('target')
+          IF(nword .LT. 2) THEN
+             errmsg=err_args(1)//'1'
+             CALL xerror(errmsg,80,1,30)
+             nsevere=nsevere+1
+          ELSE
+             Target_Res=strngs(2)
+          END IF
+
+!!$c==== Command ERFC_SPLINE==============================================
+                                                                       
+       CASE('erfc_spline')
+          erfc_spline=.TRUE.                                      
+          IF(nword .NE. 1) THEN                                   
+             CALL Read_String(strngs(2),erfc_bin)
+          END IF
+                                                                       
+!!$c==== subcommand CUTOFF =============================================  
+          
+       CASE('cutoff')
+          IF(nword.ne.1) THEN
+             CALL Read_String(strngs(2),rspoff)
+             rneim=0.0D0
+             rneil=0.0D0
+             rneih=1.5D0
+             rtolm=0.0D0
+             rtoll=0.0D0
+             rtolh=0.5D0
+             rcuth=rspoff-rtolm
+             rcutl=0.0D0
+             rcutm=0.0D0
+          END IF
+          
        CASE('cell')
           IF(nword .LT. 4) THEN
              errmsg=err_args(1)//'3'
@@ -56,20 +109,9 @@
              CALL xerror(errmsg,80,1,30)
              nsevere=nsevere+1
           ELSE
-             CALL Read_String(strngs(2),ncx)
-             CALL Read_String(strngs(3),ncy)
-             CALL Read_String(strngs(4),ncz)
-          END IF
-!!$
-!!$==== subcommand target =============================================
-!!$
-       CASE('target')
-          IF(nword .LT. 2) THEN
-             errmsg=err_args(1)//'1'
-             CALL xerror(errmsg,80,1,30)
-             nsevere=nsevere+1
-          ELSE
-             Target_Res=strngs(2)
+             CALL Read_String(strngs(2),nccx)
+             CALL Read_String(strngs(3),nccy)
+             CALL Read_String(strngs(4),nccz)
           END IF
 !!$
 !!$==== subcommand write ==============================================
@@ -95,20 +137,21 @@
              file_format=strngs(2)(1:8)
           END IF
 
+       CASE('P_of_r')
+          do_Pr=.TRUE.
+          IF(nword /= 1) THEN
+             CALL Read_String(strngs(2),dx_Pr)
+             CALL Read_String(strngs(3),max_Pr)
+          END IF
+
        CASE('molecule')
           IF(natoms_Tot == 0) THEN
-             ALLOCATE(atoms(mm1))
+             ALLOCATE(atoms(m1))
           END IF
           CALL parse_numbers(err_unr,strngs,nword,atoms(ntot),nats,nsevere)
           atoms(ntot)=Nats
           ntot=ntot+Nats+1
           natoms_Tot=natoms_Tot+1
-!!$
-!!$==== subcommand Density_avg =========================================
-!!$
-
-       CASE('density_avg')
-          Density_Avg=.TRUE.
 
 !!$
 !!$--------------------------------------------------------------------
@@ -120,51 +163,6 @@
           EXIT
        END SELECT
     END DO
-
-    SELECT CASE(file_format)
-    CASE DEFAULT
-       filename_den='DENSITY_FILE.cube'
-       INQUIRE(FILE=filename_den,EXIST=exist)
-       IF(exist) THEN
-          CALL openf(kdensity,filename_den,'FORMATTED','OLD',0)
-       ELSE
-          CALL openf(kdensity,filename_den,'FORMATTED','NEW',0)
-       END IF
-
-
-       filename_den2='DENS2_FILE.cube'
-       INQUIRE(FILE=filename_den2,EXIST=exist)
-       IF(exist) THEN
-          CALL openf(kdens2,filename_den2,'FORMATTED','OLD',0)
-       ELSE
-          CALL openf(kdens2,filename_den2,'FORMATTED','NEW',0)
-       END IF
-    CASE('xplor')
-       filename_den='DENSITY_FILE.xplor'
-       INQUIRE(FILE=filename_den,EXIST=exist)
-       IF(exist) THEN
-          CALL openf(kdensity,filename_den,'FORMATTED','OLD',0)
-       ELSE
-          CALL openf(kdensity,filename_den,'FORMATTED','NEW',0)
-       END IF
-
-       filename_den2='DENS2_FILE.xplor'
-       INQUIRE(FILE=filename_den2,EXIST=exist)
-       IF(exist) THEN
-          CALL openf(kdens2,filename_den2,'FORMATTED','OLD',0)
-       ELSE
-          CALL openf(kdens2,filename_den2,'FORMATTED','NEW',0)
-       END IF
-    END SELECT
-    IF(natoms_Tot /=0) THEN
-       filename_pdb='DENSITY_FILE.pdb'
-       INQUIRE(FILE=filename_pdb,EXIST=exist)
-       IF(exist) THEN
-          CALL openf(kpdb,filename_pdb,'FORMATTED','OLD',0)
-       ELSE
-          CALL openf(kpdb,filename_pdb,'FORMATTED','NEW',0)
-       END IF
-    END IF
     RETURN
 
 600 read_err=1

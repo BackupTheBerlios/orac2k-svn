@@ -1,4 +1,4 @@
-      SUBROUTINE mts_intra_n1(xp0,yp0,zp0,xcm,ycm,zcm,fpx,fpy,fpz
+      SUBROUTINE mts_intra_n1(xp0,yp0,zp0,xcm,ycm,zcm,fpx,fpy,fpz,phi
      &     ,fudge_qq,fudge_lj,fold_dir,puhyd,conf_bnd_slt,conf_bnd_slv
      &     ,coul_bnd_slt,coul_bnd_slv,unb14,cnb14,ungrp,cngrp,uptors
      &     ,uslvtor,stressd,mapdn,nmapdn,uumb,gr,nstart,nend,node,nprocs
@@ -14,7 +14,8 @@
 
 *----------------------- ARGUMENTS -------------------------------------
 
-      REAL*8  xp0(*),yp0(*),zp0(*),xcm(*),ycm(*),zcm(*),unb14,cnb14
+      REAL*8  xp0(*),yp0(*),zp0(*),xcm(*),ycm(*),zcm(*),phi(*),unb14
+     &     ,cnb14
       REAL*8  fpx(*),fpy(*),fpz(*),stressd(3,3),puhyd,conf_bnd_slt
      &     ,conf_bnd_slv,coul_bnd_slt,coul_bnd_slv,uslvtor
       INTEGER fold_dir,nmapdn(*),mapdn(2,*)
@@ -50,8 +51,8 @@
 
       CALL fnb14(ss_index,xp0,yp0,zp0,chrge,ntap,ecc1412,ecc146
      &     ,cutoff,clewld,alphal,int14,int14p,type14,int14_x,fudge
-     &     ,lj_fudge,fpx,fpy,fpz,unb14_slt,unb14_slv,cnb14_slt,cnb14_slv
-     &     )
+     &     ,lj_fudge,fpx,fpy,fpz,phi,unb14_slt,unb14_slv,cnb14_slt
+     &     ,cnb14_slv)
       unb14=unb14_slt
       cnb14=cnb14_slt
 
@@ -65,8 +66,8 @@
 *=======================================================================
 
       CALL fnbgrp(ss_index,xp0,yp0,zp0,chrge,nbtype,ecc12,ecc6,clewld
-     &     ,alphal,ingrp,ingrpp,ingrp_x,fpx,fpy,fpz,ungrp_slt,ungrp_slv
-     &     ,cngrp_slt,cngrp_slv)
+     &     ,alphal,ingrp,ingrpp,ingrp_x,fpx,fpy,fpz,phi,ungrp_slt
+     &     ,ungrp_slv,cngrp_slt,cngrp_slv)
       ungrp=ungrp_slt
       cngrp=cngrp_slt
 

@@ -43,6 +43,8 @@
                            fppx(j)=fppx(j)-qforce*xc
                            fppy(j)=fppy(j)-qforce*yc
                            fppz(j)=fppz(j)-qforce*zc
+                           phi(i1)=phi(i1)+swrs(jj)*charge(j)*erfcst*rspi
+                           phi(j)=phi(j)+swrs(jj)*chrgei*erfcst*rspi
 #ifdef PRESSURE
                            st1 = st1+emvir*xc*xg
                            st2 = st2+emvir*xc*yg

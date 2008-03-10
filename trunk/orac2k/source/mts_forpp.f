@@ -8,7 +8,7 @@
      &     ,charge,nbtype,type,ma,nato,atomg,xpcm,ypcm,zpcm,groupp,atomp
      &     ,co,ecc12,ecc6,ewald,alphal,erfc_spline,erfc_bin,erfc_arr
      &     ,mapnl,ngrp,grppt,uconf_slt,uconf_slv,uconf_ss,ucoul_slt
-     &     ,ucoul_slv,ucoul_ss,fpx,fpy,fpz,stress,rneigh,rinn,rout
+     &     ,ucoul_slv,ucoul_ss,fpx,fpy,fpz,phi,stress,rneigh,rinn,rout
      &     ,rtolinn,rtolout,gmass,iz,worka,nstart,nend,Boltz_Group,flag
      &     ,iret,errmsg)
 *****MultipleTimeScale Version*****P.Procacci-CECAM*********************
@@ -76,7 +76,7 @@ C----------------------- ARGUMENTS -------------------------------------
       INTEGER mapnl(*),iz
       REAL*8  xp0(*),yp0(*),zp0(*),co(3,3),charge(*),ecc12(*),ecc6(*)
      &     ,xpg(*),ypg(*),zpg(*),xpcm(*),ypcm(*),zpcm(*),fpx(*),fpy(*)
-     &     ,fpz(*),gmass(*),erfc_arr(4,*),stress(3,3)
+     &     ,fpz(*),gmass(*),erfc_arr(4,*),phi(*),stress(3,3)
       REAL*8  alphal,uconf_slt,uconf_slv,uconf_ss,ucoul_slt,ucoul_slv
      &     ,ucoul_ss,rneigh,rinn,rout,rtolinn,rtolout,erfc_bin
       LOGICAL ewald,erfc_spline,flag
@@ -216,7 +216,6 @@ c---- to be used for shorter ranged interactions
       DO j=nstart,nend
          mapag(j)=.TRUE.
       END DO
-
       nlocal=nend-nstart+1
       IF(iz == 0) THEN
          CALL Neigh_Delete(neigha)
@@ -248,6 +247,7 @@ c==== start outer loop on groups
       mbeg=1
       p_nn=0
       DO i=nstart,nend
+         
          p_nn=p_nn+1
          xpgi=xpg(i)
          ypgi=ypg(i)
@@ -381,7 +381,6 @@ c---     set auxiliary array cmap2 for swich to zero
             zpi=zp0(i1)
             nbti=nbtype(i1)
             chrgei=charge(i1)
-
             la=mapnl(1+na)
             DO j=1,la
                mm=mapnl(j+1+na)
@@ -528,6 +527,7 @@ c-----      calculate S(r)dV/dr and map sum_{k1k2} V_{k1,k2} onto cmap2
             END DO
             noff=mapnl(1+na)+1
             na=na+noff
+
          END DO
          
 c===     add the S*V term to the atomic forces

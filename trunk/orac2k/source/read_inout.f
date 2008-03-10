@@ -2,7 +2,7 @@
      &     ,fascii,err_open,err_args,err_end,err_unr)
 
 ************************************************************************
-*   Time-stamp: <2006-02-05 17:21:03 marchi>                             *
+*   Time-stamp: <2007-11-12 16:43:47 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -20,11 +20,12 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE WSC, ONLY: WSC_Input=>Read_it
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
       
-      INTEGER iret
+      INTEGER iret,read_err
       CHARACTER*22 err_open
       CHARACTER*37 err_args(3)
       CHARACTER*20 err_end 
@@ -141,6 +142,14 @@ c==== Command  TRAJECTORY ===============================================
             nsevere=nsevere+1
          END IF
          
+c==== Command WSC =====================================================
+                                                                       
+         ELSE IF(strngs(1).EQ. 'WSC' ) THEN
+            not_time_corr=.TRUE.
+            CALL WSC_Input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err,m1)
+            IF(read_err == 1) GOTO 20
+
 c==== Command  RESTART  ==================================================
 
       ELSE IF(strngs(1) .EQ. 'RESTART') THEN
@@ -167,6 +176,9 @@ c-------- Subcommand read
                   errmsg='Restart file was not found.'
                   CALL xerror(errmsg,80,1,30)
                   nsevere=nsevere+1
+               ELSE
+                  CALL openf(kdump_in,strngs(2),'FORMATTED','OLD',0)
+                  CLOSE(kdump_in)
                END IF
             ELSE
                errmsg=err_args(3)//'1'
@@ -182,10 +194,17 @@ c-------- Subcommand write
             IF(nword .EQ. 4) THEN
                CALL fndfmt(2,strngs(2),fmt)
                READ(strngs(2),fmt,err=20) fsave
-
                IF(strngs(3) .EQ. 'OPEN') THEN
                   CALL uscrpl(strngs(4),80)
                   restart_out=strngs(4)
+                  INQUIRE(FILE=strngs(4),EXIST=exist)
+                  IF(exist) THEN
+                     CALL openf(kdump_out,strngs(4),'FORMATTED','OLD',0)
+                  ELSE
+                     CALL openf(kdump_out,strngs(4),'FORMATTED','NEW',0)
+                  END IF
+                  CLOSE(kdump_out)
+
                ELSE
                   errmsg=err_open
                   CALL xerror(errmsg,80,1,30)

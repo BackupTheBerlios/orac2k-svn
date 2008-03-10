@@ -1,8 +1,7 @@
 #define _REAL_ REAL(4)
 *------------------ PARAMETER  STATEMENT -------------------------------
 
-      INTEGER(4) ::  nbuffer,buffer_time,buffer_fft
-      COMMON /iobuff/ nbuffer,buffer_time,buffer_fft
+      INTEGER(4), SAVE ::  nbuffer,buffer_time,buffer_fft
       _REAL_, DIMENSION (:), POINTER :: xpb,ypb,zpb
       REAL(8), DIMENSION (:), POINTER :: xpc,ypc,zpc,vxpc,vypc,vzpc,vxpd
      &     ,vypd,vzpd,spline_x,xpcc,ypcc,zpcc

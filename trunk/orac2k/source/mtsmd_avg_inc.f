@@ -1,5 +1,5 @@
 ************************************************************************
-*   Time-stamp: <2005-03-05 20:55:43 marchi>                             *
+*   Time-stamp: <2006-04-03 12:05:32 marchi>                             *
 *                                                                      *
 *   Compute averages and do some analysis at time step M               *
 *                                                                      *
@@ -492,8 +492,10 @@ c =
                   nscale=nscale+1
                   CALL change_origin(-1,nprot,protl,vpx,vpy,vpz,vpx,vpy
      &                 ,vpz,vcax,vcay,vcaz,co)
-                  CALL ranvel(temp_heat,mass,ntap,vpx,vpy,vpz,xp0,yp0
-     &                 ,zp0,co,.TRUE.)
+
+                  CALL HEAT_Set_slv(ucek,vpx,vpy,vpz)
+                  CALL HEAT_Set_slt(temp_heat,pucek,vpx,vpy,vpz)
+
                   IF(cnstpp .NE. 0) THEN
                      CALL rattle_correc(nstart_2,nend_2,tm,xp0,yp0
      &                    ,zp0,vpx,vpy,vpz,ntap,cnstp,dssp,coeffp,cnstpp

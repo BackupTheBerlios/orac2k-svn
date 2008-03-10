@@ -1,7 +1,7 @@
 MODULE RMS_Subtract_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-01-31 16:49:48 marchi>                           *
+!!$   Time-stamp: <2006-03-23 16:19:00 marchi2>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -15,6 +15,8 @@ MODULE RMS_Subtract_Mod
 !!$***********************************************************************
 
 !!$---- This subroutine is part of the program ORAC ----*
+  USE Xerror_Mod
+
   USE INPUT_Mod, ONLY: Read_String, Parser, err_open,err_end,err_unr&
        &,err_fnf,err_args
 
@@ -75,6 +77,7 @@ CONTAINS
 
     INTEGER :: i,k1,k2,n,nn
     INTEGER :: count,count2,count_res,i_f,nlist
+    CHARACTER(80) :: errmsg
     INTEGER, DIMENSION (:), ALLOCATABLE :: index,trace
     LOGICAL, DIMENSION(:), ALLOCATABLE :: mask
     LOGICAL :: ok
@@ -103,6 +106,10 @@ CONTAINS
              END DO
              IF(ok) THEN
                 count_res=count_res+1
+             ELSE
+                WRITE(errmsg,'(''In unit '',a8,'' wrong atom in the li&
+                     &st. Abort. '')') Res_u(k1)%target(1:3) 
+                CALL abort_now(errmsg)
              END IF
           END IF
        END DO
@@ -317,7 +324,7 @@ CONTAINS
     ALLOCATE(U(n_dip,n_dip),VT(n_dip,n_dip),sigma(n_Dip,n_Dip)&
          &,sing(n_dip)) 
 
-    REWIND(krms_dip)
+!!$    REWIND(krms_dip)
 
     fcounter=1.0D0/DBLE(counter)
     WRITE(krms_dip,'(''Ring Dipole Correlation at '',f12.3,'' fs'')')&

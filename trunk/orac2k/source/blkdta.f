@@ -18,6 +18,7 @@
 
       include 'parst.h'
       include 'cpropar.h'
+      include 'parallel.h'
 
       INCLUDE 'unit.h'
       COMMON /card / jrec,nrec,jerr,nerr,nline,istrt
@@ -129,6 +130,7 @@ c-----
       restart_old=.FALSE.
       restart_read=.FALSE.
       restart_write=.FALSE.
+      old_tpg=.FALSE.
       read_co=.FALSE.
       gofr_nprint=0
       gofr_navg=0
@@ -235,9 +237,16 @@ c-----
       pressure=.FALSE.
       lberendsen=.FALSE.
       landersen=.FALSE.
-      coupl_mol=.TRUE.
-      coupl_grp=.FALSE.
-      coupl_atm=.FALSE.
+      IF(nprocs .EQ. 1) THEN
+         coupl_mol=.TRUE.
+         coupl_grp=.FALSE.
+         coupl_atm=.FALSE.
+      ELSE
+         coupl_mol=.FALSE.
+         coupl_grp=.TRUE.
+         coupl_atm=.FALSE.
+      END IF
+
       native=.FALSE.
       check_native=.FALSE.
       wpr=40.0D0
@@ -376,17 +385,11 @@ c-----
       bin_size_cav=0.01D0
       rmax_size_cav=3.0D0
       ncavities=0
-      cutoff_vor=6.0D0
-      voronoi_res(1)=-1
       ChargeIon=0.0D0
       SigmaIon=0.0D0
       mass_pfix=0.0D0
       SmoothFactor=0.0D0
       DoFreeEnergy=.FALSE.
-      voronoi_access=.FALSE.
-      voronoi_volume=.FALSE.
-      voronoi_neighbor=.FALSE.
-      voronoi=.FALSE.
       cavities=.FALSE.
       hbonds_res=.FALSE.
       hbonds_tot=.FALSE.

@@ -110,6 +110,5 @@
      &        ,coul_bnd_slt,coul_bnd_slt_n1,self_slt,pucek,urcsp_h
      &        ,urcsp_l,urcsp_m,ucosp_h,ucosp_l,ucosp_m,ucnsp_h,ucnsp_l
      &        ,ucnsp_m,eer_m,eer_l,eer_h,nmol,nato_slv,ntap,nstep,ktest
-     &        ,lfirst,maxstp,cpress,volume,pext,ucepr,thermos,uceh,hpot
-     &        ,mass)
+     &        ,lfirst,maxstp,cpress,volume,pext,ucepr,thermos,uceh,hpot)
       END IF

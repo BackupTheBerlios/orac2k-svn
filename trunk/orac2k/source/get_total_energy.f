@@ -50,6 +50,7 @@
 
       COMMON /rag2/ fpx1,fpy1,fpz1,xpa,ypa,zpa,xpcm,ypcm,zpcm,xpcma
      &     ,ypcma,zpcma,xpga,ypga,zpga,xpg,ypg,zpg,worka
+      REAL(8), DIMENSION (:), POINTER ::  phi
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -76,6 +77,7 @@
 *---- length of neighbor list                                       ----
 *=======================================================================
 
+      ALLOCATE(phi(ntap))
 #if defined DYNAMIC_MEM
       npp_u=mpp/tgroup
 #else
@@ -140,9 +142,9 @@
 
       CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &     ,ypcma,zpcma,mapnl,mapdn,nmapdn,ucns,ucos,virs,virsp,ucnp
-     &     ,ucop,ucnsp,ucosp,fpx1,fpy1,fpz1,stressd,worka,cpu_h,ncpu_h
-     &     ,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah,node,nprocs
-     &     ,ncube,P_dyn_update_shell)
+     &     ,ucop,ucnsp,ucosp,fpx1,fpy1,fpz1,phi,stressd,worka,cpu_h
+     &     ,ncpu_h,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah,node
+     &     ,nprocs,ncube,P_dyn_update_shell)
       IF(clewld) THEN
          CALL mts_furier(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
      &        ,nprocs,ncube,nstart_1,nend_1,nlocal_1,nstart_2,nend_2

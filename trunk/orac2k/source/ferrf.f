@@ -1,6 +1,6 @@
       SUBROUTINE ferrf(ss_index,alphal,charge,fudge,x0,y0,z0,iz
-     &     ,list,nlist,sp,fscnstr_slt,fscnstr_slv,fpx,fpy,fpz,erf_corr
-     &     ,erf_arr_corr,delew,rlew)
+     &     ,list,nlist,sp,fscnstr_slt,fscnstr_slv,fpx,fpy,fpz,phi
+     &     ,erf_corr,erf_arr_corr,delew,rlew)
 
 ************************************************************************
 *                                                                      *
@@ -25,7 +25,7 @@
 
       INTEGER iz,nlist,list(2,*),ss_index(*),sp(*)
       REAL*8  charge(*),x0(*),y0(*),z0(*),fpx(*),fpy(*),fpz(*)
-     &     ,fscnstr_slt,fscnstr_slv,erf_arr_corr(4,*),delew,rlew 
+     &     ,phi(*),fscnstr_slt,fscnstr_slv,erf_arr_corr(4,*),delew,rlew 
       REAL*8  alphal,fudge
       LOGICAL erf_corr
 
@@ -39,7 +39,7 @@
       REAL*8  furpar,qforce,alphar,twrtpi,gsrtal,xab,yab,zab,rsq,rsp
       REAL*8  a1,a2,a3,a4,a5,qp,qt,expcst,erfcst,erfst,fsrtal(2),h,c1,c2
      &     ,c3,c4,qq,corr,dcorr
-      REAL*8 fact,half,factor
+      REAL*8 fact,half,factor,furpar1,furpar2,corr1,corr2
       DATA half/0.5D0/
       DATA a1,a2,a3/0.2548296d0,-0.28449674d0,1.4214137d0/
       DATA a4,a5/-1.453152d0,1.0614054d0/
@@ -73,6 +73,8 @@
                type=ss_index(ia)
                qq = charge(ia)*charge(ib)
                furpar=fudge*qq
+               furpar1=fudge*charge(ib)
+               furpar2=fudge*charge(ia)
                xab=x0(ia)-x0(ib)
                yab=y0(ia)-y0(ib)
                zab=z0(ia)-z0(ib)
@@ -84,7 +86,11 @@
                c2=erf_arr_corr(2,ic) 
                c3=erf_arr_corr(3,ic) 
                c4=erf_arr_corr(4,ic) 
-               corr = qq*(c1+h*(c2+h*(c3+h*c4/3)/2))
+               corr = (c1+h*(c2+h*(c3+h*c4/3)/2))
+               corr1 = charge(ib)*corr
+               corr2 = charge(ia)*corr
+               corr = qq*corr
+
                dcorr = qq*(c2+h*(c3+h*c4/2) )/rsp
                alphar=alphal*rsp
                qt=1.0D0/(1.0e0+qp*alphar)
@@ -96,6 +102,12 @@
      &              )/(rsp*rsq)
                fsrtal(type)=fsrtal(type)-fact*(furpar*erfst/rsp-corr
      &              *fudge)
+               
+               phi(ia)=phi(ia)-fact*(furpar1*erfst/rsp-corr1*fudge)
+               phi(ib)=phi(ib)-fact*(furpar2*erfst/rsp-corr2*fudge)
+               IF(ia == 11157) WRITE(*,*) 'ia ',ia,fact
+               IF(ib == 11157) WRITE(*,*) 'ib ',ib,fact
+
                fpx(ia)=fpx(ia)+qforce*xab 
                fpy(ia)=fpy(ia)+qforce*yab
                fpz(ia)=fpz(ia)+qforce*zab
@@ -117,6 +129,9 @@
                
                type=ss_index(ia)
                furpar=fudge*charge(ia)*charge(ib)
+               furpar1=fudge*charge(ib)
+               furpar2=fudge*charge(ia)
+
                xab=x0(ia)-x0(ib)
                yab=y0(ia)-y0(ib)
                zab=z0(ia)-z0(ib)
@@ -130,6 +145,10 @@
                erfst=1.0D0-erfcst
                qforce=-furpar*(erfst-twrtpi*alphar*expcst)/(rsp*rsq)
                fsrtal(type)=fsrtal(type)-fact*furpar*erfst/rsp
+
+               phi(ia)=phi(ia)-fact*furpar1*erfst/rsp
+               phi(ib)=phi(ib)-fact*furpar2*erfst/rsp
+
                fpx(ia)=fpx(ia)+qforce*xab
                fpy(ia)=fpy(ia)+qforce*yab
                fpz(ia)=fpz(ia)+qforce*zab

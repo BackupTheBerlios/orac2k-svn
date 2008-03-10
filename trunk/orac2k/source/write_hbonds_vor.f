@@ -2,7 +2,7 @@
      &     ,a_mask,d_mask,ss_index,nbun,nres,o1,nato)
 
 ************************************************************************
-*   Time-stamp: <97/07/10 18:56:36 marchi>                             *
+*   Time-stamp: <2006-04-05 14:34:14 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -20,6 +20,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: nnlpp_vor
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -32,7 +33,6 @@
 *----------------------- VARIABLES IN COMMON --------------------------*
 
       INCLUDE 'parst.h'
-      INCLUDE 'voronoi.h'
       INTEGER count_res(nores),count(3),index(nores)
       COMMON /rag1/ count_res,index
       

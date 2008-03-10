@@ -1,3 +1,4 @@
+
       SUBROUTINE mts_furier(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
      &     ,nprocs,ncube,nstart,nend,nlocal,nstart_2,nend_2,nlocal_2,xpb
      &     ,ypb,zpb,xp0,yp0,zp0,xpcm,ypcm,zpcm,urcsp,urcs,urcp,virsp
@@ -25,17 +26,20 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE REDUCE, ONLY: P_Reduce_Forces=>Reduce_Forces      
       IMPLICIT none
+      INTERFACE
+         SUBROUTINE P_Change_Decomposition(Decmp_name,nato,vpx,vpy,vpz
+     &        ,nstart,nend,nstart1,nend1,node,nprocs)
+         REAL(8) :: vpx(*),vpy(*),vpz(*)
+         INTEGER :: nstart,nend,nstart1,nend1
+         INTEGER :: node,nprocs,nato
+         CHARACTER(*) :: Decmp_name
+         END SUBROUTINE P_Change_Decomposition         
+      END INTERFACE
 
 *----------------------- ARGUMENTS -------------------------------------
 
-      INTERFACE
-         SUBROUTINE P_Reduce_Forces(x,y,z,nstart,nend,nlocal,node,nprocs
-     &        )
-         REAL(8) :: x(*),y(*),z(*)
-         INTEGER, OPTIONAL :: nstart,nend,nlocal,node,nprocs
-         END SUBROUTINE P_Reduce_Forces
-      END INTERFACE
       INTEGER tag_bndg(*),node,nodex,nodey,nodez,ictxt,npy
      &     ,npz,ncube,nprocs,descQ(*),ierr
       INTEGER nstart,nend,nlocal,nstart_2,nend_2,nlocal_2
@@ -58,8 +62,8 @@ c---  stuff for b-spline interpolation and FFT
 #if defined PARALLEL
       INCLUDE 'mpif.h'
 #endif
-      REAL*8  fxx(m1,2),fyy(m1,2),fzz(m1,2)
-      SAVE fxx,fyy,fzz
+      REAL*8  fxx(m1,2),fyy(m1,2),fzz(m1,2),phiw(m1)
+      SAVE fxx,fyy,fzz,phiw
 
       REAL*8  fsbond_slt,fsbend_slt,fsin14_slt,fsbond_slv,fsbend_slv
      &     ,fsin14_slv
@@ -122,6 +126,7 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
       END IF
       CALL zeroa(fxx(nstart,1),fyy(nstart,1),fzz(nstart,1),nlocal,1)
       CALL zeroa(fxx(nstart,2),fyy(nstart,2),fzz(nstart,2),nlocal,1)
+      phiw=0.0D0
 
 *=======================================================================
 *      subtract "intramolecular term" in the ZERO cell:   BONDS     ----
@@ -133,7 +138,7 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
       IF(lstretch .NE. 0) THEN
          CALL ferrf(ss_index,alphal,chrge,1.0D0,xpb,ypb,zpb,1,lstrtch
      &        ,lstretch,lbnd_x,fsbond_slt,fsbond_slv,fxx(1,2),fyy(1,2)
-     &        ,fzz(1,2),erf_corr,erf_arr_corr,delew,rlew)
+     &        ,fzz(1,2),phiw,erf_corr,erf_arr_corr,delew,rlew)
          fsbond=fsbond_slt
          coul_bnd_slv=fsbond_slv
          coul_bnd_slt=fsbond_slt
@@ -146,7 +151,7 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
       fsbend=0.0D0
       IF(int13p .NE. 0) THEN
          CALL ferrf_tag(ss_index,alphal,chrge,xpb,ypb,zpb,int13
-     &        ,int13p,int13_x,fsbend_slt,fsbend_slv,fxx,fyy,fzz,m1
+     &        ,int13p,int13_x,fsbend_slt,fsbend_slv,fxx,fyy,fzz,phiw,m1
      &        ,tag_bndg,erf_corr,erf_arr_corr,delew,rlew)
          coul_bnd_slt=coul_bnd_slt+fsbend_slt
          coul_bnd_slv=coul_bnd_slv+fsbend_slv
@@ -161,7 +166,7 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
       IF(int14p .NE. 0) THEN
          CALL ferrf(ss_index,alphal,chrge,fudgec,xpb,ypb,zpb,1,int14
      &        ,int14p,int14_x,fsin14_slt,fsin14_slv,fxx(1,2),fyy(1,2)
-     &        ,fzz(1,2),erf_corr,erf_arr_corr,delew,rlew)
+     &        ,fzz(1,2),phiw,erf_corr,erf_arr_corr,delew,rlew)
          fsin14=fsin14_slt
          coul_bnd_slv=coul_bnd_slv+fsin14_slv
          coul_bnd_slt=coul_bnd_slt+fsin14_slt
@@ -182,7 +187,11 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
      &     ),nstart,nend,nstart_2,nend_2,node,nprocs)
       CALL P_Change_Decomposition("N1-N2",ntap,fxx(1,2),fyy(1,2),fzz(1,2
      &     ),nstart,nend,nstart_2,nend_2,node,nprocs)
+      CALL P_fold_r8(ntap,phiw,nstart,nend,nlocal,node,nprocs)
+      CALL P_expand_r8(phiw,nstart,nend,nlocal,node,nprocs)
 #endif      
+      
+      phi(nstart_2:nend_2)=phi(nstart_2:nend_2)+phiw(nstart_2:nend_2)
 
 *=======================================================================
 *---- Add up all contributions from tagged ferrf and then to         ---

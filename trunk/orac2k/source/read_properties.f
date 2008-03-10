@@ -1,5 +1,5 @@
       SUBROUTINE read_properties(fxrms,favg,favg_xrms,fvi,gofr_fprint
-     &     ,fvoronoi,fcavities,ftop_print,gofr_favg,gofr_fcomp,fprtvaf
+     &     ,fcavities,ftop_print,gofr_favg,gofr_fcomp,fprtvaf
      &     ,ftotvaf,fnovaf,fdipole,fnative,ffragm_dist,fhbonds,fhhisto
      &     ,frms,fgyr,freq_ef,freq_dp,fxslt,finst_fit,fcalc_cofm
      &     ,finst_lda,flda_flu,flda_hyd,fprot_hyd,fprot_lda
@@ -25,6 +25,8 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: VOR_Input=>Read_it,VOR_fluct=>fluct
+     &     ,VOR_access=>access,VOR_volume=>volume
       USE HYDRATION_Mod, ONLY: HYD_coeff=>coeff, HYD_cutoff=>cutoff_max,
      &     HYD_Initialize=>Initialize, hydration, HYD_n_neighbors
      &     =>n_neighbors,HYD_ncx=>ncx,HYD_ncy=>ncy,HYD_ncz=>ncz,
@@ -35,6 +37,7 @@
       USE EUL_Mod, ONLY: EUL_Create=> Create
      &     ,eul_angles,EUL_index_l=>index_l, EUL_add=>Add, EUL_kdump
      &     =>kdump
+      USE FIELD_Mod, ONLY: ELE_Input=>Read_it
       USE DENSITY_Mod, ONLY: DEN_input=>Read_it
       USE PDBs_Mod, ONLY: PDB_input=>Read_it
       USE RMS_Subtract_Mod, ONLY: SUB_input=>Read_it
@@ -45,6 +48,7 @@
      &     =>cutoff_max,HYDD_Initialize=>Initialize, hydynamics,
      &     HYDD_n_neighbors=>n_neighbors,HYDD_n_write=>n_write
      &     ,khydynamics
+      USE POLAR_Mod, ONLY: POL_Input=>Read_it
 
       IMPLICIT none
 
@@ -53,7 +57,7 @@
       INTEGER iret
       CHARACTER*80 errmsg
       REAL*8  fxrms,fvi,gofr_fprint,gofr_favg,gofr_fcomp,fprtvaf,ftotvaf
-     &     ,fdipole,fnative,fnovaf,favg,favg_xrms,fvoronoi,fcavities
+     &     ,fdipole,fnative,fnovaf,favg,favg_xrms,fcavities
      &     ,ftop_print,ffragm_dist,fhbonds,fhhisto,frms,fgyr,sofk_fprint
      &     ,sofk_fcomp
       REAL*8 freq_ef,freq_dp,finst_fit,fcalc_cofm,finst_lda
@@ -607,88 +611,10 @@ c==== Command  VORONOI==================================================
 
       ELSE IF(strngs(1) .EQ. 'VORONOI' ) THEN
          not_time_corr=.TRUE.
-         voronoi=.TRUE.
-         heavy_vor=.FALSE.
-800      READ(knlist,'(a78)',END=600) line(1:78)
-         CALL wrenc(kprint,line)
-         IF(line(1:1) .EQ. '#') GOTO 800
-         CALL parse(line,sep,2,comm,strngs,40,nword,
-     x        iret,errmsg)
+         CALL VOR_Input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
 
-         IF(strngs(1) .EQ. 'cutoff' ) THEN
-            CALL fndfmt(2,strngs(2),fmt)
-            READ(strngs(2),fmt) cutoff_vor
-
-         ELSE IF(strngs(1) .EQ. 'heavy_atoms') THEN
-            heavy_vor=.TRUE.
-
-         ELSE IF(strngs(1) .EQ. 'compute') THEN
-            IF(strngs(2) .EQ. 'contact_solute') THEN
-               IF(nword .NE. 4) THEN
-                  errmsg=err_args(1)//'3'
-                  CALL xerror(errmsg,80,1,30)
-                  nsevere=nsevere+1
-               END IF
-               ncontact_slt=ncontact_slt+1
-               IF(ncontact_slt .GT. pcontact_slt) THEN
-                  errmsg=
-     &  ' Number of solute molecules for contact surface exceeded.'
-                  CALL xerror(errmsg,80,1,30)
-                  nsevere=nsevere+1
-               END IF
-               voronoi_contact=.TRUE.
-               CALL fndfmt(1,strngs(3),fmt)
-               READ(strngs(3),fmt,err=20) contact_slt(1,ncontact_slt)
-               CALL fndfmt(1,strngs(4),fmt)
-               READ(strngs(4),fmt,err=20) contact_slt(2,ncontact_slt)
-
-            ELSE IF(strngs(2) .EQ. 'accessibility') THEN
-               voronoi_access=.TRUE.
-
-            ELSE IF(strngs(2) .EQ. 'volume') THEN
-               voronoi_volume=.TRUE.
-
-            ELSE IF(strngs(2) .EQ. 'neighbors') THEN
-               voronoi_neighbor=.TRUE.
-
-            ELSE
-               errmsg=err_unr(2)//strngs(2)
-               CALL xerror(errmsg,80,1,30)
-               nsevere = nsevere + 1
-            END IF
-
-         ELSE IF(strngs(1) .EQ. 'residue') THEN
-            CALL parse_numbers(err_unr,strngs,nword,voronoi_res,n_res
-     &           ,nsevere)
-
-         ELSE IF(strngs(1) .EQ. 'print' ) THEN
-            CALL fndfmt(2,strngs(2),fmt)
-            READ(strngs(2),fmt,err=20) fvoronoi
-            IF(strngs(3) .EQ. 'OPEN') THEN
-               CALL uscrpl(strngs(4),80)
-               INQUIRE(FILE=strngs(4),EXIST=exist)
-               IF(exist) THEN
-                  CALL openf(kvoronoi,strngs(4),'FORMATTED','OLD',0)
-               ELSE
-                  CALL openf(kvoronoi,strngs(4),'FORMATTED','NEW',0)
-               END IF
-            ELSE
-               errmsg='OPEN keyword not found'
-               CALL xerror(errmsg,80,1,30)
-               nsevere = nsevere + 1
-            END IF
-
-         ELSE IF(strngs(1) .EQ. ' ') THEN
-            GOTO 800
-
-         ELSE IF(strngs(1).EQ. 'END' ) THEN
-            GOTO 100
-         ELSE
-            errmsg=err_unr(2)//strngs(2)//err_end(1:14)//err_end(16:20)
-            CALL xerror(errmsg,80,1,30)
-            nsevere = nsevere + 1
-         END IF
-         GOTO 800
+         IF(read_err == 1) GOTO 20
 
 c==== Command  CAVITIES ================================================
 
@@ -1019,7 +945,7 @@ c==== Command DENSITY  ================================================
          ELSE IF(strngs(1).EQ. 'DENSITY' ) THEN
             not_time_corr=.TRUE.
             CALL DEN_input(knlist,kprint,nsevere,nword,strngs,iret
-     &           ,errmsg,read_err)
+     &           ,errmsg,read_err,m1)
             IF(read_err == 1) GOTO 20
 
 c==== END Command DENSITY  ============================================
@@ -1336,157 +1262,23 @@ c==== Command  SigmaIon================================================
 
             END IF
             GOTO 2300
-                                                                       
-c==== Command ELECTRIC ================================================
-                                                                       
-         ELSE IF(strngs(1).EQ. 'ELECTRIC' ) THEN
-            not_time_corr=.TRUE.                                       
-            efield=.TRUE.                                              
-2100        READ(knlist,'(a78)',END=600) line(1:78)                    
-            CALL wrenc(kprint,line)                                    
-            IF(line(1:1) .EQ. '#') GOTO 2100                           
-                                                                       
-            CALL parse(line,sep,2,comm,strngs,40,nword,iret,errmsg)    
-                                                                       
-c==== Subcommand EWALD ==============================================  
-                                                                       
-            IF(strngs(1).EQ. 'EWALD') THEN                             
-               clewld=.TRUE.                                           
-               IF(strngs(2).EQ. 'PME') THEN                            
-                  pme =.TRUE.                                          
-                  grpcut=.FALSE.                                       
-                  IF(nword .EQ. 7) THEN                                
-                     CALL fndfmt(2,strngs(3),fmt)                      
-                     READ(strngs(3),fmt,err=20) alphal                 
-                     CALL fndfmt(1,strngs(4),fmt)                      
-                     READ(strngs(4),fmt,err=20) nfft1                  
-                     CALL fndfmt(1,strngs(5),fmt)                      
-                     READ(strngs(5),fmt,err=20) nfft2                  
-                     CALL fndfmt(1,strngs(6),fmt)                      
-                     READ(strngs(6),fmt,err=20) nfft3                  
-                     CALL fndfmt(1,strngs(7),fmt)                      
-                     READ(strngs(7),fmt,err=20) pme_order              
-                  ELSE                                                 
-                     nsevere = nsevere + 1                             
-                     errmsg=err_args(1) // '4 after keyword "PME"'     
-                     CALL xerror(errmsg,80,1,30)                       
-                  END IF                                               
-                                                                       
-               ELSE IF(strngs(2).EQ. 'ON' ) THEN                       
-                  clewld=.TRUE.                                        
-                  IF(nword .EQ. 4) THEN                                
-                     CALL fndfmt(2,strngs(3),fmt)                      
-                     READ(strngs(3),fmt,err=20) alphal                 
-                     CALL fndfmt(2,strngs(4),fmt)                      
-                     READ(strngs(4),fmt,err=20) rkcut                  
-                  ELSE IF(nword .EQ. 3) THEN                           
-                     CALL fndfmt(2,strngs(3),fmt)                      
-                     READ(strngs(3),fmt,err=20) alphal                 
-                  ELSE                                                 
-                     nsevere = nsevere + 1                             
-                     errmsg=err_args(1) // '1 after keyword "on"'      
-                     CALL xerror(errmsg,80,1,30)                       
-                  END IF                                               
-               ELSE IF(strngs(2).EQ. 'OFF' ) THEN                      
-                  clewld=.FALSE.                                       
-                                                                       
-                                                                       
-               ELSE                                                    
-                  nsevere = nsevere + 1                                
-                  errmsg=err_unr(3) // strngs(2)                       
-                  CALL xerror(errmsg,80,1,30)                          
-               END IF                                                  
-                                                                       
-c==== Command ERFC_SPLINE==============================================
-                                                                       
-            ELSE IF(strngs(1).EQ. 'ERFC_SPLINE' ) THEN                 
-               erfc_spline=.TRUE.                                      
-               IF(nword .NE. 1) THEN                                   
-                  CALL fndfmt(2,strngs(2),fmt)                         
-                  READ(strngs(2),fmt,err=20) erfc_bin                  
-               END IF                                                  
-                                                                       
-c==== subcommand CUTOFF =============================================  
-                                                                       
-            ELSE IF(strngs(1).EQ. 'CUTOFF' ) THEN                      
-               IF(nword.ne.1) THEN                                     
-                  CALL fndfmt(2,strngs(2),fmt)                         
-                  READ(strngs(2),fmt,err=20) rspoff                    
-               END IF                                                  
 
-c==== Command  FREQUENCY=============================================== 
-                                                                       
-            ELSE IF(strngs(1) .EQ. 'FREQUENCY') THEN                    
-               if(nword.eq.2) THEN                                     
-                  CALL fndfmt(1,strngs(2),fmt)                         
-                  READ(strngs(2),fmt,err=20) nfreq_polar                     
-               ELSE                                                    
-                  errmsg=err_args(1)//'1'                              
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere = nsevere + 1                                
-               END IF                                                  
-                                                                       
-c==== Subcommand sel_mol ============================================  
-                                                                       
-            ELSE IF(strngs(1).EQ. 'sel_mol') THEN                      
-               lmol_ef=.TRUE.                                          
-               nmol_ef = nmol_ef + 1                                   
-               pmol_efp=0                                              
-               CALL parse_numbers(err_unr,strngs,nword,pmol_ef(1,nmol_ef
-     &              ),pmol_efp,nsevere)                                
-               IF(pmol_efp .GT. f1) THEN                               
-                  errmsg=' Length of the chromophores arrays '         
-     &                 / /'insufficient. Increase _F1_.'               
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere = nsevere + 1                                
-               END IF                                                  
-               pmol_ef(1,nmol_ef)=pmol_efp                             
-                                                                       
-c==== Subcommand print efield =======================================  
-                                                                       
-            ELSE IF(strngs(1).EQ. 'print' ) THEN                       
-               IF(nword .LT. 4) THEN                                   
-                  errmsg=err_args(1)//'3'                              
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere=nsevere+1                                    
-               END IF                                                  
-               IF(strngs(3) .EQ. 'OPEN') THEN                          
-                  print_ef=.TRUE.                                      
-                  CALL fndfmt(2,strngs(2),fmt)                         
-                  READ(strngs(2),fmt) freq_ef                          
-                  CALL uscrpl(strngs(4),80)                            
-                  INQUIRE(FILE=strngs(4),EXIST=exist)                  
-                  IF(exist) THEN                                       
-                     CALL openf(kout_ef,strngs(4),'FORMATTED',         
-     &                    'OLD',0)                                     
-                  ELSE                                                 
-                     CALL openf(kout_ef,strngs(4),'FORMATTED'          
-     &                    ,'NEW',0)                                    
-                  END IF                                               
-               ELSE                                                    
-                  errmsg=err_open                                      
-                  CALL xerror(errmsg,80,1,30)                          
-                  nsevere = nsevere + 1                                
-               END IF                                                  
-                                                                       
-c--------------------------------------------------------------------  
-                                                                       
-            ELSE IF(strngs(1) .EQ. ' ') THEN                           
-               GOTO 2100                                               
-                                                                       
-            ELSE IF(strngs(1).EQ. 'END' ) THEN                         
-               GOTO 100                                                
-                                                                       
-            ELSE                                                       
-               errmsg=err_unr(2)//strngs(2)//err_end(1:14)/            
-     &              /err_end(16:20)                                    
-               CALL xerror(errmsg,80,1,30)                             
-               nsevere = nsevere + 1                                   
-            END IF                                                     
-            GOTO 2100                                                  
-                                                                       
-                                                                       
 c==== END Command ELECTRIC_FIELD ======================================
+
+         ELSE IF(strngs(1).EQ. 'ELECTRIC' ) THEN
+            not_time_corr=.TRUE.
+            CALL ELE_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+
+c==== END Command POLAR  ==============================================
+
+         ELSE IF(strngs(1).EQ. 'POLAR' ) THEN
+            not_time_corr=.TRUE.
+            CALL POL_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
+            
 c==== Command LDA =====================================================
                                                                        
          ELSE IF(strngs(1).EQ. 'LDA' ) THEN                            
@@ -2259,7 +2051,6 @@ c--   syntax errors: abort without verifying input
          CALL xerror(errmsg,80,1,2)
          STOP
       END IF
-      voronoi_res(1)=n_res
       top_bonds(1)=n_bonds
       top_bendings(1)=n_bendings
       top_ptors(1)=n_ptors

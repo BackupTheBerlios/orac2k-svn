@@ -54,14 +54,12 @@
      &     pop3, Extra_Force, Extra_Init=> Stretch_Init
 
       USE Module_Stress, ONLY: FixedAngles_Stress
+      USE HEATING_Mod, ONLY: HEAT_Init=>Init, HEAT_Set_slv=>Set_Slv
+     &     ,HEAT_Set_slt=>Set_slt,HEAT_T_Init=>T_Initial
+      USE REDUCE, ONLY: P_Reduce_Forces=>Reduce_Forces
       IMPLICIT none
 #if defined PARALLEL
       INTERFACE
-         SUBROUTINE P_Reduce_Forces(x,y,z,nstart,nend,nlocal,node,nprocs
-     &        )
-         REAL(8) :: x(*),y(*),z(*)
-         INTEGER, OPTIONAL :: nstart,nend,nlocal,node,nprocs
-         END SUBROUTINE P_Reduce_Forces
          SUBROUTINE P_Comm_Intra(nstart,nend,node,nprocs,x,y,z,xc,yc,zc
      &        ,nato,atomp,lstrtch,lstretch,lbnd_x,lbndg,lbend,lbndg_x
      &        ,ltor,ltors,ltor_x,litr,litor,litr_x,int14,int14p,int14_x
@@ -378,7 +376,7 @@
          nrject=0
       END IF
       IF(heating) THEN
-         temp_heat=0.0D0
+         temp_heat=HEAT_T_Init
          dtemp_heat=t/DFLOAT(nheating)
       END IF
       mrject=nrject*lrespa*mrespa
@@ -943,6 +941,10 @@
             CALL zero0(eta,neta)
          END IF
       END IF
+      IF(heating) THEN
+         CALL HEAT_Init(t,dtemp,ntap,nato_slv,nmol,cnstpp,cnstpp_slv
+     &        ,ss_index,efact,nstart_2,nend_2,node)
+      END IF
 
 *=======================================================================
 *-------- Initialize velocities when starting without a restart --------
@@ -1017,7 +1019,8 @@
                CALL int_corr_erf_spline(rlew,ruew,nbinew,alphal,rkcut
      &              ,erf_arr_corr,work)
             END IF
-            CALL Pme_init(node,nprocs,nfft1,nfft2,nfft3,nfft3_start
+            CALL Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt
+     &           ,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start
      &           ,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
             IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
          ELSE
@@ -1071,13 +1074,13 @@
      &           ,self_slv)
             CALL ferrf(ss_index,alphal,chrge,1.0D0,xp0,yp0,zp0,0
      &           ,lcnstr,lconstr,lconstr_x,fscnstr_slt,fscnstr_slv,fpx_p
-     &           ,fpy_p,fpz_p,erf_corr,erf_arr_corr,delew,rlew)
+     &           ,fpy_p,fpz_p,phi,erf_corr,erf_arr_corr,delew,rlew)
          ELSE IF(.NOT. pme) THEN
             CALL cself(ss_index,ntap,alphal,rkcut,chrge,self_slt
      &           ,self_slv)
             CALL ferrf(ss_index,alphal,chrge,1.0D0,xp0,yp0,zp0,0
      &           ,lcnstr,lconstr,lconstr_x,fscnstr_slt,fscnstr_slv,fpx_p
-     &           ,fpy_p,fpz_p,erf_corr,erf_arr_corr,delew,rlew)
+     &           ,fpy_p,fpz_p,phi,erf_corr,erf_arr_corr,delew,rlew)
          END IF
 #if defined PARALLEL
          IF(nprocs .GT. 1) THEN
@@ -1218,10 +1221,10 @@ c$$$
 *--      update shell h neighbor list
             CALL mts_forces('u',xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &           ,zpcma,mapnl,mapdn,nmapdn,ucns_p,ucos_p,virs_p,virsp_p
-     &           ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p
-     &           ,stressd_p,worka,cpu_h,ncpu_h
-     &           ,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah,node
-     &           ,nprocs,ncube,P_dyn_update_shell)
+     &           ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,phi
+     &           ,stressd_p,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &           ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell
+     &           )
          ELSE
             aux= rcuth+rtolh+rneih
             CALL lc_index(indxyz,ncx,ncy,ncz,nind,indxi,indxj,indxk,aux
@@ -1374,10 +1377,9 @@ c$$$
          rshell='h'
          CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_h,ucos_h,virs_h,virsp_h
-     &        ,ucnp_h,ucop_h,ucnsp_h,ucosp_h,fpx_h,fpy_h,fpz_h,stressd_h
-     &        ,worka,cpu_h,ncpu_h,nstart_h,nend_h
-     &        ,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_h,ucop_h,ucnsp_h,ucosp_h,fpx_h,fpy_h,fpz_h,phi
+     &        ,stressd_h,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
          CALL timer(vfcp,tfcp,elapse)
 #if defined PARALLEL
          IF(pme) THEN
@@ -1401,10 +1403,9 @@ c$$$
          rshell='l'
          CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_l,ucos_l,virs_l,virsp_l
-     &        ,ucnp_l,ucop_l,ucnsp_l,ucosp_l,fpx_l,fpy_l,fpz_l,stressd_l
-     &        ,worka,cpu_h,ncpu_h,nstart_h,nend_h
-     &        ,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_l,ucop_l,ucnsp_l,ucosp_l,fpx_l,fpy_l,fpz_l,phi
+     &        ,stressd_l,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
          CALL timer(vfcp,tfcp,elapse)
 #if defined PARALLEL
          IF(pme) THEN
@@ -1428,10 +1429,9 @@ c$$$
          rshell='m'
          CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_m,ucos_m,virs_m,virsp_m
-     &        ,ucnp_m,ucop_m,ucnsp_m,ucosp_m,fpx_m,fpy_m,fpz_m,stressd_m
-     &        ,worka,cpu_h,ncpu_h,nstart_h
-     &        ,nend_h,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_m,ucop_m,ucnsp_m,ucosp_m,fpx_m,fpy_m,fpz_m,phi
+     &        ,stressd_m,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
          CALL timer(vfcp,tfcp,elapse)
 #if defined PARALLEL
          IF(pme) THEN
@@ -1625,7 +1625,7 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
       gcpu=tfcp
 
       CALL mts_intra_n1(xp0,yp0,zp0,xpcma,ypcma,zpcma,fpx_n1,fpy_n1
-     &     ,fpz_n1,fudge,lj_fudge,abmd_dir,puhyd,conf_bnd_slt_n1
+     &     ,fpz_n1,phi,fudge,lj_fudge,abmd_dir,puhyd,conf_bnd_slt_n1
      &     ,conf_bnd_slv_n1,coul_bnd_slt_n1,coul_bnd_slv_n1,unb14,cnb14
      &     ,ungrp,cngrp,uptors,uslvtor,stressd_n1,mapdn,nmapdn,uumb,gr
      &     ,nstart_1,nend_1,node,nprocs,ncube)
@@ -1776,7 +1776,7 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
          IF(.not.linked_cell) THEN
             CALL mts_forces('u',xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &           ,zpcma,mapnl,mapdn,nmapdn,ucns_p,ucos_p,virs_p,virsp_p
-     &           ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p
+     &           ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,phi
      &           ,stressd_p,worka,cpu_h,ncpu_h
      &           ,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah,node
      &           ,nprocs,ncube,P_dyn_update_shell)
@@ -1804,10 +1804,9 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
          
          CALL mts_forces('h',xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_p,ucos_p,virs_p,virsp_p
-     &        ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,stressd_p
-     &        ,worka,cpu_h,ncpu_h,nstart_h
-     &        ,nend_h,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,phi
+     &        ,stressd_p,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
 
          rcutl_save=rcutl
          rtoll_save=rtoll
@@ -1820,10 +1819,9 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
          
          CALL mts_forces('l',xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_p,ucos_p,virs_p,virsp_p
-     &        ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,stressd_p
-     &        ,worka,cpu_h,ncpu_h,nstart_h
-     &        ,nend_h,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_p,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,phi
+     &        ,stressd_p,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
 
          rcuth=rcuth_save
          rtolh=rtolh_save
@@ -2233,7 +2231,7 @@ c ---
      &                 ,nend_cme,node,nprocs,ncube,rbyte)
                END DO
                CALL mts_intra_n1(xp0,yp0,zp0,xpcma,ypcma,zpcma,fpx_n1
-     &              ,fpy_n1,fpz_n1,fudge,lj_fudge,abmd_dir,puhyd
+     &              ,fpy_n1,fpz_n1,phi,fudge,lj_fudge,abmd_dir,puhyd
      &              ,conf_bnd_slt_n1,conf_bnd_slv_n1,coul_bnd_slt_n1
      &              ,coul_bnd_slv_n1,unb14,cnb14,ungrp,cngrp,uptors
      &              ,uslvtor,stressd_n1,mapdn,nmapdn,uumb,gr,nstart_1
@@ -2406,7 +2404,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
                CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &              ,ypcma,zpcma,mapnl,mapdn,nmapdn,ucns_m,ucos_m,virs_m
      &              ,virsp_m,ucnp_m,ucop_m,ucnsp_m,ucosp_m,fpx_m,fpy_m
-     &              ,fpz_m,stressd_m,worka,cpu_h
+     &              ,fpz_m,phi,stressd_m,worka,cpu_h
      &              ,ncpu_h,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah
      &              ,node,nprocs,ncube,P_dyn_update_shell)
 #if defined PARALLEL
@@ -2570,7 +2568,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
             CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &           ,ypcma,zpcma,mapnl,mapdn,nmapdn,ucns_l,ucos_l,virs_l
      &           ,virsp_l,ucnp_l,ucop_l,ucnsp_l,ucosp_l,fpx_l,fpy_l
-     &           ,fpz_l,stressd_l,worka,cpu_h
+     &           ,fpz_l,phi,stressd_l,worka,cpu_h
      &           ,ncpu_h,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah
      &           ,node,nprocs,ncube,P_dyn_update_shell)
 #if defined PARALLEL
@@ -2633,10 +2631,9 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
       IF(.NOT. polar) THEN
          CALL mts_forces(rshell,xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma
      &        ,zpcma,mapnl,mapdn,nmapdn,ucns_h,ucos_h,virs_h,virsp_h
-     &        ,ucnp_h,ucop_h,ucnsp_h,ucosp_h,fpx_h,fpy_h,fpz_h,stressd_h
-     &        ,worka,cpu_h,ncpu_h,nstart_h,nend_h
-     &        ,nstart_ah,nend_ah,nlocal_ah,node,nprocs,ncube
-     &        ,P_dyn_update_shell)
+     &        ,ucnp_h,ucop_h,ucnsp_h,ucosp_h,fpx_h,fpy_h,fpz_h,phi
+     &        ,stressd_h,worka,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah
+     &        ,nend_ah,nlocal_ah,node,nprocs,ncube,P_dyn_update_shell)
 #if defined PARALLEL
          IF(pme) THEN
             IF(rshk .NE. rshell) THEN

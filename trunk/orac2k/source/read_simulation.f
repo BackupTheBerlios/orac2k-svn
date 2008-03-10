@@ -2,7 +2,7 @@
      &     ,err_end)
 
 ************************************************************************
-*   Time-stamp: <2005-02-28 14:06:56 marchi>                             *
+*   Time-stamp: <2007-07-19 14:49:33 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,6 +21,7 @@
 *======================== DECLARATIONS ================================*
 
       USE Module_Stress
+      USE HEATING_Mod, ONLY: T_Initial
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -173,6 +174,11 @@ c==== Command  HEAT ==================================================
          IF(nword .EQ. 2) THEN
             CALL fndfmt(2,strngs(2),fmt)
             READ(strngs(2),fmt,err=20) fscale
+         ELSE IF(nword == 3) THEN
+            CALL fndfmt(2,strngs(2),fmt)
+            READ(strngs(2),fmt,err=20) fscale
+            CALL fndfmt(2,strngs(3),fmt)
+            READ(strngs(3),fmt,err=20) T_Initial
          ELSE
             errmsg=err_args(1)//'1'
             CALL xerror(errmsg,80,1,30)

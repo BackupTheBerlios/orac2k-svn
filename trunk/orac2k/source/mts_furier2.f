@@ -24,14 +24,8 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE REDUCE, ONLY: P_Reduce_Forces=>Reduce_Forces      
       IMPLICIT none
-      INTERFACE
-         SUBROUTINE P_Reduce_Forces(x,y,z,nstart,nend,nlocal,node,nprocs
-     &        )
-         REAL(8) :: x(*),y(*),z(*)
-         INTEGER, OPTIONAL :: nstart,nend,nlocal,node,nprocs
-         END SUBROUTINE P_Reduce_Forces
-      END INTERFACE
 
 *----------------------- ARGUMENTS -------------------------------------
 

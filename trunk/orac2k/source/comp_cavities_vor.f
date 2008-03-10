@@ -4,7 +4,7 @@
      &     ,errmsg)
 
 ************************************************************************
-*   Time-stamp: <99/06/08 11:29:04 marchi>                             *
+*   Time-stamp: <2006-04-11 11:57:25 marchi>                             *
 *                                                                      *
 *   Compute cavities in a system composed of solute and solvent.       *
 *   The differential cavity distribution -dp(R)/dR is binned           *
@@ -32,6 +32,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE VORONOI_Mod, ONLY: nnlpp_vor,pnnlpp_vor
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -46,7 +47,6 @@
 *----------------------- VARIABLES IN COMMON --------------------------*
 
       INCLUDE 'parst.h'
-      INCLUDE 'voronoi.h'
       INCLUDE 'analysis.h'
 
       LOGICAL ok(maxcav)

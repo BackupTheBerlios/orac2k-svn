@@ -241,7 +241,7 @@ c=======================================================================
 c=====Environment PROPERTIES ===========================================
       ELSE IF(strngs(1).EQ. '&PROPERTIES') THEN
          CALL read_properties(fxrms,favg,favg_xrms,fvi,gofr_fprint
-     &        ,fvoronoi,fcavities,ftop_print,gofr_favg,gofr_fcomp
+     &        ,fcavities,ftop_print,gofr_favg,gofr_fcomp
      &        ,fprtvaf,ftotvaf,fnovaf,fdipole,fnative,ffragm_dist
      &        ,fhbonds,fhhisto,frms,fgyr,freq_ef,freq_dp,fxslt
      &        ,finst_fit,fcalc_cofm,finst_lda,flda_flu,flda_hyd
@@ -268,7 +268,7 @@ c=====Unrecognized Environment==========================================
       WRITE(kprint,17)
       CALL verify_input(fmaxstp,fscale,fprint,fsave,fplot,fascii
      &     ,fprop,fplot_fragm,fplot_center,frject,fconf,fmaxrun,fupdte
-     &     ,fxrms,fvi,favg,favg_xrms,fvoronoi,fcavities,ftop_print
+     &     ,fxrms,fvi,favg,favg_xrms,fcavities,ftop_print
      &     ,gofr_fprint,gofr_favg,gofr_fcomp,sofk_fprint,sofk_fcomp
      &     ,fprtvaf,ftotvaf,fnovaf,fdipole,fnative,ffragm_dist,fhbonds
      &     ,fhhisto,frms,fgyr,fabmd,freq_ef,freq_dp,fxslt,finst_fit

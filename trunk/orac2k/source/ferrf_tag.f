@@ -1,9 +1,9 @@
       SUBROUTINE ferrf_tag(ss_index,alphal,charge,x0,y0,z0,list
-     &     ,nlist,sp,fscnstr_slt,fscnstr_slv,fpx,fpy,fpz,ma,tags
+     &     ,nlist,sp,fscnstr_slt,fscnstr_slv,fpx,fpy,fpz,phi,ma,tags
      &     ,erf_corr,erf_arr_corr,delew,rlew)
 
 ************************************************************************
-*   Time-stamp: <99/03/04 14:10:23 marchi>                             *
+*   Time-stamp: <2007-11-27 16:32:11 marchi>                             *
 *                                                                      *
 *                                                                      *
 *     Compute the Ewald correction from intramolecular interactions    *
@@ -29,7 +29,7 @@
 
       INTEGER nlist,ma,list(2,*),ss_index(*),tags(*),sp(*)
       REAL*8  charge(*),x0(*),y0(*),z0(*),fpx(ma,*),fpy(ma,*),fpz(ma,*)
-     &     ,fscnstr_slt,fscnstr_slv,erf_arr_corr(4,*),delew,rlew 
+     &     ,phi(*),fscnstr_slt,fscnstr_slv,erf_arr_corr(4,*),delew,rlew 
       REAL*8  alphal
       LOGICAL erf_corr
 
@@ -44,7 +44,7 @@
       REAL*8  furpar,qforce,alphar,twrtpi,gsrtal,xab,yab,zab,rsq,rsp
       REAL*8  a1,a2,a3,a4,a5,qp,qt,expcst,erfcst,erfst,fsrtal(2),h,c1,c2
      &     ,c3,c4,qq,corr,dcorr
-      REAL*8 fact,half,factor
+      REAL*8 fact,half,factor,furpar1,furpar2,corr1,corr2
       DATA half/0.5D0/
       DATA a1,a2,a3/0.2548296d0,-0.28449674d0,1.4214137d0/
       DATA a4,a5/-1.453152d0,1.0614054d0/
@@ -76,7 +76,10 @@
             
             type=ss_index(ia)
             furpar=charge(ia)*charge(ib)
+            furpar1=charge(ib)
+            furpar2=charge(ia)
             qq=furpar
+            
             xab=x0(ia)-x0(ib)
             yab=y0(ia)-y0(ib)
             zab=z0(ia)-z0(ib)
@@ -88,7 +91,11 @@
             c2=erf_arr_corr(2,ic) 
             c3=erf_arr_corr(3,ic) 
             c4=erf_arr_corr(4,ic) 
-            corr = qq*(c1+h*(c2+h*(c3+h*c4/3)/2))
+            corr = (c1+h*(c2+h*(c3+h*c4/3)/2))
+            corr1=charge(ib)*corr
+            corr2=charge(ia)*corr
+            corr=qq*corr
+
             dcorr = qq*(c2+h*(c3+h*c4/2) )/rsp
             alphar=alphal*rsp
             qt=1.0D0/(1.0e0+qp*alphar)
@@ -98,6 +105,8 @@
             erfst=1.0D0-erfcst
             qforce=-dcorr-furpar*(erfst-twrtpi*alphar*expcst)/(rsp*rsq)
             fsrtal(type)=fsrtal(type)-fact*(furpar*erfst/rsp-corr)
+            phi(ia)=phi(ia)-fact*(furpar1*erfst/rsp-corr1)
+            phi(ib)=phi(ib)-fact*(furpar2*erfst/rsp-corr2)
             fpx(ia,p1)=fpx(ia,p1)+qforce*xab
             fpy(ia,p1)=fpy(ia,p1)+qforce*yab
             fpz(ia,p1)=fpz(ia,p1)+qforce*zab
@@ -120,6 +129,9 @@
             
             type=ss_index(ia)
             furpar=charge(ia)*charge(ib)
+            furpar1=charge(ib)
+            furpar2=charge(ia)
+
             xab=x0(ia)-x0(ib)
             yab=y0(ia)-y0(ib)
             zab=z0(ia)-z0(ib)
@@ -133,6 +145,9 @@
             erfst=1.0D0-erfcst
             qforce=-furpar*(erfst-twrtpi*alphar*expcst)/(rsp*rsq)
             fsrtal(type)=fsrtal(type)-fact*furpar*erfst/rsp
+            phi(ia)=phi(ia)-fact*furpar1*erfst/rsp
+            phi(ib)=phi(ib)-fact*furpar2*erfst/rsp
+
             fpx(ia,p1)=fpx(ia,p1)+qforce*xab
             fpy(ia,p1)=fpy(ia,p1)+qforce*yab
             fpz(ia,p1)=fpz(ia,p1)+qforce*zab

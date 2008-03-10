@@ -2,7 +2,7 @@
      &     ,end_time,length_run,atom_record,length_tot,length_fft)
 
 ************************************************************************
-*   Time-stamp: <2007-08-09 18:03:09 abel>                             *
+*   Time-stamp: <2005-01-27 16:57:17 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -77,8 +77,7 @@
       ALLOCATE(wsave1(buffer_fft*4+15))
       ALLOCATE(w1(buffer_fft*2))
       ALLOCATE(w2(buffer_fft*2))
-      WRITE(*,*) ' Spline_x ',SIZE(spline_x)
-      
+
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
       RETURN

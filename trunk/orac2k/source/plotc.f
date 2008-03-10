@@ -54,8 +54,10 @@
 
       CALL rotb(a,b,c,alf,bett,gamm,co)
       WRITE(kout,2) fstep
-      WRITE(kout,4) a,b,c,alf,bett,gamm
-      IF(abmd) WRITE(kout,3) gr,gra
+# Les lignes suivantes sont commentees expres pour faire le film
+c      WRITE(kout,4) a,b,c,alf,bett,gamm
+      WRITE(kout,5) a,b,c,alf,bett,gamm
+c      IF(abmd) WRITE(kout,3) gr,gra
       sunitc=DSQRT(unitc)
       k=0
       DO i=1,ntap
@@ -73,13 +75,16 @@
          WRITE(kout,1)'ATOM  ',i,bet2(1:5),rsd,nres(i,1),xb,yb,zb
      &        ,charge(i)*sunitc,DFLOAT(k)
       END DO
-      WRITE(kout,'(a)')'TER  '
+      WRITE(kout,'(a)')'END  '
 1     FORMAT(a5,i6,1x,a5,a3,1x,i5,4x,3f8.3,2f6.2)
 2     FORMAT('COMMENT 1 Configuration at time step ',f11.2,'      ',
      &'                 ')
 3     FORMAT('COMMENT 2 ABMD varariables GR ',f12.4,' GRA ',f12.4)
 4     FORMAT('COMMENT 1 Cell parameters ',3f10.5/
      &       'COMMENT 1 Cell parameters ',3f10.5)
+5     FORMAT('CRYST1',3f9.3,3f7.2,' P  1          1')
+C 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+C CRYST1   58.397   58.397   42.091  90.00  90.00  90.00 P 43          4  1HRC  83
 
 *================= END OF EXECUTABLE STATEMENTS ========================
 

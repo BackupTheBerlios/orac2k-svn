@@ -4,7 +4,7 @@
      &     ,nfftdim3,Q,indk1,indk2,indj1,indj2,mk,mj)
 
 ************************************************************************
-*   Time-stamp: <2006-02-13 21:08:33 marchi>                             *
+*   Time-stamp: <2005-02-15 17:34:30 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -52,12 +52,10 @@
 
       energy=0.0D0
       DO n = 1,numatoms
-         mkk=mk(n)
-         phi(n)=0.0D0
-         IF(mkk == 0) CYCLE
          f1 = 0.d0
          f2 = 0.d0
          f3 = 0.d0
+         mkk=mk(n)
          mjj=mj(n)
          chg=charge(n)
          phid=0.0D0

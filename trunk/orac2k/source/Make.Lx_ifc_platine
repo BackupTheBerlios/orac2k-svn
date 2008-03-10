@@ -1,0 +1,41 @@
+########################################################################
+#                                                                      #
+#                    Cluster AMD Opteron "Platine "                    #
+#                                                                      #
+########################################################################
+
+TARGET0 = IFC
+TARGET1 = 'OPTERON'
+TARGET2 = None
+LIBRARIES = SYSTEM_LIB
+FFTS = _GPFFT_
+##FFTS = _PDFFT_
+
+ifeq ($(MODE), PARALLEL)
+FC = mpif90
+LD = mpif90
+F90 =mpif90
+CC = mpicc
+
+CFLAGS = -O3 -DPGI
+#FFTW_LIB = /home/marchi/fftw.B/lib
+OTHER_LIBS=/applications/intel/cmkl/9.0.018/lib/64
+FFTW_LIB = /usr/lib/fftw/FFTW_mpibull2-2.1.5
+LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_lapack \
+	-lmkl_ipf -lguide -lpthread 
+else
+
+FC = ifort
+LD = ifort
+F90 =ifort
+CC = icc
+CFLAGS = -O3 -DPGI
+
+#FFTW_LIB = /home/marchi/fftw.B/lib
+OTHER_LIBS=/applications/intel/cmkl/9.0.018/lib/64
+FFTW_LIB = /applications/fftw-mkl/lib/64
+LLFLAGS= -lfftw2xf_intel  -lmkl_lapack \
+	-lmkl_ipf -lguide -lpthread 
+endif
+
+

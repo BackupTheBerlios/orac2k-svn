@@ -56,6 +56,7 @@
       unitepot=unite/DSQRT(unitc)/hartree
       lbohr = 0.52917706d0
       unitefield=unitepot*lbohr
+
 *==================== END OF EXECUTABLE STATEMENTS =====================
 
       RETURN

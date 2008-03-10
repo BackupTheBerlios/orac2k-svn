@@ -2,7 +2,7 @@
      &           ,err_fnf)
 
 ************************************************************************
-*   Time-stamp: <2005-02-18 13:59:38 marchi>                             *
+*   Time-stamp: <2007-11-05 15:24:40 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -20,6 +20,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      USE PDB, ONLY: PDB_input=>Read_it
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -38,7 +39,7 @@
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
-      INTEGER nword,i,nco,nsevere,nwarning,j
+      INTEGER nword,i,nco,nsevere,nwarning,j,read_err
       CHARACTER*80 errmsg
       CHARACTER*80 line,strngs(40)
       CHARACTER*8 fmt
@@ -237,6 +238,14 @@ c==== Command  CRYSTAL=================================================
             errmsg= err_args(1)// '1' 
             CALL xerror(errmsg,80,1,30)
          END IF
+
+c==== Command  PDB ====================================================
+
+      ELSE IF(strngs(1).EQ. 'PDB' ) THEN
+         CALL PDB_input(knlist,kprint,nsevere,nword,strngs,iret
+     &        ,errmsg,read_err)
+         IF(read_err == 1) GOTO 20
+
 
 c==== Command  TEMPLATE================================================
 

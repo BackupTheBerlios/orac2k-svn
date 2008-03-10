@@ -1,6 +1,6 @@
       SUBROUTINE fnbgrp(ss_index,xp0,yp0,zp0,charge,type,ecc12,ecc6
-     &     ,ewald,alphal,ingrp,ingrpp,sp,fpx,fpy,fpz,uconf_slt,uconf_slv
-     &     ,ucoul_slt,ucoul_slv)
+     &     ,ewald,alphal,ingrp,ingrpp,sp,fpx,fpy,fpz,phi,uconf_slt
+     &     ,uconf_slv,ucoul_slt,ucoul_slv)
 
 ************************************************************************
 *                                                                      *
@@ -50,7 +50,7 @@
 
       INTEGER nato,ingrpp,type(*),ingrp(2,*),ss_index(*),sp(*)
       REAL*8  xp0(*),yp0(*),zp0(*),fpx(*),fpy(*),fpz(*),ecc6(*),ecc12(*)
-     &     ,alphal,charge(*),uconf_slt,ucoul_slt,uconf_slv
+     &     ,phi(*),alphal,charge(*),uconf_slt,ucoul_slt,uconf_slv
      &     ,ucoul_slv
       LOGICAL ewald
 
@@ -190,6 +190,10 @@
             furpar=chrgei*chrgej
             ucou=furpar*erfcst/rsp
             ucoul(typei)=ucoul(typei)+ucou*fact
+
+            phi(i1)=phi(i1)+fact*chrgej*erfcst/rsp
+            phi(i2)=phi(i2)+fact*chrgei*erfcst/rsp
+            
             qforce=qforce+furpar*(erfcst+twrtpi*alphar
      x           *expcst)*rspqi
             fpx(i1)=fpx(i1)+qforce*xa

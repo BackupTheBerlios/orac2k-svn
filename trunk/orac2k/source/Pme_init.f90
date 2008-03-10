@@ -1,8 +1,9 @@
-SUBROUTINE Pme_init(node_first,nprocs,nfft1,nfft2,nfft3,nfft3_start&
-     &,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
+SUBROUTINE Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt&
+     &,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start,nfft3_local&
+     &,nfft2_start,nfft2_local,iret,errmsg)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-09-14 16:20:51 marchi>                           *
+!!$   Time-stamp: <2007-11-21 09:48:56 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -20,22 +21,17 @@ SUBROUTINE Pme_init(node_first,nprocs,nfft1,nfft2,nfft3,nfft3_start&
 
 !!$======================== DECLARATIONS ================================*
 
-
   USE rfft3d
   IMPLICIT none
 
 !!$----------------------------- ARGUMENTS ------------------------------*
 
-  INTEGER ::  iret,nfft1,nfft2,nfft3,nfft3_start,nfft3_local&
-       &,nfft2_start,nfft2_local,node_first,nprocs
-
+  INTEGER ::  iret,node,nprocs,nodex,nodey,nodez,npy,npz,ictxt,nfft1,&
+       &nfft2,nfft3,nfft3_start,nfft3_local,descQ(*),nfft2_start,nfft2_local
+  REAL(8) :: fftable(*)
   CHARACTER(80) ::  errmsg
 
 !!$----------------------- VARIABLES IN COMMON --------------------------*
-
-#ifdef PARALLEL 
-  INCLUDE 'mpif.h'
-#endif
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
@@ -43,24 +39,16 @@ SUBROUTINE Pme_init(node_first,nprocs,nfft1,nfft2,nfft3,nfft3_start&
   REAL(8), DIMENSION (:,:,:), ALLOCATABLE :: dummy
     
   INTEGER :: i,k1,k2,k3
-
-  INTEGER :: ierr,node,comm1d
-  INTEGER :: dims(3),ndim
-  LOGICAL :: periods(3),reorder
+  INTEGER ::info,iceil,nax,nay,descQa(12),nfft1a,nfft2a,nfft3a&
+       &,npya,npza,ictxta,isys(4)
+  INTEGER, SAVE :: zero=0
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
 
-  
-  IF(node_first == 0) WRITE(*,100) 
-
-  
-#ifdef PARALLEL 
-  comm1d=MPI_COMM_WORLD
-#endif
-
+  IF(node ==0) WRITE(*,100)
   CALL do_rfft3d(0,dummy,nfft1,nfft2,nfft3,nfft3_start,nfft3_local&
-       &,nfft2_start,nfft2_local,k1,k2,k3,comm1d)
+       &,nfft2_start,nfft2_local,k1,k2,k3)
 
 100 FORMAT(/22x,'Finding optimal parameters for FFTWs.'/&
      &     22x,'     This will take a while...'/ /) 

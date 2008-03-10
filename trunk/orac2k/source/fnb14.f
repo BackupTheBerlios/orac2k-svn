@@ -1,6 +1,6 @@
       SUBROUTINE fnb14(ss_index,xp0,yp0,zp0,charge,nato,ecc12,ecc6
      &     ,cut,ewald,alphal,int14,int14p,type14,sp,fudge,lj_fudge,fpx
-     &     ,fpy,fpz,uconf_slt,uconf_slv,ucoul_slt,ucoul_slv)
+     &     ,fpy,fpz,phi,uconf_slt,uconf_slv,ucoul_slt,ucoul_slv)
 
 ************************************************************************
 *                                                                      *
@@ -59,7 +59,7 @@
 
       INTEGER nato,int14p,int14(2,*),type14(*),ss_index(*),sp(*)
       REAL*8  xp0(nato),yp0(nato),zp0(nato),fpx(nato),fpy(nato),
-     x        fpz(nato),ecc6(*),ecc12(*),alphal,charge(nato),
+     x     fpz(nato),phi(*),ecc6(*),ecc12(*),alphal,charge(nato),
      x        fudge,lj_fudge,ucoul_slt,ucoul_slv,uconf_slt,uconf_slv
       LOGICAL ewald,cut
 
@@ -194,6 +194,10 @@
             furpar=fudge*chrgei*chrgej
             ucou=furpar*erfcst/rsp
             ucoul(type)=ucoul(type)+ucou*fact
+
+            phi(i1)=phi(i1)+fact*fudge*chrgej*erfcst/rsp
+            phi(i2)=phi(i2)+fact*fudge*chrgei*erfcst/rsp
+
             qforce=qforce+furpar*(erfcst+twrtpi*alphar*expcst)*rspqi
             fpx(i1)=fpx(i1)+qforce*xa
             fpy(i1)=fpy(i1)+qforce*ya

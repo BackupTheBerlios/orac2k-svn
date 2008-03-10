@@ -15,6 +15,8 @@
 
 *======================= DECLARATIONS ==================================
 
+      USE VORONOI_Mod, ONLY: voronoi, nvoronoi,VOR_access=>access
+     &     ,VOR_volume=>volume,VOR_neighbor=>neighbor
       IMPLICIT none
       INCLUDE  'parst.h'
       INCLUDE  'cpropar.h'
@@ -59,9 +61,8 @@
       WRITE(kprint,11000) fstep
       WRITE(kprint,12000)
       IF(voronoi) THEN
-         IF(voronoi_volume)  WRITE(kprint,13000)
-         IF(voronoi_access)  WRITE(kprint,14000)
-         IF(voronoi_contact) WRITE(kprint,15000)
+         IF(VOR_volume)  WRITE(kprint,13000)
+         IF(VOR_access)  WRITE(kprint,14000)
          WRITE(kprint,16000)
          WRITE(kprint,17000) DFLOAT(nvoronoi)*fstep
       END IF
@@ -139,7 +140,6 @@
      &' computed:'/)
 13000 FORMAT('                          VORONOI Volumes     ')
 14000 FORMAT('                          VORONOI Areas       ')
-15000 FORMAT('                          VORONOI Contact Surfaces')
 16000 FORMAT('                          VORONOI Neighbors   ')
 17000 FORMAT('                               Freq.  ',f10.3,'  fs'//)
 18000 FORMAT('                          PAIR CORRELATIONS Solvent'/
