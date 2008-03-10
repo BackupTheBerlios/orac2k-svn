@@ -1,6 +1,6 @@
 MODULE HYDRATION_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2007-09-14 16:50:54 marchi>                           *
+!!$   Time-stamp: <2008-03-10 14:44:05 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -127,6 +127,7 @@ CONTAINS
     IF(time_of_call == 0) THEN
        fact=coeff*(1.0D0/(2.0D0**(1.0D0/6.0D0)))
        ALLOCATE(index_x(nbun))
+       NULLIFY(neigh_s)
     END IF
     CALL Neigh_Delete(neigh_s)
     CALL Neigh_Start(neigh_s,index_st(1))

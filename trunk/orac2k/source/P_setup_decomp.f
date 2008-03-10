@@ -61,6 +61,7 @@
       REAL*8  ucns_p,ucos_p,virs_p,virsp_p,ucnp_p,ucop_p,ucnsp_p,ucosp_p
      &     ,fpx_p,fpy_p,fpz_p,stressd_p(3,3),xpcma,ypcma,zpcma
       CHARACTER*80 errmsg
+      REAL(8), DIMENSION (:), POINTER ::  phi
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -85,6 +86,7 @@
 *=======================================================================
 
       iret=0
+      ALLOCATE(phi(ntap))
 #if !defined PARALLEL
 
       nstart_h=1
@@ -103,7 +105,7 @@
       P_shell='l'
       CALL mts_forces('z',xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma,zpcma
      &     ,mapnl,mapdn,nmapdn,ucns_p,ucos_p,virs_p,virsp_p,ucnp_p
-     &     ,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,stressd_p,worka
+     &     ,ucop_p,ucnsp_p,ucosp_p,fpx_p,fpy_p,fpz_p,phi,stressd_p,worka
      &     ,cpu_h,ncpu_h,nstart_h,nend_h,nstart_ah,nend_ah,nlocal_ah
      &     ,node,nprocs,ncube,P_shell)
       

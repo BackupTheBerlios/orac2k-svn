@@ -2,7 +2,7 @@
      &     ,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <04/11/11 16:30:00 marchi>                             *
+*   Time-stamp: <2007-11-28 11:42:35 marchi>                             *
 *                                                                      *
 *   Divide intramolecular interaction according to atom decomposition  *
 *   Each processor might do a little more work than necessary.         *
@@ -35,7 +35,7 @@
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
 
-      INTEGER i,i_iret
+      INTEGER i,i_iret,mma
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -61,6 +61,7 @@
 
       CALL P_omit_intra(node,nprocs,ncube,nbyte,lbnd_x,work2_h,iret)
 #endif      
+      
 *=======================================================================
 *---- Do angle bending -------------------------------------------------
 *=======================================================================
