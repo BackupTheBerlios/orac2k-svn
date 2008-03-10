@@ -1,7 +1,7 @@
 MODULE HEATING_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-04-03 12:06:46 marchi>                           *
+!!$   Time-stamp: <2007-07-19 14:48:05 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -16,9 +16,11 @@ MODULE HEATING_Mod
 
 !!$---- This subroutine is part of the program ORAC ----*
 
+  PRIVATE
+  PUBLIC :: Init,Set_Slt, Set_Slv,T_Initial,dtemp
   INTEGER, SAVE :: ndgree_Tot,ndgree_slv,ndgree_slt,ntap,nstart,nend&
        &,node
-  REAL(8), SAVE :: efact,T_slt,gascon=8.3143d0,t,dtemp
+  REAL(8), SAVE :: efact,T_slt,gascon=8.3143d0,t,dtemp,T_Initial=0.0D0
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: ss_index
 
 !!$======================== DECLARATIONS ================================*
