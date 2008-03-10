@@ -5,7 +5,7 @@
      &     ,lstrtch,lstretch,lbndg,lbend,atomp,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2008-03-10 14:45:15 marchi>                           *
+*   Time-stamp: <2008-03-10 16:17:05 marchi>                           *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -101,12 +101,7 @@
          IF(lb .GT. at_max) at_max=lb
          IF(lc .GT. at_max) at_max=lc
       END DO
-<<<<<<< P_atoms_split_intra.f
-
       IF(at_max .NE. 0 .AND. at_min .NE. 1e8) THEN
-=======
-      IF(at_max .NE. -1 .AND. at_min .NE. 1e8) THEN
->>>>>>> 1.4
          nato_c=(atomp(at_max)-atomp(at_min)+1)/nprocs
          DO i=0,nprocs-1
             nstart_d(i)=nato_c*i+1

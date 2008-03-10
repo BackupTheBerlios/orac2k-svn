@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2008-03-10 15:10:41 marchi>                           *
+*   Time-stamp: <2008-03-10 16:24:02 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -82,6 +82,7 @@
       USE GEOM_groups_Mod, ONLY: GE_Groups=>Geom_groups, GE_init
      &     =>Init, GE_compute=>Compute,GE_Write=>n_write,GE_output
      &     =>Write_it 
+      USE IOBUFFER_Mod
       USE HYDYNAMICS_Mod, ONLY: hydynamics,
      &     HYDD_n_neighbors=>n_neighbors,
      &     HYDD_Initialize_P=>Initialize_P,
@@ -116,7 +117,6 @@
       include 'fourier.h'
       include 'pme.h'
       INCLUDE 'lc_list.h'
-      INCLUDE 'iobuffer.h'
       INCLUDE 'analysis.h'
       INCLUDE 'unit.h'
       
@@ -202,15 +202,24 @@
      &     ,i_end,typei,nato1,nato2,jmax_cav,mqq,mma,ncpu_h,mmb
       INTEGER nat_listp,nat_cntactp,nat_list(2,nores),nat_cntact(nores)
 
-      COMMON /dynam/ w1,w2,mapdn,nmapdn,worka,nnlpp0
-     &     ,a_mask,d_mask,xpc,ypc,zpc,vxpc,vypc,vzpc,vxpd,vypd,vzpd,list
-     &     ,hlist,rlist,wsave1,spline_x,spline_y
+      COMMON /dynam/ mapdn,nmapdn,worka,nnlpp0,a_mask,d_mask,list,hlist
+     &     ,rlist
 
-      COMMON /rag2/ vacf_data,rms_disp,tot_rms_disp,xpb,ypb,zpb,xpcc
-     &     ,ypcc,zpcc,xpo,ypo,zpo,RotMat,xau,yau,zau,xpa,ypa,zpa,xpga
+      COMMON /rag2/ xpo,ypo,zpo,xau,yau,zau,xpa,ypa,zpa,xpga
      &     ,ypga,zpga,xpcma,ypcma,zpcma,wca,whe,wbc,errca,errhe,errbc
      &     ,erral,drpca,drpbc,drphe,drpal,xp_avg,yp_avg,zp_avg,xp_avg2
      &     ,yp_avg2,zp_avg2,tmass
+c$$$
+c$$$      COMMON /dynam/ w1,w2,mapdn,nmapdn,worka,nnlpp0
+c$$$     &     ,a_mask,d_mask,xpc,ypc,zpc,vxpc,vypc,vzpc,vxpd,vypd,vzpd,list
+c$$$     &     ,hlist,rlist,wsave1,spline_x,spline_y
+c$$$
+c$$$      COMMON /rag2/ vacf_data,rms_disp,tot_rms_disp,xpb,ypb,zpb,xpcc
+c$$$     &     ,ypcc,zpcc,xpo,ypo,zpo,RotMat,xau,yau,zau,xpa,ypa,zpa,xpga
+c$$$     &     ,ypga,zpga,xpcma,ypcma,zpcma,wca,whe,wbc,errca,errhe,errbc
+c$$$     &     ,erral,drpca,drpbc,drphe,drpal,xp_avg,yp_avg,zp_avg,xp_avg2
+c$$$     &     ,yp_avg2,zp_avg2,tmass
+
       INTEGER, ALLOCATABLE, SAVE :: protl_m(:)
       INTEGER, SAVE :: nprot_m
       REAL(8), DIMENSION (:), POINTER ::  phi
