@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2007-09-14 17:29:38 marchi>                             *
+*   Time-stamp: <2007-10-09 17:10:32 marchi>                             *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -859,7 +859,7 @@ c$$$            IF(beta(iatom)(1:2) .NE. 'o1') GOTO 12000
 *=======================================================================
 *----- Read trajectory file by row -------------------------------------
 *=======================================================================
-               
+
                IF(start_anl .NE. 0 .AND. dmprnd_i) THEN
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau,yau,zau,ntap
      &                 ,fstep,nstep,end,err,divide_records,atom_record)
@@ -1344,6 +1344,20 @@ c--------------------------
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau
      &                 ,yau,zau,ntap,fstep,nstep,end,err,divide_records
      &                 ,atom_record)
+
+                  IF(template) THEN
+                     CALL calc_RotMat(wca,xpt0,ypt0,zpt0,xp0,yp0,zp0
+     &                    ,Ixpcc,Iypcc,Izpcc,InstRotMat(1,1),xt_cm,yt_cm
+     &                    ,zt_cm,nato_slt)
+                     CALL RotCoordRow(ntap,xp0,yp0,zp0,Ixpcc,Iypcc,Izpcc
+     &                    ,xt_cm,yt_cm,zt_cm,InstRotMat)
+                     CALL CalcDistConf(xp0,yp0,zp0,xpt0,ypt0,zpt0,wca
+     &                    ,nato_slt,Dist)
+                     IF(node .EQ. 0) THEN
+                        WRITE(*,90200) DSQRT(Dist)
+                     END IF
+                  END IF
+
                ELSE IF(pdb_read .AND. start_anl .NE. 0) THEN
                   CALL rdcmac(kconf,kprint,nres(1,1),beta,xp0,yp0,zp0
      &                 ,ntap,.FALSE.,1,1,iret,errmsg)

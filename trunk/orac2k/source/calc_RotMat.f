@@ -2,7 +2,7 @@
      &     ,ypcc,zpcc,RotMat,xt_cm,yt_cm,zt_cm,nato_slt)
 
 ************************************************************************
-*   Time-stamp: <01/04/03 14:48:14 marchi>                             *
+*   Time-stamp: <2007-10-09 17:02:14 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -109,14 +109,14 @@ c$$$         zd=d(3,1)*xpp+d(3,2)*ypp+d(3,3)*zpp
 c$$$         xd=xd+xt_cm
 c$$$         yd=yd+yt_cm
 c$$$         zd=zd+zt_cm
-c$$$         IF(i .LT. 2) THEN
+c$$$         IF(i .LT. m+1) THEN
 c$$$            WRITE(76,'(i8,3f12.5)') i,xd,yd,zd
 c$$$            WRITE(76,'(i8,3f12.5)') i,xyzfit(1,i),xyzfit(2,i),xyzfit(3,i
 c$$$     &           )
 c$$$            WRITE(76,'(i8,3f12.5)') i,xyz0(1,i),xyz0(2,i),xyz0(3,i)
 c$$$         END IF
 c$$$      END DO
-
+c$$$      STOP
 *----------------- END OF EXECUTABLE STATEMENTS -----------------------*
          
       RETURN

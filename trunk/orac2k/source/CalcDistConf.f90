@@ -1,7 +1,7 @@
 SUBROUTINE CalcDistConf(x1,y1,z1,x2,y2,z2,w,nato,Dist)
 
 !!$***********************************************************************
-!!$   Time-stamp: <01/04/14 11:19:01 marchi>                           *
+!!$   Time-stamp: <2007-10-09 17:10:56 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -30,6 +30,8 @@ SUBROUTINE CalcDistConf(x1,y1,z1,x2,y2,z2,w,nato,Dist)
 
   REAL(8), DIMENSION (:), POINTER :: X,Y,Z
   REAL(8) :: NofW
+  INTEGER :: i
+  REAL(8) :: x0,y0,z0
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -39,7 +41,6 @@ SUBROUTINE CalcDistConf(x1,y1,z1,x2,y2,z2,w,nato,Dist)
   Y=y1(1:nato)-y2(1:nato)
   Z=z1(1:nato)-z2(1:nato)
   Dist=NofW*SUM((X*X+Y*Y+Z*Z)*w(1:nato))
-  
   DEALLOCATE(X,Y,Z)
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

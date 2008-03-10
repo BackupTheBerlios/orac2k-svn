@@ -4,7 +4,7 @@
      &     ,iret,errmsg,node,nprocs,ncube,ibyte)
 
 ************************************************************************
-*   Time-stamp: <2007-08-08 15:47:19 abel>                             *
+*   Time-stamp: <2007-10-02 13:56:10 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -60,9 +60,9 @@
 #ifdef OSF1
       recl1=recla/4
 #endif      
-#ifdef IFC
-      recl1=recla/4
-#endif      
+c$$$#ifdef IFC
+c$$$      recl1=recla/4
+c$$$#endif      
 
       WRITE(kprint,10000) 
 
@@ -217,9 +217,9 @@
 #ifdef OSF1
       recl2=reclb/4
 #endif
-#ifdef IFC
-      recl2=reclb/4
-#endif
+c$$$#ifdef IFC
+c$$$      recl2=reclb/4
+c$$$#endif
 
       IF(nsevere .GT. 0) THEN
          call int_str(nsevere,fmt,j)
