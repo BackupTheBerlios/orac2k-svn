@@ -1,6 +1,6 @@
 MODULE HYDYNAMICS_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2007-09-17 14:45:58 marchi>                           *
+!!$   Time-stamp: <2008-03-10 18:25:38 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -241,7 +241,7 @@ CONTAINS
       IMPLICIT NONE 
       INTEGER ::  iret,indxyz
       INTEGER ::  nx,ny,nz
-      INTEGER ::  i,j,k,l,m,n,nv,nvtot,numcell
+      INTEGER ::  i,j,k,l,m,n,nv,nvtot,numcell,p_nn
       INTEGER ::  iv,jv,kv,nmin
       INTEGER ::  nppp,map,count,nn,na
 
@@ -354,8 +354,10 @@ CONTAINS
       IF(nprocs .GT. 1) CALL P_merge_i(nvtot)
 #endif
 
+      p_nn=0
       DEALLOCATE(headp)
       DEALLOCATE(chainp,cellpi,cellpj,cellpk,ind_a)
+
     END SUBROUTINE Get_Neigh
   END SUBROUTINE Compute_Neighbors
   REAL(8) FUNCTION PBC(x)
@@ -372,7 +374,7 @@ CONTAINS
     
 !!$----------------------------- VARIABLES ------------------------------*
 
-    INTEGER :: ii,n,m,i1,i2,i
+    INTEGER :: ii,n,m,i1,i2,i,ii1
     REAL(8) :: cm(3),dip(3),totmass
 
     TYPE Dyna
@@ -409,7 +411,8 @@ CONTAINS
     
     IF(node == 0) THEN
        m=index_sv(1)
-       DO i1=1,m
+       DO ii1=1,m
+          i1=index_sv(1+ii1)
           dip=0.0D0
           cm=0.0D0
           totmass=0.0D0
@@ -428,21 +431,18 @@ CONTAINS
           cm=cm/TotMass
           dip=dip*unitc
 
-          Coord(i1) % x = cm(1)
-          Coord(i1) % y = cm(2)
-          Coord(i1) % z = cm(3)
-          Coord(i1) % dip_x = dip(1)
-          Coord(i1) % dip_y = dip(2)
-          Coord(i1) % dip_z = dip(3)
+          Coord(ii1) % x = cm(1)
+          Coord(ii1) % y = cm(2)
+          Coord(ii1) % z = cm(3)
+          Coord(ii1) % dip_x = dip(1)
+          Coord(ii1) % dip_y = dip(2)
+          Coord(ii1) % dip_z = dip(3)
        END DO
        WRITE(khydynamics) fstep
        WRITE(khydynamics) (Coord(i) % x, Coord(i) % y, Coord(i) % z,&
             & Coord(i) % dip_x, Coord(i) % dip_y, Coord(i) % dip_z,&
             & i=1,m)
 
-!!$       WRITE(*,*) (Coord(i) % x, Coord(i) % y, Coord(i) % z,&
-!!$            & Coord(i) % dip_x, Coord(i) % dip_y, Coord(i) % dip_z,&
-!!$            & i=1,m)
     END IF
 
     CALL Exchange
@@ -459,7 +459,6 @@ CONTAINS
        END DO
        WRITE(khydynamics) (mask(n),n=1,index_sv(1))
     END IF
-
   CONTAINS
     SUBROUTINE Exchange
       IMPLICIT NONE 

@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2008-03-10 16:24:02 marchi>                           *
+*   Time-stamp: <2008-03-10 16:58:43 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -1488,6 +1488,17 @@ c--------------------------
                         CALL HYD_Write_it(fstep)
                      END IF
                   END IF
+                  IF(hydynamics) THEN
+                     IF(MOD(nstep,HYDD_n_neighbors) == 0) THEN
+                        CALL HYDD_Compute_Neighbors(xpga,ypga,zpga,co)
+                     END IF
+                     CALL HYDD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
+                     IF(MOD(nstep,HYDD_n_write) == 0) THEN
+                        aux=elechg*unitl/3.336D-30
+                        CALL HYDD_Write_it(xp0,yp0,zp0,fstep,aux)
+                     END IF
+                  END IF
+
                   IF(Electric) THEN
                      
                      IF(nnstep == 1) THEN

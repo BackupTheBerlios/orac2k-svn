@@ -721,7 +721,7 @@ accdif.o: parst.h pbc.h
 add_solvent_tpg.o: parst.h cpropar.h
 adjust_solvent.o: parst.h
 adjust_bonds.o: parst.h
-analyse_voronoi.CPP.o:analyse_voronoi.CPP.f
+analyse_voronoi.CPP.o:analyse_voronoi.CPP.f VORONOI_Mod.CPP.o
 analyse_voronoi.CPP.o:parst.h voronoi.h
 bcnstp.o: pbc.h
 bldbox.CPP.o:bldbox.CPP.f cpropar.h parst.h
@@ -755,7 +755,7 @@ comp_abmd_fnative.CPP.o: comp_abmd_fnative.CPP.f parst.h
 comp_contacts.o: pbc.h
 comp_native.o: pbc.h
 comp_neigh_vor.o: parst.h pbc.h voronoi.h
-comp_cavities_vor.o: parst.h voronoi.h pbc.h analysis.h
+comp_cavities_vor.o: parst.h voronoi.h pbc.h analysis.h VORONOI_Mod.CPP.o
 comp_dip.o: pbc.h
 comp_dynamic_mat.o: parst.h cpropar.h unit.h
 comp_total_energy.CPP.o: parst.h cpropar.h unit.h
@@ -920,8 +920,8 @@ read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
-DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o PDB.o PBC_Mod.o
-POLAR_Mod.o: POLAR__Read.f90 INPUT_Mod.o PDB_utils.o 
+DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o PDB.o PBC_Mod.o unit.h
+POLAR_Mod.o: POLAR__Read.f90 INPUT_Mod.o PDB_utils.o parst.h cpropar.h
 WSC_Mod.o: WSC__Read.f90 INPUT_Mod.o PBC_Mod.o
 RMS_Subtract_Mod.o: RMS_Subtract_Read.f90 INPUT_Mod.o xerror_mod.o 
 read_parameters.o: parst.h parameters.h 
