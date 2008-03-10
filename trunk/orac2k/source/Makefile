@@ -19,10 +19,10 @@ LIBRARIES = NONE
 #==========================================================================
 
 .f.o :
-	$(FC) $(FFLAGS) -D$(TARGET0) -c $<
+	$(FC) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -c $<
 .SUFFIXES: .o .f90
 .f90.o :
-	$(F90) $(FFLAGS) -D$(TARGET0) -c $<
+	$(F90) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -c $<
 
 #==========================================================================
 # Define include files
@@ -50,13 +50,17 @@ INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
 #==========================================================================
 
 OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
-	EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o \
-	Neighbors_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
-	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o\
+	EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o PDB_utils.o PDB.o\
+	Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
+	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o POLAR_Mod.o \
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
 	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
 	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
+<<<<<<< Makefile
+	GEOM_groups_Mod.o WSC_Mod.o HEATING_Mod.o \
+=======
 	GEOM_groups_Mod.o PBC_Mod.o IOBUFFER_Mod.o\
+>>>>>>> 1.25
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
@@ -92,7 +96,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	correc3x3.o correc_gmgp.o correc_matr.o correc_exp_scale.o\
 	correc_scale.o correc_scale_2.o correc_scale_co.o cov_thermos.o\
 	covbd.o covchg.o covfod.o covnb.o covpr.o covuen.o crdrtf.o cself.o\
-	cself_dipole.o \
+	cself_dipole.o cself_phi.o \
 	csort.o dcopy3.o delrfg.o dist_ijk.o dlineq.o\
 	DCopy_V3.o \
 	dspat.o dumptp.o duni.o dupl_char1.o dupl_concta.o\
@@ -167,7 +171,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o\
 	P_expand_r8.o P_expand_r8x3.o P_expand_i.o\
 	P_fold_r8.o P_fold_r8x3.o P_fold_i.o P_get_errmsg.o \
-	P_Reduce_Forces.o P_get_gofr.o \
+	P_get_gofr.o \
 	P_load_balance.o P_merge_i.o P_merge_r8.o\
 	P_merge_vecr8.o P_merge_veci.o P_split_scalar0.o P_split_scalar.o\
 	P_get_iret.o P_adjust_decomp.o P_Buffer_attach.o \
@@ -216,8 +220,8 @@ PRECOMP_PP = P_whoami.f P_open_input.f P_nwrite.f P_nread.f\
 	P_pme_assign_node.f 
 
 PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
-	Pme_init.f90 HYDRATION_Mod.f90 HYDYNAMICS_Mod.f90
-
+	HYDRATION_Mod.f90 FIELD_Mod.f90 ORAC_Finalize.f90 VORONOI_Mod.f90\
+	REDUCE_Mod.f90 Pme_init.f90 HYDYNAMICS_Mod.f90
 
 PRECOMP_F90 = $(PRE_F90) 
 
@@ -437,14 +441,14 @@ mpi_size.h: mpi_size.inc
 #==========================================================================
 
 %.CPP.f: %.f
-	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
+	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(TARGET2) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
 	file=$@; \
 	test -f $$file && ( cmp -s $$file temp || \
 	cp temp $$file) || cp temp $$file ;\
 	rm -f temp temp2 >/dev/null
 
 %.CPP.f90: %.f90
-	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
+	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(TARGET2) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
 	file=$@; \
 	test -f $$file && ( cmp -s $$file temp || \
 	cp temp $$file) || cp temp $$file ;\
@@ -480,11 +484,11 @@ PGI :
 	${MAKE} orac_PGI
 
 IFC :
-	${MAKE} obj_IFC "FFLAGS = -w95 -O2 " 
-	${MAKE} prepro_IFC "FFLAGS = -w95 -O3" 
+	${MAKE} obj_IFC "FFLAGS = -O3" 
+	${MAKE} prepro_IFC "FFLAGS = -O3 " 
 	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -O0 "
-	${MAKE} eigr_IFC "FFLAGS = -w95 -O1 "
-	${MAKE} recur_IFC "FFLAGS = -w95  "
+	${MAKE} eigr_IFC "FFLAGS =  "
+	${MAKE} recur_IFC "FFLAGS =  "
 	${MAKE} orac_IFC 
 
 IFC_DBG :
@@ -725,7 +729,7 @@ analyse_voronoi.CPP.o:parst.h voronoi.h
 bcnstp.o: pbc.h
 bldbox.CPP.o:bldbox.CPP.f cpropar.h parst.h
 setup_box.CPP.o: setup_box.CPP.f cpropar.h parst.h unit.h
-blkdta.o: unit.h cpropar.h parst.h
+blkdta.o: unit.h cpropar.h parst.h parallel.h
 brot.o: unit.h
 CalcXrmsSecStruct.o: parst.h
 calc_xrms.o: parst.h
@@ -777,13 +781,14 @@ covuen.o: unit.h
 cpfld.o: unit.h pbc.h
 crdrtf.o: parst.h cpropar.h unit.h
 cself.o: unit.h
+cself_phi.o: unit.h
 cself_dipole.o: unit.h
 delrfg.o: parst.h
 drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
 	parst.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
 	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
-	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o IOBUFFER_Mod.o\
-	HYDYNAMICS_Mod.CPP.o
+	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o WSC_Mod.o FIELD_Mod.CPP.o\
+	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o
 dspat.o: parst.h pbc.h
 dumptp.o: cpropar.h parst.h
 erf_corr_cutoff.o: unit.h
@@ -843,7 +848,9 @@ mts_plots.o: unit.h
 mts_spectra.o: mts_spectra.h
 mtsmd.CPP.o: mtsmd.CPP.f cpropar.h unit.h fourier.h \
 	parst.h pme.h lc_list.h parallel.h mtsmd_avg_inc.CPP.f\
-	mtsmd_dump_inc.CPP.f Module_Extra_Forces.o
+	mtsmd_dump_inc.CPP.f Module_Extra_Forces.o HEATING_Mod.o\
+	Module_Fourier.o Class_Gauss_Param.o Class_Gcharges.o\
+	Poisson_Boltzmann.o Module_Stress.o REDUCE_Mod.CPP.o
 orac.CPP.o: orac.CPP.f parst.h cpropar.h orac.h unit.h parallel.h
 open_file_dump.CPP.o: open_file_dump.CPP.f unit.h
 
@@ -911,12 +918,15 @@ read_integrator.o: parst.h cpropar.h unit.h
 read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
 	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o GROUPS_Mod.o\
-	GEOM_groups_Mod.o HYDYNAMICS_Mod.CPP.o
+	GEOM_groups_Mod.o VORONOI_Mod.CPP.o WSC_Mod.o FIELD_Mod.CPP.o\
+	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o
 read_solvent.o: parst.h cpropar.h unit.h
 read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
-DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o
-RMS_Subtract_Mod.o: RMS_Subtract_Read.f90
+DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o PDB.o PBC_Mod.o
+POLAR_Mod.o: POLAR__Read.f90 INPUT_Mod.o PDB_utils.o 
+WSC_Mod.o: WSC__Read.f90 INPUT_Mod.o PBC_Mod.o
+RMS_Subtract_Mod.o: RMS_Subtract_Read.f90 INPUT_Mod.o xerror_mod.o 
 read_parameters.o: parst.h parameters.h 
 read_parallel.CPP.o: parst.h cpropar.h unit.h
 rigfit.o: parst.h
@@ -1017,3 +1027,9 @@ GROUPS_Mod.o: INPUT_Mod.o xerror_mod.o GROUPS_Readit.f90
 INPUT_Mod.o: xerror_mod.o
 GEOM_groups_Mod.o: GROUPS_Mod.o INPUT_Mod.o xerror_mod.o\
 	PBC_Mod.o GEOM_groups_Readit.f90 
+PDB.o: PDB_utils.o PDB__Read.f90 INPUT_Mod.o 
+FIELD_Mod.CPP.o: FIELD_Mod.CPP.f90 FIELD__Read.f90 cpropar.h PDB_utils.o\
+	INPUT_Mod.o PDB.o PBC_Mod.o parst.h unit.h parallel.h pme.h\
+	REDUCE_Mod.CPP.o DENSITY_Mod.o
+
+REDUCE_Mod.CPP.o: REDUCE_Mod.CPP.f90 PDB_utils.o
