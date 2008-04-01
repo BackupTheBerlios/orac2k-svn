@@ -1,7 +1,7 @@
       SUBROUTINE read_analysis(err_args,err_unr,err_end,err_open)
 
 ************************************************************************
-*   Time-stamp: <2005-10-16 17:48:36 marchi>                             *
+*   Time-stamp: <2008-03-19 14:11:27 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -20,6 +20,8 @@
 *======================== DECLARATIONS ================================*
       
       USE CENTER_SOL_Mod, ONLY: CEN_Center=>Center_Object,CEN_target
+     &     =>Target
+      USE RIGID_Mod, ONLY: RIG_Object=>Rigid_Object,RIG_target
      &     =>Target
       IMPLICIT none
 
@@ -150,6 +152,16 @@ c==== Command CENTER =================================================
                CEN_Target=strngs(2)(1:7)
             ELSE
                CEN_Target='   '
+            END IF
+
+c==== Command RIGID ===================================================
+
+         ELSE IF(strngs(1).EQ. 'RIGID') THEN
+            RIG_Object=.TRUE.
+            IF(nword == 2) THEN
+               RIG_Target=strngs(2)(1:7)
+            ELSE
+               RIG_Target='   '
             END IF
 
 c==== Command CONTINUE ================================================

@@ -1,7 +1,7 @@
 MODULE FIELD_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-12-10 13:47:42 marchi>                           *
+!!$   Time-stamp: <2008-03-14 12:01:39 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -223,7 +223,9 @@ CONTAINS
 
       CALL cself_phi(1,ntap,alphal,chrge,volume,phi)
       phi=(phi+phid)*efact/1000.0D0/DSQRT(unitc)
+#if defined PARALLEL
       CALL P_Barrier
+#endif
     END SUBROUTINE Direct
     SUBROUTINE Update
       IMPLICIT NONE 

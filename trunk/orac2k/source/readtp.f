@@ -232,11 +232,11 @@
      &           (phyd1(i),i=1,lphyd),
      &           (phyd2(i),i=1,lphyd)
          END IF
-            IF(iz .EQ. 1) THEN
-             READ(kdump) 
-     &                 (ecc6(i),i=1,lpnbd*(lpnbd+1)/2),
-     &                 (ecc12(i),i=1,lpnbd*(lpnbd+1)/2)
-          END IF
+         IF(iz .EQ. 1) THEN
+            READ(kdump) 
+     &           (ecc6(i),i=1,lpnbd*(lpnbd+1)/2),
+     &           (ecc12(i),i=1,lpnbd*(lpnbd+1)/2)
+         END IF
       END IF
 
       IF(nbun .GT. nores) THEN

@@ -38,6 +38,7 @@
      &     ,eul_angles,EUL_index_l=>index_l, EUL_add=>Add, EUL_kdump
      &     =>kdump
       USE FIELD_Mod, ONLY: ELE_Input=>Read_it
+      USE PDB_FRAGM_Mod, ONLY: PDB_FRAGM_Input=>Read_it
       USE DENSITY_Mod, ONLY: DEN_input=>Read_it
       USE PDBs_Mod, ONLY: PDB_input=>Read_it
       USE RMS_Subtract_Mod, ONLY: SUB_input=>Read_it
@@ -1262,6 +1263,14 @@ c==== Command  SigmaIon================================================
 
             END IF
             GOTO 2300
+
+c==== END Command PDB_FRAGM ===========================================
+
+         ELSE IF(strngs(1).EQ. 'PDB_FRAGM' ) THEN
+            not_time_corr=.TRUE.
+            CALL PDB_FRAGM_input(knlist,kprint,nsevere,nword,strngs,iret
+     &           ,errmsg,read_err)
+            IF(read_err == 1) GOTO 20
 
 c==== END Command ELECTRIC_FIELD ======================================
 

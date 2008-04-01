@@ -1,6 +1,6 @@
 MODULE HYDYNAMICS_Mod
 !!$***********************************************************************
-!!$   Time-stamp: <2008-03-10 18:25:38 marchi>                           *
+!!$   Time-stamp: <2008-03-31 18:31:30 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -15,7 +15,9 @@ MODULE HYDYNAMICS_Mod
 
   USE Module_Neighbors, ONLY: Neigh_Start=>Start, Neigh_Delete&
        &=>Delete, neigha, Neighbors
+  USE RIGID_Mod, ONLY: RIG_Object=>Rigid_Object, RIG_Compute=>Compute
   USE xerror_mod
+  USE PDB_FRAGM_Mod, ONLY: FRAGM_, FRAGM__, FRAGM_npdb=>npdb
   PRIVATE
   PUBLIC :: khydynamics, coeff, cutoff_max, HyDynamics, Initialize,&
        & Initialize_Array, Initialize_P, Compute, Write_It,&
@@ -30,7 +32,7 @@ MODULE HYDYNAMICS_Mod
   TYPE(Neighbors), DIMENSION (:), POINTER, SAVE :: neigh_s
   TYPE(Neighbors), DIMENSION (:), POINTER, SAVE :: neigh_sm
   INTEGER, DIMENSION (:), ALLOCATABLE, SAVE :: index_st,index_sv
-  INTEGER, SAVE :: indxyz,nind
+  INTEGER, SAVE :: indxyz,nind,ntap
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::  indxi,indxj,indxk
   INTEGER, DIMENSION (:,:), ALLOCATABLE, SAVE :: mres,grppt
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE ::  resg
@@ -111,6 +113,7 @@ CONTAINS
     mres(:,1:nbun)=mres_a(:,1:nbun)
     charge(1:ntap_a)=charge_a(1:ntap_a)
     mass(1:ntap_a)=mass_a(1:ntap_a)
+    ntap=ntap_a
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
     
@@ -245,7 +248,7 @@ CONTAINS
       INTEGER ::  iv,jv,kv,nmin
       INTEGER ::  nppp,map,count,nn,na
 
-      REAL(8) :: dx,dy,dz,co(3,3),rcut
+      REAL(8) :: dx,dy,dz,rcut
       REAL(8) :: x1,y1,z1,x2,y2,z2,xx,yy,zz 
       REAL(8) :: sqcut,d
 
@@ -263,8 +266,6 @@ CONTAINS
       dx=2.d0/ncx
       dy=2.d0/ncy
       dz=2.d0/ncz
-
-
       DO n=1,ncx*ncy*ncz
          headp(n)=0
       END DO
@@ -353,7 +354,6 @@ CONTAINS
 #if defined PARALLEL
       IF(nprocs .GT. 1) CALL P_merge_i(nvtot)
 #endif
-
       p_nn=0
       DEALLOCATE(headp)
       DEALLOCATE(chainp,cellpi,cellpj,cellpk,ind_a)
@@ -387,7 +387,9 @@ CONTAINS
     INTEGER, DIMENSION(:), ALLOCATABLE, SAVE :: index1
     LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE :: Mask
 
-    INTEGER, SAVE :: first_time=1,counter=0
+    INTEGER, DIMENSION(:), POINTER :: Layer
+    INTEGER :: n_Layer
+    INTEGER, SAVE :: first_time=1,counter=0,counter_fragm=0
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -427,7 +429,6 @@ CONTAINS
                 totmass=totmass+mass(i)
              END DO
           END DO
-
           cm=cm/TotMass
           dip=dip*unitc
 
@@ -438,11 +439,6 @@ CONTAINS
           Coord(ii1) % dip_y = dip(2)
           Coord(ii1) % dip_z = dip(3)
        END DO
-       WRITE(khydynamics) fstep
-       WRITE(khydynamics) (Coord(i) % x, Coord(i) % y, Coord(i) % z,&
-            & Coord(i) % dip_x, Coord(i) % dip_y, Coord(i) % dip_z,&
-            & i=1,m)
-
     END IF
 
     CALL Exchange
@@ -457,7 +453,29 @@ CONTAINS
              END DO
           END IF
        END DO
-       WRITE(khydynamics) (mask(n),n=1,index_sv(1))
+       n_layer=COUNT(mask)
+       ALLOCATE(Layer(n_Layer))
+       n=0
+       DO m=1,index_sv(1)
+          IF(mask(m)) THEN
+             n=n+1
+             Layer(n)=m
+          END IF
+       END DO
+       WRITE(khydynamics) fstep,n_layer
+       WRITE(khydynamics) (Layer(i),i=1,n_Layer)
+       WRITE(khydynamics) (REAL(Coord(Layer(i)) % x),&
+            & REAL(Coord(Layer(i)) % y),REAL(Coord(Layer(i)) % z)&
+            &,REAL(Coord(Layer(i)) % dip_x),REAL(Coord(Layer(i)) %&
+            & dip_y), REAL(Coord(Layer(i)) % dip_z),i=1,n_Layer) 
+
+       IF(FRAGM__) THEN
+          counter_fragm=counter_fragm+1
+          IF(MOD(counter_fragm-1,FRAGM_npdb) == 0) THEN
+             CALL FRAGM_(fstep,index_sv,Layer,mres,grppt,xp0,yp0,zp0)
+          END IF
+       END IF
+
     END IF
   CONTAINS
     SUBROUTINE Exchange

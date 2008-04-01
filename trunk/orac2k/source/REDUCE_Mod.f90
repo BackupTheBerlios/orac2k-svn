@@ -20,6 +20,7 @@ CONTAINS
     nend=nend_a
     nlocal=nlocal_a
     
+#ifdef PARALLEL    
     ALLOCATE(starts(nprocs),ends(nprocs),locals(nprocs))
     CALL MPI_ALLGATHER(nstart,1,MPI_INTEGER4,starts,1,MPI_INTEGER4&
          &,MPI_COMM_WORLD,ierr)
@@ -33,6 +34,7 @@ CONTAINS
     END DO
     ntot=n*3
     ALLOCATE(fp(ntot),fp_out(ntot))
+#endif
   END SUBROUTINE Init
   SUBROUTINE Reduce_Forces(x,y,z,nstart_a,nend_a,nlocal_a,node_a,nprocs_a)
 
@@ -78,7 +80,11 @@ CONTAINS
 !!$------------------------------------------------------------------------
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
-    
+
+#ifndef PARALLEL
+    RETURN
+#endif     
+#ifdef PARALLEL
     IF(PRESENT(nstart_a)) THEN
        CALL Init(nstart_a,nend_a,nlocal_a,node_a,nprocs_a)
        RETURN
@@ -113,6 +119,7 @@ CONTAINS
           END DO
        END IF
     END DO
+#endif
     
     
 !!$*----------------- END OF EXECUTABLE STATEMENTS -----------------------*
@@ -120,13 +127,16 @@ CONTAINS
   END SUBROUTINE Reduce_Forces
   SUBROUTINE Reduce_Phi(x)
     REAL(8) :: x(*)
+#ifdef PARALLEL
     include 'mpif.h'
     include 'mpi_size.h'
+#endif
     INTEGER :: ierr
     
     INTEGER :: n,ntot,i,k,ii,fp_length
 
 
+#ifdef PARALLEL
     IF(No_of_Calls < 1) THEN
        errmsg_f='Need Initialisation to reduce vector.'
        CALL Add_Errors(-1,errmsg_f)
@@ -153,5 +163,6 @@ CONTAINS
        END IF
     END DO
     
+#endif
   END SUBROUTINE Reduce_Phi
 END MODULE REDUCE

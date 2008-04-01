@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2008-03-10 16:58:43 marchi>                           *
+*   Time-stamp: <2008-03-31 18:12:52 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -71,6 +71,9 @@
       USE POLAR_Mod, ONLY: POL_Init=>Init, Polar__,Polar_
       USE CENTER_SOL_Mod, ONLY: CEN_Center=>Center_Object, CEN_Compute
      &     =>Compute,CEN_Initialize=>Initialize
+      USE RIGID_Mod, ONLY: RIG_Object=>Rigid_Object, RIG_Compute
+     &     =>Compute,RIG_Initialize=>Initialize,RIG_Initialize_xp
+     &     =>Initialize_xp
       USE PDBs_Mod, ONLY: PDB_pdbs=>PDBs, PDB_Initialize=>Initialize
      &     ,PDB_compute=>Compute,PDB_write=>Write_it,PDB_nwrite=>n_write
      &     ,PDB_ncompute=>n_compute
@@ -97,6 +100,7 @@
       USE FIELD_Mod, ONLY: ELE_write=>n_write,Electric
      &     ,ELE_Init=>Init,ELE_compute=>Compute
 
+      USE PDB_FRAGM_Mod, ONLY: PDB_FRAGM_Init=>Initialize, FRAGM__
       IMPLICIT none
       
       include 'parst.h'
@@ -276,7 +280,6 @@ c$$$====================================================================
          CALL HYD_Initialize_Array(grppt,mres,resg)
       END IF
       IF(hydynamics) THEN
-
          CALL HYDD_Initialize_P(node,nprocs,ngrp,nbun)
          CALL HYDD_Initialize_Array(grppt,mres,resg,chrge,mass,ntap)
       END IF
@@ -296,11 +299,17 @@ c$$$====================================================================
       IF(CEN_Center) THEN
          CALL CEN_Initialize(prsymb,beta,nres(1,2),ss_index,ntap)
       END IF
+      IF(RIG_Object) THEN
+         CALL RIG_Initialize(prsymb,beta,nres(1,2),ss_index,ntap)
+      END IF
       IF(PDB_pdbs) THEN
          CALL PDB_Initialize(chrge,prsymb,beta,nres(1,1),nres(1,2),ntap)
       END IF
       IF(PDB_) THEN
          CALL PDBB_Init
+      END IF
+      IF(FRAGM__) THEN
+         CALL PDB_FRAGM_Init(beta,prsymb,nres(1,2),ntap)
       END IF
 
 *===  Check if the dimension of the work array are sufficient 
@@ -1036,8 +1045,7 @@ c$$$====================================================================
                   END IF
 
                   IF(CEN_Center) THEN
-                     CALL CEN_Compute(xp0,yp0,zp0,xpa,ypa,zpa,co,oc
-     &                    ,mass,ntap)
+                     CALL CEN_Compute(xp0,yp0,zp0,mass,ntap)
                   END IF
 
 *=======================================================================
@@ -1437,8 +1445,7 @@ c--------------------------
 *=======================================================================
                   
                   IF(CEN_Center) THEN
-                     CALL CEN_Compute(xp0,yp0,zp0,xpa,ypa,zpa,co,oc
-     &                    ,mass,ntap)
+                     CALL CEN_Compute(xp0,yp0,zp0,mass,ntap)
                   END IF
                   IF(WSC__) THEN
                      IF(.NOT. WSC_Simple) THEN
@@ -1450,6 +1457,11 @@ c--------------------------
      &                       ,nprot_m,protl_m)
                         CALL change_frame(co,oc,1,ntap,xpo,ypo
      &                       ,zpo,xp0,yp0,zp0)
+                     END IF
+                  END IF
+                  IF(nnstep == 1) THEN
+                     IF(RIG_Object) THEN
+                        CALL RIG_Initialize_xp(xp0,yp0,zp0,nato_slt)
                      END IF
                   END IF
 
@@ -1495,12 +1507,14 @@ c--------------------------
                      CALL HYDD_Compute(xpa,ypa,zpa,co,nbtype,pnbd1)
                      IF(MOD(nstep,HYDD_n_write) == 0) THEN
                         aux=elechg*unitl/3.336D-30
+                        IF(RIG_Object) THEN
+                           CALL RIG_Compute(xp0,yp0,zp0)
+                        END IF
                         CALL HYDD_Write_it(xp0,yp0,zp0,fstep,aux)
                      END IF
                   END IF
 
                   IF(Electric) THEN
-                     
                      IF(nnstep == 1) THEN
                         CALL ELE_Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &                       ,ypcma,zpcma,co,oc,node,nprocs,prsymb,beta

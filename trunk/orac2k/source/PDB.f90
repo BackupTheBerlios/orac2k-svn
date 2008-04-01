@@ -1,7 +1,7 @@
 MODULE PDB
 
 !!$***********************************************************************
-!!$   Time-stamp: <2008-03-07 12:41:40 marchi>                           *
+!!$   Time-stamp: <2008-03-20 10:26:19 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -101,6 +101,5 @@ CONTAINS
          &'                 ')
 5     FORMAT('CRYST1',3f9.3,3f7.2,' P  1          1')
   END SUBROUTINE write_it
-  
   INCLUDE 'PDB__Read.f90'
 END MODULE PDB
