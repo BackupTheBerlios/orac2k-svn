@@ -54,10 +54,10 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
 	Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o POLAR_Mod.o \
 	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
-	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o\
+	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o RIGID_Mod.o\
 	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
 	GEOM_groups_Mod.o WSC_Mod.o HEATING_Mod.o \
-	PBC_Mod.o IOBUFFER_Mod.o\
+	PBC_Mod.o IOBUFFER_Mod.o PDB_FRAGM_Mod.o\
 	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
 	add_char1.o\
 	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
@@ -297,7 +297,7 @@ all:
 
 parst.h: config.h parst.inc
 	@$(CPP) parst.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=parst;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -305,7 +305,7 @@ parst.h: config.h parst.inc
 
 vacf.h: config.h vacf.inc
 	@$(CPP) vacf.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=vacf;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -313,7 +313,7 @@ vacf.h: config.h vacf.inc
 
 mts_vacf.h: config.h mts_vacf.inc
 	@$(CPP) mts_vacf.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=mts_vacf;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -321,7 +321,7 @@ mts_vacf.h: config.h mts_vacf.inc
 
 lc_list.h: config.h lc_list.inc
 	@$(CPP) lc_list.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=lc_list;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -329,7 +329,7 @@ lc_list.h: config.h lc_list.inc
 
 mts_spectra.h: config.h mts_spectra.inc
 	@$(CPP) mts_spectra.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=mts_spectra;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -337,7 +337,7 @@ mts_spectra.h: config.h mts_spectra.inc
 
 analysis.h: config.h analysis.inc
 	@$(CPP) -D$(MEMORY) analysis.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=analysis;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -345,7 +345,7 @@ analysis.h: config.h analysis.inc
 
 resid.h: config.h resid.inc
 	@$(CPP) resid.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=resid;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -353,7 +353,7 @@ resid.h: config.h resid.inc
 
 fourier.h: config.h fourier.inc
 	@$(CPP) fourier.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=fourier;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -361,7 +361,7 @@ fourier.h: config.h fourier.inc
 
 pbc.h: config.h pbc.inc
 	@$(CPP) pbc.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=pbc;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -369,7 +369,7 @@ pbc.h: config.h pbc.inc
 
 pme.h: config.h pme.inc
 	@$(CPP) -D$(TARGET1) -D$(MODE) -D$(FFTS) pme.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=pme;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -377,7 +377,7 @@ pme.h: config.h pme.inc
 
 parallel.h: parallel.inc
 	@$(CPP) -D$(TARGET1) -D$(MODE) parallel.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=parallel;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -385,7 +385,7 @@ parallel.h: parallel.inc
 
 orac.h: orac.inc
 	@$(CPP) -D$(TARGET0) orac.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=orac;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -394,7 +394,7 @@ orac.h: orac.inc
 
 cpropar.h: cpropar.inc
 	@$(CPP) -D$(TARGET0) cpropar.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=cpropar;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -402,7 +402,7 @@ cpropar.h: cpropar.inc
 
 voronoi.h: config.h voronoi.inc
 	@$(CPP) -D$(MEMORY) voronoi.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=voronoi;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -410,7 +410,7 @@ voronoi.h: config.h voronoi.inc
 
 unit.h: unit.inc
 	@$(CPP) -D$(TARGET0) unit.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=unit;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -418,7 +418,7 @@ unit.h: unit.inc
 
 parameters.h: parameters.inc
 	@$(CPP) -D$(TARGET0) parameters.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=parameters;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -426,7 +426,7 @@ parameters.h: parameters.inc
 
 mpi_size.h: mpi_size.inc
 	@$(CPP) -D$(MPI_TYPE) mpi_size.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
+	@./python/include_f90.py temp
 	file=mpi_size;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -614,9 +614,9 @@ prepronkl_IFC: $(OBJPRE_NKL)
 
 orac_IFC : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -o orac_IFC $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) -lm
+	$(LD) -o orac_IFC  $(OBJTIM) $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
+	$(OBJPRE_F90) $(OBJLIB) $(EIGRS)  \
+	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) 
 
 
 #==========================================================================
@@ -761,7 +761,7 @@ comp_dynamic_mat.o: parst.h cpropar.h unit.h
 comp_total_energy.CPP.o: parst.h cpropar.h unit.h
 comp_thermos_energy.o: unit.h
 comp_thermos_forces.o: unit.h
-comp_voronoi.CPP.o: pbc.h parst.h voronoi.h
+comp_voronoi.CPP.o: comp_voronoi.CPP.f pbc.h parst.h voronoi.h
 correc_stress.CPP.o: unit.h
 correc_stress_n0.CPP.o: unit.h
 cov_thermos.o: unit.h
@@ -785,7 +785,7 @@ drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
 	parst.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
 	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
 	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o WSC_Mod.o FIELD_Mod.CPP.o\
-	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o
+	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o RIGID_Mod.o PDB_FRAGM_Mod.o
 dspat.o: parst.h pbc.h
 dumptp.o: cpropar.h parst.h
 erf_corr_cutoff.o: unit.h
@@ -916,9 +916,9 @@ read_solute.o: parst.h cpropar.h unit.h
 read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
 	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o GROUPS_Mod.o\
 	GEOM_groups_Mod.o VORONOI_Mod.CPP.o WSC_Mod.o FIELD_Mod.CPP.o\
-	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o
+	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o PDB_FRAGM_Mod.o 
 read_solvent.o: parst.h cpropar.h unit.h
-read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o 
+read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o RIGID_Mod.o
 PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
 DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o PDB.o PBC_Mod.o unit.h
 POLAR_Mod.o: POLAR__Read.f90 INPUT_Mod.o PDB_utils.o parst.h cpropar.h
@@ -1019,7 +1019,8 @@ rattle_correc_co.o: Module_Stress.o
 kinetic.o: Module_Stress.o
 Module_Extra_Forces.o: unit.h
 HYDRATION_Mod.CPP.o: HYDRATION_Mod.CPP.f90 mpi_size.h
-HYDYNAMICS_Mod.CPP.o: HYDYNAMICS_Mod.CPP.f90 mpi_size.h
+HYDYNAMICS_Mod.CPP.o: HYDYNAMICS_Mod.CPP.f90 Neighbors_Mod.o RIGID_Mod.o\
+	xerror_mod.o mpi_size.h PDB_FRAGM_Mod.o
 GROUPS_Mod.o: INPUT_Mod.o xerror_mod.o GROUPS_Readit.f90
 INPUT_Mod.o: xerror_mod.o
 GEOM_groups_Mod.o: GROUPS_Mod.o INPUT_Mod.o xerror_mod.o\
@@ -1029,4 +1030,5 @@ FIELD_Mod.CPP.o: FIELD_Mod.CPP.f90 FIELD__Read.f90 cpropar.h PDB_utils.o\
 	INPUT_Mod.o PDB.o PBC_Mod.o parst.h unit.h parallel.h pme.h\
 	REDUCE_Mod.CPP.o DENSITY_Mod.o
 
+PDB_FRAGM_Mod.o: PDB_FRAGM__Read.f90 INPUT_Mod.o
 REDUCE_Mod.CPP.o: REDUCE_Mod.CPP.f90 PDB_utils.o

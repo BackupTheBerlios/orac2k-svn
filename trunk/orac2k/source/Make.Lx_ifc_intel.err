@@ -6,7 +6,7 @@
 
 TARGET0 = IFC
 TARGET1 = 'INTEL'
-TARGET2 = None
+TARGET2 = 'IFC_error'
 LIBRARIES = SYSTEM_LIB
 FFTS = _GPFFT_
 ##FFTS = _PDFFT_
@@ -26,8 +26,11 @@ CC = icc
 endif
 
 
-CFLAGS = -O3 
+CFLAGS = -O3 -DINTEL 
 FFTW_LIB = /usr/local/fftw.S/lib
-OTHERS_LIB=/opt/intel/mkl/10.0.1.014/lib/32
-LLFLAGS= -lrfftw -lfftw -lmkl_lapack \
-	-lmkl_intel -lguide -lpthread 
+OTHERS_LIB=/opt/intel/mkl/10.0.1.014/lib/32 
+LLFLAGS= -lmkl_lapack -lmkl_intel -lmkl_intel_thread -lmkl_core\
+	 -lguide\
+	 -lpthread\
+	 -lrfftw -lfftw
+ 
