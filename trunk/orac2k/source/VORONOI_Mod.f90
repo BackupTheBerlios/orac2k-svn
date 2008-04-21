@@ -1,7 +1,7 @@
 MODULE VORONOI_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-10-24 16:11:35 marchi>                           *
+!!$   Time-stamp: <2008-04-14 14:41:34 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -35,7 +35,7 @@ MODULE VORONOI_Mod
   LOGICAL, SAVE :: voronoi=.FALSE.,heavy=.FALSE.,access=.FALSE.&
        &,volume=.FALSE.,fluct=.FALSE.,neighbor=.FALSE.,rewind_vor&
        &=.FALSE.,noprint=.FALSE.,compress=.FALSE.,dynamics=.FALSE.&
-       &,kba=.FALSE.,only_water=.FALSE.
+       &,kba=.FALSE.,only_water=.FALSE.,no_vvs=.FALSE.
   INTEGER, SAVE :: nvoronoi=1,kvoronoi=0,nfluct=2,bmax,counter=0&
        &,nprint_press=1,ncx=-1,ncy=-1,ncz=-1,ntype=3,kdynamics=0&
        &,kcosa=0
@@ -236,7 +236,7 @@ CONTAINS
       ALLOCATE(Res_Class(ntap))
       Res_Class=-1
 
-      ALLOCATE(Res_Type(5))
+      ALLOCATE(Res_Type(6))
 
 !!$      
 !!$ ----- Aliphatic
@@ -296,6 +296,17 @@ CONTAINS
       Res_Type(5)%label(3)='asp'
       Res_Type(5)%label(4)='glu'
 
+!!$      
+!!$ ----- Other than water
+!!$
+
+      Res_Type(6)%n0 = 2
+      ALLOCATE(Res_Type(6)%label(4))
+      Res_Type(6)%label(1)='lmu'
+      Res_Type(6)%label(2)='LMU'
+      Res_Type(6)%label(3)='two'
+      Res_Type(6)%label(4)='tre'
+
     END SUBROUTINE Define_Residues
     SUBROUTINE Assign_Residues
       IMPLICIT NONE 
@@ -304,7 +315,7 @@ CONTAINS
 
       DO m=1,nbun
          label=prsymb(mend(m)) 
-         DO n=1,5
+         DO n=1,SIZE(Res_Type)
             r=SIZE(Res_Type(n)%label)
             ok=.FALSE.
             DO o=1,r
@@ -320,7 +331,7 @@ CONTAINS
          END DO
 
       END DO
-      
+
 !!$      DO m=1,nbun
 !!$         label=prsymb(mend(m))
 !!$         DO p=res(1,m),res(2,m)
@@ -391,35 +402,46 @@ CONTAINS
     REAL(8) :: rmin,scale
     REAL(8), DIMENSION (:), ALLOCATABLE :: NW,N_NW,NWW
     REAL(8), DIMENSION (:,:), ALLOCATABLE :: MMW,MMWW,M_MMW
+    INTEGER, SAVE :: calls=0
+    LOGICAL :: exist
 
 
-
+    calls=calls+1
     ALLOCATE(NW(-bmax:bmax),N_NW(-bmax:bmax),MMW(-bmax:bmax,ntype),M_MMW(&
          &-bmax:bmax,ntype),MMWW(-bmax:bmax,ntype),NWW(-bmax:bmax))
 
     counter=counter+1
-    IF(counter == 1 .AND. kba) THEN
-       WRITE(99) SIZE(wat)
-    END IF
+!!$    IF(counter == 1 .AND. kba) THEN
+!!$       WRITE(99) SIZE(wat)
+!!$    END IF
 
-    DO n=1,SIZE(wat)
-       ih=INT(watp(n)%rsp/h_bin1)+1
-       o=watp(n)%o
-       IF(o <= ntype .AND. o >= 1) THEN
-          IF(ih >= -h_max1 .AND. ih <= h_max1) THEN
-             DO i=1,4
-                ihh=INT(watp(n)%cosa(i)/h_bin2)+1
-                IF(ihh <= h_max2 .AND. ihh >= 0) THEN
-                   hist(ihh,ih,o)=hist(ihh,ih,o)+1.0D0
-                END IF
-             END DO
-          END IF
-       END IF
-    END DO
+!!$    DO n=1,SIZE(wat)
+!!$       ih=INT(watp(n)%rsp/h_bin1)+1
+!!$       o=watp(n)%o
+!!$       IF(o <= ntype .AND. o >= 1) THEN
+!!$          IF(ih >= -h_max1 .AND. ih <= h_max1) THEN
+!!$             DO i=1,4
+!!$                ihh=INT(watp(n)%cosa(i)/h_bin2)+1
+!!$                IF(ihh <= h_max2 .AND. ihh >= 0) THEN
+!!$                   hist(ihh,ih,o)=hist(ihh,ih,o)+1.0D0
+!!$                END IF
+!!$             END DO
+!!$          END IF
+!!$       END IF
+!!$    END DO
 
     IF(kba) THEN
        WRITE(*,*) ' Writing kinetic file ===>      Step = ',counter
-       WRITE(99) counter,(watp(n)%o,REAL(watp(n)%rsp),n=1,SIZE(wat))
+       IF(calls == 1) THEN
+          INQUIRE(FILE=file_cosa,EXIST=exist)
+          IF(exist) THEN
+             OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='OLD')
+          ELSE
+             OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='NEW')
+          END IF
+          WRITE(kcosa) SIZE(wat),watp(1)%o
+       END IF
+       WRITE(kcosa) counter,(REAL(watp(n)%rsp),(REAL(watp(n)%cosa(i)),i=1,4),n=1,SIZE(wat))
     END IF
     
     NW=0.0D0
@@ -428,6 +450,7 @@ CONTAINS
     MMW=0.0D0
     MMWW=0.0D0
     M_MMW=0.0D0
+    IF(no_vvs) GOTO 19000
     Vol_tot=Vol_Tot+volume
     WRITE(*,'(''Cell Volume ='',f14.5,'' Dev. = '',f14.5,'' Ang. '',e1&
          &4.6,''  % '')') volume,volume-SUM(vol_res),100.0D0*(volume&
@@ -478,8 +501,12 @@ CONTAINS
           END IF
        END DO
     END DO
-
+19000 CONTINUE
     DEALLOCATE(NW,MMW,N_NW,M_MMW)
+    DO i=1,SIZE(watp)
+       watp(i) % rsp=0.0D0
+       watp(i) % cosa(:)=0.0D0
+    END DO
   END SUBROUTINE Density
   SUBROUTINE print_density
 
@@ -491,9 +518,9 @@ CONTAINS
 
     INTEGER :: i,n,ih,o
     REAL(8) :: n00,n0,nn,vol,kk,r,aux,auxx,dens,scale,w0,w00
-    LOGICAL :: exist
 
-    IF(MOD(counter,nprint_press) == 0) THEN
+
+    IF(MOD(counter,nprint_press) == 0 .AND. (.NOT. no_vvs)) THEN
        DO ih=-bmax,bmax
           IF(N_N1(ih) /= 0) THEN
              r=DBLE(ih-1)*bin
@@ -542,30 +569,7 @@ CONTAINS
              END IF
           END DO
        END DO
-    END IF
-
-
-    INQUIRE(FILE=file_cosa,EXIST=exist)
-    IF(exist) THEN
-       OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='OLD')
-    ELSE
-       OPEN(kcosa,file=file_cosa,form='UNFORMATTED',status='NEW')
-    END IF
-
-    REWIND(kcosa)
-
-    WRITE(kcosa) counter,h_max1,h_max2,h_bin1,h_bin2,2
-    scale=1.0D0/DBLE(counter)
-    DO o=1,2
-       DO ih=1,h_max1
-          WRITE(kcosa) (ih-1)*h_bin1
-          DO i=0,h_max2
-             WRITE(kcosa) hist(i,ih,o)*scale
-          END DO
-       END DO
-    END DO
-    CLOSE(kcosa)
-    
+    END IF    
   END SUBROUTINE Print_density
   SUBROUTINE Volume_Shell(volume,co,xp0,yp0,zp0)
     IMPLICIT NONE

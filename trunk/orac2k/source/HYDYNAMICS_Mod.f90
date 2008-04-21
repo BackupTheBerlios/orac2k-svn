@@ -1,6 +1,10 @@
 MODULE HYDYNAMICS_Mod
 !!$***********************************************************************
+<<<<<<< HYDYNAMICS_Mod.f90
+!!$   Time-stamp: <2008-04-01 09:31:21 marchi>                           *
+=======
 !!$   Time-stamp: <2008-03-31 18:31:30 marchi>                           *
+>>>>>>> 1.3
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -66,7 +70,6 @@ CONTAINS
     DO i=1,m
        index_sv(i+1)=index_b(i+1)
     END DO
-
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   END SUBROUTINE Initialize
   SUBROUTINE Initialize_P(node_a,nprocs_a,ngrp_a,nbun_a)
