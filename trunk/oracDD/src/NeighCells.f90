@@ -43,7 +43,8 @@ MODULE NeighCells
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-  
+
+  USE PI_
   USE Constants
   USE Neighbors_S
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
@@ -96,19 +97,21 @@ CONTAINS
 !!$
 !!$--- Constructor
 !!$
-  FUNCTION NeighCells_(rcut,nprocs,npax,npay,npaz) RESULT(out)
+  FUNCTION NeighCells_(rcut0,rcut,nprocs,npax,npay,npaz) RESULT(out)
     INTEGER :: nprocs,npax,npay,npaz
     LOGICAL :: out
     INTEGER :: nx,ny,nz,mx,my,mz,i,j,k,n,np,count1,o,iv,jv,kv
-    REAL(8) :: rcut
+    REAL(8) :: rcut,rcut0
     INTEGER, POINTER :: Ind_x(:,:,:)
     REAL(8) :: dx,dy,dz,ddx,ddy,ddz,x1,y1,z1
     CHARACTER(len=max_char) :: labs0
     LOGICAL, POINTER :: mask(:,:,:)=>NULL()
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
-    INTEGER, SAVE :: count0=0
-    INTEGER :: npx,npy,npz,i_n
+    INTEGER, SAVE :: count0=0, iter_max=20
+    INTEGER :: npx,npy,npz,i_n,nvalues(3),iter_inst
+    LOGICAL :: okkk
+
     out=.TRUE.
 
     npx=npax; npy=npay; npz=npaz
@@ -154,48 +157,67 @@ CONTAINS
        ALLOCATE(new_node)
        NULLIFY(new_node % next)
        new_node % rcut = rcut
-       nx=NINT(a/rcut)
-       ny=NINT(b/rcut)
-       nz=NINT(c/rcut)
-       IF(nx < npx .OR. ny < npy .OR. nz < npz) THEN
-          IF(nx < npx) THEN
-             WRITE(labs0,'(i3,i3)') nx,npx
-             errmsg_f='Number of neighbor list cells along X is smaller than&
-                  & the number of processors: There are '//labs0(1:3)//' neighbor &
-                  &list cells and '//labs0(4:6)//' No. processors on X'
-          ELSE IF(ny < npy) THEN
-             WRITE(labs0,'(i3,i3)') ny,npy
-             errmsg_f='Number of neighbor list cells along Y is smaller than&
-                  & the number of processors: There are '//labs0(1:3)//' neighbor &
-                  &list cells and '//labs0(4:6)//' No. processors on Y'
-          ELSE IF(nz < npz) THEN
-             WRITE(labs0,'(i3,i3)') nz,npz
-             errmsg_f='Number of neighbor list cells along Z is smaller than&
-                  & the number of processors: There are '//labs0(1:3)//' neighbor &
-                  &list cells and '//labs0(4:6)//' No. processors on Z'
+       okkk=.FALSE.
+       nx=NINT(a/rcut0)
+       ny=NINT(b/rcut0)
+       nz=NINT(c/rcut0)
+       iter_inst=0
+       DO WHILE(.NOT. okkk)
+          iter_inst=iter_inst+1
+          IF(nx < npx .OR. ny < npy .OR. nz < npz) THEN
+             IF(nx < npx) THEN
+                WRITE(labs0,'(i3,i3)') nx,npx
+                errmsg_f='Number of neighbor list cells along X is smaller than&
+                     & the number of processors: There are '//labs0(1:3)//' neighbor &
+                     &list cells and '//labs0(4:6)//' No. processors on X'
+             ELSE IF(ny < npy) THEN
+                WRITE(labs0,'(i3,i3)') ny,npy
+                errmsg_f='Number of neighbor list cells along Y is smaller than&
+                     & the number of processors: There are '//labs0(1:3)//' neighbor &
+                     &list cells and '//labs0(4:6)//' No. processors on Y'
+             ELSE IF(nz < npz) THEN
+                WRITE(labs0,'(i3,i3)') nz,npz
+                errmsg_f='Number of neighbor list cells along Z is smaller than&
+                     & the number of processors: There are '//labs0(1:3)//' neighbor &
+                     &list cells and '//labs0(4:6)//' No. processors on Z'
+             END IF
+             CALL Add_Errors(-1,errmsg_f)
+             out=.FALSE.
+             RETURN
           END IF
-          CALL Add_Errors(-1,errmsg_f)
-          out=.FALSE.
-          RETURN
-       END IF
        
-       IF(DBLE(MOD(nx,npx))/DBLE(npx) <= 0.5D0) THEN
-          ncx=nx-MOD(nx,npx)
-       ELSE
-          ncx=nx+MOD(npx-MOD(nx,npx),npx)
-       END IF
-       
-       IF(DBLE(MOD(ny,npy))/DBLE(npy) <= 0.5D0) THEN
-          ncy=ny-MOD(ny,npy)
-       ELSE
-          ncy=ny+MOD(npy-MOD(ny,npy),npy)
-       END IF
-       
-       IF(DBLE(MOD(nz,npz))/DBLE(npz) <= 0.5D0) THEN
-          ncz=nz-MOD(nz,npz)
-       ELSE
-          ncz=nz+MOD(npz-MOD(nz,npz),npz)
-       END IF
+          IF(DBLE(MOD(nx,npx))/DBLE(npx) <= 0.5D0) THEN
+             ncx=nx-MOD(nx,npx)
+          ELSE
+             ncx=nx+MOD(npx-MOD(nx,npx),npx)
+          END IF
+          
+          IF(DBLE(MOD(ny,npy))/DBLE(npy) <= 0.5D0) THEN
+             ncy=ny-MOD(ny,npy)
+          ELSE
+             ncy=ny+MOD(npy-MOD(ny,npy),npy)
+          END IF
+          
+          IF(DBLE(MOD(nz,npz))/DBLE(npz) <= 0.5D0) THEN
+             ncz=nz-MOD(nz,npz)
+          ELSE
+             ncz=nz+MOD(npz-MOD(nz,npz),npz)
+          END IF
+          nvalues=Neighbors_S_Check(i_n,rcut,ncx,ncy,ncz)
+          IF(nvalues(1) == 0 .AND. nvalues(2) == 0 .AND. nvalues(3) == 0) THEN
+             okkk=.TRUE.
+          ELSE
+             nx=nx+nvalues(1)
+             ny=ny+nvalues(2)
+             nz=nz+nvalues(3)
+          END IF
+!!$
+!!$--- Abort after iter_Max unsuccessfull iterations
+!!$
+          IF(iter_inst > iter_Max) okkk=.TRUE.
+       END DO
+
+
        ALLOCATE(new_node % Ind_L(npx,npy,npz))
        ALLOCATE(new_node % Ind_S(ncx,ncy,ncz))
        ALLOCATE(Ind_X(npx,npy,npz))
@@ -272,9 +294,7 @@ CONTAINS
     END IF
        
     IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()
-    
-    
-    
+     
     IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
     ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
     DO mx=1,npx

@@ -67,7 +67,9 @@ CONTAINS
     PI_comm=MPI_COMM_WORLD
     call MPI_COMM_RANK( PI_comm, PI_node, ierr )
     call MPI_COMM_SIZE( PI_comm, PI_nprocs, ierr )
+    WRITE(*,*) PI_Node
     IF(PI_node /=0 ) THEN
+       WRITE(*,*) 'ill a',PI_Node
        OPEN(unit=kprint,file="/dev/null")
     END IF
 #endif

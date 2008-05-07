@@ -152,7 +152,7 @@ CONTAINS
     ALLOCATE(Pe_nb(3))
     DO n=1,3
        IF(rcut(n) > 0.0D0) THEN
-          IF(.NOT. NeighCells_(rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz))&
+          IF(.NOT. NeighCells_(rcut(1),rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz))&
                & CALL Print_Errors()
           CALL Make_Comm(n)
        END IF
@@ -239,6 +239,26 @@ CONTAINS
          END DO
       END DO
       WRITE(kprint,*) count0,' parallel communications are estimated'
+
+      count0=0
+      DO n=1,np
+         DO m=1,np
+            IF(ALLOCATED(Pe_nb(i_n) % tbl (n,m) % exc)) THEN
+               mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
+               count0=count0+mpe
+!!$               IF(i_n == 1) THEN
+!!$                  IF((n == 1 .AND. m == 4) .OR. (n == 4 .AND. m == 1)) THEN
+!!$                     mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
+!!$                     WRITE(kprint,*) 'n= ',n,'m= ',m,mpe
+!!$                     DO k=1,mpe
+!!$                        WRITE(kprint,'(3i8)') Pe_nb(i_n) % tbl (n, m) % exc(:,k)
+!!$                     END DO
+!!$                  END IF
+!!$               END IF
+            END IF
+         END DO
+      END DO
+      WRITE(kprint,*) count0,' cells are transfered for cutoff = ',rcut(i_n)
 
 !!$      DO m=1,np
 !!$         IF(ALLOCATED(Pe_nb(i_n) % tbl (m,48) % exc)) THEN

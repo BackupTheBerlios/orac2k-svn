@@ -54,7 +54,7 @@ MODULE Neighbors_S
   IMPLICIT none
   PRIVATE
   PUBLIC Neighbors_S_, Neighbors_S__Particles, Neighbors_S__Ind&
-       &, Neighbors_S__Chain, Neighbors_S__, clst
+       &, Neighbors_S__Chain, Neighbors_S__, clst, Neighbors_S_Check
 
   TYPE :: Neighbors_S__Ind
      INTEGER :: i,j,k
@@ -162,13 +162,15 @@ CONTAINS
        errmsg_f='Neighbor cells might be counted twice: Lower the&
             & cutoff or increase the No. of cell '
        IF(warnx == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along x '
+          errmsg_f=TRIM(errmsg_f)//' along x '
        END IF
        IF(warny == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along y '
+          errmsg_f=TRIM(errmsg_f)//' along y '
        END IF
        IF(warnz == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along z '
+          errmsg_f=TRIM(errmsg_f)//' along z '
+          WRITE(*,*) 'rcut =',rcut
+          WRITE(*,*) kmax,nzmax,ncz
        END IF
        CALL Add_Errors(-1,errmsg_f)
        out=.FALSE. 
@@ -272,6 +274,166 @@ CONTAINS
       out=dmin
     END FUNCTION dist_ijk
   END FUNCTION Neighbors_S_
+  FUNCTION Neighbors_S_Check(i_n,rcut,nx,ny,nz) RESULT(out)
+    INTEGER :: out(3)
+    INTEGER :: nx,ny,nz,i_n
+    REAL(8) :: rcut
+
+    INTEGER :: mfx,mfy,mfz
+    REAL(8) :: sqcut,dx,dy,dz,rmin
+    INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
+         &,nxmax, nymax,nzmax,nind
+
+    mfx=0
+    mfy=0
+    mfz=0
+    ncx=nx; ncy=ny; ncz=nz
+
+    sqcut=rcut**2
+
+    dx=2.d0/ncx
+    dy=2.d0/ncy
+    dz=2.d0/ncz
+    imax=0
+    jmax=0
+    kmax=0
+
+    istart=1-ncx
+    DO i=istart,ncx-1
+       jstart=1-ncy
+       DO j=jstart,ncy-1
+          kstart=1-ncz
+          DO k=kstart,ncz-1
+             rmin=dist_ijk(i,j,k,dx,dy,dz)
+             IF(rmin < sqcut) then
+                IF(imax < abs(i)) imax=abs(i)
+                IF(jmax < abs(j)) jmax=abs(j)
+                IF(kmax < abs(k)) kmax=abs(k)
+             END IF
+          END DO
+       END DO
+    END DO
+    nxmax=(ncx+1)/2
+    nymax=(ncy+1)/2
+    nzmax=(ncz+1)/2
+    warnx=0
+    warny=0
+    warnz=0
+    IF(imax.ge.nxmax) warnx=1
+    IF(jmax.ge.nymax) warny=1
+    IF(kmax.ge.nzmax) warnz=1
+
+    IF(warnx == 1 .OR. warny == 1 .OR. warnz == 1) THEN
+       IF(warnx == 1) THEN
+          mfx=1
+       END IF
+       IF(warny == 1) THEN
+          mfy=1
+       END IF
+       IF(warnz == 1) THEN
+          mfz=1
+       END IF
+    END IF
+    out=(/mfx, mfy, mfz/)
+  CONTAINS
+    FUNCTION dist_ijk(ni,nj,nk,dx,dy,dz) RESULT(out)
+      REAL(8) :: out
+      REAL(8) ::  dx,dy,dz
+      INTEGER ::  ni,nj,nk
+
+      REAL(8) ::  d,dmin,dt
+      REAL(8) ::  lx,ly,lz
+      REAL(8) ::  mx,my,mz
+      REAL(8) ::  dmx,dmy,dmz
+      REAL(8) ::  msq,dmsq,lambda,s
+
+      INTEGER, PARAMETER :: nv(8,3)=RESHAPE((/&
+           & 0, 1, 0, 0, 1, 1, 0, 1 &
+           &,0, 0, 1, 0, 1, 0, 1, 1 &
+           &,0, 0, 0, 1, 0, 1, 1, 1 &
+           &/),(/8, 3/))
+      INTEGER ::  i,j,imin,jmin
+      INTEGER, SAVE ::  ndtmax=0
+
+!!$
+!!$--- Minimum distance between corners of the cells (0, 0, 0) and 
+!!$--- (ni, nj, nk)
+!!$
+
+      dmin=1.0D8
+      do i=1,8
+         do j=1,8
+            lx=(ni+nv(j,1)-nv(i,1))*dx
+            ly=(nj+nv(j,2)-nv(i,2))*dy
+            lz=(nk+nv(j,3)-nv(i,3))*dz
+
+            mx=co(1,1)*lx+co(1,2)*ly+co(1,3)*lz
+            my=co(2,1)*lx+co(2,2)*ly+co(2,3)*lz
+            mz=co(3,1)*lx+co(3,2)*ly+co(3,3)*lz
+
+            d=mx*mx+my*my+mz*mz
+            if(d.lt.dmin) then
+               dmin=d
+               imin=i
+               jmin=j
+            endif
+
+         end do
+      end do
+!!$
+!!$--- Check if the minimal distance is not on the edge of the cube 
+!!$
+
+      lx=(ni+nv(jmin,1)-nv(imin,1))*dx
+      ly=(nj+nv(jmin,2)-nv(imin,2))*dy
+      lz=(nk+nv(jmin,3)-nv(imin,3))*dz
+
+      mx=co(1,1)*lx+co(1,2)*ly+co(1,3)*lz
+      my=co(2,1)*lx+co(2,2)*ly+co(2,3)*lz
+      mz=co(3,1)*lx+co(3,2)*ly+co(3,3)*lz
+
+      msq=mx*mx+my*my+mz*mz
+!!$
+!!$--- Loop on the three edges
+!!$
+
+      do i=1,3
+         dt=sign(1.,0.5-nv(imin,i))*dx
+         
+         dmx=co(1,i)*dt
+         dmy=co(2,i)*dt
+         dmz=co(3,i)*dt
+         
+         s=mx*dmx+my*dmy+mz*dmz
+         dmsq=dmx*dmx+dmy*dmy+dmz*dmz
+         lambda=-s/dmsq
+         
+         if((lambda.gt.0.) .and. (lambda.lt.1.)) then
+            d=msq-s*s/dmsq
+            if(d.lt.dmin) dmin=d
+         endif
+      enddo
+
+      do i=1,3
+         dt=sign(1.,0.5-nv(jmin,i))*dx
+         
+         dmx=co(1,i)*dt
+         dmy=co(2,i)*dt
+         dmz=co(3,i)*dt
+         
+         s=mx*dmx+my*dmy+mz*dmz
+         dmsq=dmx*dmx+dmy*dmy+dmz*dmz
+         lambda=-s/dmsq
+         
+         if((lambda.gt.0.) .and. (lambda.lt.1.)) then
+            d=msq-s*s/dmsq
+            if(d.lt.dmin) dmin=d
+         endif
+      enddo
+
+      out=dmin
+    END FUNCTION dist_ijk
+  END FUNCTION Neighbors_S_Check
 !!$
 !!$--- Constructor for Chain_xyz and Head_xyz
 !!$

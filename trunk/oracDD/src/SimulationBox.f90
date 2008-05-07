@@ -258,7 +258,7 @@ CONTAINS
       nunits_Slv=COUNT(ok_mol)
       Size_Total=nato_Slt+nunits_Slv*nato_Slv
       WRITE(kprint,'(a)') ' Inserting solute into solvent ====>'
-      WRITE(kprint,'(a,i5,a,i5,a,i5, a)') ' Eliminated '&
+      WRITE(kprint,'(a,i6,a,i6,a,i6, a)') ' Eliminated '&
            &,nunits_SlvOld-nunits_Slv,' solvent units over ', nunits_SlvOld&
            &,' remain ',nunits_Slv,' units '
       ALLOCATE(Temp(SIZE(Total)))

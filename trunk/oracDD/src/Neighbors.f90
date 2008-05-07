@@ -143,13 +143,13 @@ CONTAINS
        errmsg_f='Neighbor cells might be counted twice: Lower the&
             & cutoff or increase the No. of cell '
        IF(warnx == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along x '
+          errmsg_f=TRIM(errmsg_f)//' along x '
        END IF
        IF(warny == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along y '
+          errmsg_f=TRIM(errmsg_f)//' along y '
        END IF
        IF(warnz == 1) THEN
-          errmsg_f=TRIM(errmsg_f)//'along z '
+          errmsg_f=TRIM(errmsg_f)//' along z '
        END IF
        CALL Add_Errors(-1,errmsg_f)
        out=.TRUE. 
