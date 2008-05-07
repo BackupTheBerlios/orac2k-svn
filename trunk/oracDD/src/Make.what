@@ -38,6 +38,7 @@ ifeq ($(COMPILER), INTEL)
   CC = gcc
   LD = ifort
   FFLAGS += -fpp -O3
+  LLFLAGS= -i_dynamic 
 endif
 
 ifeq ($(COMPILER), PGI)

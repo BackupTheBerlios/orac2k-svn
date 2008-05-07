@@ -32,8 +32,8 @@
 #----------------------------------------------------------------------/
 # Makefile for 
 # Copyright (C) 2006 Massimo Marchi <marchi@job.saclay.cea.fr>
-# $Header$
-# $Log$
+# $Header: /cvsroot/orac2k/oracDD/src/Makefile,v 1.20 2007/07/20 14:07:43 mmarchi Exp $
+# $Log: Makefile,v $
 # Revision 1.20  2007/07/20 14:07:43  mmarchi
 # *** empty log message ***
 #
@@ -146,7 +146,7 @@ SRC = $(patsubst %.o, %.f90, $(OBJS)) $(patsubst %.o, %.f, $(OBJS_f))
 all: oracDD.x
 
 oracDD.x: $(OBJS) $(OBJS_f)
-	$(LD) -o oracDD.x $(OBJS) $(OBJS_f) $(LIBS)
+	$(LD) -o oracDD.x $(OBJS) $(OBJS_f) -L$(LIBS) $(LLFLAGS)
 
 clean:
 	rm -f *.o *.x *.mod *~
