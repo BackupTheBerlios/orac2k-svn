@@ -59,7 +59,7 @@ MODULE AtomCnt
   USE Tops
   USE STRPAK
   USE Node
-  USE Strings, ONLY: My_Fxm,My_Fam
+  USE Strings, ONLY: My_Fxm,My_Fam, MyRead
   USE Parameters
   USE Print_Defs
   IMPLICIT none
@@ -103,7 +103,6 @@ CONTAINS
        END DO
     END DO
     ALLOCATE(AtomCnts(nato))
-
 !!$
 !!$--- Count atoms
 !!$
@@ -153,6 +152,7 @@ CONTAINS
                 DO o=1,SIZE(App_Char(i_mass) % mass,2)
                    IF(My_Fxm(TRIM(AtomCnts(nato) % betab), App_Char(i_mass) % mass (1,o))) THEN
                       AtomCnts(nato) % Id_Type = o
+                      CALL MyRead(App_Char(i_mass) % mass (2,o),AtomCnts(nato) % mass)
                       ok=.TRUE.
                       EXIT
                    END IF
@@ -167,7 +167,6 @@ CONTAINS
           END DO
        END DO
     END DO
-
     CALL AtomCnt__GetConnections
   CONTAINS
     INCLUDE 'AtomCnt__GetConnections.f90'
@@ -206,7 +205,7 @@ CONTAINS
     INTEGER, POINTER :: SltSlv(:,:)=>NULL()
     TYPE(AtomCnt__Type), POINTER :: TempAtoms(:)
     INTEGER :: n,m,l,o,offset,nato,new_dim,old_dim,Res_Begins,Res_Ends&
-         &,offset2,No_Res_Unit
+         &,offset2,No_Res_Unit,offset_g,p_g
 
 
     SltSlv=>IndSequence__SltSlv_Res()
@@ -237,6 +236,9 @@ CONTAINS
     AtomCnts(1:old_Dim-nato)=TempAtoms(1:old_Dim-nato)
     offset=0
     offset2=0
+    offset_g=0
+    p_g=TempAtoms(Res_atm(2,Res_Ends)) % Grp_No-TempAtoms(Res_atm(1,Res_Begins)) % Grp_No+1
+
     No_res_Unit=Res_Ends-Res_Begins+1
 
     DO l=1,New_Units
@@ -247,13 +249,14 @@ CONTAINS
                 ALLOCATE(AtomCnts(m+offset) % cnt(o))
              END IF
              AtomCnts(m+offset) = TempAtoms(m)
+             AtomCnts(m+offset) % Grp_no = TempAtoms(m) % Grp_No + offset_g
              AtomCnts(m+offset) % Res_no = TempAtoms(m) % Res_No + offset2
           END DO
           offset2=offset2+No_Res_Unit
        END DO
+       offset_g=offset_g+p_g
        offset=offset+nato
     END DO
-
     DEALLOCATE(TempAtoms)
   END SUBROUTINE AtomCnt__Update
   SUBROUTINE AtomCnt__Write

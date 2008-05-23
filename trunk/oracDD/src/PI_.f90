@@ -58,7 +58,7 @@ MODULE PI_
   TYPE :: PI__Node
      INTEGER :: n, nx, ny, nz
   END TYPE PI__Node
-  TYPE(PI__Node), ALLOCATABLE :: PI__Ranks(:)
+  TYPE(PI__Node), ALLOCATABLE, SAVE :: PI__Ranks(:)
 CONTAINS
   SUBROUTINE PI__
     INTEGER :: ierr

@@ -468,7 +468,6 @@ CONTAINS
     dx=2.d0/ncx
     dy=2.d0/ncy
     dz=2.d0/ncz
-
     
     DO n=1,natp
        x1=x(n)/dx

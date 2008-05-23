@@ -146,7 +146,7 @@ CONTAINS
     END DO
   END FUNCTION IndSequence_
 
-  SUBROUTINE  IndSequence__Destroy() 
+  SUBROUTINE IndSequence__Destroy() 
 
     INTEGER :: n
     IF(ALLOCATED(Res_Atm)) DEALLOCATE(Res_Atm)

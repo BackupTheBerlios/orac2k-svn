@@ -78,14 +78,16 @@ MODULE NeighCells
 !!$--- List of small lattice units contained in each larger unit
 !!$
 
-  TYPE(NeighCells__MapLarge), POINTER :: Ind_Large(:,:,:)=>NULL()
+  TYPE(NeighCells__MapLarge), POINTER :: Ind0_Large(:,:,:)=>NULL()
+  TYPE(NeighCells__MapLarge), ALLOCATABLE, SAVE :: Ind_Large(:,:,:)
 
 !!$
 !!$--- For each small lattice unit gives the corresponding large
 !!$--- lattice unit it belongs to
 !!$
 
-  TYPE(NeighCells__Map), POINTER :: Ind_Small(:,:,:)=>NULL()
+  TYPE(NeighCells__Map), POINTER :: Ind0_Small(:,:,:)=>NULL()
+  TYPE(NeighCells__Map), ALLOCATABLE, SAVE :: Ind_Small(:,:,:)
 
 !!$
 !!$--- For each large lattice unit give the list of neighboring small units
@@ -109,7 +111,7 @@ CONTAINS
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
     INTEGER, SAVE :: count0=0, iter_max=20
-    INTEGER :: npx,npy,npz,i_n,nvalues(3),iter_inst
+    INTEGER :: npx,npy,npz,i_n,nvalues(3),iter_inst,k1,k2,k3,p0
     LOGICAL :: okkk
 
     out=.TRUE.
@@ -128,14 +130,14 @@ CONTAINS
 !!$--- Search if a cutoff match
 !!$
        current=>root
-       Ind_Large=>NULL()
-       Ind_Small=>NULL()
+!!$       Ind0_Large=>NULL()
+!!$       Ind0_Small=>NULL()
        count1=0
        current=>current % next
        DO WHILE(ASSOCIATED(current))
-          IF(current % rcut == rcut) THEN
-             Ind_Large=>current % Ind_L
-             Ind_Small=>current % Ind_S
+          IF(current % rcut == 0.0D0) THEN
+!!$             Ind0_Large=>current % Ind_L
+!!$             Ind0_Small=>current % Ind_S
              ncx=current % ncx
              ncy=current % ncy
              ncz=current % ncz
@@ -150,13 +152,13 @@ CONTAINS
     END IF
 
 !!$
-!!$--- If a cutoff does not match, Ind_Large and Ind_Small are not associated
+!!$--- If a cutoff does not match, Ind0_Large and Ind0_Small are not associated
 !!$
 
-    IF(.NOT. ASSOCIATED(Ind_Small)) THEN
+    IF(.NOT. ASSOCIATED(Ind0_Small)) THEN
        ALLOCATE(new_node)
        NULLIFY(new_node % next)
-       new_node % rcut = rcut
+       new_node % rcut = 0.0D0
        okkk=.FALSE.
        nx=NINT(a/rcut0)
        ny=NINT(b/rcut0)
@@ -203,6 +205,7 @@ CONTAINS
           ELSE
              ncz=nz+MOD(npz-MOD(nz,npz),npz)
           END IF
+
           nvalues=Neighbors_S_Check(i_n,rcut,ncx,ncy,ncz)
           IF(nvalues(1) == 0 .AND. nvalues(2) == 0 .AND. nvalues(3) == 0) THEN
              okkk=.TRUE.
@@ -283,20 +286,46 @@ CONTAINS
        current % next => new_node
        current => current % next
 
-       Ind_Large=>current % Ind_L
-       Ind_Small=>current % Ind_S
+       Ind0_Large=>current % Ind_L
+       Ind0_Small=>current % Ind_S
        current % ncx=ncx
        current % ncy=ncy
        current % ncz=ncz
        current % npx=npx
        current % npy=npy
        current % npz=npz
+
+       k1=SIZE(Ind0_Large,1)
+       k2=SIZE(Ind0_Large,2)
+       k3=SIZE(Ind0_Large,3)
+       ALLOCATE(Ind_Large(k1,k2,k3))
+       DO i=1,k1
+          DO j=1,k2
+             DO k=1,k3
+                p0=SIZE(Ind0_Large(i,j,k) % pt)
+                ALLOCATE(Ind_Large(i,j,k) % pt(p0))
+                Ind_Large(i,j,k) % pt =Ind0_Large(i,j,k) % pt 
+             END DO
+          END DO
+       END DO
+       k1=SIZE(Ind0_Small,1)
+       k2=SIZE(Ind0_Small,2)
+       k3=SIZE(Ind0_Small,3)
+       ALLOCATE(Ind_Small(k1,k2,k3))
+       DO i=1,k1
+          DO j=1,k2
+             DO k=1,k3
+                Ind_Small(i,j,k) = Ind0_Small(i,j,k) 
+             END DO
+          END DO
+       END DO
     END IF
        
     IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()
      
     IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
     ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
+
     DO mx=1,npx
        DO my=1,npy
           DO mz=1,npz
@@ -304,8 +333,8 @@ CONTAINS
              count0=(mx-1)*npy*npz+(my-1)*npz+mz
              mask=.TRUE.
              DO n=1,np
-                i=Ind_Large(mx,my,mz) % pt (n) % nx 
-                j=Ind_Large(mx,my,mz) % pt (n) % ny 
+                i=Ind_Large(mx,my,mz) % pt (n) % nx
+                j=Ind_Large(mx,my,mz) % pt (n) % ny
                 k=Ind_Large(mx,my,mz) % pt (n) % nz
                 mask(i,j,k)=.FALSE.
              END DO
@@ -337,7 +366,6 @@ CONTAINS
           END DO
        END DO
     END DO
-
   END FUNCTION NeighCells_
   SUBROUTINE NeighCells__Param(np,ncxa,ncya,ncza)
     INTEGER :: np,ncxa,ncya,ncza

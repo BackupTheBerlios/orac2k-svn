@@ -49,9 +49,12 @@ MODULE Groups
   USE SystemPrm
   USE AtomCnt
   USE IndSequence
+  USE Atom
+  USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC Groups_, Groups__Chain, Groups__Pot, Grp_A,Grp_L
+  PUBLIC Groups_, Groups__Chain, Groups__Pot, Grp_A, Groups__Base,Groupa&
+       &, Groups__InitCoords
   TYPE :: Groups__Base
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -62,7 +65,7 @@ MODULE Groups
   TYPE :: Groups__Chain
      INTEGER, ALLOCATABLE :: bd(:)
      INTEGER :: nbd
-     REAL(8), ALLOCATABLE :: p(:)     
+     REAL(8), ALLOCATABLE :: p(:)
      INTEGER :: np
   END TYPE Groups__Chain
 
@@ -70,9 +73,11 @@ MODULE Groups
      TYPE(Groups__Chain), ALLOCATABLE :: bonds(:),angles(:),dihed(:)&
           &,imph(:),int14(:)
   END TYPE Groups__Pot
-  TYPE(Groups__Pot), ALLOCATABLE :: Grp_L(:), Grp_A(:)
+  TYPE(Groups__Pot), ALLOCATABLE, SAVE :: Grp_A(:)
+  TYPE(Groups__Base), ALLOCATABLE, SAVE :: Groupa(:)
   INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
   INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
+
 CONTAINS
   FUNCTION Groups_() RESULT(out)
     LOGICAL :: out
@@ -84,7 +89,7 @@ CONTAINS
 
     out=.TRUE.
     Grp_Atm=>IndSequence__Grp()
-    ALLOCATE(Grp_A(SIZE(Grp_Atm)))
+    ALLOCATE(Grp_A(SIZE(Grp_Atm,2)))
     Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds)
     DO n=1,SIZE(Grp_Local)
        s=0
@@ -178,9 +183,9 @@ CONTAINS
       END IF
 
       IF(ALLOCATED(dims_a)) DEALLOCATE(dims_a)
-      ALLOCATE(dims_a(SIZE(Grp_Atm)))
+      ALLOCATE(dims_a(SIZE(Grp_Atm,2)))
       IF(ALLOCATED(Grp)) DEALLOCATE(Grp)
-      ALLOCATE(Grp(SIZE(Grp_Atm)))
+      ALLOCATE(Grp(SIZE(Grp_Atm,2)))
 
       Dims_a=0
       DO n=1,SIZE(P_Tpg)
@@ -212,5 +217,53 @@ CONTAINS
     END FUNCTION Do_Copy
       
   END FUNCTION Groups_
+  FUNCTION Groups__InitCoords() RESULT(out)
+    INTEGER :: ntap,ngrp,n,p1
+    REAL(8) :: mass
+    REAL(8), POINTER :: Tmass(:)
+    LOGICAL :: out
 
+    out=.TRUE.
+    IF(.NOT. ALLOCATED(Grp_A) .OR. .NOT. ALLOCATED(Atoms)) THEN
+       out=.FALSE.
+       RETURN
+    END IF
+
+    ngrp=SIZE(Grp_A)
+    ALLOCATE(Groupa(ngrp))
+    ntap=SIZE(Atoms)
+    ALLOCATE(tmass(ngrp))
+    tmass=0.0D0
+
+    DO n=1,ntap
+       p1=Atoms(n) % Grp_No
+       mass=Atoms(n) % mass
+       tmass(p1)=tmass(p1)+ mass
+       Groupa(p1) % xa = Groupa(p1) % xa + mass*Atoms(n) % xa
+       Groupa(p1) % ya = Groupa(p1) % ya + mass*Atoms(n) % ya
+       Groupa(p1) % za = Groupa(p1) % za + mass*Atoms(n) % za
+
+       Groupa(p1) % x = Groupa(p1) % x + mass*Atoms(n) % x
+       Groupa(p1) % y = Groupa(p1) % y + mass*Atoms(n) % y
+       Groupa(p1) % z = Groupa(p1) % z + mass*Atoms(n) % z
+       Groupa(p1) % Res_No = Atoms(n) % Res_No
+       Groupa(p1) % Grp_No = Atoms(n) % Grp_No
+       Groupa(p1) % Id_Res = Atoms(n) % Id_Res
+       Groupa(p1) % Id_Type = Atoms(n) % Id_Type
+       Groupa(p1) % Id_Slv = Atoms(n) % Id_slv
+    END DO
+    DO n=1,ngrp
+       Groupa(n)%xa=Groupa(n)%xa/tmass(n)
+       Groupa(n)%ya=Groupa(n)%ya/tmass(n)
+       Groupa(n)%za=Groupa(n)%za/tmass(n)
+       
+       Groupa(n)%x=Groupa(n)%x/tmass(n)
+       Groupa(n)%y=Groupa(n)%y/tmass(n)
+       Groupa(n)%z=Groupa(n)%z/tmass(n)
+    END DO
+    Grp_Atm=>IndSequence__Grp()
+    WRITE(80+PI_Node,*) ngrp,SIZE(Grp_Atm,2)
+    Groupa(:) % AtSt = Grp_atm(1,:)
+    Groupa(:) % AtEn = Grp_atm(2,:)
+  END FUNCTION Groups__InitCoords
 END MODULE Groups

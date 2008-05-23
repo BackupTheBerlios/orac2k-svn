@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Atom
+MODULE PI_TestComm
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,101 +38,24 @@ MODULE Atom
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Wed May 14 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
-  USE Constants
-  USE Errors, ONLY: Add_Errors=>Add, errmsg_f
-  USE SystemTpg
-  USE Cell
-  USE AtomCnt
-  USE AtomBox
-  USE SimulationBox
-  USE PDB
+#ifdef HAVE_MPI
+  USE mpi
+#endif
+  USE PI_
+  USE PI_Decompose
+  USE NeighCells
   IMPLICIT none
   PRIVATE
-  PUBLIC Atom_, Atom__PDB, Atom__InitCoords,Atom__, Atoms
-  TYPE :: Atom__
-     REAL(8) :: x,y,z      ! Coordinates orthogonal frame
-     REAL(8) :: xa,ya,za   ! Coordinates reduced frame
-     REAL(8) :: vx,vy,vz      ! Velocities orthogonal frame
-     REAL(8) :: vxa,vya,vza   ! Velocities reduced frame
-     REAL(8) :: chg, mass
-     CHARACTER(len=max_atm) :: Res, beta, betab
-     INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv, Mol
-  END TYPE Atom__
-  TYPE(Atom__), ALLOCATABLE, SAVE :: Atoms(:)
+  PUBLIC
 CONTAINS
-  FUNCTION Atom_() RESULT(out)
-    LOGICAL :: out
-    INTEGER :: n,m,s,nato
-
-    out=.TRUE.
-    IF(.NOT. ALLOCATED(AtomCnts)) THEN
-       errmsg_f='The No. of Atoms of the system is unknown'
-       CALL Add_Errors(-1,errmsg_f)
-       out=.FALSE.
-       RETURN
-    END IF
-    nato=SIZE(AtomCnts)
-    ALLOCATE(Atoms(nato))
-    DO n=1,nato
-       Atoms(n) % Grp_No = AtomCnts(n) % Grp_No
-       Atoms(n) % Res_No = AtomCnts(n) % Res_No
-       Atoms(n) % Id_Type = AtomCnts(n) % Id_Type
-       Atoms(n) % Id_Slv = AtomCnts(n) % Id_Slv
-       Atoms(n) % Id_Res = AtomCnts(n) % Id_Res
-       Atoms(n) % chg = AtomCnts(n) % chg
-       Atoms(n) % mass = AtomCnts(n) % mass
-       Atoms(n) % Res = AtomCnts(n) % Res
-       Atoms(n) % beta = AtomCnts(n) % Beta
-       Atoms(n) % betab = AtomCnts(n) % Betab
-    END DO
-    DO n=1,SIZE(Tpg % Mol_Atm)
-       DO m=1,SIZE(Tpg % Mol_Atm(n) % g)
-          s=Tpg % Mol_Atm(n) % g (m)
-          Atoms(s) % Mol = n
-       END DO
-    END DO    
-  END FUNCTION Atom_
-  FUNCTION Atom__InitCoords() RESULT(out)
-    LOGICAL :: out
-    INTEGER :: n
-
-    out=.TRUE.
-    IF(.NOT. ALLOCATED(Atoms_InBox)) THEN
-       errmsg_f='Cannot initialize atomic coordinates: Initial&
-            & coordinates were expected, but none were either &
-            &built or read in by SimulationBox Module.'
-       CALL Add_Errors(-1,errmsg_f)
-       out=.FALSE.
-       RETURN
-    END IF
+  SUBROUTINE Init
     
-    Atoms(:) % xa = Atoms_InBox(:) % x 
-    Atoms(:) % ya = Atoms_InBox(:) % y 
-    Atoms(:) % za = Atoms_InBox(:) % z 
-    Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
-    Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
-    Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
+  END SUBROUTINE Init
 
-  END FUNCTION Atom__InitCoords
-  SUBROUTINE Atom__PDB(unit)
-    INTEGER :: unit
-    TYPE(AtomPdb), ALLOCATABLE :: PDB__Coords(:)
-    INTEGER :: n
-
-    ALLOCATE(PDB__Coords(SIZE(Atoms)))
-    DO n=1,SIZE(Atoms)
-       PDB__Coords(n) % x = Atoms(n) % x
-       PDB__Coords(n) % y = Atoms(n) % y
-       PDB__Coords(n) % z = Atoms(n) % z
-       PDB__Coords(n) % Serial =n 
-    END DO
-    CALL PDB__Write(unit,PDB__Coords)
-    DEALLOCATE(PDB__Coords)
-  END SUBROUTINE Atom__PDB
-END MODULE Atom
+END MODULE PI_TestComm
