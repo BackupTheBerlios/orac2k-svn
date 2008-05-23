@@ -136,7 +136,7 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	IndPatch.o AtomCnt.o IndSequence.o ResidueTpg.o  SystemTpg.o TypesPrm.o \
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
 	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors_S.o Neighbors.o Utilities.o Groups.o \
-	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o\
+	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o PI_Neighbors.o \
 	NeighCells.o Potential.o Ewald.o Parallel.o Print_Defs.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
