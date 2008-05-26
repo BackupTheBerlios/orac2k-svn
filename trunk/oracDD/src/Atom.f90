@@ -120,7 +120,8 @@ CONTAINS
     Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
 
   END FUNCTION Atom__InitCoords
-  SUBROUTINE Atom__PDB(unit)
+  SUBROUTINE Atom__PDB(unit, nozero_write)
+    INTEGER, OPTIONAL :: nozero_write
     INTEGER :: unit
     TYPE(AtomPdb), ALLOCATABLE :: PDB__Coords(:)
     INTEGER :: n
@@ -132,7 +133,11 @@ CONTAINS
        PDB__Coords(n) % z = Atoms(n) % z
        PDB__Coords(n) % Serial =n 
     END DO
-    CALL PDB__Write(unit,PDB__Coords)
+    IF(PRESENT(nozero_write)) THEN
+       CALL PDB__Write(unit,PDB__Coords, nozero_write)
+    ELSE
+       CALL PDB__Write(unit,PDB__Coords)
+    END IF
     DEALLOCATE(PDB__Coords)
   END SUBROUTINE Atom__PDB
 END MODULE Atom

@@ -58,7 +58,8 @@ MODULE IndSequence
   USE SecondarySeq
   USE IndPatch
   USE Tops
-  
+
+  USE PI_
   USE Print_Defs
   IMPLICIT none
   PRIVATE
@@ -106,6 +107,7 @@ CONTAINS
              RETURN
           END IF
           DO i=1,SIZE(App_Char(i_F) % group)
+             IF(SIZE(App_Char(i_F)  % group (i) % g) == 0) CYCLE 
              Grp_No=Grp_No+1
              nato=nato+SIZE(App_Char(i_F)  % group (i) % g)
           END DO
@@ -132,12 +134,15 @@ CONTAINS
 !!$--- Count atoms
 !!$
           DO i=1,SIZE(App_Char(i_F) % group)
-             Grp_No=Grp_No+1
              jm=SIZE(App_Char(i_F)  % group (i) % g)
+             IF(jm == 0) CYCLE
+             Grp_No=Grp_No+1
+!!$             WRITE(*,*) m,TRIM(Secondary(n) % Line(m)),Grp_No,jm
              DO j=1,jm
                 nato=nato+1
                 IF(i == 1 .AND. j == 1) Res_Atm(1,Res_No)=nato
                 IF(j == 1) Grp_Atm(1,Grp_No)=nato
+!!$                WRITE(*,*) nato, TRIM(App_Char(i_F)  % group (i) % g (j))
              END DO
              Grp_Atm(2,Grp_No)=nato
           END DO

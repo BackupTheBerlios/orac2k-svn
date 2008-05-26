@@ -131,8 +131,9 @@ CONTAINS
           Res_No=Res_No+1
           i_F=inds(n) % i (m)
           DO i=1,SIZE(App_Char(i_F) % group)
-             Grp_No=Grp_No+1
              jm=SIZE(App_Char(i_F)  % group (i) % g)
+             IF(jm == 0) CYCLE
+             Grp_No=Grp_No+1
              DO j=1,jm
                 nato=nato+1
                 AtomCnts(nato) % Res = App_Char(i_F) % Type

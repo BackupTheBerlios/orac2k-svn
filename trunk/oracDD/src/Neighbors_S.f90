@@ -473,9 +473,9 @@ CONTAINS
        x1=x(n)/dx
        y1=y(n)/dy
        z1=z(n)/dz
-       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
-       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
-       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
+       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.0D0)/2
+       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.0D0)/2
+       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.0D0)/2
        nx=MOD(MOD(nx,ncx)+ncx,ncx)
        ny=MOD(MOD(ny,ncy)+ncy,ncy)
        nz=MOD(MOD(nz,ncz)+ncz,ncz)

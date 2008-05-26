@@ -65,7 +65,7 @@ CONTAINS
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
-    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
+!!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
     rcut=(/4.0D0, 5.9D0, 12.0D0/)
     IF(npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
@@ -73,6 +73,7 @@ CONTAINS
        END IF
     END IF
     CALL PI__AssignAtomsToCells
+    IF(Inout__PDB % unit /= 0 .AND. PI_Node == 4) CALL Atom__PDB(Inout__PDB % unit, 1)
     IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
        CALL Ewald__Validate

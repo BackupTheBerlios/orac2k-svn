@@ -91,6 +91,7 @@ CONTAINS
     Grp_Atm=>IndSequence__Grp()
     ALLOCATE(Grp_A(SIZE(Grp_Atm,2)))
     Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds)
+
     DO n=1,SIZE(Grp_Local)
        s=0
        IF(ALLOCATED(Grp_Local(n) % Tpg)) s=SIZE(Grp_Local(n) % Tpg)
@@ -162,7 +163,6 @@ CONTAINS
           Grp_A(n) % imph (m) % p  = Grp_Local(n) % Tpg (m) % p
        END DO
     END DO
-
     Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds, 0)
   CONTAINS
     FUNCTION Do_Copy(p_Tpg, t_Tpg, delete) RESULT(out)
@@ -187,12 +187,16 @@ CONTAINS
       IF(ALLOCATED(Grp)) DEALLOCATE(Grp)
       ALLOCATE(Grp(SIZE(Grp_Atm,2)))
 
+!!$      DO n=1,SIZE(Grp_Atm,2)
+!!$         WRITE(90,'(i7,2x,4i8)') n,Grp_Atm(1,n),Grp_Atm(2,n),AtomCnts (Grp_Atm(1&
+!!$              &,n)) % Grp_No,AtomCnts (Grp_Atm(2,n)) % Grp_No
+!!$      END DO
       Dims_a=0
       DO n=1,SIZE(P_Tpg)
          o1=p_Tpg(n)  % pt
          p1=t_Tpg (1,o1)
          G_p1=AtomCnts (p1) % Grp_No
-         Dims_a(G_p1) = Dims_a(G_p1)  +1
+        Dims_a(G_p1) = Dims_a(G_p1)  +1
       END DO
       DO n=1,SIZE(Dims_a)
          ALLOCATE(Grp(n) % Tpg (Dims_a(n)))
@@ -234,6 +238,12 @@ CONTAINS
     ntap=SIZE(Atoms)
     ALLOCATE(tmass(ngrp))
     tmass=0.0D0
+    Groupa(:) % xa = 0.0D0
+    Groupa(:) % ya = 0.0D0
+    Groupa(:) % za = 0.0D0
+    Groupa(:) % x = 0.0D0
+    Groupa(:) % y = 0.0D0
+    Groupa(:) % z = 0.0D0
 
     DO n=1,ntap
        p1=Atoms(n) % Grp_No
@@ -261,9 +271,11 @@ CONTAINS
        Groupa(n)%y=Groupa(n)%y/tmass(n)
        Groupa(n)%z=Groupa(n)%z/tmass(n)
     END DO
+    CALL IndSequence__Update
     Grp_Atm=>IndSequence__Grp()
-    WRITE(80+PI_Node,*) ngrp,SIZE(Grp_Atm,2)
-    Groupa(:) % AtSt = Grp_atm(1,:)
-    Groupa(:) % AtEn = Grp_atm(2,:)
+    DO n=1,ngrp
+       Groupa(n) % AtSt = Grp_atm(1,n)
+       Groupa(n) % AtEn = Grp_atm(2,n)
+    END DO
   END FUNCTION Groups__InitCoords
 END MODULE Groups

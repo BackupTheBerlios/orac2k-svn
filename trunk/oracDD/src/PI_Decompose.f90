@@ -279,7 +279,7 @@ CONTAINS
   END SUBROUTINE PI__GetParameters
   SUBROUTINE PI__AssignAtomsToCells
     INTEGER :: npx,npy,npz,n,m,nx,ny,nz,mx,my,mz,numcell,l,nmin,ntap&
-         &,ncx,ncy,ncz,ngrp,cp_0,cp_3, AtSt, AtEn
+         &,ncx,ncy,ncz,ngrp,cp_0,cp_3, AtSt, AtEn,mm
     LOGICAL, POINTER :: Mask(:)
     INTEGER, POINTER :: nums(:)
 
@@ -303,19 +303,12 @@ CONTAINS
        Mask(l)=.TRUE.
        l=Chain_xyz(l) % p
     END DO
-    WRITE(*,*) 'PI_Node = ',PI_Node,SIZE(Atoms),SIZE(Groupa)
+
     DO n=1,ngrp
-       IF(.NOT. Mask(n)) THEN
-          AtSt=Groupa(n) % AtSt
-          AtEn=Groupa(n) % AtEn
-          DO m=AtSt,AtEn
-             WRITE(90+PI_Node,*) n,m,Groupa(n) % x,Groupa(n) % AtSt&
-                  &,Groupa(n) % AtEn
-          END DO
-       END IF
-    END DO
-    STOP
-    DO n=1,ngrp
+       nx=Chain_xyz (n) % i
+       ny=Chain_xyz (n) % j
+       nz=Chain_xyz (n) % k
+       numcell=nz+ncz*(ny+ncy*nx)+1
        IF(.NOT. Mask(n)) THEN
           Groupa(n) % xa=0.0D0
           Groupa(n) % ya=0.0D0
@@ -325,19 +318,15 @@ CONTAINS
           Groupa(n) % z=0.0D0
           AtSt=Groupa(n) % AtSt
           AtEn=Groupa(n) % AtEn
-          DO m=AtSt,AtEn
-             WRITE(90+PI_Node,*) n,m,Groupa(n) % x,Groupa(n) % AtSt,Groupa(n) % AtEn
-             Atoms(m) % x = 0.0D0
-             Atoms(m) % y = 0.0D0
-             Atoms(m) % z = 0.0D0
-             Atoms(m) % xa = 0.0D0
-             Atoms(m) % ya = 0.0D0
-             Atoms(m) % za = 0.0D0
+          DO mm=AtSt,AtEn
+             Atoms(mm) % x = 0.0D0
+             Atoms(mm) % y = 0.0D0
+             Atoms(mm) % z = 0.0D0
+             Atoms(mm) % xa = 0.0D0
+             Atoms(mm) % ya = 0.0D0
+             Atoms(mm) % za = 0.0D0
           END DO
        END IF
     END DO
-    WRITE(*,*) '.illap. = ',PI_Node
-    STOP
   END SUBROUTINE PI__AssignAtomsToCells
 END MODULE PI_Decompose
-

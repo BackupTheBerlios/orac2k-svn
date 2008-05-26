@@ -31,7 +31,7 @@
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
 
-SUBROUTINE PDB__Write(unit,PDB__Coords)
+SUBROUTINE PDB__Write(unit,PDB__Coords, nozero_write)
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-14 17:36:13 marchi>                           *
 !!$                                                                      *
@@ -48,6 +48,7 @@ SUBROUTINE PDB__Write(unit,PDB__Coords)
 
 !!$---- This subroutine is part of the program oracDD ----*
   
+  INTEGER, OPTIONAL :: nozero_write
   TYPE(AtomPDB) :: PDB__Coords(:)
   INTEGER :: unit
   CHARACTER(len=3) :: Res
@@ -63,6 +64,7 @@ SUBROUTINE PDB__Write(unit,PDB__Coords)
      x=PDB__Coords(n) % x
      y=PDB__Coords(n) % y
      z=PDB__Coords(n) % z
+     IF(PRESENT(nozero_write) .AND. x == 0.0D0 .AND. y == 0.0D0 .AND. z == 0.0D0) CYCLE
      Serial=PDB__Coords(n) % Serial
      AtmName=TRIM(ADJUSTL(Tpg % atm (Serial) % a % beta))
      AtmName=ADJUSTR(AtmName)
