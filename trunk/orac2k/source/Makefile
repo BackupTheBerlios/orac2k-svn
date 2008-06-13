@@ -297,7 +297,7 @@ all:
 
 parst.h: config.h parst.inc
 	@$(CPP) parst.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=parst;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -305,7 +305,7 @@ parst.h: config.h parst.inc
 
 vacf.h: config.h vacf.inc
 	@$(CPP) vacf.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=vacf;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -313,7 +313,7 @@ vacf.h: config.h vacf.inc
 
 mts_vacf.h: config.h mts_vacf.inc
 	@$(CPP) mts_vacf.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=mts_vacf;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -321,7 +321,7 @@ mts_vacf.h: config.h mts_vacf.inc
 
 lc_list.h: config.h lc_list.inc
 	@$(CPP) lc_list.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=lc_list;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -329,7 +329,7 @@ lc_list.h: config.h lc_list.inc
 
 mts_spectra.h: config.h mts_spectra.inc
 	@$(CPP) mts_spectra.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=mts_spectra;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -337,7 +337,7 @@ mts_spectra.h: config.h mts_spectra.inc
 
 analysis.h: config.h analysis.inc
 	@$(CPP) -D$(MEMORY) analysis.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=analysis;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -345,7 +345,7 @@ analysis.h: config.h analysis.inc
 
 resid.h: config.h resid.inc
 	@$(CPP) resid.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=resid;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -353,7 +353,7 @@ resid.h: config.h resid.inc
 
 fourier.h: config.h fourier.inc
 	@$(CPP) fourier.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=fourier;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -361,7 +361,7 @@ fourier.h: config.h fourier.inc
 
 pbc.h: config.h pbc.inc
 	@$(CPP) pbc.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=pbc;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -369,7 +369,7 @@ pbc.h: config.h pbc.inc
 
 pme.h: config.h pme.inc
 	@$(CPP) -D$(TARGET1) -D$(MODE) -D$(FFTS) pme.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=pme;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -377,7 +377,7 @@ pme.h: config.h pme.inc
 
 parallel.h: parallel.inc
 	@$(CPP) -D$(TARGET1) -D$(MODE) parallel.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=parallel;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -385,7 +385,7 @@ parallel.h: parallel.inc
 
 orac.h: orac.inc
 	@$(CPP) -D$(TARGET0) orac.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=orac;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -394,7 +394,7 @@ orac.h: orac.inc
 
 cpropar.h: cpropar.inc
 	@$(CPP) -D$(TARGET0) cpropar.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=cpropar;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -402,7 +402,7 @@ cpropar.h: cpropar.inc
 
 voronoi.h: config.h voronoi.inc
 	@$(CPP) -D$(MEMORY) voronoi.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=voronoi;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -410,7 +410,7 @@ voronoi.h: config.h voronoi.inc
 
 unit.h: unit.inc
 	@$(CPP) -D$(TARGET0) unit.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=unit;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -418,7 +418,7 @@ unit.h: unit.inc
 
 parameters.h: parameters.inc
 	@$(CPP) -D$(TARGET0) parameters.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=parameters;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
@@ -426,7 +426,7 @@ parameters.h: parameters.inc
 
 mpi_size.h: mpi_size.inc
 	@$(CPP) -D$(MPI_TYPE) mpi_size.inc | awk '!/^ *$$/ && !/^#/' > temp
-	@./python/include_f90.py temp
+	./python/include_f90.py temp
 	file=mpi_size;\
 	test -f $$file.h && ( cmp -s $$file.h temp || \
 	cp temp $$file.h) || cp temp $$file.h ;\
