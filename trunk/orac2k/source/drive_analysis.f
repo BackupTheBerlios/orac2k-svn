@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2008-04-21 14:29:29 marchi>                           *
+*   Time-stamp: <2008-03-20 14:10:49 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -50,7 +50,7 @@
      &     =>print_density,VOR_Shell=>Volume_Shell,VOR_Dynamics
      &     =>Dynamics,VOR_Collect=>Collect_Dynamics,VOR_hbonds=>hbonds
      &     ,only_water,VOR_Water_Density=>Water_Density,VOR_Water_Print
-     &     =>Water_Print,VOR_novvs=>no_vvs
+     &     =>Water_Print
       USE HYDRATION_Mod, ONLY: hydration,HYD_n_neighbors=>n_neighbors,
      &     HYD_Initialize_P=>Initialize_P,
      &     HYD_Initialize_Array=>Initialize_Array,
@@ -280,6 +280,7 @@ c$$$====================================================================
          CALL HYD_Initialize_Array(grppt,mres,resg)
       END IF
       IF(hydynamics) THEN
+
          CALL HYDD_Initialize_P(node,nprocs,ngrp,nbun)
          CALL HYDD_Initialize_Array(grppt,mres,resg,chrge,mass,ntap)
       END IF
@@ -1180,7 +1181,7 @@ c$$$====================================================================
                   
                   IF(voronoi) THEN
                      IF(MOD(nstep,nvoronoi) .EQ. 0) THEN
-                        IF(.NOT. VOR_novvs) WRITE(kprint,93000) 
+                        WRITE(kprint,93000) 
                         CALL zero_voronoi
                         CALL VOR_hbonds(co,xpa,ypa,zpa)
                         CALL comp_neigh_vor(nstart_h,nend_h,nstart_ah
@@ -1194,29 +1195,24 @@ c$$$====================================================================
                         IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
 #endif
                         IF(.NOT. VOR_dynamics) THEN
-                           IF(.NOT. VOR_novvs) THEN
-                              CALL comp_voronoi(nstart_ah,nend_ah,ntap
-     &                             ,xpga,ypga,zpga,atomg,xpa,ypa,zpa,co
-     &                             ,iret,errmsg)
-                              CALL analyse_voronoi(nstart_ah,nend_ah
-     &                             ,nlocal_ah,nstart_uh,nend_uh
-     &                             ,nlocal_uh,node,nprocs,ncube,fstep
-     &                             ,volume,ss_index,ss_point(1,1),grppt
-     &                             ,mend,protl,nprot,ntap,nbun,beta
-     &                             ,atomp,nres(1,1),nres(1,2),mres
-     &                             ,prsymb,iret,errmsg)
-                              IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
-                           END IF
+                           CALL comp_voronoi(nstart_ah,nend_ah,ntap,xpga
+     &                          ,ypga,zpga,atomg,xpa,ypa,zpa,co,iret
+     &                          ,errmsg)
+                           CALL analyse_voronoi(nstart_ah,nend_ah
+     &                          ,nlocal_ah,nstart_uh,nend_uh
+     &                          ,nlocal_uh,node,nprocs,ncube,fstep
+     &                          ,volume,ss_index,ss_point(1,1),grppt
+     &                          ,mend,protl,nprot,ntap,nbun,beta
+     &                          ,atomp,nres(1,1),nres(1,2),mres
+     &                          ,prsymb,iret,errmsg)
+                           IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
                            IF(VOR_fluct) THEN
                               CALL VOR_Fluctuations(kprint,xp0,yp0,zp0)
                            END IF
                            IF(VOR_compress) THEN
                               IF(.NOT. only_water) THEN
                                  CALL VOR_Density(volume)
-                                 IF(.NOT. VOR_novvs) THEN
-                                    CALL VOR_Shell(volume,co,xpa,ypa
-     &                                   ,zpa)
-                                 END IF
+                                 CALL VOR_Shell(volume,co,xpa,ypa,zpa)
                                  CALL VOR_print
                               ELSE
                                  CALL VOR_Water_Density(nstart_ah
@@ -1413,6 +1409,11 @@ c--------------------------
                   CALL read_confc_rows(co,xp0,yp0,zp0,xau
      &                 ,yau,zau,ntap,fstep,nstep,end,err,divide_records
      &                 ,atom_record)
+                  IF(nnstep == 1) THEN
+                     IF(RIG_Object) THEN
+                        CALL RIG_Initialize_xp(xp0,yp0,zp0,nato_slt)
+                     END IF
+                  END IF
                ELSE IF(pdb_read .AND. start_anl .NE. 0) THEN
                   CALL rdcmac(kconf,kprint,nres(1,1),beta,xp0,yp0,zp0
      &                 ,ntap,.FALSE.,1,1,iret,errmsg)
@@ -1462,11 +1463,6 @@ c--------------------------
      &                       ,nprot_m,protl_m)
                         CALL change_frame(co,oc,1,ntap,xpo,ypo
      &                       ,zpo,xp0,yp0,zp0)
-                     END IF
-                  END IF
-                  IF(nnstep == 1) THEN
-                     IF(RIG_Object) THEN
-                        CALL RIG_Initialize_xp(xp0,yp0,zp0,nato_slt)
                      END IF
                   END IF
 
@@ -1520,6 +1516,7 @@ c--------------------------
                   END IF
 
                   IF(Electric) THEN
+                     
                      IF(nnstep == 1) THEN
                         CALL ELE_Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &                       ,ypcma,zpcma,co,oc,node,nprocs,prsymb,beta
