@@ -103,9 +103,6 @@
        CASE('dynamics')
           dynamics=.TRUE.
 
-       CASE('no_voronoi_volumes')
-          no_vvs=.TRUE.
-
        CASE('every')
           CALL Read_String(strngs(2),dummy)
           nvoronoi=IDINT(dummy)

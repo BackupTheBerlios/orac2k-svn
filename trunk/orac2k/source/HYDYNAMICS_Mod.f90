@@ -1,10 +1,6 @@
 MODULE HYDYNAMICS_Mod
 !!$***********************************************************************
-<<<<<<< HYDYNAMICS_Mod.f90
-!!$   Time-stamp: <2008-04-01 09:31:21 marchi>                           *
-=======
-!!$   Time-stamp: <2008-03-31 18:31:30 marchi>                           *
->>>>>>> 1.3
+!!$   Time-stamp: <2008-03-20 12:51:58 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -70,6 +66,7 @@ CONTAINS
     DO i=1,m
        index_sv(i+1)=index_b(i+1)
     END DO
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   END SUBROUTINE Initialize
   SUBROUTINE Initialize_P(node_a,nprocs_a,ngrp_a,nbun_a)
@@ -251,7 +248,7 @@ CONTAINS
       INTEGER ::  iv,jv,kv,nmin
       INTEGER ::  nppp,map,count,nn,na
 
-      REAL(8) :: dx,dy,dz,rcut
+      REAL(8) :: dx,dy,dz,co(3,3),rcut
       REAL(8) :: x1,y1,z1,x2,y2,z2,xx,yy,zz 
       REAL(8) :: sqcut,d
 
@@ -269,6 +266,8 @@ CONTAINS
       dx=2.d0/ncx
       dy=2.d0/ncy
       dz=2.d0/ncz
+
+
       DO n=1,ncx*ncy*ncz
          headp(n)=0
       END DO
@@ -357,6 +356,7 @@ CONTAINS
 #if defined PARALLEL
       IF(nprocs .GT. 1) CALL P_merge_i(nvtot)
 #endif
+
       p_nn=0
       DEALLOCATE(headp)
       DEALLOCATE(chainp,cellpi,cellpj,cellpk,ind_a)

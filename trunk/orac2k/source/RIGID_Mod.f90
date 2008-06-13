@@ -1,7 +1,7 @@
 MODULE RIGID_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2008-03-28 11:07:09 marchi>                           *
+!!$   Time-stamp: <2008-03-20 10:18:22 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -101,7 +101,7 @@ CONTAINS
 
     REAL(8) :: xcm,ycm,zcm,totmass
     INTEGER :: i,n,m
-    REAL(8), POINTER :: xyz(:,:),xyz0(:,:),xyzfit(:,:)
+    REAL(8), ALLOCATABLE :: xyz(:,:),xyz0(:,:),xyzfit(:,:)
     REAL(8) :: RotMat(3,3),q(0:7),xc,yc,zc,xd,yd,zd,xt_cm,yt_cm,zt_cm&
          &,err,dcm(3),xpp,ypp,zpp,xpcc,ypcc,zpcc
     INTEGER :: iret
@@ -163,6 +163,7 @@ CONTAINS
        zp0(i)=zc+zt_cm
     END DO
     DEALLOCATE(xyz,xyz0,xyzfit)
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
   END SUBROUTINE Compute

@@ -94,7 +94,7 @@ CONTAINS
              ResName(1:3)=prsymb(i)(1:3)
              CALL low_up(ResName,3)
              Chain=' '
-             WRITE(kpdb,1) 'ATOM ',i,bet2,ResName,i1,xb,yb,zb,dr,DFLOAT(k)
+             WRITE(kpdb,1) 'ATOM ',i,bet2,ResName,Chain,i1,xb,yb,zb,dr,DFLOAT(k)
           END DO
        END DO
     END DO
@@ -114,12 +114,12 @@ CONTAINS
              ResName(1:3)=prsymb(i)(1:3)
              CALL low_up(ResName,3)
              Chain=' '
-             WRITE(kpdb,1) 'ATOM ',i,bet2,ResName,i1,xb,yb,zb,dr,DFLOAT(k)
+             WRITE(kpdb,1) 'ATOM ',i,bet2,ResName,Chain,i1,xb,yb,zb,dr,DFLOAT(k)
           END DO
        END DO
     END DO
     WRITE(kpdb,'(a)')'TER  '
-1   FORMAT(a5,i6,1x,a4,x,a3,1x,i5,4x,3f8.3,f8.4,f4.1)
+1   FORMAT(a5,i6,1x,a4,x,a3,1x,a1,i4,4x,3f8.3,f8.4,f4.1)
 2   FORMAT('REMARK   1 Configuration at time step ',f11.2,'      ',&
          &'                 ')
   END SUBROUTINE FRAGM_
