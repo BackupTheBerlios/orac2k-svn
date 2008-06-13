@@ -6,8 +6,7 @@
 
       INTEGER sitslv,sitslu,types,typep,tsites,tsitep,
      &     elsiz,secsiz,mfold,nores,tgroup,hoov,npm,mspline,mpp,nbyte
-     &     ,rbyte,types_gofr,pcontact_slt,ntopol,n_mat,cheb_order
-     &     ,maxsk
+     &     ,rbyte,types_gofr,pcontact_slt,ntopol,n_mat,cheb_order,maxsk
       PARAMETER(sitslv=_SIT_SOLV_,
      &          sitslu=_SIT_SOLU_,
      &          types=_TYP_SOLV_,
