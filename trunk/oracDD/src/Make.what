@@ -37,7 +37,7 @@ ifeq ($(COMPILER), INTEL)
   F90 = ifort
   CC = gcc
   LD = ifort
-  FFLAGS += -fpp -O3
+  FFLAGS += -fpp -automatic -inline-forceinline -O3 
   LLFLAGS= -i_dynamic 
 endif
 
@@ -78,3 +78,4 @@ endif
 
 #FFLAGS = -O3
 #FFLAGS = -g -C
+include Make.Lx_ifc_breizh

@@ -137,7 +137,8 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
 	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors_S.o Neighbors.o Utilities.o Groups.o \
 	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o PI_Neighbors.o \
-	NeighCells.o Potential.o Ewald.o Parallel.o Print_Defs.o oracDD.o 
+	PI_Communicate.o NeighCells.o Potential.o Ewald.o PME.o PME_Routines.o Parallel.o\
+	Print_Defs.o Rfft3d.o LittleBoxes.o Forces.o oracDD.o 
 
 OBJS_f = AddH.o duni.o
 
@@ -146,7 +147,8 @@ SRC = $(patsubst %.o, %.f90, $(OBJS)) $(patsubst %.o, %.f, $(OBJS_f))
 all: oracDD.x
 
 oracDD.x: $(OBJS) $(OBJS_f)
-	$(LD) -o oracDD.x $(OBJS) $(OBJS_f) -L$(LIBS) $(LLFLAGS)
+	$(LD) -o oracDD.x $(OBJS) $(OBJS_f) -L$(FFTW_LIB) -L$(LIBS) $(LLFLAGS)\
+	$(LOCFLAGS)
 
 clean:
 	rm -f *.o *.x *.mod *~
