@@ -52,8 +52,11 @@ MODULE NeighCells
   USE Cell
   IMPLICIT none
   PRIVATE
-  PUBLIC NeighCells_, NeighCells__Map, NeighCells__MapLarge, NeighCells__Neigh&
-       &, Ind_Large, Ind_Small, Nei, NeighCells__Param
+  PUBLIC NeighCells_, NeighCells__, NeighCells__Map,&
+       & NeighCells__MapLarge, NeighCells__Neigh,Ind_Large, Ind_Small&
+       &, Neighc_, NeighCells__Param
+
+  INTEGER, PARAMETER :: CellMax_=3
 
   TYPE :: NeighCells__Map
      INTEGER :: nx,ny,nz
@@ -65,6 +68,9 @@ MODULE NeighCells
   TYPE :: NeighCells__Neigh
      INTEGER, ALLOCATABLE :: c(:,:)
   END TYPE NeighCells__Neigh
+  TYPE :: NeighCells__
+     TYPE(NeighCells__Neigh), ALLOCATABLE :: Nei(:)
+  END type NeighCells__
   TYPE :: NodeN
      REAL(8) :: rcut=0.0D0
      INTEGER :: npx=0,npy=0,npz=0,ncx=0,ncy=0,ncz=0
@@ -72,6 +78,7 @@ MODULE NeighCells
      TYPE(NeighCells__MapLarge), ALLOCATABLE :: Ind_L(:,:,:)
      TYPE(NodeN), POINTER :: next
   END TYPE NodeN
+
   TYPE(NodeN), POINTER :: Root, Current, new_node
 
 !!$
@@ -93,14 +100,14 @@ MODULE NeighCells
 !!$--- For each large lattice unit give the list of neighboring small units
 !!$
 
-  TYPE(NeighCells__Neigh), ALLOCATABLE, SAVE :: Nei(:)
+  TYPE(NeighCells__), TARGET, SAVE :: Neighc_(CellMax_)
   INTEGER, SAVE :: ncx,ncy,ncz
 CONTAINS
 !!$
 !!$--- Constructor
 !!$
-  FUNCTION NeighCells_(rcut0,rcut,nprocs,npax,npay,npaz) RESULT(out)
-    INTEGER :: nprocs,npax,npay,npaz
+  FUNCTION NeighCells_(rcut0,rcut,nprocs,npax,npay,npaz,i_cut) RESULT(out)
+    INTEGER :: nprocs,npax,npay,npaz,i_cut
     LOGICAL :: out
     INTEGER :: nx,ny,nz,mx,my,mz,i,j,k,n,np,count1,o,iv,jv,kv
     REAL(8) :: rcut,rcut0
@@ -122,6 +129,11 @@ CONTAINS
 !!$--- If it the first time allocate space for root
 !!$
 
+    IF(i_cut > CellMax_) THEN
+       errmsg_f='Number of Cutoffs exceed 3. Abort'
+       CALL Add_Errors(-1,errmsg_f)
+       RETURN
+    END IF
     IF(count0 == 0) THEN
        ALLOCATE(root)
        NULLIFY(root%next)
@@ -323,8 +335,7 @@ CONTAINS
        
     IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()
      
-    IF(ALLOCATED(Nei)) DEALLOCATE(Nei)
-    ALLOCATE(Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
+    ALLOCATE(Neighc_(i_cut) % Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
 
     DO mx=1,npx
        DO my=1,npy
@@ -357,11 +368,11 @@ CONTAINS
                 END DO
              END DO
              count1=Node__Size()
-             ALLOCATE(Nei(count0) % c (3,count1))
+             ALLOCATE(Neighc_(i_cut) % Nei(count0) % c (3,count1))
              count1=0
              DO WHILE(Node__Pop(vec))
                 count1=count1+1
-                Nei(count0) % c(:,count1) = vec
+                Neighc_(i_cut) % Nei(count0) % c(:,count1) = vec
              END DO
           END DO
        END DO

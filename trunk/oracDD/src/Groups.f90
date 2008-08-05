@@ -54,12 +54,13 @@ MODULE Groups
   IMPLICIT none
   PRIVATE
   PUBLIC Groups_, Groups__Chain, Groups__Pot, Grp_A, Groups__Base,Groupa&
-       &, Groups__InitCoords
+       &, Groups__InitCoords,Groups__Update_Knwn
   TYPE :: Groups__Base
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
      INTEGER ::  AtSt,AtEn ! Atom Start, Atom End
      INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv
+     INTEGER :: Knwn=1
   END TYPE Groups__Base
 
   TYPE :: Groups__Chain
@@ -278,4 +279,58 @@ CONTAINS
        Groupa(n) % AtEn = Grp_atm(2,n)
     END DO
   END FUNCTION Groups__InitCoords
+  FUNCTION Groups__Update_Knwn() RESULT(out)
+    INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
+    REAL(8) :: mass
+    REAL(8), POINTER :: Tmass(:)
+    LOGICAL :: out
+    
+
+    out=.TRUE.
+    IF(.NOT. ALLOCATED(Atoms)) THEN
+       out=.FALSE.
+       RETURN
+    END IF
+
+    ngrp=SIZE(groupa)
+    ntap=SIZE(Atoms)
+    ALLOCATE(tmass(ngrp))
+    tmass=0.0D0
+    DO n=1,ngrp
+       IF(Groupa(n) % knwn == 2) THEN
+          Groupa(n) % xa = 0.0D0
+          Groupa(n) % ya = 0.0D0
+          Groupa(n) % za = 0.0D0
+          Groupa(n) % x = 0.0D0
+          Groupa(n) % y = 0.0D0
+          Groupa(n) % z = 0.0D0
+       END IF
+    END DO
+
+    DO nn=1,ngrp
+       IF(Groupa(nn) % knwn /= 2) CYCLE
+       AtSt=Groupa(nn) % AtSt
+       AtEn=Groupa(nn) % Aten
+       DO n=AtSt,AtEn
+          mass=Atoms(n) % mass
+          tmass(nn)=tmass(nn)+ mass
+          Groupa(nn) % xa = Groupa(nn) % xa + mass*Atoms(n) % xa
+          Groupa(nn) % ya = Groupa(nn) % ya + mass*Atoms(n) % ya
+          Groupa(nn) % za = Groupa(nn) % za + mass*Atoms(n) % za
+          Groupa(nn) % x = Groupa(nn) % x + mass*Atoms(n) % x
+          Groupa(nn) % y = Groupa(nn) % y + mass*Atoms(n) % y
+          Groupa(nn) % z = Groupa(nn) % z + mass*Atoms(n) % z
+       END DO
+    END DO
+    DO n=1,ngrp
+       IF(Groupa(n) % knwn /= 2) CYCLE
+       Groupa(n)%xa=Groupa(n)%xa/tmass(n)
+       Groupa(n)%ya=Groupa(n)%ya/tmass(n)
+       Groupa(n)%za=Groupa(n)%za/tmass(n)
+       
+       Groupa(n)%x=Groupa(n)%x/tmass(n)
+       Groupa(n)%y=Groupa(n)%y/tmass(n)
+       Groupa(n)%z=Groupa(n)%z/tmass(n)
+    END DO
+  END FUNCTION Groups__Update_Knwn
 END MODULE Groups

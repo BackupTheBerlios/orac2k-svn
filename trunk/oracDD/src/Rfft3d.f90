@@ -14,7 +14,7 @@ MODULE RFFT3D
   INCLUDE 'fftw_f77.i'
 CONTAINS
   FUNCTION do_rfft3d(isign,z,na1,na2,na3,na3_start,na3_local&
-       &,na2_start,na2_local,nda1,nda2,nda3) RESULT(out)
+       &,na2_start,na2_local,nda1,nda2,nda3,My_Comm) RESULT(out)
 
 !!$***********************************************************************
 !!$                                                                      *
@@ -55,7 +55,7 @@ CONTAINS
 !!$***********************************************************************
     
     IMPLICIT none
-    INTEGER, INTENT(in) :: isign
+    INTEGER, INTENT(in), OPTIONAL  :: isign,My_Comm
     INTEGER, INTENT(in), OPTIONAL :: na1,na2,na3
     REAL(8), DIMENSION (:,:,:), INTENT(inout) :: z
     INTEGER, INTENT(out), OPTIONAL :: nda1,nda2,nda3,na3_local&
@@ -66,7 +66,7 @@ CONTAINS
     
     INTEGER, SAVE :: calls=0
     INTEGER :: i,j,k,ierr
-    INTEGER(8) :: nodea,ierra
+    INTEGER :: My_Node
     
     out=.TRUE.
     IF(isign .EQ. 0) THEN
@@ -81,6 +81,8 @@ CONTAINS
        na3_local=n3_local
        na2_start=n2_start
        na2_local=n2_local
+       call MPI_COMM_RANK(My_Comm, My_node, ierr )
+       WRITE(60+My_node,*) n2_start,n2_local,n3_start,n3_local
        RETURN
     END IF
     IF(ncache == -1) THEN
@@ -133,9 +135,9 @@ CONTAINS
       nda1=(n1/2+1)*2
       nda2=n2
       ncache=1
-      CALL rfftw3d_f77_mpi_create_plan(plan_backward,MPI_COMM_WORLD&
+      CALL rfftw3d_f77_mpi_create_plan(plan_backward,My_Comm&
            &,n1,n2,n3,FFTW_COMPLEX_TO_REAL,FFTW_MEASURE)
-      CALL rfftw3d_f77_mpi_create_plan(plan_forward ,MPI_COMM_WORLD&
+      CALL rfftw3d_f77_mpi_create_plan(plan_forward ,My_Comm&
            &,n1,n2,n3,FFTW_REAL_TO_COMPLEX,FFTW_MEASURE)
       CALL rfftwnd_f77_mpi_local_sizes(plan_forward,n3_local,n3_start&
            &,n2_local,n2_start,total_work)

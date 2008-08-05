@@ -57,7 +57,6 @@ CONTAINS
     INTEGER :: n,nx,ny,nz,nprocs,npx,npy,npz
 
     IF(Ewald__Param % do_not_change) RETURN
-    WRITE(*,*) Ewald__Param % nx, Ewald__Param % ny, Ewald__Param % nz
 
     CALL PI__GetParameters(nprocs,npx,npy,npz)
     nx=Ewald__Param % nx

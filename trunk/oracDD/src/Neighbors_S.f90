@@ -51,10 +51,13 @@ MODULE Neighbors_S
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Node
   USE Cell
+  USE Groups
+  USE PI_
   IMPLICIT none
   PRIVATE
   PUBLIC Neighbors_S_, Neighbors_S__Particles, Neighbors_S__Ind&
-       &, Neighbors_S__Chain, Neighbors_S__, clst, Neighbors_S_Check
+       &, Neighbors_S__Chain, Neighbors_S__, clst, Neighbors_S_Check&
+       &,Neighbors_S__nc, nc, Neighbors_S__Delete, Chain_xyz, Head_xyz
 
   TYPE :: Neighbors_S__Ind
      INTEGER :: i,j,k
@@ -69,11 +72,12 @@ MODULE Neighbors_S
   END TYPE Neighbors_S__nc
   TYPE :: Neighbors_S__
      TYPE(Neighbors_S__Ind), ALLOCATABLE :: Ind_xyz(:)
-     TYPE(Neighbors_S__Chain), ALLOCATABLE :: Chain_xyz(:)
-     INTEGER, ALLOCATABLE :: Head_xyz(:)
   END TYPE Neighbors_S__
+  TYPE(Neighbors_S__Chain), ALLOCATABLE,SAVE :: Chain_xyz(:)
+  INTEGER, ALLOCATABLE,SAVE :: Head_xyz(:)
 
   TYPE(Neighbors_S__), SAVE :: clst(3)
+
 
   INTEGER, SAVE :: ncx,ncy,ncz
   TYPE(Neighbors_S__nc), SAVE :: nc(3) 
@@ -437,13 +441,13 @@ CONTAINS
 !!$
 !!$--- Constructor for Chain_xyz and Head_xyz
 !!$
-  FUNCTION Neighbors_S__Particles(i_n,x,y,z) RESULT(out)
+  FUNCTION Neighbors_S__Particles(i_n) RESULT(out)
     LOGICAL :: out
-    REAL(8) :: x(:),y(:),z(:)
     INTEGER :: i_n
     REAL(8) :: x1,y1,z1,dx,dy,dz
-    INTEGER :: n,nx,ny,nz,natp,numcell,l
-    
+    INTEGER :: n,nx,ny,nz,numcell,l,ntap,ngrp,AtSt,AtEn,mm,count0
+
+    ngrp=SIZE(Groupa)
     out=.TRUE.
     IF(.NOT. Neighbors_S__Valid(i_n)) THEN
        out=.FALSE.
@@ -453,13 +457,12 @@ CONTAINS
     END IF
     ncx = nc(i_n) % x; ncy = nc(i_n) % y; ncz = nc(i_n) % z
 
-    IF(.NOT. ALLOCATED(clst (i_n) % Head_xyz)) THEN
-       ALLOCATE(clst (i_n) % Head_xyz(ncx*ncy*ncz))
-       natp=SIZE(x)
-       ALLOCATE(clst(i_n) % Chain_xyz(natp))
+    IF(.NOT. ALLOCATED(Head_xyz)) THEN
+       ALLOCATE(Head_xyz(ncx*ncy*ncz))
+       ALLOCATE(Chain_xyz(ngrp))
     END IF
-    clst(i_n) % Head_xyz=0
-    clst(i_n) % Chain_xyz (:) % p = 0
+    Head_xyz=0
+    Chain_xyz (:) % p = 0
 
 !!$=======================================================================
 !!$     Compute chain list for the system
@@ -468,29 +471,32 @@ CONTAINS
     dx=2.d0/ncx
     dy=2.d0/ncy
     dz=2.d0/ncz
-    
-    DO n=1,natp
-       x1=x(n)/dx
-       y1=y(n)/dy
-       z1=z(n)/dz
+    count0=0
+    DO n=1,ngrp
+       IF(Groupa(n) % Knwn == 0) CYCLE
+       count0=count0+(Groupa(n) % AtEn - Groupa(n) % AtSt+1)
+       x1=Groupa(n) % xa/dx
+       y1=Groupa(n) % ya/dy
+       z1=Groupa(n) % za/dz
        nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.0D0)/2
        ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.0D0)/2
        nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.0D0)/2
        nx=MOD(MOD(nx,ncx)+ncx,ncx)
        ny=MOD(MOD(ny,ncy)+ncy,ncy)
        nz=MOD(MOD(nz,ncz)+ncz,ncz)
-       clst(i_n) % Chain_xyz (n) % i=nx
-       clst(i_n) % Chain_xyz (n) % j=ny
-       clst(i_n) % Chain_xyz (n) % k=nz
        numcell=nz+ncz*(ny+ncy*nx)+1
-       clst(i_n) % Chain_xyz (n) % p=clst(i_n) % Head_xyz(numcell)
-       clst(i_n) % Head_xyz(numcell)=n
+       Chain_xyz (n) % i=nx
+       Chain_xyz (n) % j=ny
+       Chain_xyz (n) % k=nz
+       Chain_xyz (n) % p=Head_xyz(numcell)
+       Head_xyz(numcell)=n
     END DO
+
   END FUNCTION Neighbors_S__Particles
   SUBROUTINE Neighbors_S__Delete
     INTEGER :: i_n
     DO i_n=1,SIZE(clst)
-       DEALLOCATE(clst(i_n) % Ind_xyz,clst(i_n) % Chain_xyz,clst(i_n) % Head_xyz)
+       DEALLOCATE(clst(i_n) % Ind_xyz)
     END DO
   END SUBROUTINE Neighbors_S__Delete
   FUNCTION Neighbors_S__Valid(i_n) RESULT(out)

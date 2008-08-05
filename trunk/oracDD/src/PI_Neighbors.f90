@@ -66,9 +66,10 @@ CONTAINS
 !!$
 !!$--- Constructor for PI_Neighbors_
 !!$
-  FUNCTION PI_Neighbors_(x,y,z) RESULT(out)
+  FUNCTION PI_Neighbors_(x,y,z,g) RESULT(out)
     LOGICAL :: out
     REAL(8) :: x(:),y(:),z(:)
+    INTEGER :: g(:)
     REAL(8) :: x1,y1,z1,dx,dy,dz
     INTEGER :: n,nx,ny,nz,natp,numcell,l
     INTEGER, SAVE :: calls = 0 
@@ -96,6 +97,7 @@ CONTAINS
     dz=2.d0/ncz
     
     DO n=1,natp
+       IF(g(n) == 0) CYCLE
        x1=x(n)/dx
        y1=y(n)/dy
        z1=z(n)/dz

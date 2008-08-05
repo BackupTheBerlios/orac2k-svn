@@ -71,9 +71,11 @@ MODULE Potential
      LOGICAL :: Do_not_Change=.FALSE.
      REAL(8) :: alpha
      REAL(8) :: Density
-     INTEGER :: nx=0,ny=0,nz=0, order=5
+     INTEGER :: nx=0,ny=0,nz=0
+     INTEGER :: order=5
+     REAL(8) :: rkcut=1.0D9
   END TYPE Ewald__Input
-  TYPE(Ewald__Input), SAVE :: Ewald__Param
+  TYPE(Ewald__Input), SAVE, TARGET :: Ewald__Param
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*

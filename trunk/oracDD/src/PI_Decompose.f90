@@ -48,6 +48,7 @@ MODULE PI_Decompose
   USE mpi
 #endif
   USE PI_
+  USE PI_Communicate
   USE UNITS
   USE Node
   USE FactorizeNo
@@ -150,14 +151,13 @@ CONTAINS
     END IF
     WRITE(kprint,*) ' PI_nprocs, nx, ny, nz ',PI_nprocs,PI_npx,PI_npy,PI_npz
 
-    CALL PI__Get_Ranks
+    CALL PI__Setup_Cart
+    CALL PI__Setup_SndRcv
 
-    ALLOCATE(Pe_nb(3))
     DO n=1,3
        IF(rcut(n) > 0.0D0) THEN
-          IF(.NOT. NeighCells_(rcut(1),rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz))&
+          IF(.NOT. NeighCells_(rcut(1),rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz,n))&
                & CALL Print_Errors()
-          CALL Make_Comm(n)
        END IF
     END DO
   CONTAINS
@@ -196,11 +196,11 @@ CONTAINS
       DO n=1,np
          ind_x=0
          ind_y=0
-         mp=SIZE(Nei(n) % c,2)
+         mp=SIZE(Neighc_(i_n) % Nei(n) % c,2)
          DO m=1,mp
-            ox=Nei(n) % c(1,m)
-            oy=Nei(n) % c(2,m)
-            oz=Nei(n) % c(3,m)
+            ox=Neighc_(i_n) % Nei(n) % c(1,m)
+            oy=Neighc_(i_n) % Nei(n) % c(2,m)
+            oz=Neighc_(i_n) % Nei(n) % c(3,m)
             i=Ind_Small(ox,oy,oz) % nx - 1
             j=Ind_Small(ox,oy,oz) % ny - 1
             k=Ind_Small(ox,oy,oz) % nz - 1
@@ -216,28 +216,27 @@ CONTAINS
          END DO
          ind_x=0
          DO m=1,mp
-            ox=Nei(n) % c(1,m)
-            oy=Nei(n) % c(2,m)
-            oz=Nei(n) % c(3,m)
+            ox=Neighc_(i_n) % Nei(n) % c(1,m)
+            oy=Neighc_(i_n) % Nei(n) % c(2,m)
+            oz=Neighc_(i_n) % Nei(n) % c(3,m)
             mpe=ind_y(m)
             ind_x(mpe)=ind_x(mpe)+1
             Pe_nb(i_n) % tbl (n,mpe) % exc (:,ind_x(mpe)) = (/ ox, oy, oz /)
          END DO
       END DO
       count0=0
+      IF(PI_Node == 0) WRITE(kprint,'('' i_n = '',2x,i7)') i_n
       DO n=1,np
+         IF(PI_Node == 0) WRITE(kprint,'(''N ='',i4,3x,3i4)') n,PI__Ranks&
+              & (n) % nx, PI__Ranks (n) % ny, PI__Ranks (n) % nz
          DO m=1,np
             IF(ALLOCATED(Pe_nb(i_n) % tbl (n,m) % exc)) THEN
                count0=count0+1
-!!$               IF(i_n == 1) THEN
-!!$                  IF((n == 1 .AND. m == 4) .OR. (n == 4 .AND. m == 1)) THEN
-!!$                     mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
-!!$                     WRITE(kprint,*) 'n= ',n,'m= ',m,mpe
-!!$                     DO k=1,mpe
-!!$                        WRITE(kprint,'(3i8)') Pe_nb(i_n) % tbl (n, m) % exc(:,k)
-!!$                     END DO
-!!$                  END IF
-!!$               END IF
+               mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
+               IF(PI_Node == 0) THEN
+                  WRITE(kprint,'(''M ='',i4,3x,3i4,5x,i6)') m,PI__Ranks (m) % nx&
+                       &, PI__Ranks (m) % ny,PI__Ranks (m) % nz, mpe
+               END IF
             END IF
          END DO
       END DO
@@ -285,8 +284,8 @@ CONTAINS
 
     ntap=SIZE(Atoms)
     ngrp=SIZE(Groupa)
-    IF(.NOT. PI_Neighbors_(Groupa(:) % xa, Groupa(:) % ya, Groupa(:) % za)) CALL Print_Errors()
-!!$    IF(.NOT. PI_Neighbors_(Atoms(:) % xa, Atoms(:) % ya, Atoms(:) % za)) CALL Print_Errors()
+    IF(.NOT. PI_Neighbors_(Groupa(:) % xa, Groupa(:) % ya, Groupa(:) % za, Groupa(:) % knwn)) CALL Print_Errors()
+
     ncx=PI_npx
     ncy=PI_npy
     ncz=PI_npz
@@ -310,6 +309,7 @@ CONTAINS
        nz=Chain_xyz (n) % k
        numcell=nz+ncz*(ny+ncy*nx)+1
        IF(.NOT. Mask(n)) THEN
+          Groupa(n) % knwn = 0
           Groupa(n) % xa=0.0D0
           Groupa(n) % ya=0.0D0
           Groupa(n) % za=0.0D0
@@ -326,6 +326,11 @@ CONTAINS
              Atoms(mm) % ya = 0.0D0
              Atoms(mm) % za = 0.0D0
           END DO
+!!$       ELSE
+!!$          WRITE(60+PI_Node_Cart,*) nx,ny,nz,numcell
+!!$          WRITE(60+PI_Node_Cart,*) mx-1,my-1,mz-1,numcell
+!!$          WRITE(60+PI_Node_Cart,'(i6,2x,3f16.6)') n,Groupa(n) % xa, Groupa(n) % ya, Groupa(n) % za
+          
        END IF
     END DO
   END SUBROUTINE PI__AssignAtomsToCells

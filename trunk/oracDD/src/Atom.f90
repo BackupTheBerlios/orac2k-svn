@@ -45,6 +45,7 @@ MODULE Atom
 !!$---- This module is part of the program oracDD ----*
 
   USE Constants
+  USE Units, ONLY: unitc
   USE Errors, ONLY: Add_Errors=>Add, errmsg_f
   USE SystemTpg
   USE Cell
@@ -85,7 +86,7 @@ CONTAINS
        Atoms(n) % Id_Type = AtomCnts(n) % Id_Type
        Atoms(n) % Id_Slv = AtomCnts(n) % Id_Slv
        Atoms(n) % Id_Res = AtomCnts(n) % Id_Res
-       Atoms(n) % chg = AtomCnts(n) % chg
+       Atoms(n) % chg = AtomCnts(n) % chg/SQRT(unitc)
        Atoms(n) % mass = AtomCnts(n) % mass
        Atoms(n) % Res = AtomCnts(n) % Res
        Atoms(n) % beta = AtomCnts(n) % Beta
