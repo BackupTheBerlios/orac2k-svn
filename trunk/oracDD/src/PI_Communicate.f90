@@ -331,11 +331,15 @@ CONTAINS
       INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
            &,np,startime,endtime,timea,nind_o
       INTEGER :: source,dest
-      INTEGER :: iv(3)
+      INTEGER :: iv(3),n0,m0,k0
       REAL(8) :: vc(3)
       REAL(8), POINTER :: Buff_s(:,:),Buff_r(:,:)
+      TYPE(Force), POINTER :: fsb(:)
       INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
-      INTEGER, POINTER :: ind_o(:)
+      INTEGER, POINTER :: IndBox_sb(:)
+
+      LOGICAL, POINTER :: Peas(:)
+      LOGICAL :: ok
       
       iv(1)=npx
       iv(2)=npy
@@ -368,21 +372,37 @@ CONTAINS
       NoAtm_r3=NoAtm_r*3
       CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
            &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
+
+!!$      ALLOCATE(fsb(NoAtm_s))
+!!$      fsb=fs 
+!!$      DEALLOCATE(fs) ; ALLOCATE(fs(NoAtm_s+NoAtm_r))
+!!$      ALLOCATE(IndBox_sb(NoAtm_s))
+!!$      IndBox_sb=IndBox_s
+!!$      DEALLOCATE(IndBox_s) ; ALLOCATE(IndBox_s(NoAtm_s+NoAtm_r))
+!!$
+!!$      fs(1:NoAtm_s)=fsb
+!!$      fs(NoAtm_s+1:) % x=Buff_r(1,:)
+!!$      fs(NoAtm_s+1:) % y=Buff_r(2,:)
+!!$      fs(NoAtm_s+1:) % z=Buff_r(3,:)
+!!$      IndBox_s(1:NoAtm_s)=IndBox_sb
+!!$      IndBox_s(NoAtm_s+1:)=iBuff_r
       
-      frc(iBuff_r(:)) % x=frc(iBuff_r(:)) % x+Buff_r(1,:)
-      frc(iBuff_r(:)) % y=frc(iBuff_r(:)) % y+Buff_r(2,:)
-      frc(iBuff_r(:)) % z=frc(iBuff_r(:)) % z+Buff_r(3,:)
+
       
-      DO nn=1,NoAtm_r
-         n=iBuff_r(nn)
-         IF(Atoms_Knwn(n) == 0) THEN
-            Atoms_Knwn(n)=2
-         END IF
-      END DO
-      IF(.NOT. LittleBoxes__Update()) CALL Print_Errors()
-      fp(:)=frc(IndBox_p(:))
-      fs(:)=frc(IndBox_s(:))
-      
+!!$      frc(iBuff_r(:)) % x=frc(iBuff_r(:)) % x+Buff_r(1,:)
+!!$      frc(iBuff_r(:)) % y=frc(iBuff_r(:)) % y+Buff_r(2,:)
+!!$      frc(iBuff_r(:)) % z=frc(iBuff_r(:)) % z+Buff_r(3,:)
+!!$      
+!!$
+!!$      DO nn=1,NoAtm_r
+!!$         n=iBuff_r(nn)
+!!$         IF(Atoms_Knwn(n) == 0) THEN
+!!$            Atoms_Knwn(n)=2
+!!$         END IF
+!!$      END DO
+!!$      IF(.NOT. LittleBoxes__Update()) CALL Print_Errors()
+!!$      fp(:)=frc(IndBox_p(:))
+!!$      fs(:)=frc(IndBox_s(:))
     END SUBROUTINE Fold_F
   END SUBROUTINE PI__Fold_F
 END MODULE PI_Communicate
