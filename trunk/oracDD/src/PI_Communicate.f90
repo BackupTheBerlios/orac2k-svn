@@ -70,16 +70,18 @@ MODULE PI_Communicate
   PUBLIC PI__Shift,PI__Fold_F
   REAL(8), ALLOCATABLE, SAVE :: Buffer(:)
   REAL(8), SAVE :: dx,dy,dz,ddx,ddy,ddz,vp(3),vd(3)
-  INTEGER, SAVE :: ncx,ncy,ncz,npx,npy,npz
+  INTEGER, SAVE :: ncx,ncy,ncz,npx,npy,npz,nsend,Nrec
   TYPE(NeighCells__Neigh), POINTER, SAVE :: Nei(:)
 CONTAINS
-  SUBROUTINE PI__Shift(i_p,Direction)
-    INTEGER, OPTIONAL :: Direction
+  SUBROUTINE PI__Shift(i_p,pme)
+    INTEGER, OPTIONAL :: pme
     INTEGER :: i_p
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
     LOGICAL, POINTER :: Mask(:)
+    INTEGER, pointer :: Nrecs(:),Nsends(:)
+    INTEGER :: iv(3),Axis
       
     ncx=nc(i_p) % x
     ncy=nc(i_p) % y
@@ -101,31 +103,56 @@ CONTAINS
     vp(3)=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*dz
 
     
-    Nei=>Neighc_(i_p) % Nei
+    IF(PRESENT(pme)) THEN
+       Nei=>Neighc_pme_(i_p) % Nei
+    ELSE
+       Nei=>Neighc_(i_p) % Nei
+    END IF
 
 !!$
 !!$ --- Atoms to send
 !!$
     
-    IF(.NOT. PRESENT(Direction)) THEN
-       CALL Shift(i_p,_X_,_PLUS_)
-       CALL Shift(i_p,_X_,_MINUS_)
-       CALL Shift(i_p,_Y_,_PLUS_)
-       CALL Shift(i_p,_Y_,_MINUS_)
-       CALL Shift(i_p,_Z_,_PLUS_)
-       CALL Shift(i_p,_Z_,_MINUS_)
-    ELSE
-       SELECT CASE(Direction)
+    Nrec=0
+    Nsend=0
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+    DO Axis=1,3
+       SELECT CASE(iv(Axis))
        CASE(1)
-          CALL Shift(i_p,_X_,_PLUS_)
-          CALL Shift(i_p,_Y_,_PLUS_)
-          CALL Shift(i_p,_Z_,_PLUS_)
-       CASE(-1)
-          CALL Shift(i_p,_X_,_MINUS_)
-          CALL Shift(i_p,_Y_,_MINUS_)
-          CALL Shift(i_p,_Z_,_MINUS_)
+          CYCLE
+       CASE(2)
+          CALL Shift(i_p,Axis,_PLUS_)
+       CASE DEFAULT
+          CALL Shift(i_p,Axis,_PLUS_)
+          CALL Shift(i_p,Axis,_MINUS_)
        END SELECT
-    END IF
+    END DO
+    
+
+
+!!$    CALL Shift(i_p,_X_,_PLUS_)
+!!$    CALL Shift(i_p,_Y_,_PLUS_)
+!!$    CALL Shift(i_p,_Z_,_PLUS_)
+!!$    CALL Shift(i_p,_X_,_MINUS_)
+!!$    CALL Shift(i_p,_Y_,_MINUS_)
+!!$    CALL Shift(i_p,_Z_,_MINUS_)
+!!$
+!!$    ELSE
+!!$       SELECT CASE(Direction)
+!!$       CASE(1)
+!!$          CALL Shift(i_p,_X_,_PLUS_)
+!!$          CALL Shift(i_p,_Y_,_PLUS_)
+!!$          CALL Shift(i_p,_Z_,_PLUS_)
+!!$       CASE(-1)
+!!$          CALL Shift(i_p,_X_,_MINUS_)
+!!$          CALL Shift(i_p,_Y_,_MINUS_)
+!!$          CALL Shift(i_p,_Z_,_MINUS_)
+!!$       END SELECT
+!!$    END IF
 
 !!$    DO n=1,SIZE(Atoms)
 !!$       IF(groupa(Atoms(n) % Grp_No) % knwn == 1) THEN
@@ -145,20 +172,13 @@ CONTAINS
     INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
          &,np,startime,endtime,timea,nind_o
     INTEGER :: source,dest
-    INTEGER :: iv(3)
     REAL(8) :: vc(3)
     REAL(8), POINTER :: Buff_s(:,:),Buff_r(:,:)
     INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
     INTEGER, POINTER :: ind_o(:)
+    INTEGER, POINTER :: NoAtmss(:)
 
-    iv(1)=npx
-    iv(2)=npy
-    iv(3)=npz
-    
-    
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
-
-    IF(iv(Axis) == 1) RETURN
 
     IF(.NOT. Neighbors_S__Particles(i_p)) CALL Print_Errors()
 
@@ -167,25 +187,15 @@ CONTAINS
     mp=SIZE(Nei(numcell) % c,2)
     
     ALLOCATE(ind_o(mp))
-    
+
     count0=0
     DO m=1,mp
        ox=Nei(numcell) % c(1,m)-1
        oy=Nei(numcell) % c(2,m)-1
        oz=Nei(numcell) % c(3,m)-1
-       vc(1)=DBLE(ox)*ddx
-       vc(2)=DBLE(oy)*ddy
-       vc(3)=DBLE(oz)*ddz
-       IF(Dir*(vc(Axis)-vp(Axis)-0.5D0*vd(Axis)) > 0.0D0 .AND. iv(Axis) == 2) THEN
-          count0=count0+1
-          mpe=oz+ncz*(ox*ncy+oy)+1
-          ind_o(count0)=mpe
-       END IF
-       IF(iv(Axis) /= 2) THEN
-          count0=count0+1
-          mpe=oz+ncz*(ox*ncy+oy)+1
-          ind_o(count0)=mpe
-       END IF
+       count0=count0+1
+       mpe=oz+ncz*(ox*ncy+oy)+1
+       ind_o(count0)=mpe
     END DO
     nind_o=count0
     
@@ -250,159 +260,175 @@ CONTAINS
     END DO
     IF(.NOT. Groups__Update_Knwn()) CALL Print_Errors()
   END SUBROUTINE Shift
-  SUBROUTINE PI__Fold_F(fp,fs,Direction)
-    TYPE(Force), ALLOCATABLE :: fp(:),fs(:)
-    TYPE(Force), POINTER :: frc(:)
-    INTEGER, OPTIONAL :: Direction
+!!$
+!!$---- Fold forces
+!!$
+  SUBROUTINE PI__Fold_F(fp,i_p)
+    TYPE(Force) :: fp(:)
     INTEGER :: i_p
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
-    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
+    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn
     LOGICAL, POINTER :: Mask(:)
-
-    ALLOCATE(frc(SIZE(Atoms)))
-    frc(:) % x=0.0D0
-    frc(:) % y=0.0D0
-    frc(:) % z=0.0D0
-    frc(IndBox_p(:))=fp(:)
-    frc(IndBox_s(:))=fs(:)
-
+    TYPE(Force), POINTER :: fp0(:)
+    INTEGER :: iv(3),Axis
+    
+    ALLOCATE(fp0(SIZE(Atoms)))
+    fp0(:) % x=0.0D0
+    fp0(:) % y=0.0D0
+    fp0(:) % z=0.0D0
+    fp0(IndBox_t(:))=fp(:)
+    
     ncx=nc(i_p) % x
     ncy=nc(i_p) % y
     ncz=nc(i_p) % z
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
-    dx=2.0D0/DBLE(npx)
-    dy=2.0D0/DBLE(npy)
-    dz=2.0D0/DBLE(npz)
-    vd(1)=dx
-    vd(2)=dy
-    vd(3)=dz
-    ddx=2.0D0/DBLE(ncx)
-    ddy=2.0D0/DBLE(ncy)
-    ddz=2.0D0/DBLE(ncz)
-    vp(1)=DBLE(PI__Ranks(PI_Node_Cart+1) % nx)*dx
-    vp(2)=DBLE(PI__Ranks(PI_Node_Cart+1) % ny)*dy
-    vp(3)=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*dz
-
     
-    Nei=>Neighc_(i_p) % Nei
-
-!!$
-!!$ --- Atoms to send
-!!$
     
-    IF(.NOT. PRESENT(Direction)) THEN
-       CALL Fold_F(_X_,_PLUS_)
-       CALL Fold_F(_X_,_MINUS_)
-       CALL Fold_F(_Y_,_PLUS_)
-       CALL Fold_F(_Y_,_MINUS_)
-       CALL Fold_F(_Z_,_PLUS_)
-       CALL Fold_F(_Z_,_MINUS_)
-    ELSE
-       SELECT CASE(Direction)
+    Nei=>Neighc_pme_(i_p) % Nei
+    
+!!$
+!!$ --- Fold Forces
+!!$
+    IF(.NOT. Neighbors_S__Particles(i_p)) CALL Print_Errors()
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+    DO Axis=1,3
+       SELECT CASE(iv(Axis))
        CASE(1)
-          CALL Fold_F(_X_,_PLUS_)
-          CALL Fold_F(_Y_,_PLUS_)
-          CALL Fold_F(_Z_,_PLUS_)
-       CASE(-1)
-          CALL Fold_F(_X_,_MINUS_)
-          CALL Fold_F(_Y_,_MINUS_)
-          CALL Fold_F(_Z_,_MINUS_)
+          CYCLE
+       CASE(2)
+          CALL Fold_F(i_p,Axis,_PLUS_)
+       CASE DEFAULT
+          CALL Fold_F(i_p,Axis,_PLUS_)
+          CALL Fold_F(i_p,Axis,_MINUS_)
        END SELECT
-    END IF
+    END DO
 
-!!$    DO n=1,SIZE(Atoms)
-!!$       IF(groupa(Atoms(n) % Grp_No) % knwn == 1) THEN
-!!$          Atoms(n) % x =0.0D0
-!!$          Atoms(n) % y =0.0D0
-!!$          Atoms(n) % z =0.0D0
-!!$          Atoms(n) % xa =0.0D0
-!!$          Atoms(n) % ya =0.0D0
-!!$          Atoms(n) % za =0.0D0
-!!$       END IF
-!!$    END DO
+    DO nn=1,SIZE(IndBox_t)
+       n=Indbox_t(nn)
+       fp(nn)=fp0(n)
+    END DO
   CONTAINS
-    SUBROUTINE Fold_F(Axis,Dir)
-      INTEGER :: Axis,Dir
+    
+    SUBROUTINE Fold_F(i_p,Axis,Dir)
+      INTEGER :: Axis,Dir,i_p
       INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
            &,nmin,i,j,k
       INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
            &,np,startime,endtime,timea,nind_o
       INTEGER :: source,dest
-      INTEGER :: iv(3),n0,m0,k0
-      REAL(8) :: vc(3)
+      REAL(8) :: vc(3),aux
       REAL(8), POINTER :: Buff_s(:,:),Buff_r(:,:)
-      TYPE(Force), POINTER :: fsb(:)
       INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
-      INTEGER, POINTER :: IndBox_sb(:)
-
-      LOGICAL, POINTER :: Peas(:)
-      LOGICAL :: ok
+      INTEGER, POINTER :: ind_o(:)
+      LOGICAL, POINTER :: Mask(:,:,:)
       
-      iv(1)=npx
-      iv(2)=npy
-      iv(3)=npz
       
       
       CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
+
+      ALLOCATE(Mask(ncx,ncy,ncz)) ; mask=.FALSE.
+
+      numcell=PI__Ranks(dest+1) % n
+      mx=PI__Ranks(dest+1) % nx+1
+      my=PI__Ranks(dest+1) % ny+1
+      mz=PI__Ranks(dest+1) % nz+1
+      mp=SIZE(Ind_Large(mx,my,mz) % pt)
+
+      DO n=1,mp
+         ox=Ind_Large(mx,my,mz) % pt (n) % nx
+         oy=Ind_Large(mx,my,mz) % pt (n) % ny
+         oz=Ind_Large(mx,my,mz) % pt (n) % nz
+         Mask(ox,oy,oz)=.TRUE.
+      END DO
+
+      mp=SIZE(Nei(numcell) % c,2)
+      DO n=1,mp
+         ox=Nei(numcell) % c(1,n)
+         oy=Nei(numcell) % c(2,n)
+         oz=Nei(numcell) % c(3,n)
+         Mask(ox,oy,oz)=.TRUE.
+      END DO
+
+      numcell=PI__Ranks(PI_Node_Cart+1) % n
+      mp=SIZE(Nei(numcell) % c,2)
       
-      IF(iv(Axis) == 1) RETURN
+      ALLOCATE(ind_o(mp))
       
-      NoAtm_s=SIZE(IndBox_s)
-      
+      count0=0
+      DO m=1,mp
+         ox=Nei(numcell) % c(1,m)
+         oy=Nei(numcell) % c(2,m)
+         oz=Nei(numcell) % c(3,m)
+         IF(Mask(ox,oy,oz)) THEN
+            count0=count0+1
+            mpe=(ox-1)*ncy*ncz+(oy-1)*ncz+oz
+            ind_o(count0)=mpe
+         END IF
+      END DO
+      nind_o=count0
+
+      count0=0
+      DO m=1,nind_o
+         mpe=ind_o(m)
+         l=Head_xyz (mpe)
+         nmin=0
+         DO WHILE(l > nmin)
+            AtSt=Groupa(l) % AtSt
+            AtEn=Groupa(l) % AtEn
+            count0=count0+(AtEn-AtSt+1)
+            l=Chain_xyz(l) % p
+         END DO
+      END DO
+      NoAtm_s=count0
       CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
            &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
       
-      ALLOCATE(iBuff_s(NoAtm_s))
-      ALLOCATE(iBuff_r(NoAtm_r))
       ALLOCATE(Buff_s(3,NoAtm_s))
+      ALLOCATE(iBuff_s(NoAtm_s))
       ALLOCATE(Buff_r(3,NoAtm_r))
-      iBuff_s=IndBox_s
-      CALL MPI_SENDRECV(iBuff_s,NoAtm_s,MPI_INTEGER4,dest,1,iBuff_r&
-           &,NoAtm_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
-      DO n=1,NoAtm_s
-         Buff_s(1,n)=fs(n) % x
-         Buff_s(2,n)=fs(n) % y
-         Buff_s(3,n)=fs(n) % z
-      END DO
+      ALLOCATE(iBuff_r(NoAtm_r))
       
+      count0=0
+      DO m=1,nind_o
+         mpe=ind_o(m)
+         l=Head_xyz (mpe)
+         nmin=0
+         DO WHILE(l > nmin)
+            AtSt=Groupa(l) % AtSt
+            AtEn=Groupa(l) % AtEn
+            DO q=AtSt,AtEn
+               count0=count0+1
+               Buff_s(1,count0)=fp0(q) % x
+               Buff_s(2,count0)=fp0(q) % y
+               Buff_s(3,count0)=fp0(q) % z
+               IBuff_s(count0) = q
+            END DO
+            l=Chain_xyz(l) % p
+         END DO
+         
+      END DO
       NoAtm_s3=NoAtm_s*3
       NoAtm_r3=NoAtm_r*3
+      CALL MPI_SENDRECV(iBuff_s,NoAtm_s,MPI_INTEGER4,dest,1,iBuff_r&
+           &,NoAtm_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
+      
       CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
            &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
 
-!!$      ALLOCATE(fsb(NoAtm_s))
-!!$      fsb=fs 
-!!$      DEALLOCATE(fs) ; ALLOCATE(fs(NoAtm_s+NoAtm_r))
-!!$      ALLOCATE(IndBox_sb(NoAtm_s))
-!!$      IndBox_sb=IndBox_s
-!!$      DEALLOCATE(IndBox_s) ; ALLOCATE(IndBox_s(NoAtm_s+NoAtm_r))
-!!$
-!!$      fs(1:NoAtm_s)=fsb
-!!$      fs(NoAtm_s+1:) % x=Buff_r(1,:)
-!!$      fs(NoAtm_s+1:) % y=Buff_r(2,:)
-!!$      fs(NoAtm_s+1:) % z=Buff_r(3,:)
-!!$      IndBox_s(1:NoAtm_s)=IndBox_sb
-!!$      IndBox_s(NoAtm_s+1:)=iBuff_r
-      
+      DO nn=1,NoAtm_r
+         n=iBuff_r(nn)
+         fp0(n) % x=fp0(n) % x+Buff_r(1,nn)
+         fp0(n) % y=fp0(n) % y+Buff_r(2,nn)
+         fp0(n) % z=fp0(n) % z+Buff_r(3,nn)
+      END DO
 
-      
-!!$      frc(iBuff_r(:)) % x=frc(iBuff_r(:)) % x+Buff_r(1,:)
-!!$      frc(iBuff_r(:)) % y=frc(iBuff_r(:)) % y+Buff_r(2,:)
-!!$      frc(iBuff_r(:)) % z=frc(iBuff_r(:)) % z+Buff_r(3,:)
-!!$      
-!!$
-!!$      DO nn=1,NoAtm_r
-!!$         n=iBuff_r(nn)
-!!$         IF(Atoms_Knwn(n) == 0) THEN
-!!$            Atoms_Knwn(n)=2
-!!$         END IF
-!!$      END DO
-!!$      IF(.NOT. LittleBoxes__Update()) CALL Print_Errors()
-!!$      fp(:)=frc(IndBox_p(:))
-!!$      fs(:)=frc(IndBox_s(:))
     END SUBROUTINE Fold_F
   END SUBROUTINE PI__Fold_F
 END MODULE PI_Communicate
