@@ -143,6 +143,10 @@ CONTAINS
 
     CALL Charges_onGrid(Cq_s)
 
+!!$
+!!$--- Change CPU partition along Z axis
+!!$
+
     CALL Transpose_Cart2FFTW
     
     IF(.NOT. do_rfft3d(1,Cq_r)) RETURN
@@ -151,8 +155,11 @@ CONTAINS
 
     IF(.NOT. do_rfft3d(-1,Cq_r)) RETURN
 
-    CALL Transpose_FFTW2Cart
+!!$
+!!$--- Back to Cartesian CPU partition
+!!$
 
+    CALL Transpose_FFTW2Cart
 
     CALL Grad_Sum(Cq_s,Energy)
 
@@ -163,6 +170,10 @@ CONTAINS
     fp(:) % x = fx(:)
     fp(:) % y = fy(:)
     fp(:) % z = fz(:)
+
+!!$
+!!$--- Fold forces contributions to atoms inside the cell
+!!$
     
     CALL PI__Fold_F(fp,i_p)
 

@@ -97,7 +97,6 @@ CONTAINS
        CALL MPI_BARRIER(PI_Comm_Cart,ierr)
        endtime=MPI_WTIME()
        timea=endtime-startime
-!!$       WRITE(*,*) 'timea ',timea,startime,endtime
     END IF
     
   END SUBROUTINE MDRun_
