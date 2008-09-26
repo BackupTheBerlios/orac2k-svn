@@ -81,10 +81,9 @@ CONTAINS
        na3_local=n3_local
        na2_start=n2_start
        na2_local=n2_local
-       call MPI_COMM_RANK(My_Comm, My_node, ierr )
-       WRITE(60+My_node,*) n2_start,n2_local,n3_start,n3_local
        RETURN
     END IF
+    call MPI_COMM_RANK(MPI_COMM_WORLD, My_node, ierr )
     IF(ncache == -1) THEN
        errmsg_f='do_rfft3d not initialized. Abort now!'
        CALL Add_Errors(-1,errmsg_f)

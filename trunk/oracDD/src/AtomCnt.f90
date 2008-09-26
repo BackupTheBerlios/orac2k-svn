@@ -241,7 +241,6 @@ CONTAINS
     p_g=TempAtoms(Res_atm(2,Res_Ends)) % Grp_No-TempAtoms(Res_atm(1,Res_Begins)) % Grp_No+1
 
     No_res_Unit=Res_Ends-Res_Begins+1
-
     DO l=1,New_Units
        DO n=Res_Begins,Res_Ends
           DO m=Res_atm(1,n),Res_Atm(2,n)

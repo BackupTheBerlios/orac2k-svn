@@ -49,103 +49,42 @@ MODULE LittleBoxes
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
-  PUBLIC LittleBoxes_,LittleBoxes__Update,IndBox_p,IndBox_s,IndBox_t,Atoms_Knwn
+  PUBLIC LittleBoxes_,IndBox_p,IndBox_t
   INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_p(:),indBox_s(:),indBox_t(:)
-  INTEGER, ALLOCATABLE, SAVE :: Atoms_knwn(:)
+  INTEGER, ALLOCATABLE, SAVE :: indBox_p(:),indBox_t(:)
 CONTAINS
   FUNCTION LittleBoxes_() RESULT(out)
     LOGICAL :: out
-    INTEGER :: Known0
-    INTEGER :: n,m,AtSt,AtEn,count_p,count_s,count_t
+    INTEGER :: n,m,AtSt,AtEn,count_p,count_t
     
-    IF(.NOT. ALLOCATED(Atoms_Knwn)) THEN
-       ALLOCATE(Atoms_Knwn(SIZE(Atoms)))
-    END IF
-    Atoms_Knwn(:)=Groupa(Atoms(:) % Grp_No) % knwn
     count_p=0
-    count_s=0
+    count_t=0
+    count_p=COUNT(Groupa(Atoms(:) % Grp_No) % knwn == 1)
+    count_t=COUNT(Groupa(Atoms(:) % Grp_No) % knwn /= 0)
     
-    DO n=1,SIZE(Atoms_Knwn)
-       IF(Atoms_Knwn (n) == 1) THEN
-          count_p=count_p+1
-       ELSE IF(Atoms_Knwn (n) == 2) THEN
-          count_s=count_s+1
-       END IF
-    END DO
-    count_t=count_p+count_s
     IF(ALLOCATED(IndBox_p)) DEALLOCATE(IndBox_p)
-    IF(ALLOCATED(IndBox_s)) DEALLOCATE(IndBox_s)
     IF(ALLOCATED(IndBox_t)) DEALLOCATE(IndBox_t)
 
-    ALLOCATE(IndBox_p(count_p)) ; ALLOCATE(IndBox_s(count_s)) 
+    ALLOCATE(IndBox_p(count_p))
     ALLOCATE(IndBox_t(count_t)) 
     
-    count_p=0 ; count_s=0 
+    count_p=0 ; count_t=0 
 
-    DO n=1,SIZE(Atoms_Knwn)
-       IF(Atoms_Knwn (n) == 1) THEN
-          count_p=count_p+1
-          IndBox_p(count_p)=n
-       ELSE IF(Atoms_Knwn (n) == 2) THEN
-          count_s=count_s+(AtEn-AtSt+1)
-          IndBox_s(count_s)=n
+    DO n=1,SIZE(Atoms)
+       m=Groupa(Atoms(n) % Grp_No) % knwn 
+       IF(m /= 0) THEN
+          count_t=count_t+1
+          IndBox_t(count_t)=n
+          IF(m == 1) THEN
+             count_p=count_p+1
+             IndBox_p(count_p)=n
+          END IF
        END IF
     END DO
-
-    IndBox_t(1:SIZE(IndBox_p))=IndBox_p
-    IndBox_t(SIZE(IndBox_p)+1:)=IndBox_s
     out=count_p /= 0
     IF(.NOT. out) THEN
-       errmsg_f='No Atoms found in the unit box'
+       errmsg_f='No Primary Atoms found in the unit box'
        CALL Add_Errors(-1,errmsg_f)
     END IF
   END FUNCTION LittleBoxes_
-  FUNCTION LittleBoxes__Update() RESULT(out)
-    LOGICAL :: out
-    INTEGER :: Known0
-    INTEGER :: n,m,AtSt,AtEn,count_p,count_s,count_t
-    
-    IF(.NOT. ALLOCATED(Atoms_Knwn)) THEN
-       errmsg_f='Cannot do Update of LitteBoxes without initialisation'
-       CALL Add_Errors(-1,errmsg_f)
-       RETURN
-    END IF
-    count_p=0
-    count_s=0    
-    DO n=1,SIZE(Atoms_Knwn)
-       IF(Atoms_Knwn (n) == 1) THEN
-          count_p=count_p+1
-       ELSE IF(Atoms_Knwn (n) == 2) THEN
-          count_s=count_s+1
-       END IF
-    END DO
-    count_t=count_p+count_s
-    IF(ALLOCATED(IndBox_p)) DEALLOCATE(IndBox_p)
-    IF(ALLOCATED(IndBox_s)) DEALLOCATE(IndBox_s)
-    IF(ALLOCATED(IndBox_t)) DEALLOCATE(IndBox_t)
-
-    ALLOCATE(IndBox_p(count_p)) ; ALLOCATE(IndBox_s(count_s)) 
-    ALLOCATE(IndBox_t(count_t)) 
-    
-    count_p=0 ; count_s=0 
-
-    DO n=1,SIZE(Atoms_Knwn)
-       IF(Atoms_Knwn (n) == 1) THEN
-          count_p=count_p+1
-          IndBox_p(count_p)=n
-       ELSE IF(Atoms_Knwn (n) == 2) THEN
-          count_s=count_s+(AtEn-AtSt+1)
-          IndBox_s(count_s)=n
-       END IF
-    END DO
-
-    IndBox_t(1:SIZE(IndBox_p))=IndBox_p
-    IndBox_t(SIZE(IndBox_p)+1:)=IndBox_s
-    out=count_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-  END FUNCTION LittleBoxes__Update
 END MODULE LittleBoxes

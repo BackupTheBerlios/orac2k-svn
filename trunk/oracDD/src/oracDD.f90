@@ -66,6 +66,7 @@ PROGRAM OracDD
   USE Banner
   USE Atom
   USE PI_
+  USE Solvent
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -126,11 +127,13 @@ CONTAINS
        CALL SystemTpg_       
        CALL SystemPrm_       
        CALL SimulationBox_
-       CALL AtomCnt__Update(nunits_Slv)       
-       CALL SystemTpg__Update(nunits_Slv)       
-       CALL SystemPrm__Update
-       CALL SecondarySeq__AddSlv(nunits_Slv)
-       CALL IndSequence__Update
+       IF(Solvent__Param % added == 0) THEN
+          CALL AtomCnt__Update(nunits_Slv)       
+          CALL SystemTpg__Update(nunits_Slv)       
+          CALL SystemPrm__Update
+          CALL SecondarySeq__AddSlv(nunits_Slv)
+          CALL IndSequence__Update
+       END IF
        IF(Called_Binary) THEN
           CALL AtomCnt__Write
           CALL SystemTpg__Write

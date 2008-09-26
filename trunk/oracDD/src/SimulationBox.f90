@@ -115,7 +115,8 @@ CONTAINS
        END IF
 
        nato_Slt=SIZE(Slt)
-       IF(Solvent__Param % Build) CALL AtomBox__Center(Slt)
+       IF(Solvent__Param % Build .AND. Solvent__Param % added ==&
+               & 0) CALL AtomBox__Center(Slt)
 
        IF( .NOT. Exist_Slv) THEN
           m=SIZE(Slt)
@@ -141,17 +142,32 @@ CONTAINS
           CALL AtomBox_(PDB__Coords,Slv)
           nato_Slv=SIZE(Slv)
           DEALLOCATE(PDB__Coords)
-          IF(Solvent__Param % Build) CALL AtomBox__Center(Slv)
+          IF(Solvent__Param % Build .AND. Solvent__Param % added ==&
+               & 0) CALL AtomBox__Center(Slv)
        END IF
 
-       IF(Solvent__Param % added /= 0 .OR. (.NOT. Solvent__Param % Build) ) THEN
-          m=SIZE(Slv)
-          ALLOCATE(Atoms_InBox(m))
-          Atoms_InBox=Slv
-          CALL AtomBox__ChgFrame(-1,Atoms_InBox)
-          Slv_InBox=>atoms_InBox
-          nunits_Slv=SIZE(Slv)/nato_Slv
-          DEALLOCATE(Slv)
+       IF(Solvent__Param % added /= 0 .OR. (.NOT. Solvent__Param %&
+            & Build) ) THEN
+          IF(Exist_Slt) THEN
+             n=SIZE(Slt)
+             m=SIZE(Slv)
+             ALLOCATE(Total(n+m))
+             Total(1:n)=Slt
+             Total(n+1:)=Slv
+             DEALLOCATE(Slt,Slv)
+             Slt=>Total(1:n)
+             Slv=>Total(n+1:)
+             CALL AtomBox__ChgFrame(-1,Total)
+             CALL Add
+          ELSE
+             m=SIZE(Slv)
+             ALLOCATE(Atoms_InBox(m))
+             Atoms_InBox=Slv
+             CALL AtomBox__ChgFrame(-1,Atoms_InBox)
+             Slv_InBox=>atoms_InBox
+             nunits_Slv=SIZE(Slv)/nato_Slv
+             DEALLOCATE(Slv)
+          END IF
           RETURN
        END IF
 
@@ -285,6 +301,35 @@ CONTAINS
       Slv=>NULL()
       Slt=>NULL()
     END SUBROUTINE Insert
+    SUBROUTINE Add
+      INTEGER ::  nn,Size_Total,count_a,n,m
+      
+      nunits_Slv=SIZE(Slv)/nato_Slv
+
+      Size_Total=SIZE(Total)
+
+      WRITE(kprint,'(a)') ' Adding solute to solvent ====>'
+      
+      ALLOCATE(Atoms_InBox(Size_Total))
+      Atoms_InBox(1:nato_Slt)=Total(1:nato_Slt)
+      count_a=0
+
+      DO n=1,nunits_Slv
+         DO m=1,nato_Slv
+            count_a=count_a+1
+            nn=(n-1)*nato_Slv + m
+            Atoms_InBox(count_a+nato_Slt) = Total(nn+nato_Slt)
+            Atoms_InBox(count_a+nato_Slt) % Serial = count_a+nato_Slt
+         END DO
+      END DO
+
+      Slt_InBox=>Atoms_InBox(1:nato_Slt)
+      Slv_InBox=>Atoms_InBox(nato_Slt+1:)
+
+      DEALLOCATE(Total)
+      Slv=>NULL()
+      Slt=>NULL()
+    END SUBROUTINE Add
     FUNCTION PBC(x) RESULT(out)
       REAL(8) :: out
       REAL(8) :: x

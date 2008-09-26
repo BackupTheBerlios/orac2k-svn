@@ -82,6 +82,14 @@ SUBROUTINE Charges_onGrid(Cq)
         END DO
      END DO
   END DO
+!!$  DO ia=1,64
+!!$     DO ja=1,64
+!!$        DO ka=1,64
+!!$           WRITE(60,*) ia,ja,ka,Cq(ia,ja,ka)
+!!$        END DO
+!!$     END DO
+!!$  END DO
+!!$  STOP
 END SUBROUTINE Charges_onGrid
 SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
 
@@ -134,6 +142,7 @@ SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
   if ( 2*nf3 .lt. nfft3 )nf3 = nf3+1
   energy = 0.d0
   fact=2.0D0
+
   DO k1 = 1,3
      DO k2 = 1,3
         vir(k1,k2) = 0.0D0
@@ -213,9 +222,10 @@ SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
   vir(3,1)=vir(1,3)
   vir(3,2)=vir(2,3)
 END SUBROUTINE ScalarSum_Transposed
-SUBROUTINE Grad_Sum(Cq)
+SUBROUTINE Grad_Sum(Cq,Energy)
+  REAL(8) :: Energy
   INTEGER :: nmaps,m,n,ith1,ith2,ith3,i,j,k,ka,ia,ja,k0,j0,i0
-  REAL(8) :: f1,f2,f3,phid,chg0,t3,t2,dt3,dt2,term,energy
+  REAL(8) :: f1,f2,f3,phid,chg0,t3,t2,dt3,dt2,term
   REAL(8), POINTER :: Cq(:,:,:)
 
   energy=0.0D0
@@ -266,4 +276,5 @@ SUBROUTINE Grad_Sum(Cq)
      fz(n) = fz(n) + recip(3,1)*f1+recip(3,2)*f2+recip(3,3)*f3
      phi(n)=phid
   END DO
+  Energy=Energy*0.5D0
 END SUBROUTINE Grad_Sum

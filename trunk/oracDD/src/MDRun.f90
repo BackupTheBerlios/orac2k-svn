@@ -44,6 +44,7 @@ MODULE MDRun
 
 !!$---- This module is part of the program oracDD ----*
 
+#define _PME_ 1
   USE MPI
   USE PME
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
@@ -55,7 +56,7 @@ MODULE MDRun
   USE PI_Communicate
   USE NeighCells
   USE Ewald
-  USE Parallel
+  USE Parallel, ONLY: PA_npx=>npx
   USE Print_Defs
   IMPLICIT none
   PRIVATE
@@ -64,29 +65,39 @@ CONTAINS
   SUBROUTINE MDRun_
     LOGICAL :: ok
     REAL(8) :: rcut(3),startime,endtime,timea
+    INTEGER :: n
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
 !!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
     rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(npx == 0) THEN
+    IF(PA_npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
           CALL PI__Decomposition_NB(rcut)
        END IF
     END IF
-    CALL PI__AssignAtomsToCells
-    startime=MPI_WTIME()
-    CALL PI__Shift(2,-1)
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    IF(Inout__PDB % unit /= 0 .AND. PI_Node_Cart == 7) CALL Atom__PDB(Inout__PDB % unit, 1)
-    
 
+    CALL PI__AssignAtomsToCells
+
+!!$    CALL PI__Shift(2,_PME_)
+
+!!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
     IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
+
+       CALL PI__Shift(1,_PME_)
        CALL Ewald__Validate
-       CALL PME_
+
+       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+       startime=MPI_WTIME()
+
+       CALL PME_(1)
+
+       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+       endtime=MPI_WTIME()
+       timea=endtime-startime
+!!$       WRITE(*,*) 'timea ',timea,startime,endtime
     END IF
     
   END SUBROUTINE MDRun_

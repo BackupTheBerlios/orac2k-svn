@@ -119,7 +119,6 @@ CONTAINS
     Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
     Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
     Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
-
   END FUNCTION Atom__InitCoords
   SUBROUTINE Atom__PDB(unit, nozero_write)
     INTEGER, OPTIONAL :: nozero_write
@@ -132,7 +131,7 @@ CONTAINS
        PDB__Coords(n) % x = Atoms(n) % x
        PDB__Coords(n) % y = Atoms(n) % y
        PDB__Coords(n) % z = Atoms(n) % z
-       PDB__Coords(n) % Serial =n 
+       PDB__Coords(n) % Serial = n
     END DO
     IF(PRESENT(nozero_write)) THEN
        CALL PDB__Write(unit,PDB__Coords, nozero_write)

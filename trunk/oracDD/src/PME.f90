@@ -48,7 +48,7 @@ MODULE PME
   USE Rfft3d
   USE Cell, ONLY: oc,co, Volume
   USE Ewald
-  USE Forces, ONLY: fp_ew,fs_ew
+  USE Forces, ONLY: Force
 #ifdef HAVE_MPI
   USE mpi
 #endif
@@ -87,23 +87,27 @@ MODULE PME
 !!$
   REAL(8), POINTER :: fx(:),fy(:),fz(:),chg(:),fr1(:),fr2(:),fr3(:)&
        &,phi(:)
-  INTEGER, SAVE :: natom,alltoall_dim
+  INTEGER, SAVE :: natom,alltoall_dim,ntot_atom
   INTEGER, POINTER, SAVE :: order
-  REAL(8), SAVE :: recip(3,3),vir(3,3),eer
+  REAL(8), SAVE :: recip(3,3),vir(3,3),eer,energy
   
 CONTAINS
-  SUBROUTINE PME_
-    INTEGER :: i,j,k,n,m,count0,AtSt,AtEn
+  SUBROUTINE PME_(i_p)
+    INTEGER :: i_p,i,j,k,n,m,count0,AtSt,AtEn,ia,ja,ka,count1,i0,j0,k0
     INTEGER, SAVE :: No_Calls=0
-    REAL(8) :: startime,endtime,timea
+    REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
+    TYPE(Force), POINTER :: fp(:)
 
 !!$    
 !!$--- Initialize fftw when needed and allocate pointers
 !!$
+
+    CALL MPI_BARRIER(PI_Comm,ierr)
+    startime=MPI_WTIME()
     order=>Ewald__Param % order
 
-    IF(No_Calls == 0) THEN
-       
+
+    IF(No_Calls == 0) THEN       
        IF(.NOT. Initialize_()) CALL Print_Errors()
     END IF
 
@@ -111,22 +115,17 @@ CONTAINS
     ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
     ALLOCATE(Cq_sb(myfft1,myfft2,myfft3))
 
+
+
 !!$    
 !!$--- Copy coordinates and charges to local arrays
 !!$
+
     IF(.NOT. LittleBoxes_()) CALL Print_Errors()
 
     natom=SIZE(IndBox_t)
-    ALLOCATE(fp_ew(SIZE(IndBox_p)))
-    ALLOCATE(fs_ew(SIZE(IndBox_s)))
-   
-
-    ALLOCATE(theta1(Ewald__Param % order, natom)&
-         &,theta2(Ewald__Param % order, natom),theta3(Ewald__Param &
-         &% order, natom))
-    ALLOCATE(dtheta1(Ewald__Param % order, natom)&
-         &,dtheta2(Ewald__Param % order, natom),dtheta3(Ewald__Param &
-         &% order, natom))
+    ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
+    ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
     ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
     ALLOCATE(fx(natom),fy(natom),fz(natom),phi(natom))
 
@@ -138,15 +137,14 @@ CONTAINS
        END DO
     END DO
 
-    CALL MPI_BARRIER(PI_Comm_FFTW,ierr)
-    startime=MPI_WTIME()
 
     CALL Fractionals
     CALL Get_Bsplines
+
     CALL Charges_onGrid(Cq_s)
 
     CALL Transpose_Cart2FFTW
-
+    
     IF(.NOT. do_rfft3d(1,Cq_r)) RETURN
 
     CALL ScalarSum_Transposed(Cq_r,nfft1,nfft2,nfft3)
@@ -155,24 +153,38 @@ CONTAINS
 
     CALL Transpose_FFTW2Cart
 
-    CALL Grad_Sum(Cq_s)
 
-    fp_ew(:) % x =fx(1:SIZE(IndBox_p))
-    fp_ew(:) % y =fy(1:SIZE(IndBox_p))
-    fp_ew(:) % z =fz(1:SIZE(IndBox_p))
-    fs_ew(:) % x =fx(SIZE(IndBox_p)+1:)
-    fs_ew(:) % y =fy(SIZE(IndBox_p)+1:)
-    fs_ew(:) % z =fz(SIZE(IndBox_p)+1:)
+    CALL Grad_Sum(Cq_s,Energy)
 
-    CALL PI__Fold_F(fp_ew,fs_ew,-1)
+    ntot_atom=SIZE(Atoms)
 
-    CALL MPI_BARRIER(PI_Comm_FFTW,ierr)
+    ALLOCATE(fp(natom)) 
+
+    fp(:) % x = fx(:)
+    fp(:) % y = fy(:)
+    fp(:) % z = fz(:)
+    
+    CALL PI__Fold_F(fp,i_p)
+
+!!$    IF(PI_Nprocs == 1) THEN
+!!$       WRITE(60,'(i7,3e17.9)') (n,fp(n) % x, fp(n) % y, fp(n) % z, n=1,natom)
+!!$    ELSE
+!!$       DO m=1,natom
+!!$          n=IndBox_t(m)
+!!$          IF(groupa(Atoms(n) % Grp_No) % Knwn == 1) THEN
+!!$             WRITE(60+PI_Node_Cart,'(i7,3e17.9)') n,fp(m) % x, fp(m) % y&
+!!$                  &, fp(m) % z
+!!$          END IF
+!!$       END DO
+!!$    END IF
+
+    CALL MPI_ALLREDUCE(eer,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+    CALL MPI_ALLREDUCE(Energy,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+    CALL MPI_BARRIER(PI_Comm,ierr)
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) PI_Node_FFTW,timea
-
-    STOP
-
+    WRITE(*,*) 'timeo ',timea
+    WRITE(*,*) PI_Node_FFTW,eer,energy
   CONTAINS
     SUBROUTINE Fractionals
       INTEGER :: n,m,mm,count0,AtSt,AtEn

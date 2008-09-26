@@ -186,7 +186,7 @@ MODULE Solute
   PRIVATE
   PUBLIC :: Solute_,PDB_Solute, PDB_Template, Solute__Exclusion
   CHARACTER(len=max_char), ALLOCATABLE, SAVE :: PDB_Solute(:), PDB_Template(:)
-  REAL(8), SAVE :: Solute__Exclusion=1.0D0
+  REAL(8), SAVE :: Solute__Exclusion=0.0D0
 CONTAINS
   SUBROUTINE Solute_(name)
     CHARACTER(len=*) :: name

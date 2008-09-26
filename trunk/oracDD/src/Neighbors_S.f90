@@ -57,7 +57,8 @@ MODULE Neighbors_S
   PRIVATE
   PUBLIC Neighbors_S_, Neighbors_S__Particles, Neighbors_S__Ind&
        &, Neighbors_S__Chain, Neighbors_S__, clst, Neighbors_S_Check&
-       &,Neighbors_S__nc, nc, Neighbors_S__Delete, Chain_xyz, Head_xyz
+       &,Neighbors_S__nc, nc, Neighbors_S__Delete, Chain_xyz,&
+       & Head_xyz,clst_pme
 
   TYPE :: Neighbors_S__Ind
      INTEGER :: i,j,k
@@ -77,8 +78,10 @@ MODULE Neighbors_S
   INTEGER, ALLOCATABLE,SAVE :: Head_xyz(:)
 
   TYPE(Neighbors_S__), SAVE :: clst(3)
+  TYPE(Neighbors_S__), SAVE :: clst_pme(3)
 
 
+  INTEGER, SAVE :: calls=0
   INTEGER, SAVE :: ncx,ncy,ncz
   TYPE(Neighbors_S__nc), SAVE :: nc(3) 
 CONTAINS
@@ -91,11 +94,10 @@ CONTAINS
     REAL(8) :: rcut
 
     INTEGER :: vect0(3)
-    INTEGER, POINTER :: vect(:)
+    INTEGER, POINTER :: vect(:)=>NULL()
     REAL(8) :: sqcut,dx,dy,dz,rmin
     INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
-         &,nxmax, nymax,nzmax,nind
-    INTEGER, SAVE :: calls=0
+         &,nxmax, nymax,nzmax,nind,ncount0,kend,jend
 
     calls=calls+1
     i_n=calls
@@ -109,6 +111,7 @@ CONTAINS
     ncx=nx; ncy=ny; ncz=nz
     nc(calls) % x=nx; nc(calls) % y=ny; nc(calls) % z=nz; nc(calls) % rcut=rcut
     IF(ALLOCATED(clst(calls) % ind_xyz)) DEALLOCATE(clst(calls) % ind_xyz)
+    IF(ALLOCATED(clst_pme(calls) % ind_xyz)) DEALLOCATE(clst_pme(calls) % ind_xyz)
 
     sqcut=rcut**2
 
@@ -118,18 +121,21 @@ CONTAINS
     imax=0
     jmax=0
     kmax=0
-
     vect0=(/0, 0, 0/) 
+
+
     IF(.NOT. Node_()) STOP
-
     CALL Node__Push(vect0)   
-
-    istart=1-ncx
+    istart=0
+    ncount0=0
     DO i=istart,ncx-1
-       jstart=1-ncy
-       DO j=jstart,ncy-1
-          kstart=1-ncz
-          DO k=kstart,ncz-1
+       jend=ncy-1
+       IF(i == 0) jend=0
+       DO j=1-ncy,jend
+          kend=ncz-1
+          IF(i == 0 .AND. j == 0) kend=0
+          DO k=1-ncz,kend
+             ncount0=ncount0+1
              rmin=dist_ijk(i,j,k,dx,dy,dz)
              IF(rmin < sqcut) then
                 vect0=(/i, j, k/) 
@@ -145,12 +151,51 @@ CONTAINS
     END DO
     nind=Node__Size()
     ALLOCATE(clst(calls) % ind_xyz(nind))
+
+    IF(ASSOCIATED(vect)) DEALLOCATE(vect)
     nind=0
     DO WHILE(Node__Pop(vect))
        nind=nind+1
        clst(calls) % ind_xyz(nind) % i=vect(1)
        clst(calls) % ind_xyz(nind) % j=vect(2)
        clst(calls) % ind_xyz(nind) % k=vect(3)
+    END DO
+
+    imax=0
+    jmax=0
+    kmax=0
+    vect0=(/0, 0, 0/) 
+    IF(.NOT. Node_()) STOP
+    CALL Node__Push(vect0)
+    istart=1-ncx
+    jstart=1-ncy
+    ncount0=0
+    DO i=1-ncx,ncx-1
+       DO j=1-ncy,ncy-1
+          DO k=1-ncz,ncz-1
+             ncount0=ncount0+1
+             rmin=dist_ijk(i,j,k,dx,dy,dz)
+             IF(rmin < sqcut) then
+                vect0=(/i, j, k/) 
+                IF(imax < abs(i)) imax=abs(i)
+                IF(jmax < abs(j)) jmax=abs(j)
+                IF(kmax < abs(k)) kmax=abs(k)
+                IF(.NOT. (i == 0 .AND. j == 0 .AND. k == 0)) THEN
+                   CALL Node__Push(vect0)
+                END IF
+             END IF
+          END DO
+       END DO
+    END DO
+    nind=Node__Size()
+    ALLOCATE(clst_pme(calls) % ind_xyz(nind))
+    nind=0
+    IF(ASSOCIATED(vect)) DEALLOCATE(vect)
+    DO WHILE(Node__Pop(vect))
+       nind=nind+1
+       clst_pme(calls) % ind_xyz(nind) % i=vect(1)
+       clst_pme(calls) % ind_xyz(nind) % j=vect(2)
+       clst_pme(calls) % ind_xyz(nind) % k=vect(3)
     END DO
 
     nxmax=(ncx+1)/2
@@ -286,7 +331,7 @@ CONTAINS
     INTEGER :: mfx,mfy,mfz
     REAL(8) :: sqcut,dx,dy,dz,rmin
     INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
-         &,nxmax, nymax,nzmax,nind
+         &,nxmax, nymax,nzmax,nind,kend
 
     mfx=0
     mfy=0
@@ -302,12 +347,14 @@ CONTAINS
     jmax=0
     kmax=0
 
-    istart=1-ncx
+    istart=0
     DO i=istart,ncx-1
        jstart=1-ncy
+       IF(i == 0) jstart=0
        DO j=jstart,ncy-1
-          kstart=1-ncz
-          DO k=kstart,ncz-1
+          kend=ncz-1
+          IF(i == 0 .AND. j == 0) kend=0
+          DO k=1-ncz,kend
              rmin=dist_ijk(i,j,k,dx,dy,dz)
              IF(rmin < sqcut) then
                 IF(imax < abs(i)) imax=abs(i)
@@ -473,7 +520,7 @@ CONTAINS
     dz=2.d0/ncz
     count0=0
     DO n=1,ngrp
-       IF(Groupa(n) % Knwn == 0) CYCLE
+       IF(Groupa(n) % Knwn <= 0) CYCLE
        count0=count0+(Groupa(n) % AtEn - Groupa(n) % AtSt+1)
        x1=Groupa(n) % xa/dx
        y1=Groupa(n) % ya/dy
@@ -491,18 +538,18 @@ CONTAINS
        Chain_xyz (n) % p=Head_xyz(numcell)
        Head_xyz(numcell)=n
     END DO
-
   END FUNCTION Neighbors_S__Particles
   SUBROUTINE Neighbors_S__Delete
     INTEGER :: i_n
     DO i_n=1,SIZE(clst)
        DEALLOCATE(clst(i_n) % Ind_xyz)
+       DEALLOCATE(clst_pme(i_n) % Ind_xyz)
     END DO
   END SUBROUTINE Neighbors_S__Delete
   FUNCTION Neighbors_S__Valid(i_n) RESULT(out)
     INTEGER :: i_n
     LOGICAL :: out
-    out=ALLOCATED(clst(i_n) % ind_xyz)
+    out=(ALLOCATED(clst(i_n) % ind_xyz) .AND. ALLOCATED(clst_pme(i_n) % ind_xyz))
   END FUNCTION Neighbors_S__Valid
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
