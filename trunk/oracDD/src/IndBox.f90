@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE IndBox
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,69 +38,84 @@ MODULE MDRun
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Tue Aug  5 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _PME_ 1
-  USE MPI
-  USE PME
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
   USE Atom
-  USE Inout
-  USE PI_Decompose
-  USE PI_
-  USE PI_Communicate
-  USE NeighCells
-  USE Ewald
-  USE Parallel, ONLY: PA_npx=>npx
-  USE Print_Defs
+  USE Groups
+  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t
+  INTEGER :: natom_local
+  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:)
+  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
 CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: rcut(3),startime,endtime,timea
-    INTEGER :: n
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
-!!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
-    IF(PA_npx == 0) THEN
-       IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut)
+  FUNCTION IndBox_() RESULT(out)
+    LOGICAL :: out
+    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t
+
+    count_g_p=0
+    count_g_t=0
+    count_g_p=COUNT(Groupa(:) % knwn == 1)
+    count_g_t=COUNT(Groupa(:) % knwn /= 0)
+    
+    IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
+    IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
+
+    ALLOCATE(IndBox_g_p(count_g_p))
+    ALLOCATE(IndBox_g_t(count_g_t)) 
+    
+    count_g_p=0 ; count_g_t=0 
+
+    DO n=1,SIZE(Groupa)
+       m=Groupa(n) % knwn 
+       IF(m /= 0) THEN
+          count_g_t=count_g_t+1
+          IndBox_g_t(count_g_t)=n
+          IF(m == 1) THEN
+             count_g_p=count_g_p+1
+             IndBox_g_p(count_g_p)=n
+          END IF
        END IF
-    END IF
-
-    CALL PI__AssignAtomsToCells
-
-!!$    CALL PI__Shift(2)
-
-!!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
-
-!!$    CALL Direct(3)
-
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
-
-       CALL PI__Shift(1,_PME_)
-       CALL Ewald__Validate
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       startime=MPI_WTIME()
-
-       CALL PME_(1)
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       endtime=MPI_WTIME()
-       timea=endtime-startime
+    END DO
+    out=count_g_p /= 0
+    IF(.NOT. out) THEN
+       errmsg_f='No Primary Groups found in the unit box'
+       CALL Add_Errors(-1,errmsg_f)
     END IF
     
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+    count_a_p=0
+    count_a_t=0
+    count_a_p=COUNT(Groupa(Atoms(:) % Grp_No) % knwn == 1)
+    count_a_t=COUNT(Groupa(Atoms(:) % Grp_No) % knwn /= 0)
+    
+    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
+    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
+
+    ALLOCATE(IndBox_a_p(count_a_p))
+    ALLOCATE(IndBox_a_t(count_a_t)) 
+    
+    count_a_p=0 ; count_a_t=0 
+
+    DO n=1,SIZE(Atoms)
+       m=Groupa(Atoms(n) % Grp_No) % knwn 
+       IF(m /= 0) THEN
+          count_a_t=count_a_t+1
+          IndBox_a_t(count_a_t)=n
+          IF(m == 1) THEN
+             count_a_p=count_a_p+1
+             IndBox_a_p(count_a_p)=n
+          END IF
+       END IF
+    END DO
+    out=count_a_p /= 0
+    IF(.NOT. out) THEN
+       errmsg_f='No Primary Atoms found in the unit box'
+       CALL Add_Errors(-1,errmsg_f)
+    END IF
+  END FUNCTION IndBox_
+END MODULE IndBox

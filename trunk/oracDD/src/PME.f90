@@ -56,7 +56,7 @@ MODULE PME
   USE Groups
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE LittleBoxes
+  USE IndBox
   USE PI_Communicate
   IMPLICIT none
   PRIVATE
@@ -102,8 +102,6 @@ CONTAINS
 !!$--- Initialize fftw when needed and allocate pointers
 !!$
 
-    CALL MPI_BARRIER(PI_Comm,ierr)
-    startime=MPI_WTIME()
     order=>Ewald__Param % order
 
 
@@ -111,6 +109,8 @@ CONTAINS
        IF(.NOT. Initialize_()) CALL Print_Errors()
     END IF
 
+    CALL MPI_BARRIER(PI_Comm,ierr)
+    startime=MPI_WTIME()
     ALLOCATE(Cq_r(ndim_fftw1,ndim_fftw2,ndim_fftw3))
     ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
     ALLOCATE(Cq_sb(myfft1,myfft2,myfft3))
@@ -121,9 +121,9 @@ CONTAINS
 !!$--- Copy coordinates and charges to local arrays
 !!$
 
-    IF(.NOT. LittleBoxes_()) CALL Print_Errors()
+    IF(.NOT. IndBox_()) CALL Print_Errors()
 
-    natom=SIZE(IndBox_t)
+    natom=SIZE(IndBox_a_t)
     ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
     ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
     ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
@@ -202,7 +202,7 @@ CONTAINS
       REAL(8) :: w1,w2,w3,x,y,z,v1,v2,v3
       
       DO n=1,natom
-         m=IndBox_t(n)
+         m=IndBox_a_t(n)
          chg(n)=Atoms(m) % chg
          x=Atoms(m) % x
          y=Atoms(m) % y

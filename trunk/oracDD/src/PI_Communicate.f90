@@ -60,7 +60,7 @@ MODULE PI_Communicate
   USE Groups
   USE Atom
   USE Cell
-  USE LittleBoxes
+  USE IndBox
   
   USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   USE Neighbors_S, ONLY: Neighbors_S__Particles,Neighbors_S__nc, nc,&
@@ -89,19 +89,6 @@ CONTAINS
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
-    dx=2.0D0/DBLE(npx)
-    dy=2.0D0/DBLE(npy)
-    dz=2.0D0/DBLE(npz)
-    vd(1)=dx
-    vd(2)=dy
-    vd(3)=dz
-    ddx=2.0D0/DBLE(ncx)
-    ddy=2.0D0/DBLE(ncy)
-    ddz=2.0D0/DBLE(ncz)
-    vp(1)=DBLE(PI__Ranks(PI_Node_Cart+1) % nx)*dx
-    vp(2)=DBLE(PI__Ranks(PI_Node_Cart+1) % ny)*dy
-    vp(3)=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*dz
-
     
     IF(PRESENT(pme)) THEN
        Nei=>Neighc_pme_(i_p) % Nei
@@ -132,38 +119,6 @@ CONTAINS
        END SELECT
     END DO
     
-
-
-!!$    CALL Shift(i_p,_X_,_PLUS_)
-!!$    CALL Shift(i_p,_Y_,_PLUS_)
-!!$    CALL Shift(i_p,_Z_,_PLUS_)
-!!$    CALL Shift(i_p,_X_,_MINUS_)
-!!$    CALL Shift(i_p,_Y_,_MINUS_)
-!!$    CALL Shift(i_p,_Z_,_MINUS_)
-!!$
-!!$    ELSE
-!!$       SELECT CASE(Direction)
-!!$       CASE(1)
-!!$          CALL Shift(i_p,_X_,_PLUS_)
-!!$          CALL Shift(i_p,_Y_,_PLUS_)
-!!$          CALL Shift(i_p,_Z_,_PLUS_)
-!!$       CASE(-1)
-!!$          CALL Shift(i_p,_X_,_MINUS_)
-!!$          CALL Shift(i_p,_Y_,_MINUS_)
-!!$          CALL Shift(i_p,_Z_,_MINUS_)
-!!$       END SELECT
-!!$    END IF
-
-!!$    DO n=1,SIZE(Atoms)
-!!$       IF(groupa(Atoms(n) % Grp_No) % knwn == 1) THEN
-!!$          Atoms(n) % x =0.0D0
-!!$          Atoms(n) % y =0.0D0
-!!$          Atoms(n) % z =0.0D0
-!!$          Atoms(n) % xa =0.0D0
-!!$          Atoms(n) % ya =0.0D0
-!!$          Atoms(n) % za =0.0D0
-!!$       END IF
-!!$    END DO
   END SUBROUTINE PI__Shift
   SUBROUTINE Shift(i_p,Axis,Dir)
     INTEGER :: Axis,Dir,i_p
@@ -277,7 +232,7 @@ CONTAINS
     fp0(:) % x=0.0D0
     fp0(:) % y=0.0D0
     fp0(:) % z=0.0D0
-    fp0(IndBox_t(:))=fp(:)
+    fp0(IndBox_a_t(:))=fp(:)
     
     ncx=nc(i_p) % x
     ncy=nc(i_p) % y
@@ -310,8 +265,8 @@ CONTAINS
        END SELECT
     END DO
 
-    DO nn=1,SIZE(IndBox_t)
-       n=Indbox_t(nn)
+    DO nn=1,SIZE(IndBox_a_t)
+       n=Indbox_a_t(nn)
        fp(nn)=fp0(n)
     END DO
   CONTAINS
