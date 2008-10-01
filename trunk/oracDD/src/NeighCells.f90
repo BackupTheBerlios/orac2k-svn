@@ -174,9 +174,12 @@ CONTAINS
        NULLIFY(new_node % next)
        new_node % rcut = 0.0D0
        okkk=.FALSE.
-       nx=NINT(a/rcut0)
-       ny=NINT(b/rcut0)
-       nz=NINT(c/rcut0)
+!!$       nx=NINT(a/rcut0)
+!!$       ny=NINT(b/rcut0)
+!!$       nz=NINT(c/rcut0)
+       nx=24
+       ny=24
+       nz=24
        iter_inst=0
        DO WHILE(.NOT. okkk)
           iter_inst=iter_inst+1

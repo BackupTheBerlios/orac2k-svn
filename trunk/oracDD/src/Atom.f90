@@ -55,7 +55,7 @@ MODULE Atom
   USE PDB
   IMPLICIT none
   PRIVATE
-  PUBLIC Atom_, Atom__PDB, Atom__InitCoords,Atom__, Atoms
+  PUBLIC Atom_,Atom__Tpg_, Atom__PDB, Atom__InitCoords,Atom__, Atom__Tpg,Atoms_Tpg, Atoms
   TYPE :: Atom__
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -65,7 +65,21 @@ MODULE Atom
      CHARACTER(len=max_atm) :: Res, beta, betab
      INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv, Mol
   END TYPE Atom__
+  TYPE :: Atom__Tpg
+     INTEGER, ALLOCATABLE :: Bonds(:)
+     INTEGER, ALLOCATABLE :: Angles(:)
+     INTEGER, ALLOCATABLE :: dihed(:)
+     INTEGER, ALLOCATABLE :: imph(:)
+     INTEGER, ALLOCATABLE :: int14(:)
+     INTEGER, ALLOCATABLE :: Ex(:)
+  END type Atom__Tpg
+
+  TYPE :: Atom__Tpg0
+     INTEGER, ALLOCATABLE :: Bnd(:)
+  END type Atom__Tpg0
+
   TYPE(Atom__), ALLOCATABLE, SAVE :: Atoms(:)
+  TYPE(Atom__Tpg), ALLOCATABLE, SAVE :: Atoms_Tpg(:)
 CONTAINS
   FUNCTION Atom_() RESULT(out)
     LOGICAL :: out
@@ -140,4 +154,169 @@ CONTAINS
     END IF
     DEALLOCATE(PDB__Coords)
   END SUBROUTINE Atom__PDB
+  FUNCTION Atom__Tpg_() RESULT(out)
+    LOGICAL :: out
+    INTEGER :: natom
+    TYPE(Atom__Tpg0), POINTER :: Tpg_out(:)
+    INTEGER, POINTER :: indx(:),Maps(:)
+    INTEGER :: n,nn,m,ia,ib,ic,count_n
+
+    natom=SIZE(Atoms)
+    ALLOCATE(Atoms_Tpg(natom))
+    ALLOCATE(Tpg_out(natom))
+    
+    ALLOCATE(Indx(natom))
+
+!!$-- Bonds
+
+    CALL Add_Tpg(Tpg % Bonds, tpg_out)
+    DO n=1,natom
+       IF(ALLOCATED(Tpg_out(n) % Bnd)) THEN
+          nn=SIZE(Tpg_out(n) % Bnd)
+          ALLOCATE(Atoms_Tpg(n) % Bonds(nn))
+          Atoms_Tpg(n) % Bonds=Tpg_out(n) % Bnd
+          DEALLOCATE(Tpg_out(n) % Bnd)
+       END IF
+    END DO
+
+!!$-- Angles
+
+    CALL Add_Tpg(Tpg % Angles, tpg_out)
+
+    DO n=1,natom
+       IF(ALLOCATED(Tpg_out(n) % Bnd)) THEN
+          nn=SIZE(Tpg_out(n) % Bnd)
+          ALLOCATE(Atoms_Tpg(n) % Angles(nn))
+          Atoms_Tpg(n) % Angles=Tpg_out(n) % Bnd
+          DEALLOCATE(Tpg_out(n) % Bnd)
+       END IF
+    END DO
+
+!!$-- Diheds
+
+    CALL Add_Tpg(Tpg % Dihed, tpg_out)
+
+    DO n=1,natom
+       IF(ALLOCATED(Tpg_out(n) % Bnd)) THEN
+          nn=SIZE(Tpg_out(n) % Bnd)
+          ALLOCATE(Atoms_Tpg(n) % Dihed(nn))
+          Atoms_Tpg(n) % Dihed=Tpg_out(n) % Bnd
+          DEALLOCATE(Tpg_out(n) % Bnd)
+       END IF
+    END DO
+
+!!$-- Imph
+
+    CALL Add_Tpg(Tpg % Imph, tpg_out)
+
+    DO n=1,natom
+       IF(ALLOCATED(Tpg_out(n) % Bnd)) THEN
+          nn=SIZE(Tpg_out(n) % Bnd)
+          ALLOCATE(Atoms_Tpg(n) % Imph(nn))
+          Atoms_Tpg(n) % Imph=Tpg_out(n) % Bnd
+          DEALLOCATE(Tpg_out(n) % Bnd)
+       END IF
+    END DO
+
+!!$-- int14
+
+    CALL Add_Tpg(Tpg % Int14, tpg_out)
+
+    DO n=1,natom
+       IF(ALLOCATED(Tpg_out(n) % Bnd)) THEN
+          nn=SIZE(Tpg_out(n) % Bnd)
+          ALLOCATE(Atoms_Tpg(n) % Int14(nn))
+          Atoms_Tpg(n) % Int14=Tpg_out(n) % Bnd
+          DEALLOCATE(Tpg_out(n) % Bnd)
+       END IF
+    END DO
+
+
+    ALLOCATE(Maps(200))
+    DO n=1,natom
+       Maps=0
+       count_n=0
+       DO nn=1,SIZE(Atoms_Tpg(n) % Bonds)
+          m=Atoms_Tpg(n) % Bonds(nn)
+          ia=Tpg % Bonds(1,m)
+          ib=Tpg % Bonds(2,m)
+          IF(n /= ia) THEN
+             count_n=count_n+1
+             Maps(count_n)=ia
+          END IF
+          IF(n /= ib) THEN
+             count_n=count_n+1
+             Maps(count_n)=ib
+          END IF
+       END DO
+       DO nn=1,SIZE(Atoms_Tpg(n) % Angles)
+          m=Atoms_Tpg(n) % Angles(nn)
+          ia=Tpg % Angles(1,m)
+          ib=Tpg % Angles(2,m)
+          ic=Tpg % Angles(3,m)
+          IF(n /= ia) THEN
+             count_n=count_n+1
+             Maps(count_n)=ia
+          END IF
+          IF(n /= ib) THEN
+             count_n=count_n+1
+             Maps(count_n)=ib
+          END IF
+          IF(n /= ic) THEN
+             count_n=count_n+1
+             Maps(count_n)=ic
+          END IF
+       END DO
+       DO nn=1,SIZE(Atoms_Tpg(n) % Int14)
+          m=Atoms_Tpg(n) % Int14(nn)
+          ia=Tpg % Int14(1,m)
+          ib=Tpg % Int14(2,m)
+          IF(n /= ia) THEN
+             count_n=count_n+1
+             Maps(count_n)=ia
+          END IF
+          IF(n /= ib) THEN
+             count_n=count_n+1
+             Maps(count_n)=ib
+          END IF
+       END DO
+       ALLOCATE(Atoms_Tpg(n) % Ex (count_n))
+       Atoms_Tpg(n) % Ex (:)=Maps(1:count_n)
+    END DO
+
+    out=.TRUE.
+  CONTAINS
+    SUBROUTINE Add_Tpg(tpg_in, tpg_out)
+      INTEGER :: tpg_in(:,:)
+      TYPE(Atom__Tpg0) :: Tpg_out(:)
+
+      INTEGER :: d1,d2,n,nn,m
+
+      Indx=0
+      d1=SIZE(Tpg_in,1)
+      d2=SIZE(Tpg_in,2)
+
+      DO n=1,d2
+         DO m=1,d1
+            nn=Tpg_in(m,n)
+            Indx(nn)=Indx(nn)+1
+         END DO
+      END DO
+
+      DO n=1,natom
+         IF(Indx(n) /= 0) THEN
+            ALLOCATE(Tpg_out(n) % Bnd(Indx(n)))
+         END IF
+      END DO
+
+      Indx=0
+      DO n=1,d2
+         DO m=1,d1
+            nn=Tpg_in(m,n)
+            Indx(nn)=Indx(nn)+1
+            Tpg_Out(nn) % Bnd(Indx(nn)) = n
+         END DO
+      END DO
+    END SUBROUTINE Add_Tpg
+  END FUNCTION Atom__Tpg_
 END MODULE Atom

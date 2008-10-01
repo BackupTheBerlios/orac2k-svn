@@ -63,17 +63,13 @@ MODULE PI_Decompose
   USE Groups
   IMPLICIT none
   PRIVATE
-  PUBLIC PI__Decomposition_NB, PI__Topology, PI__GetParameters, PI__Type, PI__AssignAtomsToCells
+  PUBLIC PI__Decomposition_NB, PI__GetParameters, PI__Type, PI__AssignAtomsToCells
   TYPE :: PI__Type
      LOGICAL :: ok=.FALSE.
      INTEGER, ALLOCATABLE :: exc(:,:)
   END TYPE PI__Type
-  TYPE :: PI__Topology
-     TYPE(PI__Type), ALLOCATABLE :: tbl(:,:)
-  END TYPE PI__Topology
-  TYPE(PI__Topology), ALLOCATABLE, SAVE :: pe_nb(:)
-  TYPE(PI__Topology), SAVE :: pe_bb
 
+  REAL(8), SAVE :: Ref_Radius=3.11D0
   REAL(8), PARAMETER :: nv(8,3)=RESHAPE((/&
        & 0.0D0, 1.0D0, 0.0D0, 0.0D0, 1.0D0, 1.0D0, 0.0D0, 1.0D0 &
        &,0.0D0, 0.0D0, 1.0D0, 0.0D0, 1.0D0, 0.0D0, 1.0D0, 1.0D0 &
@@ -155,9 +151,10 @@ CONTAINS
 
     CALL PI__Setup_Cart
     CALL PI__Setup_SndRcv
+
     DO n=1,3
        IF(rcut(n) > 0.0D0) THEN
-          IF(.NOT. NeighCells_(rcut(1),rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz,n))&
+          IF(.NOT. NeighCells_(Ref_Radius,rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz,n))&
                & CALL Print_Errors()
        END IF
     END DO
@@ -182,96 +179,6 @@ CONTAINS
          END IF
       END DO
     END SUBROUTINE Combinations
-    SUBROUTINE Make_Comm(i_n)
-      INTEGER :: i_n
-      INTEGER :: n,nx,ny,nz,mp,m,np,i,j,k,ox,oy,oz&
-           &,mpe,ncx,ncy,ncz,count0
-      INTEGER, POINTER :: ind_x(:)=>NULL(),ind_y(:)=>NULL()
-
-      np=PI_nprocs
-      IF(ALLOCATED(Pe_nb(i_n) % tbl)) DEALLOCATE(Pe_nb(i_n) % tbl)
-      ALLOCATE(Pe_nb(i_n) % tbl(np,np))
-      CALL NeighCells__Param(mp,ncx,ncy,ncz)
-      WRITE(kprint,*) ' mp, ncx, ncy, ncz ',mp,ncx,ncy,ncz
-      ALLOCATE(ind_x(np), ind_y(mp))
-      DO n=1,np
-         ind_x=0
-         ind_y=0
-         mp=SIZE(Neighc_(i_n) % Nei(n) % c,2)
-         DO m=1,mp
-            ox=Neighc_(i_n) % Nei(n) % c(1,m)
-            oy=Neighc_(i_n) % Nei(n) % c(2,m)
-            oz=Neighc_(i_n) % Nei(n) % c(3,m)
-            i=Ind_Small(ox,oy,oz) % nx - 1
-            j=Ind_Small(ox,oy,oz) % ny - 1
-            k=Ind_Small(ox,oy,oz) % nz - 1
-
-            mpe=k+PI_npz*(i*PI_npy+j)+1
-            ind_y(m)=mpe
-            ind_x(mpe)=ind_x(mpe)+1
-         END DO
-         DO m=1,np
-            IF(ind_x(m) /= 0) THEN
-               ALLOCATE(Pe_nb(i_n) % tbl (n,m) % exc (3,ind_x(m)))
-            END IF
-         END DO
-         ind_x=0
-         DO m=1,mp
-            ox=Neighc_(i_n) % Nei(n) % c(1,m)
-            oy=Neighc_(i_n) % Nei(n) % c(2,m)
-            oz=Neighc_(i_n) % Nei(n) % c(3,m)
-            mpe=ind_y(m)
-            ind_x(mpe)=ind_x(mpe)+1
-            Pe_nb(i_n) % tbl (n,mpe) % exc (:,ind_x(mpe)) = (/ ox, oy, oz /)
-         END DO
-      END DO
-      count0=0
-      IF(PI_Node == 0) WRITE(kprint,'('' i_n = '',2x,i7)') i_n
-      DO n=1,np
-         IF(PI_Node == 0) WRITE(kprint,'(''N ='',i4,3x,3i4)') n,PI__Ranks&
-              & (n) % nx, PI__Ranks (n) % ny, PI__Ranks (n) % nz
-         DO m=1,np
-            IF(ALLOCATED(Pe_nb(i_n) % tbl (n,m) % exc)) THEN
-               count0=count0+1
-               mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
-               IF(PI_Node == 0) THEN
-                  WRITE(kprint,'(''M ='',i4,3x,3i4,5x,i6)') m,PI__Ranks (m) % nx&
-                       &, PI__Ranks (m) % ny,PI__Ranks (m) % nz, mpe
-               END IF
-            END IF
-         END DO
-      END DO
-      WRITE(kprint,*) count0,' parallel communications are estimated'
-
-      count0=0
-      DO n=1,np
-         DO m=1,np
-            IF(ALLOCATED(Pe_nb(i_n) % tbl (n,m) % exc)) THEN
-               mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
-               count0=count0+mpe
-!!$               IF(i_n == 1) THEN
-!!$                  IF((n == 1 .AND. m == 4) .OR. (n == 4 .AND. m == 1)) THEN
-!!$                     mpe=SIZE(Pe_nb(i_n) % tbl (n, m) % exc,2)
-!!$                     WRITE(kprint,*) 'n= ',n,'m= ',m,mpe
-!!$                     DO k=1,mpe
-!!$                        WRITE(kprint,'(3i8)') Pe_nb(i_n) % tbl (n, m) % exc(:,k)
-!!$                     END DO
-!!$                  END IF
-!!$               END IF
-            END IF
-         END DO
-      END DO
-      WRITE(kprint,*) count0,' cells are transfered for cutoff = ',rcut(i_n)
-
-!!$      DO m=1,np
-!!$         IF(ALLOCATED(Pe_nb(i_n) % tbl (m,48) % exc)) THEN
-!!$            WRITE(kprint,*) ' m = ',m
-!!$            WRITE(kprint,*) (Pe_nb(i_n) % tbl (m,48) % exc(:,mpe),mpe=1,SIZE(Pe_nb(i_n) % tbl (m,48) %&
-!!$                 & exc,2))
-!!$         END IF
-!!$      END DO
-
-    END SUBROUTINE Make_Comm
   END SUBROUTINE PI__Decomposition_nb
   SUBROUTINE PI__GetParameters(nprocsa,npxa,npya,npza)
     INTEGER :: nprocsa,npxa,npya,npza

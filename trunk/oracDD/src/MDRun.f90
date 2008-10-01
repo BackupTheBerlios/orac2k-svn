@@ -58,33 +58,46 @@ MODULE MDRun
   USE Ewald
   USE Parallel, ONLY: PA_npx=>npx
   USE Print_Defs
+  USE Direct, ONLY: DIR_Forces=>Compute
+  USE Forces, ONLY: rcut_o
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
 CONTAINS
   SUBROUTINE MDRun_
     LOGICAL :: ok
-    REAL(8) :: rcut(3),startime,endtime,timea
+    REAL(8) :: startime,endtime,timea
     INTEGER :: n
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
+    IF(.NOT. Atom__Tpg_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
 !!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-    rcut=(/4.0D0, 5.9D0, 12.0D0/)
+!!$    rcut=(/4.7D0, 7.3D0, 9.7D0/)
+
     IF(PA_npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut)
+          CALL PI__Decomposition_NB(rcut_o)
        END IF
     END IF
 
     CALL PI__AssignAtomsToCells
 
-!!$    CALL PI__Shift(2)
 
-!!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
+    CALL MPI_BARRIER(PI_Comm,ierr)
+    startime=MPI_WTIME()
 
-!!$    CALL Direct(3)
+    CALL PI__Shift(3,_PME_)
+
+    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
+
+    CALL DIR_Forces(3)
+
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'timeo ',timea
+    STOP
 
     IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
@@ -95,7 +108,7 @@ CONTAINS
        CALL MPI_BARRIER(PI_Comm_Cart,ierr)
        startime=MPI_WTIME()
 
-       CALL PME_(1)
+       CALL PME_(3)
 
        CALL MPI_BARRIER(PI_Comm_Cart,ierr)
        endtime=MPI_WTIME()

@@ -78,7 +78,7 @@ CONTAINS
           IndBox_g_t(count_g_t)=n
           IF(m == 1) THEN
              count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=n
+             IndBox_g_p(count_g_p)=count_g_t
           END IF
        END IF
     END DO
@@ -108,7 +108,7 @@ CONTAINS
           IndBox_a_t(count_a_t)=n
           IF(m == 1) THEN
              count_a_p=count_a_p+1
-             IndBox_a_p(count_a_p)=n
+             IndBox_a_p(count_a_p)=count_a_t
           END IF
        END IF
     END DO

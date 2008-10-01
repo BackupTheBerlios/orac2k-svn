@@ -63,7 +63,7 @@ MODULE LennardJones
   IMPLICIT none
   PRIVATE
   PUBLIC  LennardJones_, LennardJones__Type, LennardJones__SigmaEps&
-       &, LennardJones__Read, LennardJones__Write
+       &, LennardJones__Read, LennardJones__Write, LennardJones__Par
   TYPE :: LennardJones__SigmaEps
      INTEGER :: pt 
      REAL(8), DIMENSION(:), ALLOCATABLE :: g     

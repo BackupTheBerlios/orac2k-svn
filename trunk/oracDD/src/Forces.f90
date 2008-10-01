@@ -47,10 +47,13 @@ MODULE Forces
   IMPLICIT none
   PRIVATE
   PUBLIC :: Force,fp_n0,fp_n1,fp_m,fp_l,fp_h,fp_ew,fs_n0,fs_n1,fs_m&
-       &,fs_l,fs_h,fs_ew
+       &,fs_l,fs_h,fs_ew,rcut_i,rcut_o,rcut_s
   TYPE :: Force
      REAL(8) :: x,y,z
   END type Force
   TYPE(Force), ALLOCATABLE, SAVE :: fp_n0(:),fp_n1(:),fp_m(:),fp_l(:),fp_h(:),fp_ew(:)
   TYPE(Force), ALLOCATABLE, SAVE :: fs_n0(:),fs_n1(:),fs_m(:),fs_l(:),fs_h(:),fs_ew(:)
+  REAL(8), DIMENSION(3), SAVE :: rcut_i=(/4.7D0, 7.3D0, 9.7D0/)&
+       &,rcut_s=(/0.3D0,0.3D0,0.3D0/),rcut_o=(/4.7D0+0.3D0, 7.3D0&
+       &+0.3D0, 9.7D0+0.3D0/), rcut_u=(/0.5D0,0.5D0,1.5D0/)
 END MODULE Forces
