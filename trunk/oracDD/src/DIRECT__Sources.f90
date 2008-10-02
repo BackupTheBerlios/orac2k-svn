@@ -53,75 +53,92 @@ SUBROUTINE Forces
        &,emvir,qfx,qfy,qfz,uconf(3),ucoul(3),xpi,ypi,zpi,rsp,xpgi&
        &,ypgi,zpgi,xgg,ygg,zgg,drj,massi,massj,xpgj,ypgj,zpgj,xa,ya&
        &,za,X_PBC,Y_PBC,Z_PBC,chrgei,ucoula,ssvir,rspi,rspqi,alphar&
-       &,qt,erfcst,aux1,expcst,ucoul_o(3),uconf_o(3)
+       &,qt,erfcst,aux1,expcst,ucoul_o(3),uconf_o(3),rcutb,rcutb2
   
   INTEGER :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
-       &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,Id_ij,nbti,p_mapa,p_j,lij
-  
+       &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,Id_ij,nbti,p_mapa,p_j,lij,i_pb&
+       &,count_b,count_c
+  TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
+
+  Neigha=>List(i_p) % Neigh
+  i_pb=i_p-1
+  rcutb=0.0D0
+  rcutb2=0.0D0
 
   rcut1=rcut_i(i_p)
   rcut2=rcut1**2
   rcuts1=rcut_o(i_p)
   rcuts2=rcuts1**2
 
+  IF(i_pb /= 0) THEN
+     Neighb=>List(i_pb) % Neigh
+     rcutb=rcut_o(i_pb)+rshell(i_pb)
+     rcutb2=rcutb**2
+     WRITE(*,*) rcuts1,rcutb,SIZE(nei)
+  END IF
+  WRITE(*,*) rcuts1
+
   ucoul=0.0D0
   uconf=0.0D0
   DO ii=1,SIZE(IndBox_g_p)
      ig=IndBox_g_p(ii)
-     n=IndBox_g_t(ig)
      xpgi=xpg(ig)
      ypgi=ypg(ig)
      zpgi=zpg(ig)
-     p=Chain_xyz(ig) % i
-     q=Chain_xyz(ig) % j
-     r=Chain_xyz(ig) % k
      AtSt_i=grppt(1,ig)
      AtEn_i=grppt(2,ig)
      count_g=0
      count_gs=0
-     DO o=1,SIZE(Ind_xyz)
-        iv=Ind_xyz(o) % i
-        jv=Ind_xyz(o) % j
-        kv=Ind_xyz(o) % k
-        nx=mod(mod(p+iv,ncx)+ncx,ncx)
-        ny=mod(mod(q+jv,ncy)+ncy,ncy)
-        nz=mod(mod(r+kv,ncz)+ncz,ncz)
-        numcell=nz+ncz*(ny+ncy*nx)+1
-        IF(numcell > ncx*ncy*ncz) STOP
-        l=Head_xyz(numcell)
-        DO WHILE(l > 0)
-           xpgj=xpg(l)
-           ypgj=ypg(l)
-           zpgj=zpg(l)
-           xa=xpgj-xpgi
-           ya=ypgj-ypgi
-           za=zpgj-zpgi
-           X_PBC=PBC(xa)
-           Y_PBC=PBC(ya)
-           Z_PBC=PBC(za)
-           xa=xa+X_PBC
-           ya=ya+Y_PBC
-           za=za+Z_PBC
-           xc=co(1,1)*xa+co(1,2)*ya+co(1,3)*za
-           yc=           co(2,2)*ya+co(2,3)*za
-           zc=                      co(3,3)*za
-           rsq=xc*xc+yc*yc+zc*zc
-           IF(rsq <= rcut2) THEN
-              count_g=count_g+1
-              indGrp(count_g)=l
-              Xg_PBC(count_g)=X_PBC
-              Yg_PBC(count_g)=Y_PBC
-              Zg_PBC(count_g)=Z_PBC
-           ELSE IF(rsq <= rcuts2) THEN
-              count_gs=count_gs+1
-              indGrps(count_gs)=l
-              Xgs_PBC(count_gs)=X_PBC
-              Ygs_PBC(count_gs)=Y_PBC
-              Zgs_PBC(count_gs)=Z_PBC
-           END IF
-           l=Chain_xyz(l) % p
-        END DO
+     IF(i_pb /= 0) THEN
+        IF(ALLOCATED(Neighb(ig) % nb)) DEALLOCATE(Neighb(ig) % nb)
+        Neighb(ig) % no = 0 
+     END IF
+     count_b=0
+     count_c=0
+     DO o=1,Neigha(ig) % no
+        l=Neigha(ig) % nb(o)
+        xpgj=xpg(l)
+        ypgj=ypg(l)
+        zpgj=zpg(l)
+        xa=xpgj-xpgi
+        ya=ypgj-ypgi
+        za=zpgj-zpgi
+        X_PBC=PBC(xa)
+        Y_PBC=PBC(ya)
+        Z_PBC=PBC(za)
+        xa=xa+X_PBC
+        ya=ya+Y_PBC
+        za=za+Z_PBC
+        xc=co(1,1)*xa+co(1,2)*ya+co(1,3)*za
+        yc=           co(2,2)*ya+co(2,3)*za
+        zc=                      co(3,3)*za
+        rsq=xc*xc+yc*yc+zc*zc
+        IF(rsq <= rcut2) THEN
+           count_g=count_g+1
+           indGrp(count_g)=l
+           Xg_PBC(count_g)=X_PBC
+           Yg_PBC(count_g)=Y_PBC
+           Zg_PBC(count_g)=Z_PBC
+        ELSE IF(rsq <= rcuts2) THEN
+           count_gs=count_gs+1
+           indGrps(count_gs)=l
+           Xgs_PBC(count_gs)=X_PBC
+           Ygs_PBC(count_gs)=Y_PBC
+           Zgs_PBC(count_gs)=Z_PBC
+        ELSE
+           count_c=count_c+1
+        END IF
+        IF(i_pb /= 0 .AND. rsq <= rcutb2) THEN
+           count_b=count_b+1
+           nei(count_b)=l
+        END IF
      END DO
+     IF(count_b /= 0) THEN
+        Neighb(ig) % no=count_b
+        ALLOCATE(Neighb(ig) % nb(count_b))
+        Neighb(ig) % nb=nei(1:count_b)
+     END IF
+
      ngrp_j=count_g
      ngrp_js=count_gs
 
@@ -230,7 +247,7 @@ SUBROUTINE Forces
            ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
            uconf(Slv_ij)=uconf(Slv_ij)+uconfa
         END DO
-        
+        WRITE(*,*) count_c,count_c+count_g+count_gs
 
 !!$        DO l=1,ngrp_js
 !!$           j1=IndGrps(l)

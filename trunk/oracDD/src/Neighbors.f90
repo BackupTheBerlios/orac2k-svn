@@ -80,7 +80,7 @@ CONTAINS
     INTEGER, POINTER :: vect(:)
     REAL(8) :: sqcut,dx,dy,dz,rmin
     INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
-         &,nxmax, nymax,nzmax,nind
+         &,nxmax, nymax,nzmax,nind,jend,kend
 
     IF(ALLOCATED(ind_xyz)) DEALLOCATE(ind_xyz)
 
@@ -101,12 +101,14 @@ CONTAINS
 
     CALL Node__Push(vect0)   
 
-    istart=1-ncx
+    istart=0
     DO i=istart,ncx-1
-       jstart=1-ncy
-       DO j=jstart,ncy-1
-          kstart=1-ncz
-          DO k=kstart,ncz-1
+       jend=ncy-1
+       IF(i == 0) jend=0
+       DO j=1-ncy,jend
+          kend=ncz-1
+          IF(i == 0 .AND. j == 0) kend=0
+          DO k=1-ncz,kend
              rmin=dist_ijk(i,j,k,dx,dy,dz)
              IF(rmin < sqcut) then
                 vect0=(/i, j, k/) 
@@ -121,6 +123,7 @@ CONTAINS
        END DO
     END DO
     nind=Node__Size()
+    WRITE(*,*) 'nind ',nind
     ALLOCATE(ind_xyz(nind))
     nind=0
     DO WHILE(Node__Pop(vect))

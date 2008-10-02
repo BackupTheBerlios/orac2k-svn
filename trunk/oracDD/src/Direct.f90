@@ -44,17 +44,16 @@ MODULE Direct
 
 !!$---- This module is part of the program oracDD ----*
 
+  USE PI_Atom
   USE Potential
   USE Units
-  USE Forces, ONLY: Force, rcut_i,rcut_o
+  USE Forces, ONLY: Force, rcut_i,rcut_o,rshell=>rcut_u
   USE LennardJones, ONLY: LennardJones__Par
   USE Cell, ONLY: oc,co, Volume
 #ifdef HAVE_MPI
   USE mpi
 #endif
   USE PI_
-  USE Groups
-  USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE IndBox
   USE Neighbors_S, ONLY: Neighbors__Particles,Neighbors_S__nc, &
@@ -76,48 +75,32 @@ MODULE Direct
 CONTAINS
   SUBROUTINE Compute(i_p)
     INTEGER :: i_p
-    INTEGER :: natom,ngroup,ncx,ncy,ncz
-
-    REAL(8), ALLOCATABLE :: xpg(:),ypg(:),zpg(:),xp0(:),yp0(:),zp0(:)
-    REAL(8), DIMENSION(:), ALLOCATABLE :: chg,fppx,fppy,fppz,Xg_PBC&
+    INTEGER :: ncx,ncy,ncz
+    REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
          &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC 
-    INTEGER, ALLOCATABLE :: Id(:),Slv(:),IndGrp(:),IndGrps(:)&
+    INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
          &,p_index_j(:),p_index_jj(:)
-    INTEGER, ALLOCATABLE :: grppt(:,:)
-    LOGICAL, ALLOCATABLE :: maplg(:)
-    TYPE :: Mapnl
-       INTEGER, ALLOCATABLE :: ex(:)
-    END type Mapnl
-    TYPE(Mapnl), ALLOCATABLE :: Maps(:)
-    INTEGER, POINTER :: Index_0(:)
     TYPE(Neighbors_S__Ind), POINTER :: ind_xyz(:)
+    INTEGER, POINTER :: nei(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
 
 
-    IF(No_Calls /= 0) THEN
-       DEALLOCATE(xpg,ypg,zpg,xp0,yp0,zp0,chg,Id,Slv,grppt,Maps,fppx&
-            &,fppy,fppz,maplg,IndGrp,IndGrps,p_index_j,p_index_jj)
-       DEALLOCATE(Xg_PBC,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC)
-    ELSE
+    IF(No_Calls == 0) THEN
        CALL Init
+    ELSE
+       DEALLOCATE(fppx,fppy,fppz,IndGrp,IndGrps,p_index_j,p_index_jj)
+       DEALLOCATE(Xg_PBC,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC)
     END IF
 
+    IF(ngroup == 0 .AND. natom == 0) THEN
+       errmsg_f='Direct lattice forces routine must be called after PI&
+            &_Atom_'
+       CALL Print_Errors()
+       STOP
+    END IF
     CALL Memory
 
-    CALL Gather_Atoms
-
-    IF(.NOT. Neighbors__Particles(i_p,xpg,ypg,zpg)) CALL Print_Errors()
-
-    Ind_xyz=>clst(i_p) % Ind_xyz
-
-    ncx = nc(i_p) % x; ncy = nc(i_p) % y; ncz = nc(i_p) % z
-
-    CALL MPI_BARRIER(PI_Comm,ierr)
-    startime=MPI_WTIME()
     CALL Forces
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    WRITE(*,*) 'time for Force ',timea
 
     No_Calls=No_Calls+1
   CONTAINS
@@ -142,95 +125,15 @@ CONTAINS
 !!$--- Get Memory
 !!$
     SUBROUTINE Memory
-      IF(.NOT. IndBox_()) CALL Print_Errors()
-      natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
-      
-      ALLOCATE(xpg(ngroup),ypg(ngroup),zpg(ngroup),grppt(2,ngroup))
       ALLOCATE(Xg_PBC(ngroup),Yg_PBC(ngroup),Zg_PBC(ngroup),Xgs_PBC(ngroup)&
-           &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup),IndGrps(ngroup))
+           &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
+           &,IndGrps(ngroup),nei(ngroup))
       
-      ALLOCATE(xp0(natom),yp0(natom),zp0(natom),chg(natom),Id(natom)&
-           &,Slv(natom),Maps(natom),fppx(natom),fppy(natom),fppz(natom)&
-           &,maplg(natom),p_index_j(natom),p_index_jj(natom))
+      ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
+           &,p_index_jj(natom)) 
+
       
     END SUBROUTINE Memory
-!!$
-!!$--- Gather Atoms to the CPU box
-!!$
-    SUBROUTINE Gather_Atoms
-      INTEGER :: n,m,p,q,nn,count0,g1,g2
-      DO n=1,ngroup
-         m=IndBox_g_t(n)
-         xpg(n)=Groupa(m) % xa
-         ypg(n)=Groupa(m) % ya
-         zpg(n)=Groupa(m) % za
-         grppt(1,n)=Groupa(m) % AtSt
-         grppt(2,n)=Groupa(m) % AtEn
-      END DO
-      DO n=1,natom
-         m=IndBox_a_t(n)
-         xp0(n)=Atoms(m) % xa
-         yp0(n)=Atoms(m) % ya
-         zp0(n)=Atoms(m) % za
-         chg(n)=Atoms(m) % chg
-         Id(n)=Atoms(m) % Id_Type
-         Slv(n)=Atoms(m) % Id_Slv
-      END DO
-      
-      ALLOCATE(Index_0(SIZE(Atoms)))
-      Index_0=-1
-      DO n=1,natom
-         m=IndBox_a_t(n)
-         Index_0(m)=n
-      END DO
-!!$
-!!$--- Change grppt to resect atoms known in the box
-!!$
-      DO n=1,ngroup
-         g1=grppt(1,n)
-         g2=grppt(2,n)
-         IF(Index_0(g1) /= -1) THEN
-            grppt(1,n)=Index_0(g1)
-         ELSE
-            WRITE(*,*) 'Weired!!!'
-            STOP
-         END IF
-         IF(Index_0(g2) /= -1) THEN
-            grppt(2,n)=Index_0(g2)
-         ELSE
-            WRITE(*,*) 'Weired!!!'
-            STOP
-         END IF
-      END DO
-      
-!!$
-!!$--- Change exclusion atoms 
-!!$
-      
-      DO n=1,natom
-         m=IndBox_a_t(n)
-         nn=SIZE(Atoms_Tpg(m) % Ex)
-         count0=0
-         DO q=1,nn
-            p=Atoms_Tpg(m) % Ex(q)
-            IF(Index_0(p) /= -1) THEN
-               count0=count0+1
-            END IF
-         END DO
-         IF(count0 == 0) CYCLE
-         ALLOCATE(Maps(n) % ex(count0))
-         count0=0
-         DO q=1,nn
-            p=Atoms_Tpg(m) % Ex(q)
-            IF(Index_0(p) /= -1) THEN
-               count0=count0+1
-               Maps(n) % Ex(count0)=Index_0(Atoms_Tpg(m) % Ex(q))
-            END IF
-         END DO
-      END DO
-      
-    END SUBROUTINE Gather_Atoms
-
 !!$
 !!$--- Compute Forces
 !!$

@@ -47,7 +47,7 @@ MODULE Forces
   IMPLICIT none
   PRIVATE
   PUBLIC :: Force,fp_n0,fp_n1,fp_m,fp_l,fp_h,fp_ew,fs_n0,fs_n1,fs_m&
-       &,fs_l,fs_h,fs_ew,rcut_i,rcut_o,rcut_s
+       &,fs_l,fs_h,fs_ew,rcut_i,rcut_o,rcut_s,rcut_u
   TYPE :: Force
      REAL(8) :: x,y,z
   END type Force

@@ -45,6 +45,7 @@ MODULE MDRun
 !!$---- This module is part of the program oracDD ----*
 
 #define _PME_ 1
+  USE PI_Atom
   USE MPI
   USE PME
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
@@ -85,19 +86,23 @@ CONTAINS
     CALL PI__AssignAtomsToCells
 
 
-    CALL MPI_BARRIER(PI_Comm,ierr)
-    startime=MPI_WTIME()
-
     CALL PI__Shift(3,_PME_)
 
     IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
 
-    CALL DIR_Forces(3)
+    IF(.NOT. PI_Atom_()) CALL Print_Errors()
+    IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
 
+    CALL MPI_BARRIER(PI_Comm,ierr)
+    startime=MPI_WTIME()
+
+
+    CALL DIR_Forces(3)
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'timeo ',timea
     STOP
+
 
     IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
