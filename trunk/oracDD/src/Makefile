@@ -140,7 +140,7 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	PI_Communicate.o NeighCells.o Potential.o Ewald.o PME.o PME_Routines.o Parallel.o\
 	Print_Defs.o Rfft3d.o IndBox.o Forces.o Direct.o PI_Atom.o oracDD.o 
 
-OBJS_f = AddH.o duni.o
+OBJS_f = AddH.o duni.o indexx.o
 
 SRC = $(patsubst %.o, %.f90, $(OBJS)) $(patsubst %.o, %.f, $(OBJS_f)) 
 
