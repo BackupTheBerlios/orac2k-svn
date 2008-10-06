@@ -53,12 +53,12 @@ MODULE PI_Atom
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE IndBox
-  USE Forces, ONLY: rshell=>rcut_u,rcut_o
+  USE Forces
   USE Neighbors
   USE Cell, ONLY: oc,co, Volume
   IMPLICIT none
   PRIVATE
-  PUBLIC PI_Atom_,xpg,ypg,zpg,xp0,yp0,zp0,chg,Id,Slv,grppt,maplg&
+  PUBLIC PI_Atom_,xpg,ypg,zpg,xp0,yp0,zp0,chg,gmass,Id,Slv,Grp_No,grppt,maplg&
        &,Mapnl,Maps,natom,ngroup,PI_Atom__Neigh_,List,Neigha__,Neigha_
 
   TYPE Neigha__
@@ -72,8 +72,8 @@ MODULE PI_Atom
 
 
   REAL(8), ALLOCATABLE, SAVE :: xpg(:),ypg(:),zpg(:),xp0(:),yp0(:),zp0(:)
-  REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: chg,fppx,fppy,fppz
-  INTEGER, ALLOCATABLE, SAVE :: Id(:),Slv(:),grppt(:,:)
+  REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: chg,gmass,fppx,fppy,fppz
+  INTEGER, ALLOCATABLE, SAVE :: Id(:),Slv(:),grppt(:,:),grp_No(:)
   LOGICAL, ALLOCATABLE, SAVE :: maplg(:)
   TYPE :: Mapnl
      INTEGER, ALLOCATABLE :: ex(:)
@@ -88,12 +88,11 @@ CONTAINS
     INTEGER, POINTER :: Index_0(:)
 
     IF(No_Calls /= 0) THEN
-       DEALLOCATE(xpg,ypg,zpg,xp0,yp0,zp0,chg,Id,Slv,grppt,Maps,maplg)
+       DEALLOCATE(xpg,ypg,zpg,xp0,yp0,zp0,chg,Id,Slv,grppt,Grp_No,Maps,maplg,gmass)
     END IF
 
     CALL Memory
 
-    WRITE(*,*) natom,ngroup
     CALL Gather_Atoms
 
     No_Calls=No_Calls+1
@@ -109,7 +108,8 @@ CONTAINS
       ALLOCATE(xpg(ngroup),ypg(ngroup),zpg(ngroup),grppt(2,ngroup))
       
       ALLOCATE(xp0(natom),yp0(natom),zp0(natom),chg(natom),Id(natom)&
-           &,Slv(natom),Maps(natom),maplg(natom))
+           &,Slv(natom),Maps(natom),maplg(natom),gmass(natom)&
+           &,Grp_No(natom))
       
     END SUBROUTINE Memory
 !!$
@@ -133,6 +133,8 @@ CONTAINS
          chg(n)=Atoms(m) % chg
          Id(n)=Atoms(m) % Id_Type
          Slv(n)=Atoms(m) % Id_Slv
+         Grp_No(n)=Atoms(m) % Grp_No
+         gmass(n)=Atoms(m) % pmass
       END DO
       
       ALLOCATE(Index_0(SIZE(Atoms)))
@@ -142,7 +144,7 @@ CONTAINS
          Index_0(m)=n
       END DO
 !!$
-!!$--- Change grppt to resect atoms known in the box
+!!$--- Change grppt to reset atoms known in the box
 !!$
       DO n=1,ngroup
          g1=grppt(1,n)
@@ -203,7 +205,7 @@ CONTAINS
     INTEGER :: ncutoff,vect0(1)
     INTEGER, POINTER :: vect(:)
     TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha
-    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell
+    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell,counter
     REAL(8) :: xpgi,ypgi,zpgi,xpgj,ypgj,zpgj,xa,ya,za,X_PBC,Y_PBC&
          &,Z_PBC,xc,yc,zc,rsq
     INTEGER, POINTER :: nei(:)
@@ -219,8 +221,8 @@ CONTAINS
     END IF
     ALLOCATE(nei(ngroup))
 
-    ncutoff=SIZE(rcut_o)
-    rcut=rcut_o(ncutoff)+rshell(ncutoff)
+    ncutoff=SIZE(Radii)
+    rcut=Radii(ncutoff) % out + Radii(ncutoff) % update
     rcut2=rcut**2
     IF(.NOT. PRESENT(Keep)) THEN
        IF(ALLOCATED(List)) DEALLOCATE(List)
@@ -235,6 +237,7 @@ CONTAINS
     IF(.NOT. Neighbors__Particles(xpg,ypg,zpg)) CALL Print_Errors()
 
     
+    counter=0
     DO ii=1,SIZE(IndBox_g_p)
        ig=IndBox_g_p(ii)
        xpgi=xpg(ig)
@@ -292,7 +295,9 @@ CONTAINS
           ALLOCATE(Neigha(ig) % nb(count0))
           Neigha(ig) % nb=nei(1:count0)
        END IF
+       counter=counter+count0
     END DO
+    WRITE(*,*) 'Neighbor List = ',counter
   END FUNCTION PI_Atom__Neigh_
   FUNCTION PBC(x) RESULT(out)
     REAL(8) :: out

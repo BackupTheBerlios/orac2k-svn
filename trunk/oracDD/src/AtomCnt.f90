@@ -151,7 +151,7 @@ CONTAINS
                 CALL SP_Getnum(strngs(3),AtomCnts (nato) % chg, iflag)
                 ok=.FALSE.
                 DO o=1,SIZE(App_Char(i_mass) % mass,2)
-                   IF(My_Fxm(TRIM(AtomCnts(nato) % betab), App_Char(i_mass) % mass (1,o))) THEN
+                   IF(TRIM(App_Char(i_mass) % mass (1,o)) == TRIM(AtomCnts(nato) % betab)) THEN
                       AtomCnts(nato) % Id_Type = o
                       CALL MyRead(App_Char(i_mass) % mass (2,o),AtomCnts(nato) % mass)
                       ok=.TRUE.

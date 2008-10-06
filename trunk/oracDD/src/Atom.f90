@@ -61,7 +61,7 @@ MODULE Atom
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
      REAL(8) :: vx,vy,vz      ! Velocities orthogonal frame
      REAL(8) :: vxa,vya,vza   ! Velocities reduced frame
-     REAL(8) :: chg, mass
+     REAL(8) :: chg, mass,pmass
      CHARACTER(len=max_atm) :: Res, beta, betab
      INTEGER :: Res_No, Grp_No, Id_Res, Id_Type, Id_slv, Mol
   END TYPE Atom__
@@ -84,6 +84,7 @@ CONTAINS
   FUNCTION Atom_() RESULT(out)
     LOGICAL :: out
     INTEGER :: n,m,s,nato
+    REAL(8), ALLOCATABLE :: massa(:)
 
     out=.TRUE.
     IF(.NOT. ALLOCATED(AtomCnts)) THEN
@@ -93,8 +94,17 @@ CONTAINS
        RETURN
     END IF
     nato=SIZE(AtomCnts)
-    ALLOCATE(Atoms(nato))
+    ALLOCATE(massa(nato))
+    massa=0.0D0
     DO n=1,nato
+       m=AtomCnts(n) % Grp_No
+       massa(m)=massa(m)+AtomCnts(n) % mass
+    END DO
+
+    ALLOCATE(Atoms(nato))
+
+    DO n=1,nato
+       m=AtomCnts(n) % Grp_No
        Atoms(n) % Grp_No = AtomCnts(n) % Grp_No
        Atoms(n) % Res_No = AtomCnts(n) % Res_No
        Atoms(n) % Id_Type = AtomCnts(n) % Id_Type
@@ -102,6 +112,7 @@ CONTAINS
        Atoms(n) % Id_Res = AtomCnts(n) % Id_Res
        Atoms(n) % chg = AtomCnts(n) % chg/SQRT(unitc)
        Atoms(n) % mass = AtomCnts(n) % mass
+       Atoms(n) % mass = AtomCnts(n) % mass/massa(m)
        Atoms(n) % Res = AtomCnts(n) % Res
        Atoms(n) % beta = AtomCnts(n) % Beta
        Atoms(n) % betab = AtomCnts(n) % Betab
@@ -160,13 +171,13 @@ CONTAINS
     TYPE(Atom__Tpg0), POINTER :: Tpg_out(:)
     INTEGER, POINTER :: indx(:),Maps(:)
     INTEGER :: n,nn,m,ia,ib,ic,count_n
-
+    LOGICAL, ALLOCATABLE :: ok(:)
     natom=SIZE(Atoms)
     ALLOCATE(Atoms_Tpg(natom))
     ALLOCATE(Tpg_out(natom))
     
     ALLOCATE(Indx(natom))
-
+    ALLOCATE(ok(natom))
 !!$-- Bonds
 
     CALL Add_Tpg(Tpg % Bonds, tpg_out)
@@ -236,17 +247,20 @@ CONTAINS
     DO n=1,natom
        Maps=0
        count_n=0
+       ok=.TRUE.
        DO nn=1,SIZE(Atoms_Tpg(n) % Bonds)
           m=Atoms_Tpg(n) % Bonds(nn)
           ia=Tpg % Bonds(1,m)
           ib=Tpg % Bonds(2,m)
-          IF(n /= ia) THEN
+          IF(n /= ia .AND. ok(ia)) THEN
              count_n=count_n+1
              Maps(count_n)=ia
+             ok(ia)=.FALSE.
           END IF
-          IF(n /= ib) THEN
+          IF(n /= ib .AND. ok(ib)) THEN
              count_n=count_n+1
              Maps(count_n)=ib
+             ok(ib)=.FALSE.
           END IF
        END DO
        DO nn=1,SIZE(Atoms_Tpg(n) % Angles)
@@ -254,30 +268,35 @@ CONTAINS
           ia=Tpg % Angles(1,m)
           ib=Tpg % Angles(2,m)
           ic=Tpg % Angles(3,m)
-          IF(n /= ia) THEN
+          IF(n /= ia .AND. ok(ia)) THEN
              count_n=count_n+1
              Maps(count_n)=ia
+             ok(ia)=.FALSE.
           END IF
-          IF(n /= ib) THEN
+          IF(n /= ib .AND. ok(ib)) THEN
              count_n=count_n+1
              Maps(count_n)=ib
+             ok(ib)=.FALSE.
           END IF
-          IF(n /= ic) THEN
+          IF(n /= ic .AND. ok(ic)) THEN
              count_n=count_n+1
              Maps(count_n)=ic
+             ok(ic)=.FALSE.
           END IF
        END DO
        DO nn=1,SIZE(Atoms_Tpg(n) % Int14)
           m=Atoms_Tpg(n) % Int14(nn)
           ia=Tpg % Int14(1,m)
           ib=Tpg % Int14(2,m)
-          IF(n /= ia) THEN
+          IF(n /= ia .AND. ok(ia)) THEN
              count_n=count_n+1
              Maps(count_n)=ia
+             ok(ia)=.FALSE.
           END IF
-          IF(n /= ib) THEN
+          IF(n /= ib .AND. ok(ib)) THEN
              count_n=count_n+1
              Maps(count_n)=ib
+             ok(ib)=.FALSE.
           END IF
        END DO
        ALLOCATE(Atoms_Tpg(n) % Ex (count_n))
@@ -285,6 +304,8 @@ CONTAINS
     END DO
 
     out=.TRUE.
+
+
   CONTAINS
     SUBROUTINE Add_Tpg(tpg_in, tpg_out)
       INTEGER :: tpg_in(:,:)

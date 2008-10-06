@@ -214,8 +214,8 @@ CONTAINS
     
     DO n=1,SIZE(LennardJones__Par % Par_SE)
        DO m=n,SIZE(LennardJones__Par % Par_SE)
-          sigma=(LennardJones__Par % Par_SE (n) % g(1) &
-               &+ LennardJones__Par % Par_SE (m) % g(1))*0.5D0
+          sigma=LennardJones__Par % Par_SE (n) % g(1) &
+               &+ LennardJones__Par % Par_SE (m) % g(1)
           eps=SQRT(LennardJones__Par % Par_SE (n) % g(2)&
                &*LennardJones__Par % Par_SE (m) % g(2))
           ij=m*(m-1)/2+n
@@ -224,8 +224,8 @@ CONTAINS
           LennardJones__Par % c12(ij) = tmpi*4.0D0*eps*sigma**12
           IF((SIZE(LennardJones__Par % Par_SE (n) % g) == 4)&
                & .AND. (SIZE(LennardJones__Par % Par_SE (m) % g) == 4)) THEN
-             sigma=(LennardJones__Par % Par_SE (n) % g(3) &
-                  &+ LennardJones__Par % Par_SE (m) % g(3))*0.5D0
+             sigma=LennardJones__Par % Par_SE (n) % g(3) &
+                  &+ LennardJones__Par % Par_SE (m) % g(3)
              eps=SQRT(LennardJones__Par % Par_SE (n) % g(4)&
                   &*LennardJones__Par % Par_SE (m) % g(4))
              ij=m*(m-1)/2+n

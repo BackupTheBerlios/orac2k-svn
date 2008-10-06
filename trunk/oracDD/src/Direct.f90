@@ -47,7 +47,7 @@ MODULE Direct
   USE PI_Atom
   USE Potential
   USE Units
-  USE Forces, ONLY: Force, rcut_i,rcut_o,rshell=>rcut_u
+  USE Forces
   USE LennardJones, ONLY: LennardJones__Par
   USE Cell, ONLY: oc,co, Volume
 #ifdef HAVE_MPI
@@ -68,6 +68,7 @@ MODULE Direct
   TYPE(Force), ALLOCATABLE, SAVE :: fp(:)
   INTEGER, SAVE :: No_Calls=0
   REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
+  INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0&
        &,twrtpi=2.0d0/SQRT(pi)
@@ -77,19 +78,16 @@ CONTAINS
     INTEGER :: i_p
     INTEGER :: ncx,ncy,ncz
     REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
-         &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC 
+         &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
+         &,dswrs,cmap2,xmap3,ymap3,zmap3
     INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
-         &,p_index_j(:),p_index_jj(:)
+         &,p_index_j(:),p_index_jj(:) 
     TYPE(Neighbors_S__Ind), POINTER :: ind_xyz(:)
-    INTEGER, POINTER :: nei(:)
+    INTEGER, ALLOCATABLE :: nei(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
-
 
     IF(No_Calls == 0) THEN
        CALL Init
-    ELSE
-       DEALLOCATE(fppx,fppy,fppz,IndGrp,IndGrps,p_index_j,p_index_jj)
-       DEALLOCATE(Xg_PBC,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC)
     END IF
 
     IF(ngroup == 0 .AND. natom == 0) THEN
@@ -98,8 +96,8 @@ CONTAINS
        CALL Print_Errors()
        STOP
     END IF
-    CALL Memory
 
+    CALL Memory
     CALL Forces
 
     No_Calls=No_Calls+1
@@ -111,11 +109,15 @@ CONTAINS
       INTEGER :: n,m,ij
       
       alphal = Ewald__Param % alpha
+
       n=SIZE(LennardJones__Par % Par_SE)
+      ALLOCATE(Id_ij(n,n))
       ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2))
       DO n=1,SIZE(LennardJones__Par % Par_SE)
          DO m=n,SIZE(LennardJones__Par % Par_SE)
             ij=m*(m-1)/2+n
+            Id_ij(n,m)=ij
+            Id_ij(m,n)=ij
             ecc6(ij)=LennardJones__Par % c6(ij)
             ecc12(ij)=LennardJones__Par % c12(ij)
          END DO
@@ -127,7 +129,9 @@ CONTAINS
     SUBROUTINE Memory
       ALLOCATE(Xg_PBC(ngroup),Yg_PBC(ngroup),Zg_PBC(ngroup),Xgs_PBC(ngroup)&
            &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
-           &,IndGrps(ngroup),nei(ngroup))
+           &,IndGrps(ngroup),nei(ngroup),xcs(ngroup),ycs(ngroup)&
+           &,zcs(ngroup),swrs(ngroup),dswrs(ngroup),cmap2(ngroup)&
+           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup))
       
       ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
            &,p_index_jj(natom)) 

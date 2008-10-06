@@ -77,7 +77,7 @@ MODULE PI_Decompose
        &/),(/8, 3/))
 CONTAINS
   SUBROUTINE PI__Decomposition_nb(rcut,npxa,npya,npza)
-    REAL(8) :: rcut(3)
+    REAL(8) :: rcut(:)
     INTEGER, OPTIONAL :: npxa,npya,npza
     INTEGER, POINTER :: vect(:)=>NULL()
     LOGICAL, POINTER :: Mask(:)
@@ -152,7 +152,7 @@ CONTAINS
     CALL PI__Setup_Cart
     CALL PI__Setup_SndRcv
 
-    DO n=1,3
+    DO n=1,SIZE(rcut)
        IF(rcut(n) > 0.0D0) THEN
           IF(.NOT. NeighCells_(Ref_Radius,rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz,n))&
                & CALL Print_Errors()

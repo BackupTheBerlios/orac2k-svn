@@ -60,7 +60,7 @@ MODULE MDRun
   USE Parallel, ONLY: PA_npx=>npx
   USE Print_Defs
   USE Direct, ONLY: DIR_Forces=>Compute
-  USE Forces, ONLY: rcut_o
+  USE Forces
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
@@ -69,6 +69,7 @@ CONTAINS
     LOGICAL :: ok
     REAL(8) :: startime,endtime,timea
     INTEGER :: n
+    REAL(8), ALLOCATABLE :: rcut_o(:)
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__Tpg_()) CALL Print_Errors()
@@ -77,6 +78,9 @@ CONTAINS
 !!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
 !!$    rcut=(/4.7D0, 7.3D0, 9.7D0/)
 
+
+    ALLOCATE(rcut_o(SIZE(Radii)))
+    rcut_o=Radii(:) % out
     IF(PA_npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
           CALL PI__Decomposition_NB(rcut_o)
@@ -96,8 +100,13 @@ CONTAINS
     CALL MPI_BARRIER(PI_Comm,ierr)
     startime=MPI_WTIME()
 
+    DO n=1,SIZE(Atoms)
+       WRITE(90,'(i8,2x,f14.8)') n,Atoms(n) % x
+    END DO
 
     CALL DIR_Forces(3)
+    CALL DIR_Forces(2)
+    CALL DIR_Forces(1)
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'timeo ',timea

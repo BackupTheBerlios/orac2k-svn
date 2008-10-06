@@ -50,6 +50,8 @@ MODULE Potential
 
 !!$---- DATA Only Modules -----------------------------------------------*
 
+  USE Forces, ONLY: FOR_Init=>Init
+  USE Node
   USE Constants, ONLY: max_pars,max_data, max_char
   USE Parameters_globals
 
@@ -60,8 +62,7 @@ MODULE Potential
        &, errmsg_f, Print_Errors
   USE Strings, ONLY: MY_Fxm
   USE Myparse 
-  USE STRPAK
-
+  USE STRPAK, ONLY: SP_Getnum
 !!$---- DATA Statements -------------------------------------------------*
 
   IMPLICIT none
@@ -76,6 +77,10 @@ MODULE Potential
      REAL(8) :: rkcut=1.0D9
   END TYPE Ewald__Input
   TYPE(Ewald__Input), SAVE, TARGET :: Ewald__Param
+  TYPE :: Direct__Input
+     REAL(8) :: rcut(3)
+  END TYPE Direct__Input
+  TYPE(Direct__Input), SAVE, ALLOCATABLE :: shell(:)
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
@@ -84,6 +89,7 @@ CONTAINS
     CHARACTER(len=max_pars) :: line,linea
     INTEGER :: n,nword
     TYPE(Branch), SAVE :: check
+
     CALL Tree__Check_Tree('&POTENTIAL',check)
     IF(.NOT. ASSOCIATED(check%children)) RETURN
 
@@ -95,17 +101,18 @@ CONTAINS
 
        IF(MY_Fxm('EWALD',linea)) THEN
           CALL Ewald
+       ELSE IF(MY_Fxm('DIRECT',linea)) THEN
+          CALL Direct(TRIM(line))
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)
        END IF
     END DO
-    CALL Validate
-    CONTAINS
-      SUBROUTINE Validate
-        LOGICAL :: ex
-      END SUBROUTINE Validate
-    END SUBROUTINE Potential__Scan
+  CONTAINS
+    SUBROUTINE Validate
+      LOGICAL :: ex
+    END SUBROUTINE Validate
+  END SUBROUTINE Potential__Scan
   SUBROUTINE Ewald
     INTEGER ::  nword,iflags,of
 
@@ -165,4 +172,56 @@ CONTAINS
     END SELECT
     CALL Print_Errors()    
   END SUBROUTINE Ewald
+  SUBROUTINE Direct(name)
+    CHARACTER(len=*) :: name
+    TYPE(Branch), SAVE :: check
+    CHARACTER(len=max_pars) :: line,linea
+    CHARACTER(len=max_char) :: lab0
+    INTEGER :: n,nword,iflags,m
+    REAL(8) :: vect(3)
+    REAL(8) :: Rcut_Table(3,3)
+    LOGICAL :: ok
+    INTEGER, SAVE :: count0
+
+    CALL Tree__Check_Tree(name,check)
+    IF(.NOT. ASSOCIATED(check%children)) RETURN
+
+    count0=0
+    DO n=1,SIZE(check%children)
+       line=TRIM(check%children(n))
+       nword=MYParse_(line)
+       linea=strngs(1)
+
+       IF(MY_Fxm('rcut',linea)) THEN
+          count0=count0+1
+          vect=-1.0D0
+          SELECT CASE(nword)
+          CASE(1)
+             errmsg_f=error_args % g (2) //' 2'
+             CALL Add_Errors(-1,errmsg_f)
+             RETURN
+          CASE(2)
+             CALL SP_Getnum(strngs(2),vect(1),iflags)
+          CASE(3)
+             CALL SP_Getnum(strngs(2),vect(1),iflags)
+             CALL SP_Getnum(strngs(3),vect(2),iflags)
+          CASE(4)
+             CALL SP_Getnum(strngs(2),vect(1),iflags)
+             CALL SP_Getnum(strngs(3),vect(2),iflags)
+             CALL SP_Getnum(strngs(4),vect(3),iflags)
+          CASE DEFAULT
+             WRITE(lab0,'(i2)') nword
+             errmsg_f=error_args % g (3) //' 4 whereas it was '&
+                  &//TRIM(lab0)//' : '//TRIM(line)
+             CALL Add_Errors(-1,errmsg_f)
+             RETURN
+          END SELECT
+          Rcut_Table(count0,:)=vect(:)
+       ELSE
+          errmsg_f='Illegal commmands found:'//TRIM(linea)
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    END DO
+    CALL FOR_Init(count0,Rcut_Table)
+  END SUBROUTINE Direct
 END MODULE Potential
