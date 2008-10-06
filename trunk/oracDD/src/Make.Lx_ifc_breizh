@@ -2,4 +2,4 @@ FFTW_LIB=/share/apps/fftw.P/lib64
 LIB=/share/apps/intel/mkl/10.0.1.014/lib/em64t
 
 LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
-	 -lguide -lpthread -lmyriexpress -lmkl_core 
+	 -lguide -lpthread -lmkl_core 
