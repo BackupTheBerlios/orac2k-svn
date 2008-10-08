@@ -1,0 +1,6 @@
+FFTW_LIB = /usr/lib/fftw/FFTW_mpibull2-2.1.5
+LIBS=/applications/intel/cmkl/10.0.1.014/lib/64
+##LIBS=/applications/intel/cmkl/9.0.018/lib/64
+
+LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw 
+##LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl -lguide -lpthread 
