@@ -96,6 +96,8 @@ CONTAINS
 
 #ifdef HAVE_MPI
     CALL MPI_Finalize( ierr )
+#else
+    STOP
 #endif
 
   END SUBROUTINE PI__Finalize
@@ -106,8 +108,8 @@ CONTAINS
     LOGICAL :: periods(3)=(/.TRUE., .TRUE., .TRUE. /)
     LOGICAL :: reorder=.TRUE.
     LOGICAL :: remains(3)=(/.TRUE., .TRUE., .FALSE. /)
-    INTEGER, POINTER :: coords(:,:),ranks(:),ranks2(:)
-    INTEGER, POINTER :: coord2ds(:,:)
+    INTEGER, ALLOCATABLE :: coords(:,:),ranks(:),ranks2(:)
+    INTEGER, ALLOCATABLE :: coord2ds(:,:)
     INTEGER, SAVE :: PI_Comm_1,PI_Node_1,PI_Group_1
 #ifdef HAVE_MPI
 
@@ -126,6 +128,9 @@ CONTAINS
     CALL MPI_ALLGATHER(coord,3,MPI_INTEGER4,coords,3,MPI_INTEGER4&
          &,PI_Comm_Cart, ierr)
 
+    IF(PI_Node_Cart == 0) THEN
+       WRITE(*,*) 'coords ',coords(1,2)+1
+    END IF
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz

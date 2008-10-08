@@ -45,6 +45,7 @@ MODULE MDRun
 !!$---- This module is part of the program oracDD ----*
 
 #define _PME_ 1
+#define _INIT_ 1
   USE PI_Atom
   USE MPI
   USE PME
@@ -52,6 +53,7 @@ MODULE MDRun
   USE Groups
   USE Atom
   USE Inout
+
   USE PI_Decompose
   USE PI_
   USE PI_Communicate
@@ -68,16 +70,13 @@ CONTAINS
   SUBROUTINE MDRun_
     LOGICAL :: ok
     REAL(8) :: startime,endtime,timea
-    INTEGER :: n
+    INTEGER :: n,nprocs
     REAL(8), ALLOCATABLE :: rcut_o(:)
     IF(.NOT. Groups_()) STOP
     IF(.NOT. Atom_()) CALL Print_Errors()
     IF(.NOT. Atom__Tpg_()) CALL Print_Errors()
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
-!!$    IF(Inout__PDB % unit /= 0) CALL Atom__PDB(Inout__PDB % unit)
-!!$    rcut=(/4.7D0, 7.3D0, 9.7D0/)
-
 
     ALLOCATE(rcut_o(SIZE(Radii)))
     rcut_o=Radii(:) % out
@@ -90,28 +89,36 @@ CONTAINS
     CALL PI__AssignAtomsToCells
 
 
-    CALL PI__Shift(3,_PME_)
+    CALL PI__Shift(1,_PME_)
 
     IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
 
     IF(.NOT. PI_Atom_()) CALL Print_Errors()
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
-
-    CALL MPI_BARRIER(PI_Comm,ierr)
+    CALL DIR_Forces(1,_INIT_)
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
-
-    DO n=1,SIZE(Atoms)
-       WRITE(90,'(i8,2x,f14.8)') n,Atoms(n) % x
-    END DO
-
-    CALL DIR_Forces(3)
-    CALL DIR_Forces(2)
     CALL DIR_Forces(1)
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'timeo ',timea
-    STOP
+    WRITE(*,*) 'First time',PI_Node_Cart,timea
 
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+    startime=MPI_WTIME()
+
+!!$    CALL DIR_Forces(3)
+!!$    CALL DIR_Forces(2)
+    DO n=1,80
+       CALL DIR_Forces(1)
+    END DO
+
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
+    CALL PI__Finalize
+    STOP
+    
 
     IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN

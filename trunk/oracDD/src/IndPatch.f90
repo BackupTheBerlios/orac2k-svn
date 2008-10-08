@@ -64,7 +64,7 @@ MODULE IndPatch
      CHARACTER(len=Max_Char) :: l1
      CHARACTER(len=Max_Char) :: l2
   END TYPE Indpatch__Type
-  TYPE(Indpatch__type), DIMENSION(:), ALLOCATABLE, TARGET :: Ind_Patch
+  TYPE(Indpatch__type), DIMENSION(:), ALLOCATABLE, SAVE, TARGET :: Ind_Patch
 CONTAINS
   FUNCTION Indpatch_() RESULT(out)
     TYPE(Indpatch__type), DIMENSION(:), POINTER :: out

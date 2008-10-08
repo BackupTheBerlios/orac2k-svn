@@ -123,7 +123,6 @@ CONTAINS
        END DO
     END DO
     nind=Node__Size()
-    WRITE(*,*) 'nind ',nind
     ALLOCATE(ind_xyz(nind))
     nind=0
     DO WHILE(Node__Pop(vect))

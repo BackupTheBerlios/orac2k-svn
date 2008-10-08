@@ -205,7 +205,7 @@ CONTAINS
     INTEGER :: ncutoff,vect0(1)
     INTEGER, POINTER :: vect(:)
     TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha
-    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell,counter
+    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell,counter,No_Nei
     REAL(8) :: xpgi,ypgi,zpgi,xpgj,ypgj,zpgj,xa,ya,za,X_PBC,Y_PBC&
          &,Z_PBC,xc,yc,zc,rsq
     INTEGER, POINTER :: nei(:)
@@ -297,7 +297,11 @@ CONTAINS
        END IF
        counter=counter+count0
     END DO
-    WRITE(*,*) 'Neighbor List = ',counter
+    CALL MPI_ALLREDUCE(counter,No_Nei,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
+    IF(PI_Node_Cart == 0) THEN
+       WRITE(*,*) 'Neighbors (',No_Nei,')'
+    END IF
+
   END FUNCTION PI_Atom__Neigh_
   FUNCTION PBC(x) RESULT(out)
     REAL(8) :: out

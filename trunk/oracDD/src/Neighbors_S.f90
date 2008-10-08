@@ -58,7 +58,7 @@ MODULE Neighbors_S
   PUBLIC Neighbors_S_, Neighbors_S__Particles, Neighbors_S__Ind&
        &, Neighbors_S__Chain, Neighbors_S__, clst, Neighbors_S_Check&
        &,Neighbors_S__nc, nc, Neighbors_S__Delete, Chain_xyz,&
-       & Head_xyz,clst_pme, Neighbors__Particles
+       & Head_xyz,clst_pme
 
   TYPE :: Neighbors_S__Ind
      INTEGER :: i,j,k
@@ -498,7 +498,7 @@ CONTAINS
     out=.TRUE.
     IF(.NOT. Neighbors_S__Valid(i_n)) THEN
        out=.FALSE.
-       errmsg_f='Must construct cell indeces before atomic indeces can be obtained'
+       errmsg_f='1 Must construct cell indeces before atomic indeces can be obtained'
        CALL Add_Errors(-1,errmsg_f)
        RETURN
     END IF
@@ -541,66 +541,7 @@ CONTAINS
        Head_xyz(numcell)=n
     END DO
   END FUNCTION Neighbors_S__Particles
-  FUNCTION Neighbors__Particles(i_n,xa,ya,za) RESULT(out)
-    
-    LOGICAL :: out
-    INTEGER :: i_n
-    REAL(8) :: xa(:),ya(:),za(:)
-    REAL(8) :: x1,y1,z1,dx,dy,dz
-    INTEGER :: n,nx,ny,nz,numcell,l,ntap,ngrp,mm
 
-    ngrp=SIZE(xa)
-    out=.TRUE.
-    IF(ngrp /= SIZE(ya) .OR. ngrp /= SIZE(za)) THEN
-       out=.FALSE.
-       errmsg_f='Coordinate dimension is not equal on the three directions'
-       CALL Add_Errors(-1,errmsg_f)
-       RETURN
-    END IF
-    IF(.NOT. Neighbors_S__Valid(i_n)) THEN
-       out=.FALSE.
-       errmsg_f='Must construct cell indeces before atomic indeces can be obtained'
-       CALL Add_Errors(-1,errmsg_f)
-       RETURN
-    END IF
-    ncx = nc(i_n) % x; ncy = nc(i_n) % y; ncz = nc(i_n) % z
-
-    WRITE(*,*) ncx,ncy,ncz
-
-    IF(ALLOCATED(Head_xyz)) THEN
-       DEALLOCATE(Head_xyz,Chain_xyz)
-    END IF
-    ALLOCATE(Head_xyz(ncx*ncy*ncz))
-    ALLOCATE(Chain_xyz(ngrp))
-
-    Head_xyz=0
-    Chain_xyz (:) % p = 0
-
-!!$=======================================================================
-!!$     Compute chain list for the system
-!!$=======================================================================
-
-    dx=2.d0/ncx
-    dy=2.d0/ncy
-    dz=2.d0/ncz
-    DO n=1,ngrp
-       x1=xa(n)/dx
-       y1=ya(n)/dy
-       z1=za(n)/dz
-       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.0D0)/2
-       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.0D0)/2
-       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.0D0)/2
-       nx=MOD(MOD(nx,ncx)+ncx,ncx)
-       ny=MOD(MOD(ny,ncy)+ncy,ncy)
-       nz=MOD(MOD(nz,ncz)+ncz,ncz)
-       numcell=nz+ncz*(ny+ncy*nx)+1
-       Chain_xyz (n) % i=nx
-       Chain_xyz (n) % j=ny
-       Chain_xyz (n) % k=nz
-       Chain_xyz (n) % p=Head_xyz(numcell)
-       Head_xyz(numcell)=n
-    END DO
-  END FUNCTION Neighbors__Particles
   SUBROUTINE Neighbors_S__Delete
     INTEGER :: i_n
     DO i_n=1,SIZE(clst)

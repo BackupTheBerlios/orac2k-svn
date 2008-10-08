@@ -93,7 +93,6 @@ SUBROUTINE AtomCnt__GetConnections
                  END DO
                  CALL Node__Push(new_bond)
               ELSE IF(m1 == -1) THEN
-                 WRITE(lab0,'(i4)') m
                  label0=TRIM(App_Char(i_F) % bonds(1,i))
                  label1=TRIM(App_Char(i_F) % bonds(2,i))
                  errmsg_f='Inter-residue connection '//TRIM(label0)&
@@ -168,6 +167,4 @@ SUBROUTINE AtomCnt__GetConnections
      AtomCnts(i1) % cnt(ind_x(i1))=i2
      AtomCnts(i2) % cnt(ind_x(i2))=i1
   END DO
-  DEALLOCATE(ind_x)
-  DEALLOCATE(Res_bonds)
 END SUBROUTINE AtomCnt__GetConnections

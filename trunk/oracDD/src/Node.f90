@@ -243,24 +243,26 @@ CONTAINS
 
   SUBROUTINE Node_R8__Push(vect)
     REAL(8), DIMENSION(:), INTENT(IN) :: vect
-    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect
+    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect1
+    CHARACTER(len=1), DIMENSION(1) :: cvect
     INTEGER :: length
+
     length=SIZE(TRANSFER(vect,cvect))
-    ALLOCATE(cvect(length))
-    cvect=TRANSFER(vect,cvect)
-    CALL Node_C__Push(cvect)
-    DEALLOCATE(cvect)
+
+    ALLOCATE(cvect1(length))
+    cvect1=TRANSFER(vect,cvect1)
+    CALL Node_C__Push(cvect1)
   END SUBROUTINE Node_R8__Push
 
   SUBROUTINE Node_R8_1__Push(vect)
     REAL(8), INTENT(IN) :: vect
-    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect
+    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect1
+    CHARACTER(len=1), DIMENSION(1) :: cvect
     INTEGER :: length
     length=SIZE(TRANSFER(vect,cvect))
-    ALLOCATE(cvect(length))
-    cvect=TRANSFER(vect,cvect)
-    CALL Node_C__Push(cvect)
-    DEALLOCATE(cvect)
+    ALLOCATE(cvect1(length))
+    cvect1=TRANSFER(vect,cvect1)
+    CALL Node_C__Push(cvect1)
   END SUBROUTINE Node_R8_1__Push
   FUNCTION Node_R8__Pop(vect) RESULT(out)
     IMPLICIT none
@@ -289,23 +291,23 @@ CONTAINS
   END FUNCTION Node_R8_1__Pop
   SUBROUTINE Node_I__Push(vect)
     INTEGER, DIMENSION(:), INTENT(IN) :: vect
-    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect
+    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect1
+    CHARACTER(len=1), DIMENSION(1) :: cvect
     INTEGER :: length
     length=SIZE(TRANSFER(vect,cvect))
-    ALLOCATE(cvect(length))
-    cvect=TRANSFER(vect,cvect)
-    CALL Node_C__Push(cvect)
-    DEALLOCATE(cvect)
+    ALLOCATE(cvect1(length))
+    cvect1=TRANSFER(vect,cvect1)
+    CALL Node_C__Push(cvect1)
   END SUBROUTINE Node_I__Push
   SUBROUTINE Node_I_1__Push(vect)
     INTEGER, INTENT(IN) :: vect
-    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect
+    CHARACTER(len=1), DIMENSION(:), ALLOCATABLE :: cvect1
+    CHARACTER(len=1), DIMENSION(1) :: cvect
     INTEGER :: length
     length=SIZE(TRANSFER(vect,cvect))
-    ALLOCATE(cvect(length))
-    cvect=TRANSFER(vect,cvect)
-    CALL Node_C__Push(cvect)
-    DEALLOCATE(cvect)
+    ALLOCATE(cvect1(length))
+    cvect1=TRANSFER(vect,cvect1)
+    CALL Node_C__Push(cvect1)
   END SUBROUTINE Node_I_1__Push
   FUNCTION Node_I__Pop(vect) RESULT(out)
     IMPLICIT none

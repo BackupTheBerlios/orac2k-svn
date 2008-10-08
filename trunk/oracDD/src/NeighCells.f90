@@ -342,7 +342,12 @@ CONTAINS
     ALLOCATE(mask(ncx,ncy,ncz))
 
     IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()     
-
+    IF(i_n /= i_cut) THEN
+       errmsg_f=' Terrible error'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+    
     DO mx=1,npx
        DO my=1,npy
           DO mz=1,npz

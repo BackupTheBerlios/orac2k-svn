@@ -118,27 +118,18 @@ SUBROUTINE Forces
   arsinn2=rtolinn**3
   ucoul=0.0D0
   uconf=0.0D0
-  WRITE(*,*) rinn,rinn0
-  WRITE(*,*) rout,rout0
-!!$  DO ii=1,natom
-!!$     Id_i=Id(ii)
-!!$     
-!!$     lij=Id_ij(Id_i,Id_i)
-!!$     WRITE(61,'(2i7,2x,e16.7,f14.6,2e14.6)') ii,Id_i,xp0(ii),chg(ii)&
-!!$          &*SQRT(unitc)
-!!$  END DO
-!!$  
-!!$  DO i=22325,22327
-!!$     Id_i=Id(i)
-!!$     DO j=i,22327
-!!$        Id_j=Id(j)
-!!$        lij=Id_ij(Id_i,Id_j)
-!!$        WRITE(81,'(5i7,2x,2e14.6)') i,j,id_i,id_j,lij,ecc6(lij),ecc12(lij)
-!!$     END DO
-!!$  END DO
 
   maplg=.TRUE.
   count_c=0
+  st1=0.0D0
+  st2=0.0D0
+  st3=0.0D0
+  st4=0.0D0
+  st5=0.0D0
+  st6=0.0D0
+  st7=0.0D0
+  st8=0.0D0
+  st9=0.0D0
   DO ii=1,SIZE(IndBox_g_p)
      ig=IndBox_g_p(ii)
      xpgi=xpg(ig)
@@ -208,9 +199,11 @@ SUBROUTINE Forces
            dswrs(count_gs)=2.0d0*auxa*auxb-2.0d0*auxb**2/arsinn2
            dswrs(count_gs)=dswrs(count_gs)/rsp
         END IF
-        IF(i_pb /= 0 .AND. rsq <= rcutb2) THEN
-           count_b=count_b+1
-           nei(count_b)=l
+        IF(i_pb /= 0) THEN
+           IF(rsq <= rcutb2) THEN
+              count_b=count_b+1
+              nei(count_b)=l
+           END IF
         END IF
      END DO
      IF(count_b /= 0) THEN
@@ -222,7 +215,7 @@ SUBROUTINE Forces
      ngrp_j=count_g
      ngrp_js=count_gs
      cmap2(1:ngrp_js)=0.d0
-     count_c=count_c+count_gs
+     count_c=count_c+count_gs+count_g
      DO i1=AtSt_i,AtEn_i
         xpi=xp0(i1)
         ypi=yp0(i1)
@@ -470,13 +463,14 @@ SUBROUTINE Forces
      END IF
   END DO
 
-  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-
-  IF(PI_Node_Cart == 0) THEN
-     WRITE(*,*) ucoul_o
-     WRITE(*,*) uconf_o
-  END IF
+!!$  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  WRITE(*,*) PI_Node_Cart,count_c
+!!$  IF(PI_Node_Cart == 0) THEN
+!!$     WRITE(*,*) ucoul_o
+!!$     WRITE(*,*) uconf_o
+!!$  END IF
 END SUBROUTINE Forces
 FUNCTION PBC(x) RESULT(out)
   REAL(8) :: out

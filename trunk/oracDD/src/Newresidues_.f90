@@ -52,7 +52,7 @@ SUBROUTINE NewResidues_
   END IF
 
   stores=>Tops__Store(Res_Char)
-  m=COUNT(patches % Type == 'resi')+COUNT(patches % Type == 'link')
+  m=COUNT(patches % Type == 'resi')+2*COUNT(patches % Type == 'link')
   ALLOCATE(Add_Char(m))
   new_r=0
   DO n=1,SIZE(patches)

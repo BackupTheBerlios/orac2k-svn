@@ -56,9 +56,6 @@ MODULE Direct
   USE PI_
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE IndBox
-  USE Neighbors_S, ONLY: Neighbors__Particles,Neighbors_S__nc, &
-       & Neighbors_S__Chain, Neighbors_S__Ind,Chain_xyz&
-       &, Head_xyz, nc, clst
   USE PI_Communicate
   
   IMPLICIT none
@@ -70,25 +67,20 @@ MODULE Direct
   REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
-       &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0&
-       &,twrtpi=2.0d0/SQRT(pi)
-  REAL(8), SAVE :: alphal
+       &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
+  REAL(8), SAVE :: alphal,twrtpi
 CONTAINS
-  SUBROUTINE Compute(i_p)
+  SUBROUTINE Compute(i_p,Initialize)
     INTEGER :: i_p
-    INTEGER :: ncx,ncy,ncz
-    REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
+    INTEGER, OPTIONAL :: Initialize
+    INTEGER :: ncx,ncy,ncz,ierr
+    REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: fppx,fppy,fppz,Xg_PBC&
          &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
          &,dswrs,cmap2,xmap3,ymap3,zmap3
-    INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
-         &,p_index_j(:),p_index_jj(:) 
-    TYPE(Neighbors_S__Ind), POINTER :: ind_xyz(:)
-    INTEGER, ALLOCATABLE :: nei(:)
+    INTEGER, ALLOCATABLE, SAVE :: IndGrp(:),IndGrps(:)&
+         &,p_index_j(:),p_index_jj(:)
+    INTEGER, ALLOCATABLE, SAVE :: nei(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
-
-    IF(No_Calls == 0) THEN
-       CALL Init
-    END IF
 
     IF(ngroup == 0 .AND. natom == 0) THEN
        errmsg_f='Direct lattice forces routine must be called after PI&
@@ -96,10 +88,13 @@ CONTAINS
        CALL Print_Errors()
        STOP
     END IF
+    IF(PRESENT(Initialize)) THEN
+       CALL Init
+       CALL Memory
+       RETURN
+    END IF
 
-    CALL Memory
     CALL Forces
-
     No_Calls=No_Calls+1
   CONTAINS
 !!$
@@ -108,6 +103,7 @@ CONTAINS
     SUBROUTINE Init
       INTEGER :: n,m,ij
       
+      twrtpi=2.0d0/SQRT(pi)
       alphal = Ewald__Param % alpha
 
       n=SIZE(LennardJones__Par % Par_SE)

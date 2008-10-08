@@ -86,7 +86,7 @@ CONTAINS
 
     Res_No=0
     Grp_No=0
-
+    nato=0
     DO n=1,SIZE(Secondary)
        sltslv_res(1,n)=Res_no+1
        sltslv_Grp(1,n)=Grp_no+1
@@ -115,7 +115,6 @@ CONTAINS
        sltslv_Res(2,n)=Res_No
        sltslv_Grp(2,n)=Grp_No
     END DO
-    out=>Indexa
     
     ALLOCATE(Res_Atm(2,Res_No))
     ALLOCATE(Grp_Atm(2,Grp_No))
@@ -137,18 +136,18 @@ CONTAINS
              jm=SIZE(App_Char(i_F)  % group (i) % g)
              IF(jm == 0) CYCLE
              Grp_No=Grp_No+1
-!!$             WRITE(*,*) m,TRIM(Secondary(n) % Line(m)),Grp_No,jm
              DO j=1,jm
                 nato=nato+1
                 IF(i == 1 .AND. j == 1) Res_Atm(1,Res_No)=nato
                 IF(j == 1) Grp_Atm(1,Grp_No)=nato
-!!$                WRITE(*,*) nato, TRIM(App_Char(i_F)  % group (i) % g (j))
              END DO
              Grp_Atm(2,Grp_No)=nato
           END DO
           Res_Atm(2,Res_No)=nato
        END DO
     END DO
+    
+    out=>Indexa
   END FUNCTION IndSequence_
 
   SUBROUTINE IndSequence__Destroy() 
