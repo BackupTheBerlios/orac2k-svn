@@ -53,9 +53,6 @@ MODULE PI_Decompose
   USE Node
   USE FactorizeNo
   USE Cell
-  USE NeighCells
-  USE Neighbors_S, ONLY: Neighbors_S__Particles,Neighbors_S__nc, &
-       & Neighbors_S__Chain, Chain_S_xyz=>Chain_xyz, Head_S_xyz=>Head_xyz,nc
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Print_Defs
   USE PI_Neighbors
@@ -80,7 +77,7 @@ CONTAINS
     REAL(8) :: rcut(:)
     INTEGER, OPTIONAL :: npxa,npya,npza
     INTEGER, POINTER :: vect(:)=>NULL()
-    LOGICAL, POINTER :: Mask(:)
+    LOGICAL, ALLOCATABLE :: Mask(:)
     INTEGER :: o0, Ic,  Jc, Kc, n, count0, m, l
     REAL(8) :: cube
     INTEGER, ALLOCATABLE :: combs(:)
@@ -147,24 +144,28 @@ CONTAINS
        END DO
        PI_npx=n_combs; PI_npy=m_combs; PI_npz=l_combs
     END IF
-    WRITE(kprint,*) ' PI_nprocs, nx, ny, nz ',PI_nprocs,PI_npx,PI_npy,PI_npz
+    IF(PI_Npx /= 1) THEN
+       IF(PI_npy  == 1) THEN
+          PI_npy=PI_npx
+          PI_npx=1
+       ELSE IF(PI_npz  == 1) THEN
+          PI_npz=PI_npx
+          PI_npx=1
+       END IF
+    END IF
 
+    WRITE(kprint,100) PI_nprocs,PI_npx,PI_npy,PI_npz
     CALL PI__Setup_Cart
     CALL PI__Setup_SndRcv
 
-    DO n=1,SIZE(rcut)
-       IF(rcut(n) > 0.0D0) THEN
-          IF(.NOT. NeighCells_(Ref_Radius,rcut(n),PI_nprocs,PI_npx,PI_npy,PI_npz,n))&
-               & CALL Print_Errors()
-       END IF
-    END DO
+100 FORMAT(' ====> Running with ',i3,' Processors ',' nx = ',i2,' ny = ',i2,' nz = ',i2,' <====')
   CONTAINS
     RECURSIVE SUBROUTINE Combinations(Prod, Mask, vect)
       INTEGER :: vect(:)
       INTEGER :: Prod
       LOGICAL :: mask(:)
       INTEGER :: i
-      LOGICAL, POINTER :: mask_new(:)
+      LOGICAL, ALLOCATABLE :: mask_new(:)
       INTEGER :: Prod_New
       
       ALLOCATE(Mask_New(SIZE(Mask)) )
@@ -188,32 +189,20 @@ CONTAINS
     INTEGER :: npx,npy,npz,n,m,nx,ny,nz,mx,my,mz,numcell,l,nmin,ntap&
          &,ngrp,cp_0,cp_3, AtSt, AtEn,mm,ox,oy,oz,mpe,mp&
          &,count0
-    LOGICAL, POINTER :: Mask(:)
-    INTEGER, POINTER :: nums(:)
-    TYPE(NeighCells__Neigh), POINTER :: Nei(:)
-    INTEGER :: ncx,ncy,ncz,i_p
-    REAL(8) :: dx,dy,dz,ddx,ddy,ddz,vc(3)
+    LOGICAL, ALLOCATABLE :: Mask(:)
+    INTEGER :: i_p
 
-    i_p=2
-    ncx=nc(i_p) % x
-    ncy=nc(i_p) % y
-    ncz=nc(i_p) % z
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
-    dx=2.0D0/DBLE(npx)
-    dy=2.0D0/DBLE(npy)
-    dz=2.0D0/DBLE(npz)
-    ddx=2.0D0/DBLE(ncx)
-    ddy=2.0D0/DBLE(ncy)
-    ddz=2.0D0/DBLE(ncz)
 
     ntap=SIZE(Atoms)
     ngrp=SIZE(Groupa)
 
     groupa(:) % knwn=3
 
-    IF(.NOT. PI_Neighbors_(Groupa(:) % xa, Groupa(:) % ya, Groupa(:) % za, Groupa(:) % knwn)) CALL Print_Errors()
+    IF(.NOT. PI_Neighbors_(Groupa(:) % xa, Groupa(:) % ya, Groupa(:) &
+         &% za, Groupa(:) % knwn)) CALL Print_Errors()
 
     m=PI_Node_Cart+1
     mx=PI__Ranks(m) % nx + 1
@@ -231,30 +220,6 @@ CONTAINS
        Groupa(l) % knwn = 1
        l=Chain_xyz(l) % p
     END DO
-
-!!$    Nei=>Neighc_(i_p) % Nei
-!!$    IF(.NOT. Neighbors_S__Particles(i_p)) CALL Print_Errors()
-!!$
-!!$    numcell=PI__Ranks(PI_Node_Cart+1) % n
-!!$    mp=SIZE(Nei(numcell) % c,2)
-!!$    DO m=1,mp
-!!$       ox=Nei(numcell) % c(1,m)-1
-!!$       oy=Nei(numcell) % c(2,m)-1
-!!$       oz=Nei(numcell) % c(3,m)-1
-!!$       vc(1)=DBLE(ox)*ddx
-!!$       vc(2)=DBLE(oy)*ddy
-!!$       vc(3)=DBLE(oz)*ddz
-!!$       mpe=oz+ncz*(ox*ncy+oy)+1
-!!$       l=Head_S_xyz (mpe)
-!!$       nmin=0
-!!$       DO WHILE(l > nmin)
-!!$          AtSt=Groupa(l) % AtSt
-!!$          AtEn=Groupa(l) % AtEn
-!!$          count0=count0+AtEn-AtSt+1
-!!$          Groupa(l) % knwn = 2
-!!$          l=Chain_S_xyz(l) % p
-!!$       END DO       
-!!$    END DO
 
     DO n=1,SIZE(Groupa)
        IF(Groupa(n) % knwn /= 1 ) THEN
