@@ -137,8 +137,8 @@ OBJS = Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o Strings.o
 	SystemPrm.o LennardJones.o PrmUtilities.o BondedPrm.o SimulationBox.o\
 	ReadStore.o AddHydrogens_.o AtomBox.o Neighbors_S.o Neighbors.o Utilities.o Groups.o \
 	Banner.o Atom.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o PI_Neighbors.o \
-	PI_Communicate.o NeighCells.o Potential.o Ewald.o PME.o PME_Routines.o Parallel.o\
-	Print_Defs.o Rfft3d.o IndBox.o Forces.o Direct.o PI_Atom.o oracDD.o 
+	PI_Communicate.o Potential.o Ewald.o PME.o PME_Routines.o Parallel.o\
+	Geometry.o Print_Defs.o Rfft3d.o IndBox.o Forces.o Direct.o PI_Atom.o oracDD.o 
 
 OBJS_f = AddH.o duni.o indexx.o
 
