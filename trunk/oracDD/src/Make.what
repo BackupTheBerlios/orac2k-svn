@@ -37,8 +37,9 @@ ifeq ($(COMPILER), INTEL)
   F90 = ifort
   CC = gcc
   LD = ifort
-  FFLAGS += -fpp -inline-forceinline -O3 
-#  FFLAGS += -fpp -save -check -g
+
+  FFLAGS += -fpp -inline-forceinline -O3
+#  FFLAGS += -fpp  -g -traceback -fpe0 -check all 
   LLFLAGS= -i_dynamic 
 endif
 
