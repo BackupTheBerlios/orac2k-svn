@@ -57,7 +57,6 @@ MODULE MDRun
   USE PI_Decompose
   USE PI_
   USE PI_Communicate
-  USE NeighCells
   USE Ewald
   USE Parallel, ONLY: PA_npx=>npx
   USE Print_Defs
@@ -79,7 +78,7 @@ CONTAINS
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
 
     ALLOCATE(rcut_o(SIZE(Radii)))
-    rcut_o=Radii(:) % out
+    rcut_o=Radii(:) % out+Radii(:) % update
     IF(PA_npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
           CALL PI__Decomposition_NB(rcut_o)
@@ -89,33 +88,43 @@ CONTAINS
     CALL PI__AssignAtomsToCells
 
 
-    CALL PI__Shift(1,_PME_)
+    CALL PI__Shift(1)
 
-    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 31) CALL Atom__PDB(Inout__PDB % unit, 1)
+!!$    CALL PI__ZeroPrimary
+!!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 10) CALL Atom__PDB(Inout__PDB % unit, 1)
 
     IF(.NOT. PI_Atom_()) CALL Print_Errors()
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
+    
     CALL DIR_Forces(1,_INIT_)
+
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
+
+    CALL PI__Shift(1)
     CALL DIR_Forces(1)
+
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
 !!$    CALL DIR_Forces(3)
 !!$    CALL DIR_Forces(2)
     DO n=1,80
+       CALL PI__ZeroSecondary
+       CALL PI__Shift(1)
        CALL DIR_Forces(1)
     END DO
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
+
+    IF(.NOT. PI__Write_Stats()) CALL Print_Errors()
+
+    STOP
     CALL PI__Finalize
     STOP
     

@@ -74,12 +74,12 @@ CONTAINS
     INTEGER :: n,nx,ny,nz,natp,numcell,l
     INTEGER, SAVE :: calls = 0 
 
+    natp=SIZE(x)
     IF(calls == 0) THEN
        ncx=PI_npx
        ncy=PI_npy
        ncz=PI_npz
        ALLOCATE(Head_xyz(ncx*ncy*ncz))
-       natp=SIZE(x)
        ALLOCATE(Chain_xyz(natp))
     END IF
 
@@ -114,6 +114,7 @@ CONTAINS
        Chain_xyz (n) % p=Head_xyz(numcell)
        Head_xyz(numcell)=n
     END DO
+    calls=calls+1
   END FUNCTION PI_Neighbors_
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*

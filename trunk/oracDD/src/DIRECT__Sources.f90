@@ -92,6 +92,7 @@ SUBROUTINE Forces
 
   rinn=0.0D0
   rinn0=0.0D0
+  rtolinn=0.0D0
 
   rout=Radii(i_p) % inn
   rout0=Radii(i_p) % out

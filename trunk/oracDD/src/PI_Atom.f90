@@ -80,7 +80,7 @@ MODULE PI_Atom
   END type Mapnl
   TYPE(Mapnl), ALLOCATABLE, SAVE :: Maps(:)
   INTEGER, SAVE :: No_Calls=0,natom=0,ngroup=0
-  INTEGER, SAVE :: nnx=8,nny=8,nnz=8
+  INTEGER, SAVE :: nnx=24,nny=24,nnz=24
   
 CONTAINS
   FUNCTION PI_Atom_ RESULT(out)
@@ -205,10 +205,11 @@ CONTAINS
     INTEGER :: ncutoff,vect0(1)
     INTEGER, POINTER :: vect(:)
     TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha
-    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell,counter,No_Nei
+    INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell&
+         &,counter,No_Nei,knw_ig,knw_l,n0
     REAL(8) :: xpgi,ypgi,zpgi,xpgj,ypgj,zpgj,xa,ya,za,X_PBC,Y_PBC&
          &,Z_PBC,xc,yc,zc,rsq
-    INTEGER, POINTER :: nei(:)
+    INTEGER, ALLOCATABLE :: nei(:),known(:),nei0(:)
     LOGICAL :: ok
 
     out=.FALSE.
@@ -219,7 +220,8 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)       
        RETURN
     END IF
-    ALLOCATE(nei(ngroup))
+    ALLOCATE(nei(ngroup),known(ngroup))
+
 
     ncutoff=SIZE(Radii)
     rcut=Radii(ncutoff) % out + Radii(ncutoff) % update
@@ -235,11 +237,13 @@ CONTAINS
 
     IF(.NOT. Neighbors_(rcut, nnx, nny, nnz)) CALL Print_Errors()
     IF(.NOT. Neighbors__Particles(xpg,ypg,zpg)) CALL Print_Errors()
-
     
     counter=0
-    DO ii=1,SIZE(IndBox_g_p)
-       ig=IndBox_g_p(ii)
+    known(:)=Groupa(IndBox_g_t(:)) % knwn
+
+
+    DO ig=1,ngroup
+       knw_ig=known(ig)
        xpgi=xpg(ig)
        ypgi=ypg(ig)
        zpgi=zpg(ig)
@@ -259,13 +263,13 @@ CONTAINS
           ny=mod(mod(q+jv,nny)+nny,nny)
           nz=mod(mod(r+kv,nnz)+nnz,nnz)
           numcell=nz+nnz*(ny+nny*nx)+1
-          IF(numcell > nnx*nny*nnz) STOP
           l=Head_xyz(numcell)
           DO WHILE(l > 0)
              IF(ok .AND. l < ig) THEN
                 l=Chain_xyz(l) % p
                 CYCLE
              END IF
+             knw_l=known(l)+Knw_ig
              xpgj=xpg(l)
              ypgj=ypg(l)
              zpgj=zpg(l)
@@ -282,7 +286,7 @@ CONTAINS
              yc=           co(2,2)*ya+co(2,3)*za
              zc=                      co(3,3)*za
              rsq=xc*xc+yc*yc+zc*zc
-             IF(rsq <= rcut2) THEN
+             IF(rsq <= rcut2 .AND. knw_l /= 4) THEN
                 count0=count0+1
                 nei(count0)=l
              END IF
@@ -297,11 +301,19 @@ CONTAINS
        END IF
        counter=counter+count0
     END DO
+!!$    ALLOCATE(nei0(SIZE(Groupa)))
+!!$    nei0=0
+!!$    DO ig=1,ngroup
+!!$       n0=Neigha(ig) % no
+!!$       o=IndBox_g_t(ig)
+!!$       nei0(o)=nei0(o)+n0
+!!$    END DO
+!!$    CALL MPI_ALLREDUCE(nei0,nei0,SIZE(Groupa),MPI_INTEGER,MPI_SUM&
+!!$         &,PI_Comm_Cart,ierr)
     CALL MPI_ALLREDUCE(counter,No_Nei,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
     IF(PI_Node_Cart == 0) THEN
        WRITE(*,*) 'Neighbors (',No_Nei,')'
     END IF
-
   END FUNCTION PI_Atom__Neigh_
   FUNCTION PBC(x) RESULT(out)
     REAL(8) :: out

@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE IndBox
+MODULE Geometry
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,85 +38,34 @@ MODULE IndBox
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Aug  5 2008 -                                     *
+!!$              - Fri Oct 10 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
   USE PI_
-  USE Atom
-  USE Groups
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
-  PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t
-  INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:)
-  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  PUBLIC Equation_Plane
 CONTAINS
-  FUNCTION IndBox_() RESULT(out)
-    LOGICAL :: out
-    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t
-
-    count_g_p=0
-    count_g_t=0
-    count_g_p=COUNT(Groupa(:) % knwn == 1)
-    count_g_t=COUNT(Groupa(:) % knwn /= 0)
-
-    IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
-    IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
-
-    ALLOCATE(IndBox_g_p(count_g_p))
-    ALLOCATE(IndBox_g_t(count_g_t)) 
+  FUNCTION Equation_Plane(v1,v2,v3) RESULT(out)
+    REAL(8), DIMENSION(:) :: v1,v2,v3
+    REAL(8) :: out(4)
+    REAL(8) :: q(4)
     
-    count_g_p=0 ; count_g_t=0 
+    REAL(8) :: x1,y1,z1,x2,y2,z2,x3,y3,z3,Norm
 
-    DO n=1,SIZE(Groupa)
-       m=Groupa(n) % knwn 
-       IF(m /= 0) THEN
-          count_g_t=count_g_t+1
-          IndBox_g_t(count_g_t)=n
-          IF(m == 1) THEN
-             count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=count_g_t
-          END IF
-       END IF
-    END DO
-    out=count_g_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Groups found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-    
-    count_a_p=0
-    count_a_t=0
-    count_a_p=COUNT(Groupa(Atoms(:) % Grp_No) % knwn == 1)
-    count_a_t=COUNT(Groupa(Atoms(:) % Grp_No) % knwn /= 0)
-    
-    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
-    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
+    x1=v1(1) ; y1=v1(2) ; z1=v1(3)
+    x2=v2(1) ; y2=v2(2) ; z2=v2(3)
+    x3=v3(1) ; y3=v3(2) ; z3=v3(3)
 
-    ALLOCATE(IndBox_a_p(count_a_p))
-    ALLOCATE(IndBox_a_t(count_a_t)) 
-    
-    count_a_p=0 ; count_a_t=0 
-
-    DO n=1,SIZE(Atoms)
-       m=Groupa(Atoms(n) % Grp_No) % knwn 
-       IF(m /= 0) THEN
-          count_a_t=count_a_t+1
-          IndBox_a_t(count_a_t)=n
-          IF(m == 1) THEN
-             count_a_p=count_a_p+1
-             IndBox_a_p(count_a_p)=count_a_t
-          END IF
-       END IF
-    END DO
-    out=count_a_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-  END FUNCTION IndBox_
-END MODULE IndBox
+    q(1)=y1*(z2 - z3) + y2*(z3 - z1) + y3*(z1 - z2) 
+    q(2)=z1*(x2 - x3) + z2*(x3 - x1) + z3*(x1 - x2)
+    q(3)=x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2)
+    q(4)=(x1*(y2*z3 - y3*z2) + x2*(y3*z1 - y1*z3) + x3*(y1*z2 - y2*z1))
+    Norm=SQRT(q(1)**2+q(2)**2+q(3)**2)
+    q=q/Norm
+    out=q
+  END FUNCTION Equation_Plane
+END MODULE Geometry

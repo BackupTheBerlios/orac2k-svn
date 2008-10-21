@@ -128,9 +128,6 @@ CONTAINS
     CALL MPI_ALLGATHER(coord,3,MPI_INTEGER4,coords,3,MPI_INTEGER4&
          &,PI_Comm_Cart, ierr)
 
-    IF(PI_Node_Cart == 0) THEN
-       WRITE(*,*) 'coords ',coords(1,2)+1
-    END IF
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz

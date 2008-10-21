@@ -188,10 +188,6 @@ CONTAINS
       IF(ALLOCATED(Grp)) DEALLOCATE(Grp)
       ALLOCATE(Grp(SIZE(Grp_Atm,2)))
 
-!!$      DO n=1,SIZE(Grp_Atm,2)
-!!$         WRITE(90,'(i7,2x,4i8)') n,Grp_Atm(1,n),Grp_Atm(2,n),AtomCnts (Grp_Atm(1&
-!!$              &,n)) % Grp_No,AtomCnts (Grp_Atm(2,n)) % Grp_No
-!!$      END DO
       Dims_a=0
       DO n=1,SIZE(P_Tpg)
          o1=p_Tpg(n)  % pt
@@ -262,7 +258,6 @@ CONTAINS
        Groupa(p1) % Id_Res = Atoms(n) % Id_Res
        Groupa(p1) % Id_Type = Atoms(n) % Id_Type
        Groupa(p1) % Id_Slv = Atoms(n) % Id_slv
-!!$       WRITE(50,'(i8,2x,i8,a5,2x,a5)') n,p1,TRIM(Atoms(n) % beta),TRIM(Atoms(n) % Res)
     END DO
     DO n=1,ngrp
        Groupa(n)%xa=Groupa(n)%xa/tmass(n)
@@ -279,9 +274,6 @@ CONTAINS
        Groupa(n) % AtSt = Grp_atm(1,n)
        Groupa(n) % AtEn = Grp_atm(2,n)
     END DO
-!!$    WRITE(50,'(i8,2x,e16.7)') (n,Groupa(n) % xa,n=1,ngrp)
-!!$    WRITE(51,'(i8,2x,e16.7)') (n,Atoms(n) % xa,n=1,ntap)
-!!$    STOP
   END FUNCTION Groups__InitCoords
   FUNCTION Groups__Update_Knwn() RESULT(out)
     INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn

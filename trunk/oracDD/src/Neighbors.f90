@@ -48,6 +48,7 @@ MODULE Neighbors
 
 !!$---- This subroutine is part of the program oracDD ----*
 
+  USE PI_
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Node
   USE Cell
@@ -131,7 +132,6 @@ CONTAINS
        ind_xyz(nind) % j=vect(2)
        ind_xyz(nind) % k=vect(3)
     END DO
-
     nxmax=(ncx+1)/2
     nymax=(ncy+1)/2
     nzmax=(ncz+1)/2
@@ -265,6 +265,7 @@ CONTAINS
     INTEGER :: n,nx,ny,nz,natp,numcell,l
     
     out=.TRUE.
+    natp=SIZE(x)
     IF(.NOT. Neighbors__Valid()) THEN
        out=.FALSE.
        errmsg_f='Must construct cell indeces before atomic indeces can be obtained'
@@ -273,7 +274,10 @@ CONTAINS
     END IF
     IF(.NOT. ALLOCATED(Head_xyz)) THEN
        ALLOCATE(Head_xyz(ncx*ncy*ncz))
-       natp=SIZE(x)
+       ALLOCATE(Chain_xyz(natp))
+    ELSE
+       DEALLOCATE(Head_xyz,Chain_xyz)
+       ALLOCATE(Head_xyz(ncx*ncy*ncz))
        ALLOCATE(Chain_xyz(natp))
     END IF
     Head_xyz=0
@@ -303,8 +307,7 @@ CONTAINS
        Chain_xyz (n) % k=nz
        numcell=nz+ncz*(ny+ncy*nx)+1
        Chain_xyz (n) % p=Head_xyz(numcell)
-       Head_xyz(numcell)=n
-       
+       Head_xyz(numcell)=n       
     END DO
   END FUNCTION Neighbors__Particles
   SUBROUTINE Neighbors__Delete
