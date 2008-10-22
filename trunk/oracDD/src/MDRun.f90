@@ -101,6 +101,7 @@ CONTAINS
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
+    CALL PI__ZeroSecondary
     CALL PI__Shift(1)
     CALL DIR_Forces(1)
 
@@ -108,6 +109,7 @@ CONTAINS
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
 
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
 !!$    CALL DIR_Forces(3)
@@ -118,6 +120,7 @@ CONTAINS
        CALL DIR_Forces(1)
     END DO
 
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
