@@ -229,8 +229,6 @@ CONTAINS
     REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
     INTEGER, ALLOCATABLE :: iBuff_s(:),iBuff_r(:)
     INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
-    INTEGER, ALLOCATABLE :: NoAtmss(:)
-    LOGICAL, ALLOCATABLE :: Mask(:,:,:)
     LOGICAL :: oks
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
@@ -309,6 +307,7 @@ CONTAINS
     NoAtm_s=count0
     nind_o=count1
     NoAtm_r=0
+
 
     CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
          &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
@@ -449,8 +448,6 @@ CONTAINS
     REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
     INTEGER, ALLOCATABLE :: iBuff_s(:),iBuff_r(:)
     INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
-    INTEGER, ALLOCATABLE :: NoAtmss(:)
-    LOGICAL, ALLOCATABLE :: Mask(:,:,:)
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
     LOGICAL :: ok_X,ok_Y,ok_Z
