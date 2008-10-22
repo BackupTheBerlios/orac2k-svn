@@ -131,8 +131,9 @@ SUBROUTINE Forces
   st7=0.0D0
   st8=0.0D0
   st9=0.0D0
-  DO ii=1,SIZE(IndBox_g_p)
-     ig=IndBox_g_p(ii)
+!!$  DO ii=1,SIZE(IndBox_g_p)
+!!$     ig=IndBox_g_p(ii)
+  DO ig=1,ngroup
      xpgi=xpg(ig)
      ypgi=ypg(ig)
      zpgi=zpg(ig)
@@ -463,15 +464,18 @@ SUBROUTINE Forces
         END DO
      END IF
   END DO
-
-!!$  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-!!$  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-!!$  CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
+  fp(:) % x = fppx(:)
+  fp(:) % y = fppy(:)
+  fp(:) % z = fppz(:)
+  
+  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+  CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
 !!$  WRITE(*,*) PI_Node_Cart,count_c
-!!$  IF(PI_Node_Cart == 0) THEN
-!!$     WRITE(*,*) ucoul_o
-!!$     WRITE(*,*) uconf_o
-!!$  END IF
+  IF(PI_Node_Cart == 0) THEN
+     WRITE(*,*) ucoul_o
+     WRITE(*,*) uconf_o
+  END IF
 END SUBROUTINE Forces
 FUNCTION PBC(x) RESULT(out)
   REAL(8) :: out

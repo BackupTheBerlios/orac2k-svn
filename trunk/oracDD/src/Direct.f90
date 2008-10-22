@@ -73,13 +73,13 @@ CONTAINS
   SUBROUTINE Compute(i_p,Initialize)
     INTEGER :: i_p
     INTEGER, OPTIONAL :: Initialize
-    INTEGER :: ncx,ncy,ncz,ierr
-    REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: fppx,fppy,fppz,Xg_PBC&
+    INTEGER :: ierr,nnn,nn,n
+    REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
          &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
          &,dswrs,cmap2,xmap3,ymap3,zmap3
-    INTEGER, ALLOCATABLE, SAVE :: IndGrp(:),IndGrps(:)&
+    INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
          &,p_index_j(:),p_index_jj(:)
-    INTEGER, ALLOCATABLE, SAVE :: nei(:)
+    INTEGER, ALLOCATABLE :: nei(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
 
     IF(ngroup == 0 .AND. natom == 0) THEN
@@ -90,15 +90,17 @@ CONTAINS
     END IF
     IF(PRESENT(Initialize)) THEN
        CALL Init
-       CALL Memory
        RETURN
     END IF
 
+    CALL Memory
     CALL Forces
+    CALL PI__Fold_F(fp,i_p)
+
     No_Calls=No_Calls+1
   CONTAINS
 !!$
-!!$--- Initialize once for all
+!!$--- Initialize things once for all
 !!$
     SUBROUTINE Init
       INTEGER :: n,m,ij
@@ -131,8 +133,11 @@ CONTAINS
       
       ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
            &,p_index_jj(natom)) 
-
-      
+      IF(ALLOCATED(fp)) DEALLOCATE(fp)
+      ALLOCATE(fp(natom))
+      fp(:) % x =0.0_8
+      fp(:) % y =0.0_8
+      fp(:) % z =0.0_8
     END SUBROUTINE Memory
 !!$
 !!$--- Compute Forces
