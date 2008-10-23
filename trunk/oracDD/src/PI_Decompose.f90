@@ -158,7 +158,8 @@ CONTAINS
     CALL PI__Setup_Cart
     CALL PI__Setup_SndRcv
 
-100 FORMAT(' ====> Running with ',i3,' Processors ',' nx = ',i2,' ny = ',i2,' nz = ',i2,' <====')
+100 FORMAT(' ====> Running with ',i3,' Processors ',' nx = ',i2,' ny =&
+         & ',i2,' nz = ',i2,' <====')
   CONTAINS
     RECURSIVE SUBROUTINE Combinations(Prod, Mask, vect)
       INTEGER :: vect(:)
