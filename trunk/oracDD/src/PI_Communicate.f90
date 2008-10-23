@@ -92,6 +92,11 @@ MODULE PI_Communicate
      REAL(8) :: r(3)=0.0_8
   END type Cuts
   TYPE(Cuts), SAVE :: rcuts0(10)
+  TYPE :: Times
+     REAL(8) :: Tot,Comms
+  END type Times
+  TYPE(Times), SAVE :: Timea
+  REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
   SUBROUTINE Thickness(i_p)
     INTEGER :: i_p
@@ -220,7 +225,7 @@ CONTAINS
     INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
     INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
-         &,np,nind_o
+         &,np,nind_o,NoGrp_s,NoGrp_r
     INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
     REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
@@ -234,11 +239,11 @@ CONTAINS
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
     LOGICAL :: ok_X,ok_Y,ok_Z
     INTEGER, SAVE :: MyCalls=0
-    REAL(8) :: timeb,startime,endtime,timea,Axis_L,Axis_R,X_L,X_R
+    REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
+
     
     IF(MyCalls == 0) THEN
        ALLOCATE(ind_o(SIZE(Groupa)))
-       timea=0.0D0
     END IF
 
     oks=PRESENT(scnd_half) .AND. (.NOT. ok_PME)
@@ -267,6 +272,8 @@ CONTAINS
     Axis_R=Margin(Axis)
     X_L=Margin2_1
     X_R=Margin2_1+rcut(1)
+
+
     DO n=1,SIZE(Groupa)
        IF(Groupa(n) % knwn == 0) CYCLE
        IF(Groupa(n) % knwn == 1 .AND. oks) CYCLE
@@ -306,20 +313,28 @@ CONTAINS
     
     NoAtm_s=count0
     nind_o=count1
+    NoGrp_s=count1
     NoAtm_r=0
+    NoGrp_r=0
 
 
+    startime=MPI_WTIME()
+    
     CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
          &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,1,NoGrp_r&
+         &,1,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
+    endtime=MPI_WTIME()
+    timea % Comms=timea % Comms+endtime-startime
 
     ALLOCATE(Buff_s(3,NoAtm_s))
-    ALLOCATE(iBuff_s(NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
-    ALLOCATE(iBuff_r(NoAtm_r))
-        
+    ALLOCATE(iBuff_s(NoGrp_s))
+    ALLOCATE(iBuff_r(NoGrp_r))
     count0=0
-    DO m=1,nind_o
+    DO m=1,NoGrp_s
        l=ind_o(m)
+       iBuff_s(m)=l
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
        DO q=AtSt,AtEn
@@ -327,29 +342,65 @@ CONTAINS
           Buff_s(1,count0)=Atoms(q) % x
           Buff_s(2,count0)=Atoms(q) % y
           Buff_s(3,count0)=Atoms(q) % z
-          IBuff_s(count0) = q
        END DO
     END DO
        
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
-    CALL MPI_SENDRECV(iBuff_s,NoAtm_s,MPI_INTEGER4,dest,1,iBuff_r&
-         &,NoAtm_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
+    startime=MPI_WTIME()
+    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,2,iBuff_r&
+         &,NoGrp_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
 
-    DO nn=1,NoAtm_r
-       n=iBuff_r(nn)
-       atoms(n) % x=Buff_r(1,nn)
-       atoms(n) % y=Buff_r(2,nn)
-       atoms(n) % z=Buff_r(3,nn)
-       Atoms(n) % xa = oc(1,1)*Atoms(n) % x+oc(1,2)*Atoms(n) % y+oc(1,3)*Atoms(n) % z    
-       Atoms(n) % ya = oc(2,1)*Atoms(n) % x+oc(2,2)*Atoms(n) % y+oc(2,3)*Atoms(n) % z    
-       Atoms(n) % za = oc(3,1)*Atoms(n) % x+oc(3,2)*Atoms(n) % y+oc(3,3)*Atoms(n) % z    
-       Grp_No=Atoms(n) % Grp_No
-       groupa(Grp_No) % Knwn = 2
+    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
+         &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
+    endtime=MPI_WTIME()
+    timea % Comms=timea % Comms+endtime-startime
+
+    nn=0
+    DO m=1,NoGrp_r
+       l=iBuff_r(m)
+       AtSt=Groupa(l) % AtSt
+       AtEn=Groupa(l) % AtEn
+       xpga=0.0D0
+       ypga=0.0D0
+       zpga=0.0D0
+       xpg=0.0D0
+       ypg=0.0D0
+       zpg=0.0D0
+       tmass=Groupa(l) % Mass
+       DO n=AtSt,AtEn
+          xmass=Atoms(n) % mass/tmass
+          nn=nn+1
+          xc=Buff_r(1,nn)
+          yc=Buff_r(2,nn)
+          zc=Buff_r(3,nn)
+          atoms(n) % x=xc
+          atoms(n) % y=yc
+          atoms(n) % z=zc
+          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
+          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
+          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
+          xpga = xpga + xmass*Atoms(n) % xa
+          ypga = ypga + xmass*Atoms(n) % ya
+          zpga = zpga + xmass*Atoms(n) % za
+          xpg = xpg + xmass*Atoms(n) % x
+          ypg = ypg + xmass*Atoms(n) % y
+          zpg = zpg + xmass*Atoms(n) % z
+          Grp_No=Atoms(n) % Grp_No
+          groupa(Grp_No) % Knwn = 2
+       END DO
+       Groupa(l) % xa = xpga 
+       Groupa(l) % ya = ypga
+       Groupa(l) % za = zpga
+       Groupa(l) % x = xpg
+       Groupa(l) % y = ypg
+       Groupa(l) % z = zpg
     END DO
-    IF(.NOT. Groups__Update_Knwn()) CALL Print_Errors()
+
+!!$    startime0=MPI_WTIME()
+!!$    IF(.NOT. Groups__Update_Knwn()) CALL Print_Errors()
+!!$    endtime0=MPI_WTIME()
+!!$    Timea % Tot = Timea % Tot + Endtime0-Startime0
 
     Comms % Atoms_S=Comms % Atoms_S+DBLE(NoAtm_s)
     Comms % Atoms_R=Comms % Atoms_R+DBLE(NoAtm_r)
@@ -439,7 +490,7 @@ CONTAINS
     INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
     INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
-         &,np,nind_o
+         &,np,nind_o,NoGrp_s,NoGrp_r
     INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
     REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
@@ -452,11 +503,10 @@ CONTAINS
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
     LOGICAL :: ok_X,ok_Y,ok_Z
     INTEGER, SAVE :: MyCalls=0
-    REAL(8) :: timeb,startime,endtime,timea,Axis_L,Axis_R,X_L,X_R
+    REAL(8) :: Axis_L,Axis_R,X_L,X_R
     
     IF(MyCalls == 0) THEN
        ALLOCATE(ind_o(SIZE(Groupa)))
-       timea=0.0D0
     END IF
 
     MyCalls=MyCalls+1
@@ -488,8 +538,6 @@ CONTAINS
           v1(Axis)=v1(Axis)-Two*ANINT(Half*(v1(Axis)-1.0D0))
           aux1=v1(Axis)-Axis_L
           aux1=aux1-Two*ANINT(Half*aux1)
-!!$          aux2=v1(Axis)-Axis_R
-!!$          aux2=aux2-Two*ANINT(Half*aux2)
           IF(Dir*aux1 > 0.0D0) THEN
              AtSt=Groupa(n) % AtSt
              AtEn=Groupa(n) % AtEn
@@ -503,18 +551,26 @@ CONTAINS
     NoAtm_s=count0
     nind_o=count1
     NoAtm_r=0
+    NoGrp_s=count1
+    NoGrp_r=0
 
+    startime=MPI_WTIME()
+    CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,3,NoGrp_r&
+         &,1,MPI_INTEGER4,source,3,PI_Comm_Cart,STATUS,ierr)
     CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
          &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
+    endtime=MPI_WTIME()
+    timea % Comms=timea % Comms+endtime-startime
 
     ALLOCATE(Buff_s(3,NoAtm_s))
-    ALLOCATE(iBuff_s(NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
-    ALLOCATE(iBuff_r(NoAtm_r))
+    ALLOCATE(iBuff_s(NoGrp_s))
+    ALLOCATE(iBuff_r(NoGrp_r))
         
     count0=0
-    DO m=1,nind_o
+    DO m=1,NoGrp_s
        l=ind_o(m)
+       iBuff_s(m)=l
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
        DO q=AtSt,AtEn
@@ -522,7 +578,6 @@ CONTAINS
           Buff_s(1,count0)=fp0(q) % x
           Buff_s(2,count0)=fp0(q) % y
           Buff_s(3,count0)=fp0(q) % z
-          IBuff_s(count0) = q
           Grp_No=Atoms(q) % Grp_No
           groupa(Grp_No) % Knwn = 3
        END DO
@@ -530,16 +585,26 @@ CONTAINS
        
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
-    CALL MPI_SENDRECV(iBuff_s,NoAtm_s,MPI_INTEGER4,dest,1,iBuff_r&
-         &,NoAtm_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
+
+    startime=MPI_WTIME()
+    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,1,iBuff_r&
+         &,NoGrp_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
     CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
          &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
+    endtime=MPI_WTIME()
+    timea % Comms=timea % Comms+endtime-startime
 
-    DO nn=1,NoAtm_r
-       n=iBuff_r(nn)
-       fp0(n) % x=fp0(n) % x+Buff_r(1,nn)
-       fp0(n) % y=fp0(n) % y+Buff_r(2,nn)
-       fp0(n) % z=fp0(n) % z+Buff_r(3,nn)
+    nn=0
+    DO q=1,NoGrp_r
+       l=iBuff_r(q)
+       AtSt=Groupa(l) % AtSt
+       AtEn=Groupa(l) % AtEn
+       DO n=AtSt,AtEn
+          nn=nn+1
+          fp0(n) % x=fp0(n) % x+Buff_r(1,nn)
+          fp0(n) % y=fp0(n) % y+Buff_r(2,nn)
+          fp0(n) % z=fp0(n) % z+Buff_r(3,nn)
+       END DO
     END DO
     Comms % Atoms_S=Comms % Atoms_S+DBLE(NoAtm_s)
     Comms % Atoms_R=Comms % Atoms_R+DBLE(NoAtm_r)
@@ -600,29 +665,42 @@ CONTAINS
   FUNCTION PI__Write_Stats RESULT(out)
     LOGICAL :: out
     REAL(8) :: Kbyte_s, Kbyte_r, Atoms_s, Atoms_r
+    REAL(8) :: Kbyte_s0, Kbyte_r0, Atoms_s0, Atoms_r0
+    REAL(8) :: Timeb,Timeb0,Timec,timec0
 
     out=.TRUE.
     IF(PI_Nprocs == 1) RETURN
 #ifdef HAVE_MPI
-    Kbyte_s=Comms % KByte_s/DBLE(Calls)
-    Kbyte_r=Comms % KByte_r/DBLE(Calls)
-    Atoms_s=Comms % Atoms_s/DBLE(Calls)
-    Atoms_r=Comms % Atoms_r/DBLE(Calls)
-    CALL MPI_ALLREDUCE(Kbyte_s,Kbyte_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-    CALL MPI_ALLREDUCE(Kbyte_r,Kbyte_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-    CALL MPI_ALLREDUCE(Atoms_s,Atoms_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-    CALL MPI_ALLREDUCE(Atoms_r,Atoms_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    Kbyte_s0=Comms % KByte_s/DBLE(Calls)
+    Kbyte_r0=Comms % KByte_r/DBLE(Calls)
+    Atoms_s0=Comms % Atoms_s/DBLE(Calls)
+    Atoms_r0=Comms % Atoms_r/DBLE(Calls)
+    CALL MPI_ALLREDUCE(Kbyte_s0,Kbyte_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Kbyte_r0,Kbyte_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Atoms_s0,Atoms_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Atoms_r0,Atoms_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Timea % Comms,Timeb,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Timea % Tot,Timec,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+
     IF(PI_Node_Cart == 0) THEN
        Kbyte_s=Kbyte_s/DBLE(PI_Nprocs)
        Kbyte_r=Kbyte_r/DBLE(PI_Nprocs)
        Atoms_s=Atoms_s/DBLE(PI_Nprocs)
        Atoms_r=Atoms_r/DBLE(PI_Nprocs)
+       Timeb=Timeb/DBLE(PI_Nprocs)
+       Timec=Timec/DBLE(PI_Nprocs)
        WRITE(*,100) Atoms_s,Kbyte_s,Atoms_r,Kbyte_r
+       WRITE(*,200) Timeb,Timec,Timec-Timeb
     END IF
 100 FORMAT(/'=====>    Average data transfer by each CPU per full shift    <====='&
          &/'=====>    ',f12.2,' atoms (',f12.4,' KB ) sent          <====='&
          &/'=====>    ',f12.2,' atoms (',f12.4,' KB ) received      <=&
          &===='/)
+200 FORMAT(/'=====>        Timing                   <====='&
+          &/'=====>   Comm. Time = ',f12.5,' s        <====='/&
+          &/'=====>   Tot.  Time = ',f12.5,' s        <====='/&
+          &/'=====>   Rem.  Time = ',f12.5,' s        <====='/&
+          &)
 #endif
   END FUNCTION PI__Write_Stats
 END MODULE PI_Communicate
