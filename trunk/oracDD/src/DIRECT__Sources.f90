@@ -243,6 +243,7 @@ SUBROUTINE Forces
               END IF
            END DO
         END DO
+!DEC$ IVDEP
         DO p_j=1,p_mapa
            jj=p_index_jj(p_j)
            j=p_index_j(p_j)
@@ -336,6 +337,7 @@ SUBROUTINE Forces
               END IF
            END DO
         END DO
+!DEC$ IVDEP
         DO p_j=1,p_mapa
            jj=p_index_jj(p_j)
            j=p_index_j(p_j)
@@ -423,6 +425,7 @@ SUBROUTINE Forces
            xpi=xp0(i1)
            ypi=yp0(i1)
            zpi=zp0(i1)
+!DEC$ IVDEP
            DO jj=1,ngrp_js
               fppx(i1)=fppx(i1)+massi*xmap3(jj)
               fppy(i1)=fppy(i1)+massi*ymap3(jj)
@@ -443,6 +446,7 @@ SUBROUTINE Forces
            xg=-Xgs_PBC(jj)
            yg=-Ygs_PBC(jj)
            zg=-Zgs_PBC(jj)
+           !DEC$ IVDEP
            DO j1=grppt(1,j),grppt(2,j)
               massj=gmass(j1)
               fppx(j1)=fppx(j1)-massj*xmap3(jj)

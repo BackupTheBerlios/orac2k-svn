@@ -52,7 +52,7 @@ MODULE PI_
   PRIVATE
   PUBLIC :: PI__, PI__Finalize, PI_Comm,PI_Node,PI_nprocs,PI_npx&
        &,PI_npy,PI_npz, PI_Comm_Cart,PI__Node, PI__Ranks,&
-       & PI__Setup_Cart, PI_Node_Cart,PI_Nei,PI_Shift,&
+       & PI__Setup_Cart, PI_Node_Cart,&
        & PI__Setup_SndRcv,ierr,status,PI_Comm_Z,PI_Node_Z,PI_Nprocs_Z&
        &, PI__Ranks_Z, PI_Node_FFTW, PI_Comm_FFTW, PI__Ranks_FFTW
 

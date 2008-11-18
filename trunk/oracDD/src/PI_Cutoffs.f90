@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Direct
+MODULE PI_Cutoffs
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,121 +38,85 @@ MODULE Direct
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Mon Sep 29 2008 -                                     *
+!!$              - Fri Nov  7 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _INIT_ 0
-#define _FOLD_ 1
-  USE PI_ATOM
-  USE POTENTIAL
-  USE Units
-  USE Forces
-  USE LennardJones, ONLY: LennardJones__Par
-  USE Cell, ONLY: oc,co, Volume
-#ifdef HAVE_MPI
-  USE mpi
-#endif
-  USE PI_
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE IndBox
-  USE PI_Communicate
-  
-  IMPLICIT none
-  PRIVATE 
-  PUBLIC Compute, fp
-  
-  TYPE(Force), ALLOCATABLE, SAVE :: fp(:)
-  INTEGER, SAVE :: No_Calls=0
-  REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
-  INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
-  REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
-       &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
-  REAL(8), SAVE :: alphal,twrtpi
-CONTAINS
-  SUBROUTINE Compute(i_p,Initialize)
-    INTEGER :: i_p
-    INTEGER, OPTIONAL :: Initialize
-    INTEGER :: ierr,nnn,nn,n,m
-    REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
-         &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
-         &,dswrs,cmap2,xmap3,ymap3,zmap3
-    INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
-         &,p_index_j(:),p_index_jj(:)
-    INTEGER, ALLOCATABLE :: nei(:)
-    REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
-    INTEGER, SAVE :: Times_of_Call=0
 
-    Times_of_Call=Times_of_Call+1
-    IF(ngroup == 0 .AND. natom == 0) THEN
-       errmsg_f='Direct lattice forces routine must be called after PI&
-            &_Atom_'
-       CALL Print_Errors()
-       STOP
-    END IF
-    IF(PRESENT(Initialize)) THEN
-       CALL Init
+  USE Cell
+  USE Geometry
+  USE Forces, ONLY: Force, Radii
+  USE PI_
+  IMPLICIT none
+  PRIVATE
+  PUBLIC Thickness,rcut,ddx,ddy,ddz
+  REAL(8), SAVE :: dx,dy,dz,ddx,ddy,ddz
+  TYPE :: Cuts
+     REAL(8) :: r(3)=0.0_8
+  END type Cuts
+  TYPE(Cuts), SAVE :: rcuts0(10)
+  REAL(8), SAVE :: Thick(3),rcut(3)
+CONTAINS
+  SUBROUTINE Thickness(i_p)
+    INTEGER :: i_p
+    REAL(8) :: x1,x2,y1,y2,z1,z2,v1(3),v2(3),v3(3),r1(3),r2(3)&
+           &,r3(3),r0(3),qq(4)
+    
+    IF(rcuts0(i_p) % r(1) /= 0.0_8) THEN
+       rcut(:)=rcuts0(i_p) % r(:)
        RETURN
     END IF
 
-    CALL Memory
-    CALL Forces
-    IF(Times_of_Call == 1) CALL PI__Fold_F(fp,i_p,_INIT_)
-    CALL PI__Fold_F(fp,i_p,_FOLD_)
+    ddx=2.d0/PI_npx
+    ddy=2.d0/PI_npy
+    ddz=2.d0/PI_npz
 
-!!$    DO nn=1,SIZE(IndBox_a_p)
-!!$       n=IndBox_a_p(nn)
-!!$       m=IndBox_a_t(n)
-!!$       WRITE(100+PI_Node_Cart,'(i8,3e15.7)') m,fp(n) % x, fp(n) % y, fp(n) % z
-!!$    END DO
-    No_Calls=No_Calls+1
+    r0=0.0D0
+    v1(1)=1.0D0
+    v1(2)=0.0D0
+    v1(3)=0.0D0
+    r1=Convert(v1)
+    v2(1)=0.0D0
+    v2(2)=1.0D0
+    v2(3)=0.0D0
+    r2=Convert(v2)
+    v3(1)=0.0D0
+    v3(2)=0.0D0
+    v3(3)=1.0D0
+    r3=Convert(v3)
+
+!!$    
+!!$---- Thickness along x
+!!$
+    qq=Equation_Plane(r0,r2,r3)
+    Thick(1)=1.0D0/ABS(qq(1)*r1(1)+qq(2)*r1(2)+qq(3)*r1(3)-qq(4))
+!!$    
+!!$---- Thickness along y
+!!$
+    qq=Equation_Plane(r0,r1,r3)
+    Thick(2)=1.0D0/ABS(qq(1)*r2(1)+qq(2)*r2(2)+qq(3)*r2(3)-qq(4))
+!!$    
+!!$---- Thickness along z
+!!$
+    qq=Equation_Plane(r0,r1,r2)
+    Thick(3)=1.0D0/ABS(qq(1)*r3(1)+qq(2)*r3(2)+qq(3)*r3(3)-qq(4))
+    
+!!$    
+!!$---- Thickness along x
+!!$
+    rcuts0(i_p) % r (:)=(Radii(i_p) % out+Radii(i_p)% update)*Thick(:)
+    rcut(:)=rcuts0(i_p) % r (:)
   CONTAINS
-!!$
-!!$--- Initialize things once for all
-!!$
-    SUBROUTINE Init
-      INTEGER :: n,m,ij
-      
-      twrtpi=2.0d0/SQRT(pi)
-      alphal = Ewald__Param % alpha
+    FUNCTION Convert(v1) RESULT(out)
+      REAL(8) :: v1(3),out(3)
+      REAL(8) :: r1(3)
+      r1(1)=co(1,1)*v1(1)+co(1,2)*v1(2)+co(1,3)*v1(3)
+      r1(2)=co(2,1)*v1(1)+co(2,2)*v1(2)+co(2,3)*v1(3)
+      r1(3)=co(3,1)*v1(1)+co(3,2)*v1(2)+co(3,3)*v1(3)
+      out=r1
+    END FUNCTION Convert
+  END SUBROUTINE Thickness
 
-      n=SIZE(LennardJones__Par % Par_SE)
-      ALLOCATE(Id_ij(n,n))
-      ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2))
-      DO n=1,SIZE(LennardJones__Par % Par_SE)
-         DO m=n,SIZE(LennardJones__Par % Par_SE)
-            ij=m*(m-1)/2+n
-            Id_ij(n,m)=ij
-            Id_ij(m,n)=ij
-            ecc6(ij)=LennardJones__Par % c6(ij)
-            ecc12(ij)=LennardJones__Par % c12(ij)
-         END DO
-      END DO
-    END SUBROUTINE Init
-!!$
-!!$--- Get Memory
-!!$
-    SUBROUTINE Memory
-      ALLOCATE(Xg_PBC(ngroup),Yg_PBC(ngroup),Zg_PBC(ngroup),Xgs_PBC(ngroup)&
-           &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
-           &,IndGrps(ngroup),nei(ngroup),xcs(ngroup),ycs(ngroup)&
-           &,zcs(ngroup),swrs(ngroup),dswrs(ngroup),cmap2(ngroup)&
-           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup))
-      
-      ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
-           &,p_index_jj(natom)) 
-      IF(ALLOCATED(fp)) DEALLOCATE(fp)
-      ALLOCATE(fp(natom))
-      fp(:) % x =0.0_8
-      fp(:) % y =0.0_8
-      fp(:) % z =0.0_8
-    END SUBROUTINE Memory
-!!$
-!!$--- Compute Forces
-!!$
-
-    INCLUDE 'DIRECT__Sources.f90'
-  END SUBROUTINE Compute
-END MODULE Direct
+END MODULE PI_Cutoffs

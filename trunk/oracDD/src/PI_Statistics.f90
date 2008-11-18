@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE MDRun
+MODULE PI_Statistics
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,118 +38,85 @@ MODULE MDRun
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Jan 25 2007 -                                     *
+!!$              - Fri Nov  7 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _PME_ 1
-#define _INIT_ 1
-#define _INIT_EXCHANGE_     0
-#define _EXCHANGE_ONLY_     1
-  USE PI_Atom
-  USE MPI
-  USE PME
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Groups
-  USE Atom
-  USE Inout
-
-  USE PI_Decompose
+#ifdef HAVE_MPI
+  USE mpi
+#endif
   USE PI_
-  USE PI_Communicate
-  USE PI_Statistics, ONLY: PI__Write_Stats=>Write_It
-  USE Ewald
-  USE Parallel, ONLY: PA_npx=>npx
-  USE Print_Defs
-  USE Direct, ONLY: DIR_Forces=>Compute
-  USE Forces
   IMPLICIT none
   PRIVATE
-  PUBLIC MDRun_
+  PUBLIC Write_It, Time_It, Sample_Exchange, Add_Calls, Calls
+  TYPE :: Statistics
+     REAL(8) :: KByte_S=0.0_8,KByte_R=0.0_8
+     REAL(8) :: Atoms_S=0.0_8,Atoms_R=0.0_8
+  END type Statistics
+  TYPE :: Times
+     REAL(8) :: Tot,Comms
+  END type Times
+  TYPE(Statistics), SAVE :: Comms
+  TYPE(Times), SAVE :: Timea
+  INTEGER, SAVE :: Calls=0
 CONTAINS
-  SUBROUTINE MDRun_
-    LOGICAL :: ok
-    REAL(8) :: startime,endtime,timea
-    INTEGER :: n,nprocs
-    REAL(8), ALLOCATABLE :: rcut_o(:)
-    IF(.NOT. Groups_()) STOP
-    IF(.NOT. Atom_()) CALL Print_Errors()
-    IF(.NOT. Atom__Tpg_()) CALL Print_Errors()
-    IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
-    IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
+  SUBROUTINE Add_Calls
+    Calls=Calls+1
+  END SUBROUTINE Add_Calls
+  SUBROUTINE Sample_Exchange(NoAtm_S,NoAtm_R)
+    INTEGER :: NoAtm_S, NoAtm_R
 
-    ALLOCATE(rcut_o(SIZE(Radii)))
-    rcut_o=Radii(:) % out+Radii(:) % update
-    IF(PA_npx == 0) THEN
-       IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut_o)
-       END IF
+    Comms % Atoms_S=Comms % Atoms_S+DBLE(NoAtm_s)
+    Comms % Atoms_R=Comms % Atoms_R+DBLE(NoAtm_r)
+    Comms % KByte_S=Comms % KByte_S+DBLE(NoAtm_s*3*8)/1024.0_8
+    Comms % KByte_R=Comms % KByte_R+DBLE(NoAtm_r*3*8)/1024.0_8
+  END SUBROUTINE Sample_Exchange
+  SUBROUTINE Time_It(startime,endtime)
+    REAL(8) :: out ,startime,endtime
+    timea % Comms=timea % Comms+endtime-startime
+  END SUBROUTINE Time_It
+  FUNCTION Write_It RESULT(out)
+    LOGICAL :: out
+    REAL(8) :: Kbyte_s, Kbyte_r, Atoms_s, Atoms_r
+    REAL(8) :: Kbyte_s0, Kbyte_r0, Atoms_s0, Atoms_r0
+    REAL(8) :: Timeb,Timeb0,Timec,timec0
+
+    out=.TRUE.
+    IF(PI_Nprocs == 1) RETURN
+#ifdef HAVE_MPI
+    Kbyte_s0=Comms % KByte_s/DBLE(Calls)
+    Kbyte_r0=Comms % KByte_r/DBLE(Calls)
+    Atoms_s0=Comms % Atoms_s/DBLE(Calls)
+    Atoms_r0=Comms % Atoms_r/DBLE(Calls)
+    CALL MPI_ALLREDUCE(Kbyte_s0,Kbyte_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Kbyte_r0,Kbyte_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Atoms_s0,Atoms_s,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Atoms_r0,Atoms_r,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Timea % Comms,Timeb,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Timea % Tot,Timec,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+
+    IF(PI_Node_Cart == 0) THEN
+       Kbyte_s=Kbyte_s/DBLE(PI_Nprocs)
+       Kbyte_r=Kbyte_r/DBLE(PI_Nprocs)
+       Atoms_s=Atoms_s/DBLE(PI_Nprocs)
+       Atoms_r=Atoms_r/DBLE(PI_Nprocs)
+       Timeb=Timeb/DBLE(PI_Nprocs)
+       Timec=Timec/DBLE(PI_Nprocs)
+       WRITE(*,100) Atoms_s,Kbyte_s,Atoms_r,Kbyte_r
+       WRITE(*,200) Timeb,Timec,Timec-Timeb
     END IF
+100 FORMAT(/'=====>    Average data transfer by each CPU per full shift    <====='&
+         &/'=====>    ',f12.2,' atoms (',f12.4,' KB ) sent          <====='&
+         &/'=====>    ',f12.2,' atoms (',f12.4,' KB ) received      <=&
+         &===='/)
+200 FORMAT(/'=====>        Timing                   <====='&
+          &/'=====>   Comm. Time = ',f12.5,' s        <====='/&
+          &/'=====>   Tot.  Time = ',f12.5,' s        <====='/&
+          &/'=====>   Rem.  Time = ',f12.5,' s        <====='/&
+          &)
+#endif
+  END FUNCTION Write_It
 
-    CALL PI__AssignAtomsToCells
-
-
-    CALL PI__Shift(1,_INIT_EXCHANGE_)
-
-!!$    CALL PI__ZeroPrimary
-!!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 10) CALL Atom__PDB(Inout__PDB % unit, 1)
-
-    IF(.NOT. PI_Atom_()) CALL Print_Errors()
-    IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
-    
-    CALL DIR_Forces(1,_INIT_)
-
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
-    CALL PI__ZeroSecondary
-    CALL PI__Shift(1,_EXCHANGE_ONLY_)
-    CALL DIR_Forces(1)
-
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    WRITE(*,*) 'First time',PI_Node_Cart,timea
-
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
-
-!!$    CALL DIR_Forces(3)
-!!$    CALL DIR_Forces(2)
-    timea=0.0D0
-    DO n=1,80
-       CALL PI__ZeroSecondary
-       CALL PI__Shift(1,_EXCHANGE_ONLY_)
-       CALL DIR_Forces(1)
-    END DO
-
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    endtime=MPI_WTIME()
-    timea=timea+endtime-startime
-    WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
-
-    IF(.NOT. PI__Write_Stats()) CALL Print_Errors()
-
-    STOP
-    CALL PI__Finalize
-    STOP
-    
-
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
-
-       CALL PI__Shift(1,_INIT_EXCHANGE_,_PME_)
-       CALL Ewald__Validate
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       startime=MPI_WTIME()
-
-       CALL PME_(3)
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       endtime=MPI_WTIME()
-       timea=endtime-startime
-    END IF
-    
-  END SUBROUTINE MDRun_
-END MODULE MDRun
+END MODULE PI_Statistics

@@ -44,6 +44,8 @@ MODULE PME
 
 !!$---- This module is part of the program oracDD ----*
 
+#define _INIT_ 0
+#define _FOLD_ 1
   USE Units, ONLY: Pi, TwoPi
   USE Rfft3d
   USE Cell, ONLY: oc,co, Volume
@@ -175,7 +177,8 @@ CONTAINS
 !!$--- Fold forces contributions to atoms inside the cell
 !!$
     
-    CALL PI__Fold_F(fp,i_p)
+    CALL PI__Fold_F(fp,i_p,_INIT_)
+    CALL PI__Fold_F(fp,i_p,_FOLD_)
 
 !!$    IF(PI_Nprocs == 1) THEN
 !!$       WRITE(60,'(i7,3e17.9)') (n,fp(n) % x, fp(n) % y, fp(n) % z, n=1,natom)
