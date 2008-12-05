@@ -75,7 +75,13 @@ MODULE Groups
      TYPE(Groups__Chain), ALLOCATABLE :: bonds(:),angles(:),dihed(:)&
           &,imph(:),int14(:)
   END TYPE Groups__Pot
+  TYPE :: Groups__Param
+     INTEGER, ALLOCATABLE :: bonds(:),angles(:),dihed(:)&
+          &,imph(:),int14(:)
+  END type Groups__Param
   TYPE(Groups__Pot), ALLOCATABLE, SAVE :: Grp_A(:)
+  TYPE(Groups__Param), ALLOCATABLE, SAVE :: Grp_B(:)
+
   TYPE(Groups__Base), ALLOCATABLE, SAVE :: Groupa(:)
   INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
   INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
@@ -193,7 +199,7 @@ CONTAINS
          o1=p_Tpg(n)  % pt
          p1=t_Tpg (1,o1)
          G_p1=AtomCnts (p1) % Grp_No
-        Dims_a(G_p1) = Dims_a(G_p1)  +1
+         Dims_a(G_p1) = Dims_a(G_p1)  +1
       END DO
       DO n=1,SIZE(Dims_a)
          ALLOCATE(Grp(n) % Tpg (Dims_a(n)))

@@ -78,7 +78,7 @@ MODULE Atom
      INTEGER, ALLOCATABLE :: Bnd(:)
   END type Atom__Tpg0
 
-  TYPE(Atom__), ALLOCATABLE, SAVE :: Atoms(:)
+  TYPE(Atom__), ALLOCATABLE, TARGET, SAVE :: Atoms(:)
   TYPE(Atom__Tpg), ALLOCATABLE, SAVE :: Atoms_Tpg(:)
 CONTAINS
   FUNCTION Atom_() RESULT(out)

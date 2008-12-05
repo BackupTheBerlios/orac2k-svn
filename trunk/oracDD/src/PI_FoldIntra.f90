@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE PI_Fold
+MODULE PI_FoldIntra
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -58,6 +58,7 @@ MODULE PI_Fold
   USE Cell
   USE Constants, ONLY: max_pars,max_data,max_char
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
+  USE PI_ShiftIntra, ONLY: MyMaps,nMyMaps
   IMPLICIT none
   PRIVATE
   PUBLIC Setup,iFold_init, Buff_Fold
@@ -74,12 +75,9 @@ MODULE PI_Fold
   INTEGER, SAVE :: Calls=0
   REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
-  LOGICAL, SAVE :: ok_pme
 CONTAINS
-  SUBROUTINE Setup(ok_pmea)
-    LOGICAL :: ok_pmea
+  SUBROUTINE Setup
     Calls=0
-    ok_pme=ok_pmea
   END SUBROUTINE Setup
   SUBROUTINE iFold_init(fp0,i_p,Axis,Dir)
     TYPE(Force) :: fp0(:)
@@ -138,18 +136,9 @@ CONTAINS
     Axis_L=Margin(Axis)
     Axis_R=Margin(Axis)+Dir*rcut(Axis)
 
-    IF(i_p == 1) THEN
-       nmax=SIZE(Groupa)
-    ELSE
-       nmax=SIZE(iFold(Calls) % sh(i_p-1) % iBuff_S)
-    END IF
-
+    nmax=nMyMaps(i_p)
     DO nn=1,nmax
-       IF(i_p == 1) THEN
-          n=nn
-       ELSE
-          n=iFold(Calls) % sh(i_p-1) % iBuff_S(nn)
-       END IF
+       n=MyMaps(nn,i_p)
        IF(Groupa(n) % knwn == 2) THEN
           v1(1)=Groupa(n) % xa
           v1(2)=Groupa(n) % ya
@@ -163,7 +152,7 @@ CONTAINS
              count1=count1+1
              ind_o(count1)=n
              count0=count0+(AtEn-AtSt+1)
-          END IF
+           END IF
        END IF
     END DO
     
@@ -328,4 +317,4 @@ CONTAINS
     CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
   END SUBROUTINE Buff_Fold
 
-END MODULE PI_Fold
+END MODULE PI_FoldIntra

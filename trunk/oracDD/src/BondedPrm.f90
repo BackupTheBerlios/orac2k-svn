@@ -81,6 +81,7 @@ CONTAINS
     
     IF(.NOT. PrmUtilities__Type(Paras (i_iTors) % line, Tpg % imph)) RETURN
     IF(.NOT. PrmUtilities__Gather('Improper Torsions ',Tpg % imph, share)) RETURN
+    IF(ALLOCATED(ImpropersPrm__Param)) DEALLOCATE(ImpropersPrm__Param)
     IF(ASSOCIATED(share)) THEN
        ALLOCATE(ImpropersPrm__Param(SIZE(share)))
        DO n=1,SIZE(Share)
@@ -198,6 +199,7 @@ CONTAINS
     
     IF(.NOT. PrmUtilities__Type(Paras (i_Tors) % line, Tpg % dihed)) RETURN
     IF(.NOT. PrmUtilities__Gather('Torsions ',Tpg % dihed, share)) RETURN
+    IF(ALLOCATED(TorsionsPrm__Param)) DEALLOCATE(TorsionsPrm__Param)
     IF(ASSOCIATED(share)) THEN
        ALLOCATE(TorsionsPrm__Param(SIZE(share)))
        DO n=1,SIZE(Share)
@@ -313,6 +315,9 @@ CONTAINS
 
     IF(.NOT. PrmUtilities__Type(Paras (i_Bends) % line, Tpg % angles)) RETURN
     IF(.NOT. PrmUtilities__Gather('Angles ',Tpg % angles, share)) RETURN
+
+    IF(ALLOCATED(AnglesPrm__Param)) DEALLOCATE(AnglesPrm__Param)
+
     IF(ASSOCIATED(share)) THEN
        ALLOCATE(AnglesPrm__Param(SIZE(share)))
        DO n=1,SIZE(Share)
@@ -420,6 +425,9 @@ CONTAINS
     END IF
     IF(.NOT. PrmUtilities__Type(Paras (i_Bonds) % line, Tpg % bonds)) RETURN
     IF(.NOT. PrmUtilities__Gather('Bonds',Tpg % bonds, share)) RETURN
+
+    IF(ALLOCATED(BondsPrm__Param)) DEALLOCATE(BondsPrm__Param)
+
     IF(ASSOCIATED(share)) THEN
        ALLOCATE(BondsPrm__Param(SIZE(share)))
        DO n=1,SIZE(Share)

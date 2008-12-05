@@ -65,7 +65,8 @@ MODULE Keyword
        &'BOND     ','BENDINGS ','TORSION  '/)
   CHARACTER(len=max_char), PARAMETER :: Pars_nbond='NONBONDED'
   PRIVATE
-  PUBLIC Keyword_, Keyword__Type, Keyword__Pop, Keyword__Size, Keyword__PopReset
+  PUBLIC Keyword_, Keyword__Type, Keyword__Pop, Keyword__Size,&
+       & Keyword__PopReset,charmm
 
   TYPE :: Keyword__Type
      INTEGER :: Begin, End

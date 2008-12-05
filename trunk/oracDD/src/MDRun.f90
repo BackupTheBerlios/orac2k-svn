@@ -64,7 +64,11 @@ MODULE MDRun
   USE Parallel, ONLY: PA_npx=>npx
   USE Print_Defs
   USE Direct, ONLY: DIR_Forces=>Compute
-  USE Forces
+  USE Forces, ONLY: FORCES_Memory=>Memory,Radii
+  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
+!!$  USE IndIntraBox, ONLY: IndIntraBox_n0_, IndIntraBox_n1_
+  USE IndIntraBox
+  USE Intra, ONLY: Intra_n0_,Intra_n1_
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
@@ -88,6 +92,7 @@ CONTAINS
        END IF
     END IF
 
+    CALL FORCES_Memory
     CALL PI__AssignAtomsToCells
 
 
@@ -103,17 +108,78 @@ CONTAINS
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
-    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
     CALL PI__Shift(1,_EXCHANGE_ONLY_)
     CALL DIR_Forces(1)
 
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
+!!$
+!!$ --- Intramolecular
+!!$
+
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
+
+    CALL IntraMaps_n0_
+
+    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+
+    CALL Intra_n0_(_INIT_EXCHANGE_)
+
+
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
+    CALL IntraMaps_n1_
+
+    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
+    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+
+    CALL Intra_n1_(_INIT_EXCHANGE_)
+
+
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
+    CALL IntraMaps_n0_
 
+    CALL PI__ShiftIntra(1,_EXCHANGE_ONLY_)
+
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+
+!!$    CALL Intra_n0_(_EXCHANGE_ONLY_)
+
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'Second time',PI_Node_Cart,timea
+
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
+
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+    startime=MPI_WTIME()
+    CALL IntraMaps_n1_
+
+    CALL PI__ShiftIntra(2,_EXCHANGE_ONLY_)
+    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+
+!!$    CALL Intra_n1_(_EXCHANGE_ONLY_)
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'Third time',PI_Node_Cart,timea
+
+
+    STOP
+
+!!$    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
+!!$    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+
+    STOP
 !!$    CALL DIR_Forces(3)
 !!$    CALL DIR_Forces(2)
     timea=0.0D0

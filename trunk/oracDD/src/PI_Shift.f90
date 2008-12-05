@@ -59,7 +59,7 @@ MODULE PI_Shift
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC Setup,iShift_init, Buff_Shift
+  PUBLIC Setup,iShift_init, Buff_Shift, iShift, Indx, iBuffer
   TYPE :: Indx
      INTEGER :: NoAtm_s,NoAtm_r
      INTEGER :: NoGrp_s,NoGrp_r

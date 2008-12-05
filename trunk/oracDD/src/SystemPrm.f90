@@ -66,7 +66,6 @@ MODULE SystemPrm
   TYPE :: SystemPrm__Type
      TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),angles(:)=>NULL(),&
           &dihed(:)=>NULL(),imph(:)=>NULL()
-!!$     ,int14(:)=>NULL()
      TYPE(LennardJones__Type), POINTER :: LJ=>NULL()
      CHARACTER(len=max_atm), POINTER :: Types(:)=>NULL()
   END TYPE SystemPrm__Type
@@ -81,6 +80,14 @@ CONTAINS
     IF(.NOT. ASSOCIATED(Prm % Types)) CALL Print_errors()
     Prm % LJ=>LennardJones_() 
     IF(.NOT. ASSOCIATED(Prm % LJ)) CALL Print_errors()
+    Prm % bonds=> BondsPrm_()
+    IF(.NOT. ASSOCIATED(Prm % bonds)) CALL Print_errors()
+    Prm % angles=>AnglesPrm_()
+    IF(.NOT. ASSOCIATED(Prm % angles)) CALL Print_errors()
+    Prm % dihed=>TorsionsPrm_()
+    IF(.NOT. ASSOCIATED(Prm % dihed)) CALL Print_errors()
+    Prm % imph=>ImpropersPrm_()
+    IF(.NOT. ASSOCIATED(Prm % imph)) CALL Print_errors()
   END SUBROUTINE SystemPrm_
   SUBROUTINE SystemPrm__Update
     Prm % bonds=> BondsPrm_()

@@ -60,6 +60,10 @@ MODULE PI_Communicate
        &=>Setup, SHIFT__Buff_Shift=>Buff_Shift 
   USE PI_Fold, ONLY: FOLD__iFold_Init=>iFold_Init, FOLD__Setup&
        &=>Setup, FOLD__Buff_Fold=>Buff_Fold 
+  USE PI_ShiftIntra, ONLY: SHIFTINTRA__iShift_Init=>iShift_Init, SHIFTINTRA__Setup&
+       &=>Setup, SHIFTINTRA__Buff_Shift=>Buff_Shift 
+  USE PI_FoldIntra, ONLY: FOLDINTRA__iFold_Init=>iFold_Init, FOLDINTRA__Setup&
+       &=>Setup, FOLDINTRA__Buff_Fold=>Buff_Fold 
 
   USE PI_Cutoffs
   USE Geometry
@@ -77,8 +81,8 @@ MODULE PI_Communicate
   USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,&
-       & PI__ZeroPrimary 
+  PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,PI__ZeroPrimary,&
+       & PI__ShiftIntra, PI__ResetSecondary,PI__FoldIntra
   TYPE :: Communicate__Chain
      INTEGER :: i,j,k
      INTEGER :: p
@@ -271,9 +275,144 @@ CONTAINS
       END IF
     END SUBROUTINE Fold_it
   END SUBROUTINE PI__Fold_F
-  
+  SUBROUTINE PI__ShiftIntra(i_p,init)
+    INTEGER :: init,i_p
+
+    INTEGER, SAVE :: ShiftTime,source, dest
+    INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
+    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
+    INTEGER :: iv(3),Axis
+    INTEGER :: ng
+    npx=PI_npx
+    npy=PI_npy
+    npz=PI_npz
+
+    CALL Thickness(1)
+
+!!$
+!!$ --- Atoms to send
+!!$
+    
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+    IF(PI_Nprocs == 1) RETURN
+
+    CALL SHIFTINTRA__Setup
+
+    SELECT CASE(init)
+    CASE(_INIT_EXCHANGE_)
+       CALL Shift_it(SHIFTINTRA__iShift_init)
+    CASE(_EXCHANGE_ONLY_)
+       CALL Shift_it(SHIFTINTRA__Buff_Shift)
+    END SELECT
+!!$    DO n=1,SIZE(Atoms)
+!!$       ng=Atoms(n) % Grp_no
+!!$       m=Groupa(ng) % knwn
+!!$       IF(m == 0) CYCLE
+!!$       WRITE(100+PI_Node_Cart,'(3i8,3x,3f14.5)') n,m,ng,atoms(n) % x,atoms(n) % y,atoms(n) % z
+!!$    END DO
+!!$    STOP
+
+!!$
+!!$--- Add to Calls counter: One data exchange has occurred
+!!$
+    CALL PI__Add_Calls
+  CONTAINS
+    SUBROUTINE Shift_it(Routine)
+      INTERFACE
+         SUBROUTINE Routine(i_p,Axis,Dir,scnd_half)
+           INTEGER, OPTIONAL :: scnd_half
+           INTEGER :: Axis,Dir,i_p
+         END SUBROUTINE Routine
+      END INTERFACE
+      IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+         CALL Routine(i_p,2,_PLUS_)
+         CALL Routine(i_p,3,_PLUS_)
+         CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
+      ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+         CALL Routine(i_p,3,_PLUS_)
+      ELSE
+         CALL Routine(i_p,1,_MINUS_)
+         CALL Routine(i_p,2,_PLUS_)
+         CALL Routine(i_p,3,_PLUS_)
+         CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
+         CALL Routine(i_p,2,_MINUS_,_2NDHALF_)
+      END IF
+    END SUBROUTINE Shift_it
+  END SUBROUTINE PI__ShiftIntra
+
+!!$
+!!$---- Fold forces
+!!$
+  SUBROUTINE PI__FoldIntra(fp,i_p,init)
+    TYPE(Force) :: fp(:)
+    INTEGER :: i_p,init
+    INTEGER, SAVE :: ShiftTime,source, dest
+    INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
+    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
+    INTEGER :: iv(3),Axis
+
+    CALL Thickness(i_p)    
+
+    npx=PI_npx
+    npy=PI_npy
+    npz=PI_npz
+    
+!!$
+!!$ --- Fold Forces
+!!$
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+
+    IF(PI_Nprocs == 1) RETURN
+
+    CALL FOLDINTRA__Setup
+
+    SELECT CASE(init)
+    CASE(_INIT_EXCHANGE_)
+       CALL Fold_it(FOLDINTRA__iFold_init)
+    CASE(_EXCHANGE_ONLY_)
+       CALL Fold_it(FOLDINTRA__Buff_Fold)
+    END SELECT
+
+    CALL PI__Add_Calls
+  CONTAINS
+    SUBROUTINE Fold_it(Routine)
+      INTERFACE
+         SUBROUTINE Routine(fp0,i_p,Axis,Dir)
+           USE Forces, ONLY: Force
+           TYPE(Force) :: fp0(:)
+           INTEGER :: Axis,Dir,i_p
+         END SUBROUTINE Routine
+      END INTERFACE
+      IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+         CALL Routine(fp,i_p,3,_PLUS_)
+         CALL Routine(fp,i_p,3,_MINUS_)
+         CALL Routine(fp,i_p,2,_MINUS_)
+      ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+         CALL Routine(fp,i_p,3,_MINUS_)
+      ELSE
+         CALL Routine(fp,i_p,3,_PLUS_)
+         CALL Routine(fp,i_p,2,_PLUS_)
+         CALL Routine(fp,i_p,3,_MINUS_)
+         CALL Routine(fp,i_p,2,_MINUS_)
+         CALL Routine(fp,i_p,1,_MINUS_)
+      END IF
+    END SUBROUTINE Fold_it
+  END SUBROUTINE PI__FoldIntra
+
+  SUBROUTINE PI__ResetSecondary
+    WHERE(Groupa(:) % knwn /= 1) Groupa(:) % knwn = 0
+  END SUBROUTINE PI__ResetSecondary
   SUBROUTINE PI__ZeroSecondary
     INTEGER :: n,AtSt,AtEn,mm
+
     DO n=1,SIZE(Groupa)
        IF(Groupa(n) % knwn /= 1 ) THEN
           Groupa(n) % knwn = 0

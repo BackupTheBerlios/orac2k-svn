@@ -221,8 +221,8 @@ CONTAINS
     DO WHILE(Node__Pop(Params))
        count_A=count_A+1
        m1=SIZE(Params)
-       ALLOCATE(dummy(count_A) % g(m1-1))
-       dummy(count_a) % g =Params(1:m1-1)
+       ALLOCATE(dummy(count_A) % g(m1))
+       dummy(count_a) % g =Params
        n=INT(Params(m1))
        ind_y(count_a)=n
        ind_x(ABS(n))=ind_x(ABS(n))+1
