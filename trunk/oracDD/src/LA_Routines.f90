@@ -30,47 +30,59 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
+MODULE LA_Routines
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Tue Dec  9 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program  ----*
+!!$---- This module is part of the program oracDD ----*
 
-  USE Parallel
-  USE Parameters
-  USE Setup
-  USE Potential
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
-  USE Tree
-  USE InOut
-  USE Simulation
+  USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
-  PUBLIC Process_
+  PUBLIC Matinv_
 CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Potential__Scan
-    CALL Parallel__Scan
-    CALL Simulation__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+  FUNCTION Matinv_(Mat,i_Mat) RESULT(out)
+    LOGICAL :: out
+    REAL(8) :: Mat(:,:),i_Mat(:,:)
+    INTEGER :: n_dim,m_dim,info
+    REAL(8), ALLOCATABLE :: Matinv(:,:),Work(:)
+    INTEGER, ALLOCATABLE :: ipiv(:)
+
+
+    out=.TRUE.
+    n_dim=SIZE(Mat,1)
+    m_dim=SIZE(Mat,2)
+    IF(n_dim /= m_Dim) THEN
+       errmsg_f='Cannot invert a rectangular matrix '
+       CALL Add_Errors(-1,errmsg_f)
+       RETURN
+    END IF
+
+    
+    ALLOCATE(Matinv(n_Dim, m_Dim),ipiv(n_Dim),Work(n_Dim*20))
+
+    CALL DCOPY(n_Dim*m_Dim,Mat,1,Matinv,1)
+    CALL DGETRF(n_Dim,m_Dim,Matinv,n_Dim,ipiv,Info)
+    IF(Info /= 0) THEN
+       errmsg_f='DGETRF exited with info not equal zero '
+       CALL Add_Errors(-1,errmsg_f)
+       RETURN
+    END IF
+    CALL DGETRI(n_Dim,MATINV,n_Dim,Ipiv,Work,n_Dim*20,Info)
+    IF(Info /= 0) THEN
+       errmsg_f='DGETRI exited with info not equal zero '
+       CALL Add_Errors(-1,errmsg_f)
+       RETURN
+    END IF
+    i_Mat=Matinv
+  END FUNCTION Matinv_
+
+END MODULE LA_Routines

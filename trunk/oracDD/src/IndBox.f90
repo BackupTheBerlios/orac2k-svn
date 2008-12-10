@@ -45,8 +45,6 @@ MODULE IndBox
 !!$---- This module is part of the program oracDD ----*
 
   USE PI_
-  USE Atom
-  USE Groups
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
@@ -55,14 +53,16 @@ MODULE IndBox
   INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:)
   INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
 CONTAINS
-  FUNCTION IndBox_() RESULT(out)
+  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
+    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
     LOGICAL :: out
-    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t
+    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t,q,AtSt&
+         &,AtEn 
 
     count_g_p=0
     count_g_t=0
-    count_g_p=COUNT(Groupa(:) % knwn == 1)
-    count_g_t=COUNT(Groupa(:) % knwn /= 0)
+    count_g_p=COUNT(g_knwn(:) == 1)
+    count_g_t=COUNT(g_knwn(:) /= 0)
 
     IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
     IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
@@ -72,8 +72,8 @@ CONTAINS
     
     count_g_p=0 ; count_g_t=0 
 
-    DO n=1,SIZE(Groupa)
-       m=Groupa(n) % knwn 
+    DO n=1,SIZE(G_Knwn)
+       m=G_knwn(n)
        IF(m /= 0) THEN
           count_g_t=count_g_t+1
           IndBox_g_t(count_g_t)=n
@@ -91,8 +91,13 @@ CONTAINS
     
     count_a_p=0
     count_a_t=0
-    count_a_p=COUNT(Groupa(Atoms(:) % Grp_No) % knwn == 1)
-    count_a_t=COUNT(Groupa(Atoms(:) % Grp_No) % knwn /= 0)
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       IF(m == 1) count_a_p=count_a_p+(AtEn-AtSt+1)
+       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
+    END DO
     
     IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
     IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
@@ -102,17 +107,22 @@ CONTAINS
     
     count_a_p=0 ; count_a_t=0 
 
-    DO n=1,SIZE(Atoms)
-       m=Groupa(Atoms(n) % Grp_No) % knwn 
-       IF(m /= 0) THEN
-          count_a_t=count_a_t+1
-          IndBox_a_t(count_a_t)=n
-          IF(m == 1) THEN
-             count_a_p=count_a_p+1
-             IndBox_a_p(count_a_p)=count_a_t
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       DO q=AtSt,AtEn
+          IF(m /= 0) THEN
+             count_a_t=count_a_t+1
+             IndBox_a_t(count_a_t)=q
+             IF(m == 1) THEN
+                count_a_p=count_a_p+1
+                IndBox_a_p(count_a_p)=count_a_t
+             END IF
           END IF
-       END IF
+       END DO
     END DO
+
     out=count_a_p /= 0
     IF(.NOT. out) THEN
        errmsg_f='No Primary Atoms found in the unit box'

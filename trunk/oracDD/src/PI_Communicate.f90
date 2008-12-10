@@ -409,6 +409,7 @@ CONTAINS
 
   SUBROUTINE PI__ResetSecondary
     WHERE(Groupa(:) % knwn /= 1) Groupa(:) % knwn = 0
+    WHERE(Atoms(:) % knwn /= 1) Atoms(:) % knwn = 0
   END SUBROUTINE PI__ResetSecondary
   SUBROUTINE PI__ZeroSecondary
     INTEGER :: n,AtSt,AtEn,mm
@@ -425,6 +426,7 @@ CONTAINS
           AtSt=Groupa(n) % AtSt
           AtEn=Groupa(n) % AtEn
           DO mm=AtSt,AtEn
+             Atoms(mm) % knwn=0
              Atoms(mm) % x = 0.0D0
              Atoms(mm) % y = 0.0D0
              Atoms(mm) % z = 0.0D0

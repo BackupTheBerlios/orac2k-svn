@@ -67,7 +67,9 @@ MODULE Potential
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Potential__Scan, Ewald__Input, Ewald__Param
+  PUBLIC Potential__Scan, Ewald__Input, Ewald__Param&
+       &,Constraint__Input, Rattle__Param
+
   TYPE :: Ewald__Input
      LOGICAL :: Do_not_Change=.FALSE.
      REAL(8) :: alpha
@@ -81,6 +83,12 @@ MODULE Potential
      REAL(8) :: rcut(3)
   END TYPE Direct__Input
   TYPE(Direct__Input), SAVE, ALLOCATABLE :: shell(:)
+  TYPE :: Constraint__Input
+     LOGICAL :: switch=.FALSE.,shake=.TRUE.,mim=.FALSE.
+     INTEGER :: mim_Max=20
+  END type Constraint__Input
+  TYPE(Constraint__Input) :: Rattle__Param
+
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
@@ -103,6 +111,8 @@ CONTAINS
           CALL Ewald
        ELSE IF(MY_Fxm('DIRECT',linea)) THEN
           CALL Direct(TRIM(line))
+       ELSE IF(MY_Fxm('CONSTR',linea)) THEN
+          CALL Constraints
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)
@@ -224,4 +234,42 @@ CONTAINS
     END DO
     CALL FOR_Init(count0,Rcut_Table)
   END SUBROUTINE Direct
+  SUBROUTINE Constraints
+    INTEGER ::  nword,iflags
+    nword=SIZE(strngs)
+    SELECT CASE(nword)
+    CASE(1)
+       Rattle__Param % switch=.TRUE.
+    CASE(2)
+       IF(MY_Fxm('SHA',strngs(2))) THEN
+          Rattle__Param % shake=.TRUE.
+          Rattle__Param % MIM =.NOT. Rattle__Param % shake
+       ELSE IF(MY_Fxm('MIM',strngs(2))) THEN
+          Rattle__Param % shake=.FALSE.
+          Rattle__Param % MIM =.NOT. Rattle__Param % shake
+       ELSE
+          errmsg_f=error_unr % g (3)//' Only SHAKE and MIM are allowed '
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
+    CASE(3)
+       IF(.NOT. MY_Fxm('MIM',strngs(2))) THEN
+          errmsg_f=error_unr % g (3)//' Only MIM is allowed with an argument '
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
+       Rattle__Param % shake=.FALSE.
+       Rattle__Param % MIM =.NOT. Rattle__Param % shake
+       CALL SP_Getnum(strngs(3),Rattle__Param % mim_Max,iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(3))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    CASE DEFAULT 
+       errmsg_f=error_args % g (4)//' 2 or 4'
+       CALL Add_Errors(-1,errmsg_f)
+    END SELECT
+    CALL Print_Errors()
+  END SUBROUTINE Constraints
 END MODULE Potential

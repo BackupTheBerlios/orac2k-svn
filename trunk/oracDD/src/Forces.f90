@@ -44,27 +44,31 @@ MODULE Forces
 
 !!$---- This module is part of the program oracDD ----*
 
-  USE Atom
+#define _N0_     1
+#define _N1_     2
+#define _M_      3
+#define _L_      4
+#define _H_      5
+
   USE Constants, ONLY: max_pars,max_data, max_char
   USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&
        &, errmsg_f, Print_Errors
   IMPLICIT none
   PRIVATE
   PUBLIC :: Force,fp_n0,fp_n1,fp_m,fp_l,fp_h,fp_ew,fs_n0,fs_n1,fs_m&
-       &,fs_l,fs_h,fs_ew,Init,Radii,Cutoff,Memory
+       &,fs_l,fs_h,fs_ew,Init,Radii,Cutoff,Memory, Pick
   TYPE :: Force
      REAL(8) :: x,y,z
   END type Force
-  TYPE(Force), ALLOCATABLE, SAVE :: fp_n0(:),fp_n1(:),fp_m(:),fp_l(:),fp_h(:),fp_ew(:)
-  TYPE(Force), ALLOCATABLE, SAVE :: fs_n0(:),fs_n1(:),fs_m(:),fs_l(:),fs_h(:),fs_ew(:)
+  TYPE(Force), ALLOCATABLE, SAVE, TARGET :: fp_n0(:),fp_n1(:),fp_m(:),fp_l(:),fp_h(:),fp_ew(:)
+  TYPE(Force), ALLOCATABLE, SAVE, TARGET :: fs_n0(:),fs_n1(:),fs_m(:),fs_l(:),fs_h(:),fs_ew(:)
   TYPE :: cutoff
      REAL(8) :: inn,out,shell,update
   END type cutoff
   TYPE(Cutoff), ALLOCATABLE, SAVE :: Radii(:)
 CONTAINS
-  SUBROUTINE Memory
+  SUBROUTINE Memory(natom)
     INTEGER :: natom
-    natom=SIZE(atoms)
     ALLOCATE(fp_n0(natom),fp_n1(natom),fp_m(natom),fp_l(natom),fp_h(natom),fp_ew(natom))
   END SUBROUTINE Memory
   SUBROUTINE Init(NShell,Rcut_Table)
@@ -190,4 +194,25 @@ CONTAINS
     END IF
     WRITE(*,*) Radii (:) % out
   END SUBROUTINE Init
+  FUNCTION Pick(level) RESULT(out)
+    INTEGER :: level
+    TYPE(Force), POINTER :: out(:)
+    SELECT CASE(level)
+    CASE(_N0_)
+       out=>fp_n0
+    CASE(_N1_)
+       out=>fp_n1
+    CASE(_M_)
+       out=>fp_m
+    CASE(_L_)
+       out=>fp_l
+    CASE(_H_)
+       out=>fp_h
+    CASE DEFAULT
+       errmsg_f='Only five level RESPA is allowed'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+       STOP
+    END SELECT
+  END FUNCTION Pick
 END MODULE Forces

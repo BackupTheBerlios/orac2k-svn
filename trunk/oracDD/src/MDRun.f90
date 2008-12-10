@@ -92,7 +92,7 @@ CONTAINS
        END IF
     END IF
 
-    CALL FORCES_Memory
+    CALL FORCES_Memory(SIZE(Atoms))
     CALL PI__AssignAtomsToCells
 
 
@@ -119,61 +119,63 @@ CONTAINS
 !!$ --- Intramolecular
 !!$
 
+!!$
+!!$--- Prepare for intramolecular interactions
+!!$
+
+
     CALL PI__ZeroSecondary
     CALL PI__ResetSecondary
 
     CALL IntraMaps_n0_
-
     CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
-
     IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-
-    CALL Intra_n0_(_INIT_EXCHANGE_)
-
 
     CALL PI__ZeroSecondary
     CALL PI__ResetSecondary
-    CALL IntraMaps_n1_
 
+    CALL IntraMaps_n1_
     CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
     IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
 
-    CALL Intra_n1_(_INIT_EXCHANGE_)
 
 
     CALL PI__ZeroSecondary
     CALL PI__ResetSecondary
 
+
+!!$
+!!$--- Do n1
+!!$
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
-    CALL IntraMaps_n0_
 
-    CALL PI__ShiftIntra(1,_EXCHANGE_ONLY_)
-
-    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-
-!!$    CALL Intra_n0_(_EXCHANGE_ONLY_)
+    DO n=1,10
+       CALL PI__ShiftIntra(2,_EXCHANGE_ONLY_)
+       CALL Intra_n1_(_EXCHANGE_ONLY_)
+    END DO
 
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'Second time',PI_Node_Cart,timea
+    WRITE(*,*) 'Third time',PI_Node_Cart,timea/10.0_8
 
-    CALL PI__ZeroSecondary
-    CALL PI__ResetSecondary
+!!$
+!!$--- Do n0
+!!$
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
-    CALL IntraMaps_n1_
+    
+    DO n=1,10
+       CALL PI__ShiftIntra(1,_EXCHANGE_ONLY_)
+       CALL Intra_n0_(_EXCHANGE_ONLY_)
+    END DO
 
-    CALL PI__ShiftIntra(2,_EXCHANGE_ONLY_)
-    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-
-!!$    CALL Intra_n1_(_EXCHANGE_ONLY_)
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'Third time',PI_Node_Cart,timea
+    WRITE(*,*) 'Second time',PI_Node_Cart,timea/10.0_8
 
-
+    IF(.NOT. Atom__vInit_()) CALL Print_Errors()
     STOP
 
 !!$    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)

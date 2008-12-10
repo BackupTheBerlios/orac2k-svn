@@ -301,6 +301,7 @@ CONTAINS
           xpg = xpg + xmass*Atoms(n) % x
           ypg = ypg + xmass*Atoms(n) % y
           zpg = zpg + xmass*Atoms(n) % z
+          Atoms(n) % knwn = 2
        END DO
        Groupa(l) % xa = xpga 
        Groupa(l) % ya = ypga
@@ -397,6 +398,7 @@ CONTAINS
           Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
           Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
           Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
+          Atoms(n) % knwn = 2
        END DO
     END DO
 

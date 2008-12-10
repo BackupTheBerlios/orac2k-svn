@@ -284,8 +284,6 @@ CONTAINS
     iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_s
     iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_r
 
-    groupa(iBuff_s(:)) % Knwn = 3
-    
     ALLOCATE(Buff_s(3,NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
         

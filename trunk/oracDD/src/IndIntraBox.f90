@@ -55,6 +55,7 @@ MODULE IndIntraBox
   USE Groups
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
+  USE IndBox, ONLY: IndBox_g_p,IndBox_g_t
   IMPLICIT none
   PRIVATE
   PUBLIC IndIntraBox_n0_, IntraParam, Param_Bonds,Param_Angles,Param_Imph&
@@ -81,9 +82,9 @@ CONTAINS
 
     IF(.NOT. IndIntraBox_()) RETURN
  
-    CALL IntraPot(Prm % Bonds, Tpg % Bonds, Indx_Bonds, Param_Bonds)
-    CALL IntraPot(Prm % Angles, Tpg % Angles, Indx_Angles, Param_Angles)
-    CALL IntraPot(Prm % Imph, Tpg % Imph, Indx_Imph, Param_Imph)
+    CALL IntraPot( Prm % Bonds, Tpg % Bonds, Indx_Bonds, Param_Bonds)
+    CALL IntraPot( Prm % Angles, Tpg % Angles, Indx_Angles, Param_Angles)
+    CALL IntraPot( Prm % Imph, Tpg % Imph, Indx_Imph, Param_Imph)
 
     out=.TRUE.
   END FUNCTION IndIntraBox_n0_
@@ -96,8 +97,10 @@ CONTAINS
  
     CALL IntraPot(Prm % Dihed, Tpg % Dihed, Indx_Dihed, Param_Dihed)
     CALL IntraPot14(Tpg % Int14, Indx_Int14)
+
     out=.TRUE.
   END FUNCTION IndIntraBox_n1_
+
   SUBROUTINE IntraPot(Prm, Tpg, Indx, Param)
     TYPE(SystemPrm__Chain) :: Prm(:)
     INTEGER :: Tpg(:,:)
@@ -140,8 +143,8 @@ CONTAINS
        Indx(:,nnn)=via
        Param(nnn) % pot=Prm(nn) % g
     END DO
-!!$    CALL MPI_ALLREDUCE(count0,count1,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
-!!$    IF(PI_Node_Cart == 0) WRITE(*,*) count1
+    CALL MPI_ALLREDUCE(count0,count1,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    IF(PI_Node_Cart == 0) WRITE(*,*) count1
   END SUBROUTINE IntraPot
   SUBROUTINE IntraPot14(Tpg, Indx)
     INTEGER :: Tpg(:,:)
@@ -175,6 +178,8 @@ CONTAINS
        Indx(:,nn)=via
     END DO    
   END SUBROUTINE IntraPot14
+
+
 
   FUNCTION IndIntraBox_() RESULT(out)
     LOGICAL :: out
@@ -211,3 +216,101 @@ CONTAINS
     END IF
   END FUNCTION IndIntraBox_
 END MODULE IndIntraBox
+
+!!$  SUBROUTINE IntraPot(Grp_Param, Prm, Tpg, Indx, Param)
+!!$    TYPE(Groups__Param) :: Grp_Param(:)
+!!$    TYPE(SystemPrm__Chain) :: Prm(:)
+!!$    INTEGER :: Tpg(:,:)
+!!$    INTEGER, ALLOCATABLE :: Indx(:,:)
+!!$    TYPE(IntraParam), ALLOCATABLE :: Param(:)
+!!$    
+!!$    INTEGER, ALLOCATABLE :: via(:),ind_o(:)
+!!$    LOGICAL, ALLOCATABLE :: ok(:)
+!!$    INTEGER :: n_Tpg,m_Prm,count0,count1,n,nn,ng,n1,n2,nnn,mm,m,o
+!!$    
+!!$    
+!!$    m_Prm=SIZE(Prm)
+!!$    n_Tpg=SIZE(Tpg,1)
+!!$
+!!$    ALLOCATE(via(n_Tpg),ind_o(m_Prm),ok(m_Prm))
+!!$
+!!$    ind_o=0
+!!$    count0=0
+!!$    ok=.TRUE.
+!!$    DO mm=1,SIZE(IndBox_g_p)
+!!$       m=IndBox_g_t(IndBox_g_p(mm))
+!!$       DO o=1,SIZE(Grp_Param(m) % indx)
+!!$          nn=Grp_Param(m) % indx(o)
+!!$
+!!$          n=Prm (nn) % pt
+!!$          via=Tpg(:,n)
+!!$          n1=COUNT(oks(via(:)))
+!!$          IF(n1 == 0) CYCLE
+!!$          n2=COUNT(okt(via(:)))
+!!$          IF(n1+n2 == n_Tpg .AND. ok(nn)) THEN
+!!$             count0=count0+1
+!!$             ind_o(count0)=nn
+!!$             ok(nn)=.FALSE.
+!!$          END IF
+!!$       END DO
+!!$    END DO
+!!$
+!!$    IF(ALLOCATED(Indx)) DEALLOCATE(Indx)
+!!$    IF(ALLOCATED(Param)) DEALLOCATE(Param)
+!!$
+!!$    ALLOCATE(Indx(n_Tpg,count0),Param(count0))
+!!$
+!!$    DO nnn=1,count0
+!!$       nn=ind_o(nnn)
+!!$       n=Prm (nn) % pt
+!!$       via=Tpg (:,n)
+!!$       ng=SIZE(Prm (nn) % g)
+!!$       ALLOCATE(Param(nnn) % pot(ng))
+!!$       Indx(:,nnn)=via
+!!$       Param(nnn) % pot=Prm(nn) % g
+!!$    END DO
+!!$    CALL MPI_ALLREDUCE(count0,count1,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+!!$    IF(PI_Node_Cart == 0) WRITE(*,*) count1
+!!$  END SUBROUTINE IntraPot
+!!$  SUBROUTINE IntraPot14(Grp_Param, Tpg, Indx)
+!!$    TYPE(Groups__Param) :: Grp_Param(:)
+!!$    INTEGER :: Tpg(:,:)
+!!$    INTEGER, ALLOCATABLE :: Indx(:,:)
+!!$    
+!!$    INTEGER, ALLOCATABLE :: via(:),ind_o(:)
+!!$    LOGICAL, ALLOCATABLE :: ok(:)
+!!$    INTEGER :: n_Tpg,m_Tpg,count0,n,nn,ng,n1,n2,mm,m,o
+!!$    
+!!$    
+!!$    n_Tpg=SIZE(Tpg,1)
+!!$    m_Tpg=SIZE(Tpg,2)
+!!$
+!!$    ALLOCATE(via(n_Tpg),ind_o(m_Tpg),ok(m_Tpg))
+!!$
+!!$    count0=0
+!!$    ok=.TRUE.
+!!$    DO mm=1,SIZE(IndBox_g_p)
+!!$       m=IndBox_g_t(IndBox_g_p(mm))
+!!$       DO o=1,SIZE(Grp_Param(m) % indx)
+!!$          n=Grp_Param(m) % indx(o)
+!!$          via=Tpg(:,n)
+!!$          n1=COUNT(oks(via(:)))
+!!$          IF(n1 == 0) CYCLE
+!!$          n2=COUNT(okt(via(:)))
+!!$          IF(n1+n2 == n_Tpg  .AND. ok(n) ) THEN
+!!$             count0=count0+1
+!!$             ind_o(count0)=n
+!!$             ok(n)=.FALSE.
+!!$          END IF
+!!$       END DO
+!!$    END DO
+!!$    IF(ALLOCATED(Indx)) DEALLOCATE(Indx)
+!!$    ALLOCATE(Indx(n_Tpg,count0))
+!!$
+!!$    DO nn=1,count0
+!!$       n=ind_o(nn)
+!!$       via=Tpg (:,n)
+!!$       Indx(:,nn)=via
+!!$    END DO    
+!!$  END SUBROUTINE IntraPot14
+!!$

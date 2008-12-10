@@ -1,5 +1,5 @@
 !!$/---------------------------------------------------------------------\
-!!$   Copyright  © 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
+!!$   Copyright  Â© 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
 !!$                                                                      |
 !!$    This software is a computer program named oracDD whose            |
 !!$    purpose is to simulate and model complex molecular systems.       |
@@ -30,47 +30,61 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
+MODULE Gauss
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Mon Dec  8 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program  ----*
-
-  USE Parallel
-  USE Parameters
-  USE Setup
-  USE Potential
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
-  USE Tree
-  USE InOut
-  USE Simulation
-  IMPLICIT none
-  PRIVATE
-  PUBLIC Process_
+!!$---- This module is part of the program oracDD ----*
+  IMPLICIT None
+  PUBLIC cgauss
 CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Potential__Scan
-    CALL Parallel__Scan
-    CALL Simulation__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+!!$==========================================================================
+!!$ Program to produce exponentially correlated colored (Gaussian) noise.
+!!$ based on Fox et al Physical Review A vol.38(1988)5938 and 
+!!$ modification of GASDEV from Numerical Recipes for Fortran(2nd ed.pg279)
+!!$
+!!$ CAPE is capital E in the article by Fox et. al.
+!!$ PREV is the previous value of CGAUSS used in the next iteration
+!!$ L1ME2 is the main parameters causing colored noise in Fox et al
+!!$       and represents (lamda*(1-E)^2). Ditto for H in that article.
+!!$
+!!$ routine is illustrated in Double Precision in case it is needed in this
+!!$ mode, otherwise all Double Precision variables maybe changed to REAL
+!!$ but the corresponding changes must be made to CGAUS0 and the calling
+!!$ programs.
+
+
+  FUNCTION cgauss RESULT(out)
+    REAL(8) :: out
+    INTEGER,SAVE :: iset=0
+    REAL(8) ::  fac,rsq,v1,v2,h
+    REAL(8), SAVE :: gset,prev=0.0_8
+    REAL(8), EXTERNAL :: Duni
+
+    if (iset.eq.0) then
+1      v1=2.0_8*Duni()-1.0_8
+       v2=2.0_8*Duni()-1.0_8
+       rsq=v1**2+v2**2
+       IF(rsq >= 1.0_8 .OR. rsq == 0.0_8) GOTO 1
+
+       fac=SQRT(-2.0_8*LOG(rsq)/rsq)
+       gset=v1*fac
+       h=v2*fac
+       iset=1
+    else
+       h=gset
+       iset=0
+    endif
+
+    out=h       !in integration is previously set in PARAM
+
+  END FUNCTION cgauss
+END MODULE Gauss

@@ -199,7 +199,7 @@ CONTAINS
        l=iBuff_s(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Groupa(l) % knwn=3
+       Groupa(l) % knwn=0
        DO q=AtSt,AtEn
           count0=count0+1
           Buff_s(1,count0)=fp0(q) % x
@@ -273,8 +273,6 @@ CONTAINS
     iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_s
     iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_r
 
-    groupa(iBuff_s(:)) % Knwn = 3
-    
     ALLOCATE(Buff_s(3,NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
         
@@ -283,7 +281,7 @@ CONTAINS
        l=iBuff_s(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Groupa(l) % knwn = 3
+       Groupa(l) % knwn = 0
        DO q=AtSt,AtEn
           count0=count0+1
           Buff_s(1,count0)=fp0(q) % x

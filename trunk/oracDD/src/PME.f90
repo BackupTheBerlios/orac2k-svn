@@ -123,7 +123,8 @@ CONTAINS
 !!$--- Copy coordinates and charges to local arrays
 !!$
 
-    IF(.NOT. IndBox_()) CALL Print_Errors()
+    IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+         & AtEn)) CALL Print_Errors() 
 
     natom=SIZE(IndBox_a_t)
     ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))

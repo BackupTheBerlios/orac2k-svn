@@ -102,7 +102,7 @@ CONTAINS
 !!$--- Get Memory
 !!$
     SUBROUTINE Memory
-      IF(.NOT. IndBox_()) CALL Print_Errors()
+      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) % AtEn)) CALL Print_Errors()
       natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
       
       ALLOCATE(xpg(ngroup),ypg(ngroup),zpg(ngroup),grppt(2,ngroup))

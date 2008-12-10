@@ -219,6 +219,7 @@ CONTAINS
        AtEn=Groupa(l) % AtEn
        count0=count0+AtEn-AtSt+1
        Groupa(l) % knwn = 1
+       Atoms(AtSt:AtEn) % knwn = 1
        l=Chain_xyz(l) % p
     END DO
 
@@ -234,6 +235,7 @@ CONTAINS
           AtSt=Groupa(n) % AtSt
           AtEn=Groupa(n) % AtEn
           DO mm=AtSt,AtEn
+             Atoms(mm) % knwn = 0
              Atoms(mm) % x = 0.0D0
              Atoms(mm) % y = 0.0D0
              Atoms(mm) % z = 0.0D0
