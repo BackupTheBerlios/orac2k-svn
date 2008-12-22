@@ -53,10 +53,8 @@ MODULE Groups
   USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC Groups_, Groups__Chain, Groups__Pot, Grp_A, Groups__Base,Groupa&
-       &, Groups__InitCoords,Groups__Update_Knwn,Groups__InitParam_&
-       &,Groups__Param,Grp_bonds,Grp_angles,Grp_dihed&
-       &,Grp_imph,Grp_int14
+  PUBLIC Groups_, Groups__Chain,  Groups__Base,Groupa&
+       &,Groups__InitCoords,Groups__Update_Knwn 
   TYPE :: Groups__Base
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -72,19 +70,6 @@ MODULE Groups
      REAL(8), ALLOCATABLE :: p(:)
      INTEGER :: np
   END TYPE Groups__Chain
-  
-  TYPE :: Groups__Pot
-     TYPE(Groups__Chain), ALLOCATABLE :: bonds(:),angles(:),dihed(:)&
-          &,imph(:),int14(:)
-  END TYPE Groups__Pot
-  TYPE :: Groups__Param
-     INTEGER, ALLOCATABLE :: indx(:)
-  END type Groups__Param
-  
-  TYPE(Groups__Pot), ALLOCATABLE, SAVE :: Grp_A(:)
-  
-  TYPE(Groups__Param), ALLOCATABLE, SAVE :: Grp_bonds(:),Grp_angles(:),Grp_dihed(:)&
-       &,Grp_imph(:),Grp_int14(:)
   TYPE(Groups__Base), ALLOCATABLE, SAVE :: Groupa(:)
   INTEGER, SAVE, POINTER :: Res_Atm(:,:)=>NULL()
   INTEGER, SAVE, POINTER :: Grp_Atm(:,:)=>NULL()
@@ -99,133 +84,6 @@ CONTAINS
     
     out=.TRUE.
     Grp_Atm=>IndSequence__Grp()
-    ALLOCATE(Grp_A(SIZE(Grp_Atm,2)))
-    Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds)
-    
-    DO n=1,SIZE(Grp_Local)
-       s=0
-       IF(ALLOCATED(Grp_Local(n) % Tpg)) s=SIZE(Grp_Local(n) % Tpg)
-       IF(s == 0) CYCLE
-       ALLOCATE(Grp_A(n) % bonds(s))
-       DO m=1,s
-          o1=SIZE(Grp_Local(n) % Tpg (m) % bd)
-          ALLOCATE(Grp_A(n) % bonds (m) % bd(o1))
-          Grp_A(n) % bonds (m) % nbd = o1
-          o1=SIZE(Grp_Local(n) % Tpg (m) % p)
-          ALLOCATE(Grp_A(n) % bonds (m) % p(o1))
-          Grp_A(n) % bonds (m) % np = o1
-          Grp_A(n) % bonds (m) % bd = Grp_Local(n) % Tpg (m) % bd
-          Grp_A(n) % bonds (m) % p  = Grp_Local(n) % Tpg (m) % p
-       END DO
-       
-       DO m=1,s
-          o1=Grp_A(n) % bonds(m) % nbd
-       END DO
-    END DO
-    Grp_Local=>Do_Copy(Prm % angles, Tpg % angles)
-    DO n=1,SIZE(Grp_Local)
-       s=0
-       IF(ALLOCATED(Grp_Local(n) % Tpg)) s=SIZE(Grp_Local(n) % Tpg)
-       IF(s == 0) CYCLE
-       ALLOCATE(Grp_A(n) % angles(s))
-       DO m=1,s
-          o1=SIZE(Grp_Local(n) % Tpg (m) % bd)
-          ALLOCATE(Grp_A(n) % angles (m) % bd(o1))
-          Grp_A(n) % angles (m) % nbd = o1
-          o1=SIZE(Grp_Local(n) % Tpg (m) % p)
-          ALLOCATE(Grp_A(n) % angles (m) % p(o1))
-          Grp_A(n) % angles (m) % np = o1
-          Grp_A(n) % angles (m) % bd = Grp_Local(n) % Tpg (m) % bd
-          Grp_A(n) % angles (m) % p  = Grp_Local(n) % Tpg (m) % p
-       END DO
-    END DO
-    Grp_Local=>Do_Copy(Prm % dihed, Tpg % dihed)
-    DO n=1,SIZE(Grp_Local)
-       s=0
-       IF(ALLOCATED(Grp_Local(n) % Tpg)) s=SIZE(Grp_Local(n) % Tpg)
-       IF(s == 0) CYCLE
-       ALLOCATE(Grp_A(n) % dihed(s))
-       DO m=1,s
-          o1=SIZE(Grp_Local(n) % Tpg (m) % bd)
-          ALLOCATE(Grp_A(n) % dihed (m) % bd(o1))
-          Grp_A(n) % dihed (m) % nbd = o1
-          o1=SIZE(Grp_Local(n) % Tpg (m) % p)
-          ALLOCATE(Grp_A(n) % dihed (m) % p(o1))
-          Grp_A(n) % dihed (m) % np = o1
-          Grp_A(n) % dihed (m) % bd = Grp_Local(n) % Tpg (m) % bd
-          Grp_A(n) % dihed (m) % p  = Grp_Local(n) % Tpg (m) % p
-       END DO
-    END DO
-    Grp_Local=>Do_Copy(Prm % imph, Tpg % imph)
-    DO n=1,SIZE(Grp_Local)
-       s=0
-       IF(ALLOCATED(Grp_Local(n) % Tpg)) s=SIZE(Grp_Local(n) % Tpg)
-       IF(s == 0) CYCLE
-       ALLOCATE(Grp_A(n) % imph(s))
-       DO m=1,s
-          o1=SIZE(Grp_Local(n) % Tpg (m) % bd)
-          ALLOCATE(Grp_A(n) % imph (m) % bd(o1))
-          Grp_A(n) % imph (m) % nbd = o1
-          o1=SIZE(Grp_Local(n) % Tpg (m) % p)
-          ALLOCATE(Grp_A(n) % imph (m) % p(o1))
-          Grp_A(n) % imph (m) % np = o1
-          Grp_A(n) % imph (m) % bd = Grp_Local(n) % Tpg (m) % bd
-          Grp_A(n) % imph (m) % p  = Grp_Local(n) % Tpg (m) % p
-       END DO
-    END DO
-    Grp_Local=>Do_Copy(Prm % bonds, Tpg % bonds, 0)
-  CONTAINS
-    FUNCTION Do_Copy(p_Tpg, t_Tpg, delete) RESULT(out)
-      TYPE(SystemPrm__Chain) :: p_tpg(:)
-      INTEGER :: t_tpg(:,:)
-      INTEGER, OPTIONAL :: delete
-      TYPE(Local), POINTER :: out(:)
-      
-      INTEGER, ALLOCATABLE, SAVE :: dims_a(:)
-      TYPE(Local), ALLOCATABLE, SAVE, TARGET :: Grp(:)
-      INTEGER :: n,p1,G_p1,o1
-      
-      out=>NULL()
-      IF(PRESENT(delete)) THEN
-         IF(ALLOCATED(dims_a)) DEALLOCATE(dims_a)
-         IF(ALLOCATED(Grp)) DEALLOCATE(Grp)
-         RETURN
-      END IF
-      
-      IF(ALLOCATED(dims_a)) DEALLOCATE(dims_a)
-      ALLOCATE(dims_a(SIZE(Grp_Atm,2)))
-      IF(ALLOCATED(Grp)) DEALLOCATE(Grp)
-      ALLOCATE(Grp(SIZE(Grp_Atm,2)))
-      
-      Dims_a=0
-      DO n=1,SIZE(P_Tpg)
-         o1=p_Tpg(n)  % pt
-         p1=t_Tpg (1,o1)
-         G_p1=AtomCnts (p1) % Grp_No
-         Dims_a(G_p1) = Dims_a(G_p1)  +1
-      END DO
-      DO n=1,SIZE(Dims_a)
-         ALLOCATE(Grp(n) % Tpg (Dims_a(n)))
-      END DO
-      
-      Dims_a=0
-      DO n=1,SIZE(P_Tpg)
-         o1=p_Tpg(n)  % pt
-         p1=t_Tpg (1,o1)
-         G_p1=AtomCnts (p1) % Grp_No
-         Dims_a(G_p1) = Dims_a(G_p1)  + 1
-         m=Dims_a(G_p1)
-         ALLOCATE(Grp(G_p1) % Tpg(m) % bd (SIZE(t_Tpg,1)))
-         ALLOCATE(Grp(G_p1) % Tpg(m) % p (SIZE(p_Tpg (n) % g)))
-         
-         Grp(G_p1) % Tpg(m) % bd = t_Tpg(:,o1)
-         Grp(G_p1) % Tpg(m) % p = p_Tpg (n) % g
-         Grp(G_p1) % Tpg(m) % nbd = SIZE(t_Tpg,1)
-         Grp(G_p1) % Tpg(m) % np = SIZE(p_Tpg (n) % g)
-      END DO
-      out=>Grp
-    END FUNCTION Do_Copy
-    
   END FUNCTION Groups_
   FUNCTION Groups__InitCoords() RESULT(out)
     INTEGER :: ntap,ngrp,n,p1
@@ -234,12 +92,12 @@ CONTAINS
     LOGICAL :: out
     
     out=.TRUE.
-    IF(.NOT. ALLOCATED(Grp_A) .OR. .NOT. ALLOCATED(Atoms)) THEN
+    IF(.NOT. ASSOCIATED(Grp_Atm) .OR. .NOT. ALLOCATED(Atoms)) THEN
        out=.FALSE.
        RETURN
     END IF
     
-    ngrp=SIZE(Grp_A)
+    ngrp=SIZE(Grp_Atm,2)
     ALLOCATE(Groupa(ngrp))
     ntap=SIZE(Atoms)
     ALLOCATE(tmass(ngrp))
@@ -338,147 +196,4 @@ CONTAINS
        Groupa(n)%z=Groupa(n)%z/tmass
     END DO
   END FUNCTION Groups__Update_Knwn
-  FUNCTION Groups__InitParam_ RESULT(out)
-    LOGICAL :: out
-    INTEGER :: k 
-    out=.FALSE.
-    ALLOCATE(Grp_Bonds(SIZE(Groupa)))
-    ALLOCATE(Grp_Angles(SIZE(Groupa)))
-    ALLOCATE(Grp_Imph(SIZE(Groupa)))
-    ALLOCATE(Grp_Dihed(SIZE(Groupa)))
-    ALLOCATE(Grp_Int14(SIZE(Groupa)))
-    CALL GroupIntra(Prm % Bonds, Tpg % Bonds, Grp_Bonds)
-    CALL GroupIntra(Prm % Angles, Tpg % Angles, Grp_Angles)
-    CALL GroupIntra(Prm % Imph, Tpg % Imph, Grp_Imph)
-    CALL GroupIntra(Prm % Dihed, Tpg % Dihed, Grp_Dihed)
-    CALL GroupInt14(Tpg % Int14, Grp_Int14)
-  CONTAINS
-    SUBROUTINE GroupIntra(Prm, Tpg, Grp_Param)
-      TYPE(SystemPrm__Chain) :: Prm(:)
-      TYPE(Groups__Param) :: Grp_Param(:)
-      INTEGER :: Tpg(:,:)
-      INTEGER, ALLOCATABLE :: via(:),ind_o(:),ind_d(:)
-      LOGICAL, ALLOCATABLE :: oks(:)
-      TYPE(Groups__Param), ALLOCATABLE :: cnt(:)
-      
-      INTEGER :: n_Tpg,m_Prm,count0,n,m,i,ia,nn
-!!$
-!!$--- Grp_Param list of parameters per group. 
-!!$--- Grp_Param (n) % indx(m) gives the m-th parameters for the n-th 
-!!$--- group.
-!!$
-
-      m_Prm=SIZE(Prm)
-      n_Tpg=SIZE(Tpg,1)
-      
-      ALLOCATE(via(n_Tpg),ind_o(SIZE(Groupa)),Cnt(SIZE(Groupa))&
-           &,oks(m_Prm),ind_d(m_Prm))
-      
-      ind_o=0
-      DO nn=1,m_Prm
-         n=Prm (nn) % pt
-         DO i=1,SIZE(via)
-            via(i)=Atoms(Tpg(i,n)) % Grp_no
-            ind_o(via(i))=Ind_o(via(i))+1
-         END DO
-      END DO
-      
-      DO n=1,SIZE(Groupa)
-         ia=ind_o(n)
-         IF(ia /= 0) ALLOCATE(Cnt(n) % indx(ia))
-      END DO
-      
-      ind_o=0
-      DO nn=1,m_Prm
-         n=Prm (nn) % pt
-         via=Atoms(Tpg(:,n)) % Grp_no
-         DO i=1,SIZE(via)
-            ia=via(i)
-            ind_o(ia)=Ind_o(ia)+1
-            Cnt(ia) % indx (Ind_o(ia))=n
-         END DO
-      END DO
-
-      oks=.FALSE.
-      DO m=1,SIZE(Groupa)
-         count0=0
-         DO ia=1,SIZE(Cnt(m) % indx)
-            n=Cnt(m) % indx (ia)
-            IF(.NOT. oks(n)) THEN
-               oks(n)=.TRUE.
-               count0=count0+1
-               ind_d(count0)=n
-            END IF
-         END DO
-         IF(count0 /= 0) ALLOCATE(Grp_Param(m) % indx(count0))
-         
-         DO ia=1,count0
-            n=ind_d(ia)
-            Grp_Param(m) % indx(ia)=n
-            oks(n)=.FALSE.
-         END DO
-      END DO
-    END SUBROUTINE GroupIntra
-    SUBROUTINE GroupInt14(Tpg, Grp_Param)
-      TYPE(Groups__Param) :: Grp_Param(:)
-      INTEGER :: Tpg(:,:)
-      INTEGER, ALLOCATABLE :: via(:),ind_o(:),ind_d(:)
-      LOGICAL, ALLOCATABLE :: oks(:)
-      TYPE(Groups__Param), ALLOCATABLE :: cnt(:)
-      
-      INTEGER :: n_Tpg,m_Prm,count0,n,m,i,ia,nn
-      
-      
-      m_Prm=SIZE(Tpg,2)
-      n_Tpg=SIZE(Tpg,1)
-      
-      ALLOCATE(via(n_Tpg),ind_o(SIZE(Groupa)),Cnt(SIZE(Groupa))&
-           &,oks(m_Prm),ind_d(m_Prm))
-      
-      ind_o=0
-      DO nn=1,m_Prm
-         n=nn
-         DO i=1,SIZE(via)
-            via(i)=Atoms(Tpg(i,n)) % Grp_no
-            ind_o(via(i))=Ind_o(via(i))+1
-         END DO
-      END DO
-      
-      DO n=1,SIZE(Groupa)
-         IF(ind_o(n) /= 0) ALLOCATE(Cnt(n) % indx(ind_o(n)))
-      END DO
-      
-      ind_o=0
-      DO nn=1,m_Prm
-         n=nn
-         via=Atoms(Tpg(:,n)) % Grp_no
-         DO i=1,SIZE(via)
-            ia=via(i)
-            ind_o(ia)=Ind_o(ia)+1
-            Cnt(ia) % indx (Ind_o(ia))=n
-         END DO
-      END DO
-      
-      oks=.FALSE.
-      DO m=1,SIZE(Groupa)
-         count0=0
-         DO ia=1,Ind_o(m)
-            n=Cnt(m) % indx (ia)
-            IF(.NOT. oks(n)) THEN
-               oks(n)=.TRUE.
-               count0=count0+1
-               ind_d(count0)=n
-            END IF
-         END DO
-         IF(count0 /= 0) ALLOCATE(Grp_Param(m) % indx(count0))
-         
-         DO ia=1,count0
-            n=ind_d(ia)
-            Grp_Param(m) % indx(ia)=n
-            oks(n)=.FALSE.
-         END DO
-      END DO
-    END SUBROUTINE GroupInt14
-    
-  END FUNCTION Groups__InitParam_
 END MODULE Groups

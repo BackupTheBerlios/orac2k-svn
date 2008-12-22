@@ -44,10 +44,12 @@ MODULE Atom
 
 !!$---- This module is part of the program oracDD ----*
 
+#include "config.h"
 #ifdef HAVE_MPI
   USE mpi
 #endif
   USE PI_
+  USE PI_Collectives
   USE Constants
   USE Units, ONLY: unitc,unite,gascon,Boltz,efact
   USE Errors, ONLY: Add_Errors=>Add, errmsg_f,Print_Errors
@@ -67,7 +69,7 @@ MODULE Atom
   PRIVATE
   PUBLIC Atom_,Atom__Tpg_, Atom__PDB, Atom__InitCoords,Atom__,&
        & Atom__Tpg,Atoms_Tpg, Atoms,Atom__vInit_, Atom__Verlet_,&
-       & Atom__Correct_
+       & Atom__Correct_,Atom__Write_
   TYPE :: Atom__
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -570,6 +572,29 @@ CONTAINS
        Atoms(m) % vz=Atoms(m) % vz+tfact*fp(m) % z
     END DO
   END FUNCTION Atom__Correct_
+  FUNCTION Atom__Write_(Unit,Mode) RESULT(out)
+    LOGICAL :: out
+    INTEGER :: Mode,Unit
+    REAL(8), ALLOCATABLE :: xc(:),yc(:),zc(:)
+    INTEGER :: natom,n
+    out=.TRUE.
+
+    natom=SIZE(Atoms)
+    ALLOCATE(xc(natom),yc(natom),zc(natom))
+    xc=Atoms(:) % x
+    yc=Atoms(:) % y
+    zc=Atoms(:) % z
+
+    CALL PI_Gather_(xc,yc,zc)    
+
+    SELECT CASE(Mode)
+    CASE(_SIMPLE_)
+       IF(PI_Node_Cart == 0) THEN
+          WRITE(90,'(3f12.5,i8)') (xc(n),yc(n),zc(n),n,n=1,natom)
+       END IF
+    END SELECT
+  END FUNCTION Atom__Write_
+
   ELEMENTAL FUNCTION PBC(x) RESULT(out)
     REAL(8) :: out
     REAL(8), INTENT(in) :: x

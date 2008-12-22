@@ -47,7 +47,8 @@ MODULE SystemPrm
 !!$***********************************************************************
 
 !!$---- This module is part of the program ORAC ----*
-  
+
+  USE Potential
   USE Constants
   USE PrmUtilities
   USE LennardJones
@@ -64,8 +65,8 @@ MODULE SystemPrm
   PUBLIC :: SystemPrm_, SystemPrm__Type, Prm, SystemPrm__Update&
        &, SystemPrm__Read, SystemPrm__Write
   TYPE :: SystemPrm__Type
-     TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),angles(:)=>NULL(),&
-          &dihed(:)=>NULL(),imph(:)=>NULL()
+     TYPE(SystemPrm__Chain), POINTER :: bonds(:)=>NULL(),Constr(:)&
+          &=>NULL(),angles(:)=>NULL(),dihed(:)=>NULL(),imph(:)=>NULL()
      TYPE(LennardJones__Type), POINTER :: LJ=>NULL()
      CHARACTER(len=max_atm), POINTER :: Types(:)=>NULL()
   END TYPE SystemPrm__Type
@@ -82,6 +83,10 @@ CONTAINS
     IF(.NOT. ASSOCIATED(Prm % LJ)) CALL Print_errors()
     Prm % bonds=> BondsPrm_()
     IF(.NOT. ASSOCIATED(Prm % bonds)) CALL Print_errors()
+    IF(Rattle__Param % switch) THEN
+       Prm % Constr=> ConstrPrm_()
+       IF(.NOT. ASSOCIATED(Prm % Constr)) CALL Print_errors()
+    END IF
     Prm % angles=>AnglesPrm_()
     IF(.NOT. ASSOCIATED(Prm % angles)) CALL Print_errors()
     Prm % dihed=>TorsionsPrm_()
@@ -92,6 +97,10 @@ CONTAINS
   SUBROUTINE SystemPrm__Update
     Prm % bonds=> BondsPrm_()
     IF(.NOT. ASSOCIATED(Prm % bonds)) CALL Print_errors()
+    IF(Rattle__Param % switch) THEN
+       Prm % Constr=> ConstrPrm_()
+       IF(.NOT. ASSOCIATED(Prm % Constr)) CALL Print_errors()
+    END IF
     Prm % angles=>AnglesPrm_()
     IF(.NOT. ASSOCIATED(Prm % angles)) CALL Print_errors()
     Prm % dihed=>TorsionsPrm_()

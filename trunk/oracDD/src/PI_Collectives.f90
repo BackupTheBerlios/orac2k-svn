@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE IndBox
+MODULE PI_Collectives
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,101 +38,117 @@ MODULE IndBox
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Aug  5 2008 -                                     *
+!!$              - Thu Dec 11 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
+  
 
+#ifdef HAVE_MPI
+  USE mpi
+#endif
   USE PI_
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
+  USE IndBox, ONLY: IndBox_a_t,IndBox_a_p
   IMPLICIT none
   PRIVATE
-  PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t&
-       &,BoxInd_a_p
-  INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
-  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  PUBLIC PI_Gather_, PI_AllGather_
 CONTAINS
-  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
-    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
-    LOGICAL :: out
-    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t,q,AtSt&
-         &,AtEn,natom
+  SUBROUTINE PI_Gather_(xc,yc,zc)
+    REAL(8) :: xc(:),yc(:),zc(:)
+    REAL(8), ALLOCATABLE :: x(:),y(:),z(:)
+    INTEGER, ALLOCATABLE :: iBuff(:),locals(:),displ(:)
+    INTEGER :: natom,nlocal,n,nn,pt
 
-    natom=SUM(g_AtEn-g_AtSt)+SIZE(g_knwn)
-    count_g_p=0
-    count_g_t=0
-    count_g_p=COUNT(g_knwn(:) == 1)
-    count_g_t=COUNT(g_knwn(:) /= 0)
+#ifdef HAVE_MPI
+    natom=SIZE(xc)
 
-    IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
-    IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
+    ALLOCATE(x(natom),y(natom),z(natom),iBuff(natom))
+    ALLOCATE(locals(PI_Nprocs),displ(PI_Nprocs))
 
-    ALLOCATE(IndBox_g_p(count_g_p))
-    ALLOCATE(IndBox_g_t(count_g_t)) 
-    
-    count_g_p=0 ; count_g_t=0 
-
-    DO n=1,SIZE(G_Knwn)
-       m=G_knwn(n)
-       IF(m /= 0) THEN
-          count_g_t=count_g_t+1
-          IndBox_g_t(count_g_t)=n
-          IF(m == 1) THEN
-             count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=count_g_t
-          END IF
-       END IF
-    END DO
-    out=count_g_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Groups found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-    
-    count_a_p=0
-    count_a_t=0
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       IF(m == 1) count_a_p=count_a_p+(AtEn-AtSt+1)
-       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
-    END DO
-    
-    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
-    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
-    IF(ALLOCATED(BoxInd_a_p)) DEALLOCATE(BoxInd_a_p)
-
-    ALLOCATE(IndBox_a_p(count_a_p))
-    ALLOCATE(IndBox_a_t(count_a_t)) 
-    ALLOCATE(BoxInd_a_p(natom))
-    
-    count_a_p=0 ; count_a_t=0 
-
-    BoxInd_a_p=-1
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       DO q=AtSt,AtEn
-          IF(m /= 0) THEN
-             count_a_t=count_a_t+1
-             IndBox_a_t(count_a_t)=q
-             IF(m == 1) THEN
-                count_a_p=count_a_p+1
-                IndBox_a_p(count_a_p)=count_a_t
-                BoxInd_a_p(q)=count_a_p
-             END IF
-          END IF
+    IF(PI_Nprocs > 1) THEN
+       nlocal=SIZE(IndBox_a_p)
+       CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1&
+            &,MPI_INTEGER4,PI_Comm_Cart,ierr)
+       displ(1)=0
+       DO n=2,PI_Nprocs
+          displ(n)=displ(n-1)+locals(n-1)
        END DO
-    END DO
+       
+       pt=displ(PI_Node_Cart+1)
+       DO nn=1,SIZE(IndBox_a_p)
+          n=IndBox_a_t(IndBox_a_p(nn))
+          iBuff(pt+nn)=n
+          x(pt+nn)=xc(n)
+          y(pt+nn)=yc(n)
+          z(pt+nn)=zc(n)
+       END DO
 
-    out=count_a_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
+       CALL MPI_GATHERV(x(pt+1),nlocal,MPI_REAL8,x,locals&
+            &,displ,MPI_REAL8,0,PI_Comm_Cart,ierr)
+       CALL MPI_GATHERV(y(pt+1),nlocal,MPI_REAL8,y,locals&
+            &,displ,MPI_REAL8,0,PI_Comm_Cart,ierr)
+       CALL MPI_GATHERV(z(pt+1),nlocal,MPI_REAL8,z,locals&
+            &,displ,MPI_REAL8,0,PI_Comm_Cart,ierr)
+       CALL MPI_GATHERV(iBuff(pt+1),nlocal,MPI_INTEGER4,iBuff,locals&
+            &,displ,MPI_INTEGER4,0,PI_Comm_Cart,ierr)       
+
+       IF(PI_Node_Cart == 0) THEN
+          xc(iBuff(:))=x
+          yc(iBuff(:))=y
+          zc(iBuff(:))=z
+       END IF
     END IF
-  END FUNCTION IndBox_
-END MODULE IndBox
+#else
+    RETURN
+#endif    
+  END SUBROUTINE PI_Gather_
+
+  SUBROUTINE PI_AllGather_(xc,yc,zc)
+    REAL(8) :: xc(:),yc(:),zc(:)
+    REAL(8), ALLOCATABLE :: x(:),y(:),z(:)
+    INTEGER, ALLOCATABLE :: iBuff(:),locals(:),displ(:)
+    INTEGER :: natom,nlocal,n,nn,pt
+
+#ifdef HAVE_MPI
+    natom=SIZE(xc)
+
+    ALLOCATE(x(natom),y(natom),z(natom),iBuff(natom))
+    ALLOCATE(locals(PI_Nprocs),displ(PI_Nprocs))
+
+    IF(PI_Nprocs > 1) THEN
+       nlocal=SIZE(IndBox_a_p)
+       CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1&
+            &,MPI_INTEGER4,PI_Comm_Cart,ierr)
+       displ(1)=0
+       DO n=2,PI_Nprocs
+          displ(n)=displ(n-1)+locals(n-1)
+       END DO
+       
+       pt=displ(PI_Node_Cart+1)
+       DO nn=1,SIZE(IndBox_a_p)
+          n=IndBox_a_t(IndBox_a_p(nn))
+          iBuff(pt+nn)=n
+          x(pt+nn)=xc(n)
+          y(pt+nn)=yc(n)
+          z(pt+nn)=zc(n)
+       END DO
+
+       CALL MPI_ALLGATHERV(x(pt+1),nlocal,MPI_REAL8,x,locals&
+            &,displ,MPI_REAL8,PI_Comm_Cart,ierr)
+       CALL MPI_ALLGATHERV(y(pt+1),nlocal,MPI_REAL8,y,locals&
+            &,displ,MPI_REAL8,PI_Comm_Cart,ierr)
+       CALL MPI_ALLGATHERV(z(pt+1),nlocal,MPI_REAL8,z,locals&
+            &,displ,MPI_REAL8,PI_Comm_Cart,ierr)
+       CALL MPI_ALLGATHERV(iBuff(pt+1),nlocal,MPI_INTEGER4,iBuff,locals&
+            &,displ,MPI_INTEGER4,PI_Comm_Cart,ierr)
+
+       xc(iBuff(:))=x
+       yc(iBuff(:))=y
+       zc(iBuff(:))=z
+    END IF
+#else
+    RETURN
+#endif    
+  END SUBROUTINE PI_AllGather_
+END MODULE PI_Collectives

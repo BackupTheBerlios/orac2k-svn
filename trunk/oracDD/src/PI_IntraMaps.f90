@@ -44,8 +44,6 @@ MODULE PI_IntraMaps
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _N0_ 0
-#define _N1_ 1
 #ifdef HAVE_MPI
   USE mpi
 #endif

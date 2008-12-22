@@ -404,8 +404,10 @@ MODULE BondsPrm
   USE Print_Defs
   IMPLICIT none
   PRIVATE
-  PUBLIC :: BondsPrm_,BondsPrm__Param, BondsPrm__Read, BondsPrm__Write
+  PUBLIC :: BondsPrm_,BondsPrm__Param, BondsPrm__Read,&
+       & BondsPrm__Write,ConstrPrm_,ConstrPrm__Param
   TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: BondsPrm__Param(:)
+  TYPE(SystemPrm__Chain), ALLOCATABLE, TARGET, SAVE :: ConstrPrm__Param(:)
   TYPE(SystemPrm__Chain2), POINTER, SAVE :: share(:)=>NULL()
 CONTAINS
   FUNCTION BondsPrm_() RESULT(out)
@@ -482,6 +484,54 @@ CONTAINS
     CALL Add_Errors(-1,errmsg_f)
     RETURN    
   END FUNCTION BondsPrm__Read
+  FUNCTION ConstrPrm_() RESULT(out)
+    TYPE(SystemPrm__Chain), POINTER :: out(:)
+    INTEGER :: n,i1,i2,nn,count0
+    CHARACTER(7) :: ch1,ch2
+    out=>NULL()
+    
+    IF(.NOT. ALLOCATED(BondsPrm__Param)) THEN
+       errmsg_f='Don''t have any bonds on the system and can''t allocate constraints'
+       CALL Add_Errors(-1,errmsg_f)
+       RETURN
+    END IF
+    count0=0
+    DO nn=1,SIZE(BondsPrm__Param)
+       n=BondsPrm__Param(nn) % pt
+       i1=Tpg % Bonds(1,n) 
+       i2=Tpg % Bonds(2,n) 
+       ch1=ADJUSTL(Tpg % atm (i1) % a % beta)
+       ch2=ADJUSTL(Tpg % atm (i2) % a % beta)
+       IF(ch1(1:1) == 'h' .OR. ch2(1:1) == 'h') THEN
+          count0=count0+1
+       END IF
+    END DO
+    IF(ALLOCATED(ConstrPrm__Param)) DEALLOCATE(ConstrPrm__Param)
+    ALLOCATE(ConstrPrm__Param(count0))
+    count0=0
+    DO nn=1,SIZE(BondsPrm__Param)
+       n=BondsPrm__Param(nn) % pt
+       i1=Tpg % Bonds(1,n) 
+       i2=Tpg % Bonds(2,n) 
+       ch1=ADJUSTL(Tpg % atm (i1) % a % beta)
+       ch2=ADJUSTL(Tpg % atm (i2) % a % beta)
+       IF(ch1(1:1) == 'h' .OR. ch2(1:1) == 'h') THEN
+          count0=count0+1
+          ALLOCATE(ConstrPrm__Param(count0) % g(1))
+          ConstrPrm__Param(count0) % pt = BondsPrm__Param(n) % pt
+          ConstrPrm__Param(count0) % g(1) = BondsPrm__Param(n) % g(2)
+          BondsPrm__Param(n) % pt=-BondsPrm__Param(n) % pt
+       END IF
+    END DO
+    out=>ConstrPrm__Param
+    IF(ALLOCATED(ConstrPrm__Param)) THEN
+       WRITE(kprint,*) '<===== Constraining hydrogens =====>'
+       WRITE(kprint,*) 'New Total Stretching Parameters No. =====>'&
+            &,SIZE(BondsPrm__Param)-SIZE(ConstrPrm__Param) 
+       WRITE(kprint,*) 'Total Constraints Parameters No. =====>'&
+            &,SIZE(ConstrPrm__Param) 
+    END IF
+  END FUNCTION ConstrPrm_
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 

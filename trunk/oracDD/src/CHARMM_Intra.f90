@@ -50,8 +50,8 @@ MODULE CHARMM_Intra
   USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   USE Units
   USE IndIntraBox, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
-       &,Indx_Angles,Param_Dihed,Indx_Dihed,Param_Imph,Indx_Imph&
-       &,Indx_Int14
+       &,Indx_Angles,Param_Dihed,Param_Constr,Indx_Dihed,Param_Imph,Indx_Imph&
+       &,Indx_Int14,Indx_Constr
   USE Potential
   USE Atom
   USE Groups
@@ -59,15 +59,17 @@ MODULE CHARMM_Intra
   USE LennardJones, ONLY: LennardJones__Par
   IMPLICIT none
   PRIVATE
-  PUBLIC Bonds,Angles,Dihed,Imph,Int14,Bonds_,Angles_,Dihed_,Imph_&
-       &,Int14coul_,Int14conf_ 
-  REAL(8), SAVE :: Ubond_slv,Ubond_slt,Ubend_slv,Ubend_slt,Uitors_slv&
-       &,Uitors_Slt,Uptors_Slv,Uptors_Slt,Uint14coul_Slv&
-       &,Uint14coul_Slt,Uint14conf_Slv,Uint14conf_Slt
+  PUBLIC Bonds,Constraints,Angles,Dihed,Imph,Int14,Bonds_,Angles_,Dihed_,Imph_&
+       &,Int14coul_,Int14conf_,Constraints_
+  REAL(8), SAVE :: Ubond_slv,Ubond_slt,Uconstr_slv,Uconstr_slt&
+       &,Ubend_slv,Ubend_slt,Uitors_slv,Uitors_Slt,Uptors_Slv&
+       &,Uptors_Slt,Uint14coul_Slv,Uint14coul_Slt,Uint14conf_Slv&
+       &,Uint14conf_Slt 
   INTEGER, SAVE :: Calls=0
   REAL(8), SAVE :: Conv_Fact,Degree_To_Rad=pi/180.0_8
 CONTAINS
   INCLUDE "CHARMM_Bonds.f90" 
+  INCLUDE "CHARMM_Constraints.f90" 
   INCLUDE "CHARMM_Angles.f90" 
   INCLUDE "CHARMM_Imph.f90" 
   INCLUDE "CHARMM_Dihed.f90" 
@@ -82,6 +84,16 @@ CONTAINS
     u_slt=Ubond_slt
 #endif
   END SUBROUTINE Bonds_
+  SUBROUTINE Constraints_(u_Slv,u_Slt)
+    REAL(8) :: u_Slv,u_Slt
+#ifdef HAVE_MPI
+    CALL MPI_ALLREDUCE(Uconstr_slv,u_slv,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(Uconstr_slt,u_slt,1,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+#else
+    u_slv=Uconstr_slv
+    u_slt=Uconstr_slt
+#endif
+  END SUBROUTINE Constraints_
   SUBROUTINE Angles_(u_Slv,u_Slt)
     REAL(8) :: u_Slv,u_Slt
 #ifdef HAVE_MPI

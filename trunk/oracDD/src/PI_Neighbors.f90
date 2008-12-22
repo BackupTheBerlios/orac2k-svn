@@ -48,7 +48,6 @@ MODULE PI_Neighbors
 
 !!$---- This subroutine is part of the program oracDD ----*
 
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE PI_
   IMPLICIT none
   PRIVATE

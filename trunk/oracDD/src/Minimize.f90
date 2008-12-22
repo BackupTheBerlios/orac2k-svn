@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE IndBox
+MODULE Minimize
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,101 +38,143 @@ MODULE IndBox
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Aug  5 2008 -                                     *
+!!$              - Thu Dec 11 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
+#include "config.h"
+
+  USE Print_Defs
   USE PI_
+  USE Potential
+  USE Units, ONLY: efact
+  USE IndIntraBox
+  USE Forces, ONLY: Force, fp=>fp_n0
+  USE PI_Communicate
+  USE PI_Collectives
+  USE Atom
+  USE Intra, ONLY: Intra_n0_,uconstr_slt,uconstr_slv
+  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
+  USE IndBox
   IMPLICIT none
   PRIVATE
-  PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t&
-       &,BoxInd_a_p
-  INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
-  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  PUBLIC Minimize__Bonds_
 CONTAINS
-  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
-    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
+  FUNCTION Minimize__Bonds_() RESULT(out)
     LOGICAL :: out
-    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t,q,AtSt&
-         &,AtEn,natom
+    REAL(8), ALLOCATABLE :: x(:),g(:)
+    REAL(8), ALLOCATABLE :: d(:),Gold(:),w(:)
+    REAL(8) :: tlev,Energy,eps
+    INTEGER :: iflag,n,nn
+    INTEGER, SAVE :: iprint(2)=(/-1,0/),method=2,irest=0,step_Max=100
+    LOGICAL :: finish,ok
+    INTEGER :: natom,ntot,icall,i
 
-    natom=SUM(g_AtEn-g_AtSt)+SIZE(g_knwn)
-    count_g_p=0
-    count_g_t=0
-    count_g_p=COUNT(g_knwn(:) == 1)
-    count_g_t=COUNT(g_knwn(:) /= 0)
+    WRITE(kprint,100) 
+    out=.TRUE.
+    eps=Rattle__Param % adjust_eps
 
-    IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
-    IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
+    natom=SIZE(Atoms)
+    ntot=3*natom
+    ALLOCATE(x(ntot),g(ntot),d(ntot),Gold(ntot),w(ntot))
 
-    ALLOCATE(IndBox_g_p(count_g_p))
-    ALLOCATE(IndBox_g_t(count_g_t)) 
-    
-    count_g_p=0 ; count_g_t=0 
+    CALL PI__ResetSecondary
+    CALL IntraMaps_n0_
+    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+    CALL Intra_n0_(_INIT_EXCHANGE_,_CONSTRS_)
 
-    DO n=1,SIZE(G_Knwn)
-       m=G_knwn(n)
-       IF(m /= 0) THEN
-          count_g_t=count_g_t+1
-          IndBox_g_t(count_g_t)=n
-          IF(m == 1) THEN
-             count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=count_g_t
-          END IF
+    icall=1
+20  CONTINUE
+    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+    CALL Intra_n0_(_EXCHANGE_ONLY_,_CONSTRS_)
+    Energy=(uconstr_Slv+uconstr_Slt)
+    CALL Arrays_Get
+
+30  CONTINUE
+    CALL cgfam(ntot,x,Energy,g,d,Gold,iprint,eps,w,iflag,irest,method,finish)
+    CALL Arrays_Put
+
+    IF(iflag < 0 .OR. iCall > 1000) THEN
+       errmsg_f='Stopped adjusting bond lengths. No convergence.'
+       CALL Add_Errors(-1,errmsg_f)
+       out=.FALSE.
+       RETURN
+    END IF
+    IF(iflag == 1) THEN
+       icall=icall+1
+       IF(iCall > step_max) GOTO 50
+       GOTO 20
+    ELSE IF(iflag == 2) THEN
+             
+!!$
+!!$ Termination Test.  The user may replace it by some other test. However, 
+!!$ the parameter 'FINISH' must be set to 'TRUE' when the test is satisfied.
+!!$
+
+       tlev=eps*(1.0_8 + dabs(Energy))
+       i=0
+40     i=i+1
+       IF(i > ntot) THEN
+          Finish=.TRUE.
+          GOTO 30
        END IF
-    END DO
-    out=count_g_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Groups found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
+       IF(ABS(g(i)) > Tlev) THEN
+          GOTO 30
+       ELSE
+          GOTO 40
+       END IF       
     END IF
-    
-    count_a_p=0
-    count_a_t=0
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       IF(m == 1) count_a_p=count_a_p+(AtEn-AtSt+1)
-       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
-    END DO
-    
-    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
-    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
-    IF(ALLOCATED(BoxInd_a_p)) DEALLOCATE(BoxInd_a_p)
+50  CONTINUE
 
-    ALLOCATE(IndBox_a_p(count_a_p))
-    ALLOCATE(IndBox_a_t(count_a_t)) 
-    ALLOCATE(BoxInd_a_p(natom))
-    
-    count_a_p=0 ; count_a_t=0 
+    WRITE(kprint,200) Energy/DBLE(SIZE(Indx_Constr,2)+SIZE(Indx_Bonds,2))
 
-    BoxInd_a_p=-1
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       DO q=AtSt,AtEn
-          IF(m /= 0) THEN
-             count_a_t=count_a_t+1
-             IndBox_a_t(count_a_t)=q
-             IF(m == 1) THEN
-                count_a_p=count_a_p+1
-                IndBox_a_p(count_a_p)=count_a_t
-                BoxInd_a_p(q)=count_a_p
-             END IF
-          END IF
-       END DO
-    END DO
+100 FORMAT(10x,'=======>  Adjusting Bonds <======')
+200 FORMAT('===> Bond Average RMS deviation from force field bond leng&
+         &th ',e14.5,' A^2 ') 
+  CONTAINS
+    SUBROUTINE Arrays_Get
+      REAL(8), POINTER :: xc(:),yc(:),zc(:)
+      INTEGER :: n,m
+      xc=>Atoms(:) % x
+      yc=>Atoms(:) % y
+      zc=>Atoms(:) % z
+      
+      CALL PI_AllGather_(xc,yc,zc)
+      DO n=1,natom
+         m=3*(n-1)
+         x(m+1)=xc(n)
+         x(m+2)=yc(n)
+         x(m+3)=zc(n)
+      END DO
+      xc=>fp(:) % x
+      yc=>fp(:) % y
+      zc=>fp(:) % z
+      CALL PI_AllGather_(xc,yc,zc)
+      DO n=1,natom
+         m=3*(n-1)
+         g(m+1)=-xc(n)
+         g(m+2)=-yc(n)
+         g(m+3)=-zc(n)
+      END DO
+    END SUBROUTINE Arrays_Get
+    SUBROUTINE Arrays_Put
+      REAL(8), POINTER :: xc(:),yc(:),zc(:)
+      INTEGER :: n,m
+      xc=>Atoms(:) % x
+      yc=>Atoms(:) % y
+      zc=>Atoms(:) % z
+      
+      DO n=1,natom
+         m=3*(n-1)
+         xc(n)=x(m+1)
+         yc(n)=x(m+2)
+         zc(n)=x(m+3)
+      END DO
+    END SUBROUTINE Arrays_Put
 
-    out=count_a_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-  END FUNCTION IndBox_
-END MODULE IndBox
+  END FUNCTION Minimize__Bonds_
+END MODULE Minimize

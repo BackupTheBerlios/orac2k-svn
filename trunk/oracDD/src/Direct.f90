@@ -44,8 +44,7 @@ MODULE Direct
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _INIT_ 0
-#define _FOLD_ 1
+#include "config.h"
   USE PI_ATOM
   USE POTENTIAL
   USE Units
@@ -72,8 +71,8 @@ MODULE Direct
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
   REAL(8), SAVE :: alphal,twrtpi
 CONTAINS
-  SUBROUTINE Compute(i_p,Initialize)
-    INTEGER :: i_p
+  SUBROUTINE Compute(i_pa,Initialize)
+    INTEGER :: i_pa
     INTEGER, OPTIONAL :: Initialize
     INTEGER :: ierr,nnn,nn,n,m
     REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
@@ -84,6 +83,10 @@ CONTAINS
     INTEGER, ALLOCATABLE :: nei(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
     INTEGER, SAVE :: Times_of_Call=0
+    INTEGER :: i_p
+
+
+    i_p=i_pa-2
 
     Times_of_Call=Times_of_Call+1
     IF(ngroup == 0 .AND. natom == 0) THEN

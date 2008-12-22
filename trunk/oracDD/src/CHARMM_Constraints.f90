@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Bonds(fpx,fpy,fpz)
+SUBROUTINE Constraints(fpx,fpy,fpz)
   REAL(8) :: fpx(:),fpy(:),fpz(:)
   REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
   INTEGER :: i,la,lb,type,nbond
@@ -49,12 +49,46 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
   
   nbond=SIZE(Indx_Bonds,2)
   ubond=0.0_8
-!!$  dsq=0.0_8
   DO i=1,nbond
      la=Indx_Bonds(1,i)
      lb=Indx_Bonds(2,i)
      pota=Param_Bonds(i) % pot(2)
-     potb=Param_Bonds(i) % pot(1)*Conv_Fact
+     
+     type=Atoms(la) % Id_Slv
+     
+     xr1=xp0(la)
+     yr1=yp0(la)
+     zr1=zp0(la)
+     xr2=xp0(lb)
+     yr2=yp0(lb)
+     zr2=zp0(lb)
+     
+     x21=xr2-xr1
+     y21=yr2-yr1
+     z21=zr2-zr1
+     rs21=DSQRT(x21**2+y21**2+z21**2)
+     
+     qforce=-2.0D0*(pota-rs21)
+     uux1=x21/rs21
+     uuy1=y21/rs21
+     uuz1=z21/rs21
+     uux2=-uux1
+     uuy2=-uuy1
+     uuz2=-uuz1
+     fpx(la)=fpx(la)+qforce*uux1
+     fpy(la)=fpy(la)+qforce*uuy1
+     fpz(la)=fpz(la)+qforce*uuz1
+     
+     fpx(lb)=fpx(lb)+qforce*uux2
+     fpy(lb)=fpy(lb)+qforce*uuy2
+     fpz(lb)=fpz(lb)+qforce*uuz2
+     ubond(type)=ubond(type)+(rs21-pota)**2
+  END DO
+  nbond=SIZE(Indx_Constr,2)
+  DO i=1,nbond
+     la=Indx_Constr(1,i)
+     lb=Indx_Constr(2,i)
+     pota=Param_Constr(i) % pot(1)
      
      type=Atoms(la) % Id_Slv
      
@@ -72,7 +106,7 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
      z21=zr2-zr1
      rs21=DSQRT(x21**2+y21**2+z21**2)
      
-     qforce=-2.0D0*potb*(pota-rs21)
+     qforce=-2.0D0*(pota-rs21)
      uux1=x21/rs21
      uuy1=y21/rs21
      uuz1=z21/rs21
@@ -86,10 +120,9 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
      fpx(lb)=fpx(lb)+qforce*uux2
      fpy(lb)=fpy(lb)+qforce*uuy2
      fpz(lb)=fpz(lb)+qforce*uuz2
-     ubond(type)=ubond(type)+potb*(rs21-pota)**2       
-!!$     dsq=dsq+(rs21-pota)**2
+     ubond(type)=ubond(type)+(rs21-pota)**2
   END DO
-  Ubond_slt=ubond(1)
-  Ubond_slv=ubond(2)
-!!$  dsq=dsq/DBLE(nbond)
-END SUBROUTINE Bonds
+
+  UConstr_slt=ubond(1)
+  UConstr_slv=ubond(2)
+END SUBROUTINE Constraints

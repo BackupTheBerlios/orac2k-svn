@@ -43,15 +43,8 @@ MODULE PI_Communicate
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-  
-#define _INIT_EXCHANGE_     0
-#define _EXCHANGE_ONLY_     1
-#define _X_ 1
-#define _Y_ 2
-#define _Z_ 3
-#define  _PLUS_  1
-#define _MINUS_ -1
-#define _2NDHALF_ 1
+
+#include "config.h"
 
 #ifdef HAVE_MPI
   USE mpi
@@ -78,7 +71,6 @@ MODULE PI_Communicate
        &=>Time_It, PI__Sample_Exchange=>Sample_Exchange, PI__Add_Calls&
        &=>Add_Calls
 
-  USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   IMPLICIT none
   PRIVATE
   PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,PI__ZeroPrimary,&
@@ -100,13 +92,15 @@ MODULE PI_Communicate
   INTEGER, SAVE :: Calls=0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
-  SUBROUTINE PI__Shift(i_p,init,pme)
+  SUBROUTINE PI__Shift(i_pa,init,pme)
     INTEGER, OPTIONAL :: pme
-    INTEGER :: i_p,init
+    INTEGER :: init,i_pa
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
-    INTEGER :: iv(3),Axis
+    INTEGER :: iv(3),Axis,i_p
+
+    i_p=i_pa-2
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
@@ -183,15 +177,16 @@ CONTAINS
 !!$
 !!$---- Fold forces
 !!$
-  SUBROUTINE PI__Fold_F(fp,i_p,init)
+  SUBROUTINE PI__Fold_F(fp,i_pa,init)
     TYPE(Force) :: fp(:)
-    INTEGER :: i_p,init
+    INTEGER :: i_pa,init
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
     TYPE(Force), ALLOCATABLE :: fp0(:)
-    INTEGER :: iv(3),Axis
+    INTEGER :: iv(3),Axis,i_p
 
+    i_p=i_pa-2
     ALLOCATE(fp0(SIZE(Atoms)))
     fp0(:) % x=0.0D0
     fp0(:) % y=0.0D0
@@ -287,7 +282,7 @@ CONTAINS
     npy=PI_npy
     npz=PI_npz
 
-    CALL Thickness(1)
+    CALL Thickness(i_p)
 
 !!$
 !!$ --- Atoms to send
@@ -355,7 +350,7 @@ CONTAINS
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
     INTEGER :: iv(3),Axis
 
-    CALL Thickness(i_p)    
+    CALL Thickness(i_p)
 
     npx=PI_npx
     npy=PI_npy

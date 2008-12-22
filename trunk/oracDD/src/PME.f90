@@ -44,8 +44,8 @@ MODULE PME
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _INIT_ 0
-#define _FOLD_ 1
+#include "config.h"
+
   USE Units, ONLY: Pi, TwoPi
   USE Rfft3d
   USE Cell, ONLY: oc,co, Volume

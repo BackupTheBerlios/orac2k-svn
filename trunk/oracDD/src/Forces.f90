@@ -44,11 +44,7 @@ MODULE Forces
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _N0_     1
-#define _N1_     2
-#define _M_      3
-#define _L_      4
-#define _H_      5
+#include "config.h"
 
   USE Constants, ONLY: max_pars,max_data, max_char
   USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&

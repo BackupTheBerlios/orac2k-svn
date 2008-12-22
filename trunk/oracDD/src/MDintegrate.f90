@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE IndBox
+MODULE MDintegrate
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,101 +38,125 @@ MODULE IndBox
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Aug  5 2008 -                                     *
+!!$              - Wed Dec 17 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
 
-  USE PI_
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
-  PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t&
-       &,BoxInd_a_p
-  INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
-  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  PUBLIC
+  REAL(8), SAVE :: dt_h, dt_l, dt_m, dt_n1, dt_n0
+  INTEGER, SAVE :: n0_,n1_,m_,l_,h_
+  INTEGER, SAVE :: nstep=0
+  REAL(8), SAVE :: Time_at_Step=0.0_8
 CONTAINS
-  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
-    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
-    LOGICAL :: out
-    INTEGER :: n,m,count_a_p,count_a_t,count_G_p,count_G_t,q,AtSt&
-         &,AtEn,natom
+  SUBROUTINE Init_
 
-    natom=SUM(g_AtEn-g_AtSt)+SIZE(g_knwn)
-    count_g_p=0
-    count_g_t=0
-    count_g_p=COUNT(g_knwn(:) == 1)
-    count_g_t=COUNT(g_knwn(:) /= 0)
+    IF(.NOT. Atom__vInit_()) CALL Print_Errors()
 
-    IF(ALLOCATED(IndBox_g_p)) DEALLOCATE(IndBox_g_p)
-    IF(ALLOCATED(IndBox_g_t)) DEALLOCATE(IndBox_g_t)
+    n0_=Integrator_ % Mult_Intra(1)
+    n2_=Integrator_ % Mult_Intra(2)
+    m_ =Integrator_ % Mult_Inter(1)
+    l_ =Integrator_ % Mult_Inter(2)
+    h_ =1
 
-    ALLOCATE(IndBox_g_p(count_g_p))
-    ALLOCATE(IndBox_g_t(count_g_t)) 
-    
-    count_g_p=0 ; count_g_t=0 
+    dt_h=Integrator_ % t
+    dt_l=dt_h/l_
+    dt_m=dt_l/m_
+    dt_n1=dt_m/n1_
+    dt_n0=dt_n1/n0_
+  END SUBROUTINE Init_
+  SUBROUTINE Integrate
+    IF(nstep == 0) CALL Init_
+    CALL FORCES_Memory(SIZE(Atoms))
+    CALL PI__AssignAtomsToCells
 
-    DO n=1,SIZE(G_Knwn)
-       m=G_knwn(n)
-       IF(m /= 0) THEN
-          count_g_t=count_g_t+1
-          IndBox_g_t(count_g_t)=n
-          IF(m == 1) THEN
-             count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=count_g_t
-          END IF
-       END IF
+    CALL PI__Shift(1,_INIT_EXCHANGE_)
+    CALL DIR_Forces(1,_INIT_)
+
+
+    CALL Integrate_m
+
+    Time_at_Step=Update_Step()
+  CONTAINS
+  END SUBROUTINE Integrate
+
+  SUBROUTINE Integrate_n0
+    DO n0=1,n0_
+       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
+       
+       IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
+       
+       CALL GetForces(_N0_)
+       
+       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
     END DO
-    out=count_g_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Groups found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-    
-    count_a_p=0
-    count_a_t=0
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       IF(m == 1) count_a_p=count_a_p+(AtEn-AtSt+1)
-       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
+  END SUBROUTINE Integrate_n0
+
+  SUBROUTINE Integrate_n1
+    DO n1=1,n1_
+       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
+
+       CALL Integrate_n0
+
+       CALL GetForces(_N1_)
+       
+       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
     END DO
-    
-    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
-    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
-    IF(ALLOCATED(BoxInd_a_p)) DEALLOCATE(BoxInd_a_p)
+  END SUBROUTINE Integrate_n1
 
-    ALLOCATE(IndBox_a_p(count_a_p))
-    ALLOCATE(IndBox_a_t(count_a_t)) 
-    ALLOCATE(BoxInd_a_p(natom))
-    
-    count_a_p=0 ; count_a_t=0 
+  SUBROUTINE Integrate_m
+    DO m=1,m_
+       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
 
-    BoxInd_a_p=-1
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       DO q=AtSt,AtEn
-          IF(m /= 0) THEN
-             count_a_t=count_a_t+1
-             IndBox_a_t(count_a_t)=q
-             IF(m == 1) THEN
-                count_a_p=count_a_p+1
-                IndBox_a_p(count_a_p)=count_a_t
-                BoxInd_a_p(q)=count_a_p
-             END IF
-          END IF
-       END DO
+       CALL Initialize_Intra
+
+       CALL Integrate_n1
+
+       CALL GetForces(_M_)
+       
+       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
     END DO
+  END SUBROUTINE Integrate_m
 
-    out=count_a_p /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Primary Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-  END FUNCTION IndBox_
-END MODULE IndBox
+  SUBROUTINE GetForces(Init)
+    
+    SELECT CASE(Init)
+    CASE(_N0_)
+       CALL PI__ShiftIntra(_N0_,Track_Intra)
+       CALL Intra_n0_(Track_Intra)
+    CASE(_N1_)
+       CALL PI__ShiftIntra(_N1_,Track_Intra)
+       CALL Intra_n1_(Track_Intra)
+    CASE(_M_)
+
+    END SELECT
+
+  END SUBROUTINE GetForces
+  
+  SUBROUTINE Initialize_Intra
+    
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
+    
+    CALL IntraMaps_n0_
+    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+    
+    CALL PI__ZeroSecondary
+    CALL PI__ResetSecondary
+    
+    CALL IntraMaps_n1_
+    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
+    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+    Track_Intra=0
+  END SUBROUTINE Initialize_Intra
+  
+  FUNCTION Update_Step RESULT(out)
+    REAL(8) :: out
+    nstep=nstep+1
+    out=nstep*Integrator_ % t
+  END FUNCTION Update_Step
+END MODULE MDintegrate

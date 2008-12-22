@@ -102,9 +102,16 @@ CONTAINS
 !!$--- Get Memory
 !!$
     SUBROUTINE Memory
-      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) % AtEn)) CALL Print_Errors()
+      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+           & AtEn)) CALL Print_Errors()
+
       natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
       
+      IF(ALLOCATED(xpg)) THEN
+         DEALLOCATE(xpg,ypg,zpg,grppt)
+         DEALLOCATE(xp0,yp0,zp0,chg,Id,Slv,Maps,maplg,gmass,Grp_No)
+      END IF
+
       ALLOCATE(xpg(ngroup),ypg(ngroup),zpg(ngroup),grppt(2,ngroup))
       
       ALLOCATE(xp0(natom),yp0(natom),zp0(natom),chg(natom),Id(natom)&
@@ -301,15 +308,6 @@ CONTAINS
        END IF
        counter=counter+count0
     END DO
-!!$    ALLOCATE(nei0(SIZE(Groupa)))
-!!$    nei0=0
-!!$    DO ig=1,ngroup
-!!$       n0=Neigha(ig) % no
-!!$       o=IndBox_g_t(ig)
-!!$       nei0(o)=nei0(o)+n0
-!!$    END DO
-!!$    CALL MPI_ALLREDUCE(nei0,nei0,SIZE(Groupa),MPI_INTEGER,MPI_SUM&
-!!$         &,PI_Comm_Cart,ierr)
     CALL MPI_ALLREDUCE(counter,No_Nei,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
     IF(PI_Node_Cart == 0) THEN
        WRITE(*,*) 'Neighbors (',No_Nei,')'

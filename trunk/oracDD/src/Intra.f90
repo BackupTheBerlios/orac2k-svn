@@ -44,14 +44,15 @@ MODULE Intra
 
 !!$---- This module is part of the program oracDD ----*
 
-#define _INIT_EXCHANGE_     0
-#define _EXCHANGE_ONLY_     1
+#include "config.h"
+  USE Units, ONLY: efact
   USE PI_
   USE CHARMM_Intra, ONLY: CHARMM_Bonds=>Bonds,CHARMM_Angles=>Angles&
        &,CHARMM_Dihed=>Dihed, CHARMM_Imph=>Imph, CHARMM_Int14=>Int14&
        &,CHARMM_Bonds_=>Bonds_,CHARMM_Angles_=>Angles_,CHARMM_Dihed_&
        &=>Dihed_, CHARMM_Imph_=>Imph_, CHARMM_Int14coul_=>Int14coul_ &
-       &, CHARMM_Int14conf_=>Int14conf_  
+       &, CHARMM_Int14conf_=>Int14conf_, CHARMM_Constr=>Constraints,&
+       & CHARMM_Constr_=>Constraints_
   USE Keyword, ONLY: charmm
   USE Forces, ONLY: fp_n0,fp_n1
   USE IndIntraBox, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
@@ -63,38 +64,58 @@ MODULE Intra
   USE PI_Communicate, ONLY: PI__FoldIntra
   IMPLICIT none
   PRIVATE
-  PUBLIC Intra_n0_, Intra_n1_
+  PUBLIC Intra_n0_, Intra_n1_,ubond_Slv,ubond_Slt,ubend_Slv,ubend_Slt,uitors_Slv&
+       &,uitors_Slt,uptors_Slv,uptors_Slt,ucoulint14_Slv,&
+       &ucoulint14_Slt,uconfint14_Slv,uconfint14_Slt,uconstr_Slv&
+       &,uconstr_Slt
   REAL(8), SAVE :: ubond_Slv,ubond_Slt,ubend_Slv,ubend_Slt,uitors_Slv&
        &,uitors_Slt,uptors_Slv,uptors_Slt,ucoulint14_Slv,&
-       &ucoulint14_Slt,uconfint14_Slv,uconfint14_Slt
+       &ucoulint14_Slt,uconfint14_Slv,uconfint14_Slt,uconstr_Slv&
+       &,uconstr_Slt
 CONTAINS
-  SUBROUTINE Intra_n0_(init)
+  SUBROUTINE Intra_n0_(init,Pick)
+    INTEGER, OPTIONAL :: Pick
     INTEGER :: init
     INTEGER :: n,nn
     fp_n0(:) % x  = 0.0_8
     fp_n0(:) % y  = 0.0_8
     fp_n0(:) % z  = 0.0_8
     IF(charmm) THEN
-       CALL Intra_(CHARMM_Bonds,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+       IF(PRESENT(Pick)) THEN
+          SELECT CASE(Pick)
+          CASE(_CONSTRS_)
+             CALL Intra_(CHARMM_Constr,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Energy_(CHARMM_Constr_,uconstr_Slv,uconstr_Slt)
+             CALL PI__FoldIntra(fp_n0,1,init)
+          CASE(_STRETCHS_)
+             CALL Intra_(CHARMM_Bonds,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Energy_(CHARMM_Bonds_,ubond_Slv,ubond_Slt)
+             CALL PI__FoldIntra(fp_n0,1,init)
+          CASE(_ANGLES_)
+             CALL Intra_(CHARMM_Angles,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
+             CALL PI__FoldIntra(fp_n0,1,init)
+          CASE(_IMPHS_)
+             CALL Intra_(CHARMM_Imph,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
+             CALL PI__FoldIntra(fp_n0,1,init)
+          END SELECT
+       ELSE
+          CALL Intra_(CHARMM_Bonds,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+          CALL Intra_(CHARMM_Angles,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+          CALL Intra_(CHARMM_Imph,fp_n0 % x,fp_n0 % y,fp_n0 % z)
 
-       CALL Intra_(CHARMM_Angles,fp_n0 % x,fp_n0 % y,fp_n0 % z)
-       CALL Intra_(CHARMM_Imph,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+          CALL Energy_(CHARMM_Bonds_,ubond_Slv,ubond_Slt)
+          CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
+          CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
 
-       CALL Energy_(CHARMM_Bonds_,ubond_Slv,ubond_Slt)
+          CALL PI__FoldIntra(fp_n0,1,init)
 
-       CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
-       CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
-
-       CALL PI__FoldIntra(fp_n0,1,init)
-
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u1 ',ubond_Slv,ubond_Slt
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u2 ',ubend_Slv,ubend_Slt
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u3 ',uitors_Slv,uitors_Slt
-!!$       DO n=1,SIZE(Atoms)
-!!$          IF(Groupa(Atoms(n) % Grp_No) % knwn /= 1) CYCLE
-!!$          WRITE(100+PI_Node_Cart,'(i8,4x,3e14.5)') n,fp_n0 (n) %  x,&
-!!$               & fp_n0 (n) %  y, fp_n0 (n) %  z
-!!$       END DO
+          IF(PI_Node_Cart == 0) WRITE(*,*) 'u1 ',ubond_Slv,ubond_Slt&
+               &,(ubond_Slt+ubond_Slv)*efact/1000.0_8
+          IF(PI_Node_Cart == 0) WRITE(*,*) 'u2 ',ubend_Slv,ubend_Slt
+          IF(PI_Node_Cart == 0) WRITE(*,*) 'u3 ',uitors_Slv,uitors_Slt
+       END IF
     END IF
   END SUBROUTINE Intra_n0_
   SUBROUTINE Intra_n1_(init)
@@ -115,11 +136,6 @@ CONTAINS
        IF(PI_Node_Cart == 0) WRITE(*,*) 'u4 ',uptors_Slv,uptors_Slt
        IF(PI_Node_Cart == 0) WRITE(*,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
        IF(PI_Node_Cart == 0) WRITE(*,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
-!!$       DO nn=1,SIZE(IndBox_a_p)
-!!$          n=IndBox_a_t(IndBox_a_p(nn))
-!!$          WRITE(200+PI_Node_Cart,'(i8,4x,3e14.5)') n, fp_n1 (n) %  x,&
-!!$               & fp_n1 (n) %  y, fp_n1 (n) %  z
-!!$       END DO
     END IF
   END SUBROUTINE Intra_n1_
 
