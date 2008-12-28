@@ -62,7 +62,7 @@ CONTAINS
 !!$ programs.
 
 
-  FUNCTION cgauss RESULT(out)
+  FUNCTION cgauss() RESULT(out)
     REAL(8) :: out
     INTEGER,SAVE :: iset=0
     REAL(8) ::  fac,rsq,v1,v2,h

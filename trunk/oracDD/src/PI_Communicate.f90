@@ -403,8 +403,8 @@ CONTAINS
   END SUBROUTINE PI__FoldIntra
 
   SUBROUTINE PI__ResetSecondary
-    WHERE(Groupa(:) % knwn /= 1) Groupa(:) % knwn = 0
-    WHERE(Atoms(:) % knwn /= 1) Atoms(:) % knwn = 0
+    WHERE(Groupa(IndBox_g_t(:)) % knwn /= 1) Groupa(IndBox_g_t(:)) % knwn = 0
+    WHERE(Atoms(IndBox_a_t(:)) % knwn /= 1) Atoms(IndBox_a_t(:)) % knwn = 0
   END SUBROUTINE PI__ResetSecondary
   SUBROUTINE PI__ZeroSecondary
     INTEGER :: n,AtSt,AtEn,mm

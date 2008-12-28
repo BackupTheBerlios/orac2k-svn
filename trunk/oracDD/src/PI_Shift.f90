@@ -60,6 +60,7 @@ MODULE PI_Shift
   IMPLICIT none
   PRIVATE
   PUBLIC Setup,iShift_init, Buff_Shift, iShift, Indx, iBuffer
+  INTEGER, PARAMETER :: NSHell_Max=3
   TYPE :: Indx
      INTEGER :: NoAtm_s,NoAtm_r
      INTEGER :: NoGrp_s,NoGrp_r
@@ -67,7 +68,7 @@ MODULE PI_Shift
      INTEGER, ALLOCATABLE :: ibuff_s(:)
   END type Indx
   TYPE :: iBuffer
-     TYPE(Indx) :: sh(3)
+     TYPE(Indx) :: sh(NShell_Max)
   END type iBuffer
   TYPE(iBuffer), SAVE, TARGET :: iShift(6)
   INTEGER, SAVE :: Calls=0
@@ -99,7 +100,7 @@ CONTAINS
     LOGICAL :: oks
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    LOGICAL :: ok_X,ok_Y,ok_Z
+    LOGICAL :: ok_X,ok_Y,ok_Z,Change_Nmax
     INTEGER, SAVE :: MyCalls=0
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
@@ -145,18 +146,20 @@ CONTAINS
     X_L=Margin2_1
     X_R=Margin2_1+rcut(1)
 
-    IF(i_p == 1) THEN
-       nmax=SIZE(Groupa)
-    ELSE
-       nmax=SIZE(iShift(Calls) % sh(i_p-1) % iBuff_S)
+    nmax=SIZE(Groupa)
+    Change_nmax=.FALSE.
+    
+    IF(i_p < NShell_Max) THEN
+       IF(ALLOCATED(iShift(Calls) % sh(i_p+1) % iBuff_S)) THEN
+          nmax=SIZE(iShift(Calls) % sh(i_p+1) % iBuff_S)
+          Change_nmax=.TRUE.
+       END IF
     END IF
     DO nn=1,nmax
-       IF(i_p == 1) THEN
-          n=nn
-       ELSE
-          n=iShift(Calls) % sh(i_p-1) % iBuff_S(nn)
+       n=nn
+       IF(Change_nmax) THEN
+          n=iShift(Calls) % sh(i_p+1) % iBuff_S(nn)
        END IF
-       
        IF(Groupa(n) % knwn == 0) CYCLE
        IF(Groupa(n) % knwn == 1 .AND. oks) CYCLE
        IF(oks .AND. Axis == 2) THEN

@@ -71,6 +71,7 @@ MODULE MDRun
        &=>Parameters_,RATTLE__Verlet_=>Verlet_,RATTLE__Correct_&
        &=>Correct_ 
   USE IndBox
+  USE MDintegrate
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
@@ -94,14 +95,26 @@ CONTAINS
        END IF
     END IF
 
+!!$
+!!$--- Allocate forces for the 5 shells
+!!$
 
     CALL FORCES_Memory(SIZE(Atoms))
 
+!!$
+!!$--- Assign atoms to simulation cells. Set all Groupa % knwn
+!!$--- outside the primary cell to zero 
+!!$
+
     CALL PI__AssignAtomsToCells
 
-    IF(.NOT. Atom__vInit_()) CALL Print_Errors()
+!!$
+!!$--- Adjust bond length by minimizing the bond stretching part of the potential
+!!$
 
     CALL Adjust_Bonds
+
+    CALL Integrate
 
     STOP
     CALL PI__Shift(_M_,_INIT_EXCHANGE_)
@@ -114,18 +127,18 @@ CONTAINS
 !!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 10) CALL Atom__PDB(Inout__PDB % unit, 1)
 
     
-    CALL DIR_Forces(1,_INIT_)
+    CALL DIR_Forces(3,_INIT_)
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
     CALL PI__ResetSecondary
     CALL PI__Shift(_M_,_EXCHANGE_ONLY_)
-    CALL DIR_Forces(1)
+    CALL DIR_Forces(3)
 
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
-
+    STOP
 !!$
 !!$ --- Intramolecular
 !!$
@@ -241,6 +254,7 @@ CONTAINS
 
   CONTAINS
     SUBROUTINE Adjust_Bonds
+      INTEGER :: n
 !!$--- Shift atoms of the M Shell
 
       CALL PI__Shift(_M_,_INIT_EXCHANGE_)
@@ -265,8 +279,12 @@ CONTAINS
 !!$--- Decide which N0 interactions to include 
 
       IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+
 !!$--- Adjust bonds by Minimization
+
       IF(.NOT. Minimize__Bonds_()) CALL Print_Errors()
+
+      IF(.NOT. Groups__Update()) CALL Print_Errors()
     END SUBROUTINE Adjust_Bonds
 
     SUBROUTINE SetupIntra_n1

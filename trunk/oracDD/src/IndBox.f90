@@ -100,7 +100,6 @@ CONTAINS
        IF(m == 1) count_a_p=count_a_p+(AtEn-AtSt+1)
        IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
     END DO
-    
     IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
     IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
     IF(ALLOCATED(BoxInd_a_p)) DEALLOCATE(BoxInd_a_p)

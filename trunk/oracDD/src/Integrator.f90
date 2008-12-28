@@ -66,7 +66,7 @@ MODULE Integrator
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Integrator__Scan
+  PUBLIC Integrator__Scan, Integrator__Input, Integrator_
   TYPE :: Integrator__Input
      REAL(8) :: t=12.0_8
      INTEGER :: Mult_Intra(2)=(/2,2/)
@@ -136,20 +136,20 @@ CONTAINS
     nword=SIZE(strngs)
     SELECT CASE(nword)
     CASE(3)
-       CALL SP_Getnum(strngs(2),Integrator_ % Intra(1),iflags)
+       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Intra(1),iflags)
        IF(iflags /=0) THEN
           errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(3))//''' '
+               &//TRIM(strngs(2))//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
-       CALL SP_Getnum(strngs(3),Integrator_ % Intra(2),iflags)
+       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Intra(2),iflags)
        IF(iflags /=0) THEN
           errmsg_f='Cannot convert to integer: '''&
                &//TRIM(strngs(3))//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
     CASE DEFAULT 
-       errmsg_f=error_args % g (4)//' 2 '
+       errmsg_f='INTRA '//TRIM(error_args % g (4))//' 2 '
        CALL Add_Errors(-1,errmsg_f)
     END SELECT
     CALL Print_Errors()
@@ -159,21 +159,47 @@ CONTAINS
 
     nword=SIZE(strngs)
     SELECT CASE(nword)
+    CASE(2)
+       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(2))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
     CASE(3)
-       CALL SP_Getnum(strngs(2),Integrator_ % Inter(1),iflags)
+       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(2))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Inter(2),iflags)
        IF(iflags /=0) THEN
           errmsg_f='Cannot convert to integer: '''&
                &//TRIM(strngs(3))//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
-       CALL SP_Getnum(strngs(3),Integrator_ % Inter(2),iflags)
+    CASE(4)
+       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(2))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Inter(2),iflags)
        IF(iflags /=0) THEN
           errmsg_f='Cannot convert to integer: '''&
                &//TRIM(strngs(3))//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+       CALL SP_Getnum(strngs(4),Integrator_ % Mult_Inter(3),iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(4))//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
     CASE DEFAULT 
-       errmsg_f=error_args % g (4)//' 2 '
+       errmsg_f='INTER '//TRIM(error_args % g (4))//' 2 '
        CALL Add_Errors(-1,errmsg_f)
     END SELECT
     CALL Print_Errors()

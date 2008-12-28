@@ -188,7 +188,6 @@ CONTAINS
           Radii(n) % out = rcut_i(n)+rcut_s(n)
        END DO
     END IF
-    WRITE(*,*) Radii (:) % out
   END SUBROUTINE Init
   FUNCTION Pick(level) RESULT(out)
     INTEGER :: level

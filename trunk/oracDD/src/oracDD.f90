@@ -49,7 +49,7 @@ PROGRAM OracDD
 !!$======================== DECLARATIONS ================================*
 
   USE MDRun
-  USE Errors,ONLY: Print_Errors, Print_Warnings
+  USE Errors,ONLY: Print_Errors, Print_Warnings, errmsg_w
   USE Tree, ONLY: Tree__Start
   USE Inputs
   USE Grammars
@@ -67,6 +67,8 @@ PROGRAM OracDD
   USE Atom
   USE PI_
   USE Solvent
+  USE Integrator, ONLY: Integrator_
+  USE Forces, ONLY: Radii
   
 !!$  USE PROCESS_Mod, ONLY:  Inputs, Grammar, Process__Construe=>Construe
 !!$  USE TOPOLOGY_Mod, ONLY: Topology__SetupTpg=>SetupTpg, &
@@ -103,6 +105,8 @@ PROGRAM OracDD
 !!$======================================================================
 
   CALL Process_
+  
+  CALL VerifyParameters
 
   CALL BuildSystem
 
@@ -120,6 +124,15 @@ PROGRAM OracDD
   CALL PI__Finalize
 
 CONTAINS
+  SUBROUTINE VerifyParameters
+    INTEGER :: NShell,n
+
+    NShell=SIZE(Radii)
+    DO n=NShell+1,3
+       Integrator_ % Mult_Inter(n)=1
+    END DO
+
+  END SUBROUTINE VerifyParameters
   SUBROUTINE BuildSystem
     IF(Called_Tpg .AND. Called_Prm) THEN
        CALL Tops_       

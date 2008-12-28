@@ -77,7 +77,7 @@ CONTAINS
     REAL(8) :: out ,startime,endtime
     timea % Comms=timea % Comms+endtime-startime
   END SUBROUTINE Time_It
-  FUNCTION Write_It RESULT(out)
+  FUNCTION Write_It() RESULT(out)
     LOGICAL :: out
     REAL(8) :: Kbyte_s, Kbyte_r, Atoms_s, Atoms_r
     REAL(8) :: Kbyte_s0, Kbyte_r0, Atoms_s0, Atoms_r0

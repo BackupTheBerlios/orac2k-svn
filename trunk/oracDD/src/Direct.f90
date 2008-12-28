@@ -48,7 +48,7 @@ MODULE Direct
   USE PI_ATOM
   USE POTENTIAL
   USE Units
-  USE Forces
+  USE Forces, Forces_Init=>Init,Forces_Memory=>Memory
   USE LennardJones, ONLY: LennardJones__Par
   USE Cell, ONLY: oc,co, Volume
 #ifdef HAVE_MPI
@@ -99,7 +99,7 @@ CONTAINS
        CALL Init
        RETURN
     END IF
-
+    
     CALL Memory
     CALL Forces
     IF(Times_of_Call == 1) CALL PI__Fold_F(fp,i_p,_INIT_)

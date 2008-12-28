@@ -222,29 +222,29 @@ CONTAINS
        Atoms(AtSt:AtEn) % knwn = 1
        l=Chain_xyz(l) % p
     END DO
-
-    DO n=1,SIZE(Groupa)
-       IF(Groupa(n) % knwn /= 1 ) THEN
-          Groupa(n) % knwn = 0
-          Groupa(n) % xa=0.0D0
-          Groupa(n) % ya=0.0D0
-          Groupa(n) % za=0.0D0
-          Groupa(n) % x=0.0D0
-          Groupa(n) % y=0.0D0
-          Groupa(n) % z=0.0D0
-          AtSt=Groupa(n) % AtSt
-          AtEn=Groupa(n) % AtEn
-          DO mm=AtSt,AtEn
-             Atoms(mm) % knwn = 0
-             Atoms(mm) % x = 0.0D0
-             Atoms(mm) % y = 0.0D0
-             Atoms(mm) % z = 0.0D0
-             Atoms(mm) % xa = 0.0D0
-             Atoms(mm) % ya = 0.0D0
-             Atoms(mm) % za = 0.0D0
-          END DO
-       END IF          
-    END DO
+    WHERE(Groupa(:) % knwn /= 1) Groupa(:) % knwn =0
+!!$    DO n=1,SIZE(Groupa)
+!!$       IF(Groupa(n) % knwn /= 1 ) THEN
+!!$          Groupa(n) % knwn = 0
+!!$          Groupa(n) % xa=0.0D0
+!!$          Groupa(n) % ya=0.0D0
+!!$          Groupa(n) % za=0.0D0
+!!$          Groupa(n) % x=0.0D0
+!!$          Groupa(n) % y=0.0D0
+!!$          Groupa(n) % z=0.0D0
+!!$          AtSt=Groupa(n) % AtSt
+!!$          AtEn=Groupa(n) % AtEn
+!!$          DO mm=AtSt,AtEn
+!!$             Atoms(mm) % knwn = 0
+!!$             Atoms(mm) % x = 0.0D0
+!!$             Atoms(mm) % y = 0.0D0
+!!$             Atoms(mm) % z = 0.0D0
+!!$             Atoms(mm) % xa = 0.0D0
+!!$             Atoms(mm) % ya = 0.0D0
+!!$             Atoms(mm) % za = 0.0D0
+!!$          END DO
+!!$       END IF          
+!!$    END DO
 
   END SUBROUTINE PI__AssignAtomsToCells
 END MODULE PI_Decompose

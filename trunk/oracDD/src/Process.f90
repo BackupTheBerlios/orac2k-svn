@@ -57,6 +57,7 @@ MODULE Process
   USE Tree
   USE InOut
   USE Simulation
+  USE Integrator
   IMPLICIT none
   PRIVATE
   PUBLIC Process_
@@ -71,6 +72,7 @@ CONTAINS
     CALL Potential__Scan
     CALL Parallel__Scan
     CALL Simulation__Scan
+    CALL Integrator__Scan
     CALL Print_Errors()
   END SUBROUTINE Process_
 END MODULE Process

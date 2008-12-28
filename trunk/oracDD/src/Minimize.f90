@@ -86,6 +86,7 @@ CONTAINS
     CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
     IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
     CALL Intra_n0_(_INIT_EXCHANGE_,_CONSTRS_)
+    Energy=(uconstr_Slv+uconstr_Slt)
 
     icall=1
 20  CONTINUE
@@ -130,8 +131,10 @@ CONTAINS
     END IF
 50  CONTINUE
 
-    WRITE(kprint,200) Energy/DBLE(SIZE(Indx_Constr,2)+SIZE(Indx_Bonds,2))
+    CALL Arrays_Put
+    IF(.NOT. Atom__Convert(_X_TO_XA_)) CALL Print_Errors()
 
+    WRITE(kprint,200) Energy/DBLE(SIZE(Indx_Constr,2)+SIZE(Indx_Bonds,2))
 100 FORMAT(10x,'=======>  Adjusting Bonds <======')
 200 FORMAT('===> Bond Average RMS deviation from force field bond leng&
          &th ',e14.5,' A^2 ') 

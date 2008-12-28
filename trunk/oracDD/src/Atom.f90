@@ -69,7 +69,7 @@ MODULE Atom
   PRIVATE
   PUBLIC Atom_,Atom__Tpg_, Atom__PDB, Atom__InitCoords,Atom__,&
        & Atom__Tpg,Atoms_Tpg, Atoms,Atom__vInit_, Atom__Verlet_,&
-       & Atom__Correct_,Atom__Write_
+       & Atom__Correct_,Atom__Write_, Atom__Convert
   TYPE :: Atom__
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -160,6 +160,21 @@ CONTAINS
     Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
     Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
   END FUNCTION Atom__InitCoords
+  FUNCTION Atom__Convert(Dir) RESULT(out)
+    LOGICAL :: out
+    INTEGER :: Dir
+    out=.TRUE.
+    SELECT CASE(Dir)
+    CASE(_XA_TO_X_)
+       Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
+       Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
+       Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
+    CASE(_X_TO_XA_)
+       Atoms(:) % xa = oc(1,1)*Atoms(:) % x+oc(1,2)*Atoms(:) % y+oc(1,3)*Atoms(:) % z    
+       Atoms(:) % ya = oc(2,1)*Atoms(:) % x+oc(2,2)*Atoms(:) % y+oc(2,3)*Atoms(:) % z    
+       Atoms(:) % za = oc(3,1)*Atoms(:) % x+oc(3,2)*Atoms(:) % y+oc(3,3)*Atoms(:) % z
+    END SELECT
+  END FUNCTION Atom__Convert
   SUBROUTINE Atom__PDB(unit, nozero_write)
     INTEGER, OPTIONAL :: nozero_write
     INTEGER :: unit
@@ -356,7 +371,7 @@ CONTAINS
     END SUBROUTINE Add_Tpg
   END FUNCTION Atom__Tpg_
 
-  FUNCTION Atom__vInit_ RESULT(out)
+  FUNCTION Atom__vInit_() RESULT(out)
     LOGICAL :: out
     REAL(8), ALLOCATABLE :: vx(:),vy(:),vz(:),xa(:),ya(:),za(:),mass(:)
     REAL(8) :: ekt,massa,tvel,sig,v1,v2,v3,tmass
@@ -395,7 +410,6 @@ CONTAINS
     xa=xa+PBC(xa)
     ya=ya+PBC(ya)
     za=za+PBC(za)
-
     
     CALL Velocities
 
@@ -471,7 +485,7 @@ CONTAINS
       am(1)=am(1)-(cm(2)*lm(3)-cm(3)*lm(2))
       am(2)=am(2)-(cm(3)*lm(1)-cm(1)*lm(3))
       am(3)=am(3)-(cm(1)*lm(2)-cm(2)*lm(1))
-      
+
       IF(.NOT. Matinv_(iner,i_iner)) CALL Print_Errors()
 
       omega(1)=i_iner(1,1)*am(1)+i_iner(1,2)*am(2)+i_iner(1,3)*am(3)

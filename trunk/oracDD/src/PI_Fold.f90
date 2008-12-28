@@ -61,6 +61,7 @@ MODULE PI_Fold
   IMPLICIT none
   PRIVATE
   PUBLIC Setup,iFold_init, Buff_Fold
+  INTEGER, PARAMETER :: NSHell_Max=3
   TYPE :: Indx
      INTEGER :: NoAtm_s,NoAtm_r
      INTEGER :: NoGrp_s,NoGrp_r
@@ -68,7 +69,7 @@ MODULE PI_Fold
      INTEGER, ALLOCATABLE :: ibuff_s(:)
   END type Indx
   TYPE :: iBuffer
-     TYPE(Indx) :: sh(3)
+     TYPE(Indx) :: sh(Nshell_max)
   END type iBuffer
   TYPE(iBuffer), SAVE, TARGET :: iFold(6)
   INTEGER, SAVE :: Calls=0
@@ -138,18 +139,18 @@ CONTAINS
     Axis_L=Margin(Axis)
     Axis_R=Margin(Axis)+Dir*rcut(Axis)
 
-    IF(i_p == 1) THEN
+!!$    IF(i_p == NShell_Max) THEN
        nmax=SIZE(Groupa)
-    ELSE
-       nmax=SIZE(iFold(Calls) % sh(i_p-1) % iBuff_S)
-    END IF
+!!$    ELSE
+!!$       nmax=SIZE(iFold(Calls) % sh(i_p+1) % iBuff_S)
+!!$    END IF
 
     DO nn=1,nmax
-       IF(i_p == 1) THEN
+!!$       IF(i_p == NShell_Max) THEN
           n=nn
-       ELSE
-          n=iFold(Calls) % sh(i_p-1) % iBuff_S(nn)
-       END IF
+!!$       ELSE
+!!$          n=iFold(Calls) % sh(i_p+1) % iBuff_S(nn)
+!!$       END IF
        IF(Groupa(n) % knwn == 2) THEN
           v1(1)=Groupa(n) % xa
           v1(2)=Groupa(n) % ya

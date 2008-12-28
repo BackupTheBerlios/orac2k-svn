@@ -53,7 +53,7 @@ MODULE PI_Atom
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE IndBox
-  USE Forces
+  USE Forces, Forces_Memory=>Memory
   USE Neighbors
   USE Cell, ONLY: oc,co, Volume
   IMPLICIT none
@@ -83,7 +83,7 @@ MODULE PI_Atom
   INTEGER, SAVE :: nnx=24,nny=24,nnz=24
   
 CONTAINS
-  FUNCTION PI_Atom_ RESULT(out)
+  FUNCTION PI_Atom_() RESULT(out)
     LOGICAL :: out
     INTEGER, POINTER :: Index_0(:)
 
@@ -92,7 +92,6 @@ CONTAINS
     END IF
 
     CALL Memory
-
     CALL Gather_Atoms
 
     No_Calls=No_Calls+1

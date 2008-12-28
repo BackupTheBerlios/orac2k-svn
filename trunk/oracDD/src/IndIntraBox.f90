@@ -209,7 +209,6 @@ CONTAINS
        IF(m == 2) okt(n)=.TRUE.
     END DO
     out=count_a_p /= 0
-
     IF(.NOT. out) THEN
        errmsg_f='No Primary Atoms for Intramolecular interaction found in the unit box'
        CALL Add_Errors(-1,errmsg_f)

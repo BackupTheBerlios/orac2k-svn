@@ -54,7 +54,7 @@ MODULE Groups
   IMPLICIT none
   PRIVATE
   PUBLIC Groups_, Groups__Chain,  Groups__Base,Groupa&
-       &,Groups__InitCoords,Groups__Update_Knwn 
+       &,Groups__InitCoords,Groups__Update_Knwn, Groups__Update
   TYPE :: Groups__Base
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -98,7 +98,7 @@ CONTAINS
     END IF
     
     ngrp=SIZE(Grp_Atm,2)
-    ALLOCATE(Groupa(ngrp))
+    IF(.NOT. ALLOCATED(Groupa)) ALLOCATE(Groupa(ngrp))
     ntap=SIZE(Atoms)
     ALLOCATE(tmass(ngrp))
     tmass=0.0D0
@@ -196,4 +196,51 @@ CONTAINS
        Groupa(n)%z=Groupa(n)%z/tmass
     END DO
   END FUNCTION Groups__Update_Knwn
+  FUNCTION Groups__Update() RESULT(out)
+    INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
+    REAL(8) :: mass
+    REAL(8) :: Tmass
+    LOGICAL :: out
+    
+    
+    out=.TRUE.
+    IF(.NOT. ALLOCATED(Atoms)) THEN
+       out=.FALSE.
+       RETURN
+    END IF
+    
+    ngrp=SIZE(groupa)
+    ntap=SIZE(Atoms)
+    
+    Groupa(:) % x=0.0D0
+    Groupa(:) % y=0.0D0
+    Groupa(:) % z=0.0D0
+    Groupa(:) % xa=0.0D0
+    Groupa(:) % ya=0.0D0
+    Groupa(:) % za=0.0D0
+
+    DO nn=1,ngrp
+       AtSt=Groupa(nn) % AtSt
+       AtEn=Groupa(nn) % Aten
+       DO n=AtSt,AtEn
+          mass=Atoms(n) % mass
+          Groupa(nn) % xa = Groupa(nn) % xa + mass*Atoms(n) % xa
+          Groupa(nn) % ya = Groupa(nn) % ya + mass*Atoms(n) % ya
+          Groupa(nn) % za = Groupa(nn) % za + mass*Atoms(n) % za
+          Groupa(nn) % x = Groupa(nn) % x + mass*Atoms(n) % x
+          Groupa(nn) % y = Groupa(nn) % y + mass*Atoms(n) % y
+          Groupa(nn) % z = Groupa(nn) % z + mass*Atoms(n) % z
+       END DO
+    END DO
+    DO n=1,ngrp
+       tmass=Groupa(n) % Mass
+       Groupa(n)%xa=Groupa(n)%xa/tmass
+       Groupa(n)%ya=Groupa(n)%ya/tmass
+       Groupa(n)%za=Groupa(n)%za/tmass
+       
+       Groupa(n)%x=Groupa(n)%x/tmass
+       Groupa(n)%y=Groupa(n)%y/tmass
+       Groupa(n)%z=Groupa(n)%z/tmass
+    END DO
+  END FUNCTION Groups__Update
 END MODULE Groups

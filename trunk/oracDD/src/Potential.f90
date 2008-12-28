@@ -88,7 +88,7 @@ MODULE Potential
      INTEGER :: mim_Max=4
      REAL(8) :: adjust_eps=0.00001_8
   END type Constraint__Input
-  TYPE(Constraint__Input) :: Rattle__Param
+  TYPE(Constraint__Input), SAVE :: Rattle__Param
 
 CONTAINS
 
