@@ -1,0 +1,5 @@
+FFTW_LIB=/usr/local/fftw.P/lib
+LIB=/Library/Frameworks/Intel_MKL.framework/Versions/Current/Libraries/em64t
+
+LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
+	 -lguide -lpthread -lmkl_core 

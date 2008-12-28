@@ -29,11 +29,20 @@ endif
 ifeq ($(COMPILER), G95)
 COMPILER_DEFS = -DHAVE_F2003_EXT
 endif
+ifeq ($(COMPILER), gfortran)
+COMPILER_DEFS = -DHAVE_F2003_EXT
+endif
 
+ifeq ($(COMPILER), gfortran)
+FFLAGS = -x f95-cpp-input $(PARA_DEFS) $(COMPILER_DEFS)
+else
 FFLAGS = $(PARA_DEFS) $(COMPILER_DEFS)
+endif
+ F77FLAGS = -O3
+# F77FLAGS = -g -traceback -fpe0 -check all
 
 ifeq ($(COMPILER), INTEL)
-  FC = ifort
+  F77 = ifort
   F90 = ifort
   CC = gcc
   LD = ifort
@@ -44,29 +53,30 @@ ifeq ($(COMPILER), INTEL)
 endif
 
 ifeq ($(COMPILER), PGI)
-  FC = pgf90
+  F77 = pgf90
   F90 = pgf90
   CC = gcc
   LD = pgf90
   FFLAGS += -O3
 endif
 ifeq ($(COMPILER), G95)
-  FC = g95
+  F77 = g95
   F90 = g95
   CC = gcc
   LD = g95
-  FFLAGS += -O3
+  FFLAGS += -cpp -O3
 endif
 ifeq ($(COMPILER), gfortran)
-  FC = /usr/local/bin/gfortran
-  F90 = /usr/local/bin/gfortran
+  F77 = gfortran
+  F90 = gfortran
   CC = gcc
-  LD = /usr/local/bin/gfortran
-  FFLAGS += -O3
+  LD = gfortran
+  FFLAGS += -O3 
+  F77FLAGS = -O3
 endif 
 
 ifdef PARA_DEFS 
-   FC = mpif90
+   F77 = mpif77
    F90 = mpif90
    CC = mpicc
    LD = mpif90
@@ -80,4 +90,6 @@ endif
 
 #FFLAGS = -O3
 #FFLAGS = -g -C
-include Make.Lx_ifc_breizh
+#include Make.Lx_ifc_breizh
+#include Make.MAC_GF
+include Make.MAC

@@ -1,0 +1,4 @@
+FFTW_LIB=/usr/local/fftw.PGF/lib
+LIB=/usr/lib/LAPACK
+
+LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw $(LIB)/libblas_MACOSX.a $(LIB)/liblapack_MACOSX.a $(LIB)/libtmglib_MACOSX.a
