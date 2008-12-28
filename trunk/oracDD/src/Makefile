@@ -119,7 +119,7 @@ include Make.what
 #==========================================================================
 
 .f.o :
-	$(FC) $(FFLAGS)  -c $<
+	$(F77) $(F77FLAGS)  -c $<
 
 .SUFFIXES: .o .f90
 .f90.o :
@@ -141,7 +141,8 @@ OBJS = Atom.o Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o St
 	Geometry.o Print_Defs.o Rfft3d.o IndBox.o Forces.o Direct.o PI_Atom.o oracDD.o \
 	PI_Statistics.o  PI_Cutoffs.o PI_Shift.o PI_Fold.o PI_ShiftIntra.o PI_FoldIntra.o\
 	PI_IntraMaps.o IndIntraBox.o CHARMM_Intra.o Intra.o Simulation.o GAUSS.o\
-	LA_Routines.o PI_Collectives.o Minimize.o Rattle.o
+	LA_Routines.o PI_Collectives.o Minimize.o Rattle.o Integrator.o\
+	MDintegrate.o
 
 OBJS_f = AddH.o duni.o indexx.o cgfam.o
 
@@ -164,4 +165,4 @@ copy:
 # Dependencies
 io.h: $(shell ../bin/makedepf90 $(SRC) > io.h)
 include io.h
-### $(shell rm io.h)
+$(shell rm io.h)
