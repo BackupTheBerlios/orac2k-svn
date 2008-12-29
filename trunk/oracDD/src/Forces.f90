@@ -52,7 +52,7 @@ MODULE Forces
   IMPLICIT none
   PRIVATE
   PUBLIC :: Force,fp_n0,fp_n1,fp_m,fp_l,fp_h,fp_ew,fs_n0,fs_n1,fs_m&
-       &,fs_l,fs_h,fs_ew,Init,Radii,Cutoff,Memory, Pick
+       &,fs_l,fs_h,fs_ew,Init,Radii,Cutoff,Memory, Pick, Zero
   TYPE :: Force
      REAL(8) :: x,y,z
   END type Force
@@ -204,10 +204,32 @@ CONTAINS
     CASE(_H_)
        out=>fp_h
     CASE DEFAULT
-       errmsg_f='Only five level RESPA is allowed'
+       errmsg_f='In Pick, only five level RESPA is allowed'
        CALL Add_Errors(-1,errmsg_f)
        CALL Print_Errors()
        STOP
     END SELECT
   END FUNCTION Pick
+  SUBROUTINE Zero(Level)
+    INTEGER :: level
+    TYPE(Force) :: fp0=Force(0.0_8, 0.0_8, 0.0_8)
+
+    SELECT CASE(level)
+    CASE(_N0_)
+       fp_n0=fp0
+    CASE(_N1_)
+       fp_n1=fp0
+    CASE(_M_)
+       fp_m=fp0
+    CASE(_L_)
+       fp_l=fp0
+    CASE(_H_)
+       fp_h=fp0
+    CASE DEFAULT
+       errmsg_f='In Zero, only five level RESPA is allowed'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+       STOP
+    END SELECT
+  END SUBROUTINE Zero
 END MODULE Forces

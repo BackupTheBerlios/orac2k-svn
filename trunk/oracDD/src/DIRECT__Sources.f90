@@ -63,12 +63,11 @@ SUBROUTINE Forces
   TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
 
   IF(i_p > SIZE(Radii)) RETURN
-
+  
   Neigha=>List(i_p) % Neigh
   i_pb=i_p-1
   rcutb=0.0D0
   rcutb2=0.0D0
-
 !!$          Translation scheme orac2k => oracDD
 !!$
 !!$
@@ -133,6 +132,9 @@ SUBROUTINE Forces
   st9=0.0D0
 !!$  DO ii=1,SIZE(IndBox_g_p)
 !!$     ig=IndBox_g_p(ii)
+  fppx=0.0_8
+  fppy=0.0_8
+  fppz=0.0_8
   DO ig=1,ngroup
      xpgi=xpg(ig)
      ypgi=ypg(ig)
@@ -253,7 +255,6 @@ SUBROUTINE Forces
            Slv_ij=Slv_j+Slv_i-1
 
            Id_j=Id(j)
-           
            
            xd=Xg_PBC(jj)
            yd=Yg_PBC(jj)
@@ -468,14 +469,13 @@ SUBROUTINE Forces
         END DO
      END IF
   END DO
-  fp(:) % x = fppx(:)
-  fp(:) % y = fppy(:)
-  fp(:) % z = fppz(:)
+  fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
+  fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
+  fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
   
   CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
-!!$  WRITE(*,*) PI_Node_Cart,count_c
   IF(PI_Node_Cart == 0) THEN
      WRITE(*,*) ucoul_o
      WRITE(*,*) uconf_o

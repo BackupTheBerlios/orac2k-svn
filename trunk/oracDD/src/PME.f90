@@ -50,7 +50,7 @@ MODULE PME
   USE Rfft3d
   USE Cell, ONLY: oc,co, Volume
   USE Ewald
-  USE Forces, ONLY: Force
+  USE Forces, ONLY: Force,fp_m, fp_l, fp_h, fp_ew, FORCE_Pick=>Pick
 #ifdef HAVE_MPI
   USE mpi
 #endif
@@ -58,7 +58,6 @@ MODULE PME
   USE Groups
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE IndBox
   USE PI_Communicate
   IMPLICIT none
   PRIVATE
@@ -84,6 +83,7 @@ MODULE PME
   REAL(8), ALLOCATABLE, SAVE :: bsp_mod1(:),bsp_mod2(:),bsp_mod3(:)
   REAL(8), POINTER :: theta1(:,:),theta2(:,:),theta3(:,:)&
        &,dtheta1(:,:),dtheta2(:,:),dtheta3(:,:)
+  INTEGER, ALLOCATABLE :: IndBox_a_t(:)
 !!$
 !!$--- System Data
 !!$
@@ -94,21 +94,25 @@ MODULE PME
   REAL(8), SAVE :: recip(3,3),vir(3,3),eer,energy
   
 CONTAINS
-  SUBROUTINE PME_(i_p)
-    INTEGER :: i_p,i,j,k,n,m,count0,AtSt,AtEn,ia,ja,ka,count1,i0,j0,k0
+  SUBROUTINE PME_(i_pa)
+    INTEGER :: i_pa,i,j,k,n,m,count0,AtSt,AtEn,ia,ja,ka,count1,i0,j0,k0
     INTEGER, SAVE :: No_Calls=0
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
     TYPE(Force), POINTER :: fp(:)
+    INTEGER :: i_p
 
 !!$    
 !!$--- Initialize fftw when needed and allocate pointers
 !!$
 
+    i_p=i_pa-2
     order=>Ewald__Param % order
 
 
     IF(No_Calls == 0) THEN       
        IF(.NOT. Initialize_()) CALL Print_Errors()
+       No_Calls=No_Calls+1
+       RETURN
     END IF
 
     CALL MPI_BARRIER(PI_Comm,ierr)
@@ -116,8 +120,6 @@ CONTAINS
     ALLOCATE(Cq_r(ndim_fftw1,ndim_fftw2,ndim_fftw3))
     ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
     ALLOCATE(Cq_sb(myfft1,myfft2,myfft3))
-
-
 
 !!$    
 !!$--- Copy coordinates and charges to local arrays
@@ -140,12 +142,10 @@ CONTAINS
        END DO
     END DO
 
-
     CALL Fractionals
     CALL Get_Bsplines
 
     CALL Charges_onGrid(Cq_s)
-
 !!$
 !!$--- Change CPU partition along Z axis
 !!$
@@ -168,18 +168,18 @@ CONTAINS
 
     ntot_atom=SIZE(Atoms)
 
-    ALLOCATE(fp(natom)) 
+    fp=>FORCE_Pick(i_pa)
 
-    fp(:) % x = fx(:)
-    fp(:) % y = fy(:)
-    fp(:) % z = fz(:)
+    fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fx(:)
+    fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fy(:)
+    fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fz(:)
 
 !!$
 !!$--- Fold forces contributions to atoms inside the cell
 !!$
     
-    CALL PI__Fold_F(fp,i_p,_INIT_)
-    CALL PI__Fold_F(fp,i_p,_FOLD_)
+!!$    CALL PI__Fold_F(fp,i_p,_INIT_)
+!!$    CALL PI__Fold_F(fp,i_p,_FOLD_)
 
 !!$    IF(PI_Nprocs == 1) THEN
 !!$       WRITE(60,'(i7,3e17.9)') (n,fp(n) % x, fp(n) % y, fp(n) % z, n=1,natom)
@@ -259,9 +259,7 @@ CONTAINS
 
     kwstart=nfftw3_start
     kwend  =nfftw3_start+nfftw3_local-1
- 
     CALL BSP_Moduli
-
 100 FORMAT(/22x,'Finding optimal parameters for FFTWs.'/&
      &     22x,'     This will take a while...'/ /)     
   CONTAINS
@@ -319,6 +317,39 @@ CONTAINS
          &,MPI_REAL8,PI_Comm_Z,ierr)
 
   END SUBROUTINE Transpose_FFTW2Cart
+  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
+    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
+    LOGICAL :: out
+    INTEGER :: n,m,count_a_t,q,AtSt,AtEn
+
+    count_a_t=0
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
+    END DO
+    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
+    ALLOCATE(IndBox_a_t(count_a_t)) 
+    count_a_t=0 
+
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       DO q=AtSt,AtEn
+          IF(m /= 0) THEN
+             count_a_t=count_a_t+1
+             IndBox_a_t(count_a_t)=q
+          END IF
+       END DO
+    END DO
+    out=count_a_t /= 0
+    IF(.NOT. out) THEN
+       errmsg_f='No Atoms found in the unit box'
+       CALL Add_Errors(-1,errmsg_f)
+    END IF
+  END FUNCTION IndBox_
 
   INCLUDE 'PME__Sources.f90'
 END MODULE PME

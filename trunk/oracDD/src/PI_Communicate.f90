@@ -193,7 +193,7 @@ CONTAINS
     fp0(:) % z=0.0D0
     fp0(IndBox_a_t(:))=fp(:)
     
-    CALL Thickness(i_p)    
+    CALL Thickness(i_p)
 
     npx=PI_npx
     npy=PI_npy

@@ -147,19 +147,7 @@ CONTAINS
     X_R=Margin2_1+rcut(1)
 
     nmax=SIZE(Groupa)
-    Change_nmax=.FALSE.
-    
-    IF(i_p < NShell_Max) THEN
-       IF(ALLOCATED(iShift(Calls) % sh(i_p+1) % iBuff_S)) THEN
-          nmax=SIZE(iShift(Calls) % sh(i_p+1) % iBuff_S)
-          Change_nmax=.TRUE.
-       END IF
-    END IF
-    DO nn=1,nmax
-       n=nn
-       IF(Change_nmax) THEN
-          n=iShift(Calls) % sh(i_p+1) % iBuff_S(nn)
-       END IF
+    DO n=1,nmax
        IF(Groupa(n) % knwn == 0) CYCLE
        IF(Groupa(n) % knwn == 1 .AND. oks) CYCLE
        IF(oks .AND. Axis == 2) THEN

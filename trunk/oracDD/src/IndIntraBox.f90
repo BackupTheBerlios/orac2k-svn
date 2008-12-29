@@ -64,7 +64,6 @@ MODULE IndIntraBox
        &,Indx_Dihed,Indx_Int14,Indx_Constr, IndIntraBox_n1_
 
   INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:)
   LOGICAL, ALLOCATABLE, SAVE :: oks(:),okt(:)
   TYPE :: IntraParam
      REAL(8), ALLOCATABLE :: Pot(:)
@@ -189,11 +188,10 @@ CONTAINS
     count_a_p=0
     count_a_p=COUNT(Groupa(Atoms(:) % Grp_No) % knwn == 1)
 
-    IF(ALLOCATED(IndBox_a_p)) DEALLOCATE(IndBox_a_p)
     IF(ALLOCATED(oks)) DEALLOCATE(oks)
     IF(ALLOCATED(okt)) DEALLOCATE(okt)
 
-    ALLOCATE(IndBox_a_p(count_a_p),oks(SIZE(Atoms)),okt(SIZE(Atoms)))
+    ALLOCATE(oks(SIZE(Atoms)),okt(SIZE(Atoms)))
     
     count_a_p=0 
     oks=.FALSE.
@@ -203,7 +201,6 @@ CONTAINS
        m=Groupa(mm) % knwn 
        IF(m == 1) THEN
           count_a_p=count_a_p+1
-          IndBox_a_p(count_a_p)=n
        END IF
        IF(m == 1) oks(n)=.TRUE.
        IF(m == 2) okt(n)=.TRUE.

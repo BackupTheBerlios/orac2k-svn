@@ -47,7 +47,9 @@ MODULE MDRun
 #include "config.h"
 
   USE PI_Atom
-  USE MPI
+#ifdef HAVE_MPI
+  USE mpi
+#endif
   USE PME
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE Groups

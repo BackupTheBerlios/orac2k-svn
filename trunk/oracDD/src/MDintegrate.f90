@@ -46,18 +46,26 @@ MODULE MDintegrate
 
 #include "config.h"
 
+#ifdef HAVE_MPI
+  USE mpi
+#endif
   USE PI_
   USE Pi_Decompose 
   USE Print_Defs
   USE PI_Atom
-  USE Forces, ONLY: Radii
+  USE Forces, ONLY: Radii, FORCES_Zero=>Zero, FORCES_Pick=>Pick, Force
   USE Integrator, ONLY: Integrator_
   USE Atom
   USE Groups
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE Direct, ONLY: DIR_Forces=>Compute
+  USE Ewald
+  USE PME
   USE PI_Communicate
   USE IndBox
+  USE IndIntraBox
+  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
+  USE Intra, ONLY: Intra_n0_,Intra_n1_
   IMPLICIT none
   PRIVATE
   PUBLIC Integrate
@@ -94,12 +102,20 @@ CONTAINS
          & AtEn)) CALL Print_Errors()
 
     IF(.NOT. Atom__vInit_()) CALL Print_Errors()
-    WRITE(*,*) 'ulla ',COUNT(Atoms(:) % knwn == 2),COUNT(Atoms(:) % knwn == 1)
-    WRITE(*,*) 'ulla ',COUNT(Groupa(:) % knwn == 2),COUNT(Groupa(:) % knwn == 1)
 
   END SUBROUTINE Init_
   SUBROUTINE Integrate
     INTEGER :: n
+    REAL(8) :: startime,endtime,timea
+
+    
+!!$--- Lennard Jones Arrays
+
+    CALL DIR_Forces(_M_,_INIT_)
+
+!!$--- Initialize Ewald parameters for the run
+
+    CALL Ewald__Validate
 
 !!$
 !!$--- Assign atoms to simulation cells. 
@@ -112,21 +128,62 @@ CONTAINS
     CALL Pi__ZeroSecondary
     IF(nstep == 0) CALL Init_
 
+!!$--- Reset secondary cell. Need it before shifting
+
     CALL PI__ResetSecondary
 
-    CALL PI__Shift(NShell,_INIT_EXCHANGE_)
-    WRITE(*,*) 'ulla ',NShell,COUNT(Groupa(:) % knwn == 2),COUNT(Groupa(:) % knwn == 1)
+!!$--- Shift the outer most atoms around the primary cell
 
+    CALL PI__Shift(NShell,_INIT_EXCHANGE_)
+
+!!$--- Setup the primary and secondary atom cells: IndBox_?_? arrays
+!!$--- are created
     IF(.NOT. PI_Atom_()) CALL Print_Errors()
+
+!!$
+!!$--- Compute outer neighbor lists
+!!$
+
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
 
-    CALL DIR_Forces(Nshell,_INIT_)
+    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+         & Ewald__Param % nz /= 0) THEN
+       CALL PME_(0)
+    END IF
+
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+    startime=MPI_WTIME()
 
     DO n=NShell,3,-1
-       CALL PI__ResetSecondary
-       CALL PI__Shift(n,_INIT_EXCHANGE_)
-       CALL DIR_Forces(n)
+       CALL FORCES_Zero(n)
+       CALL InterForces_(n,_INIT_EXCHANGE_)
     END DO
+
+!!$
+!!$--- Pick all groups within the range of the bonded interactions in
+!!$--- the primary cell. Used by ShiftIntra
+!!$
+
+    CALL IntraMaps_n0_
+    CALL IntraMaps_n1_
+
+!!$--- Shift atoms
+    CALL PI__ResetSecondary
+    CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
+!!$--- Gets all n0 interactions beloging to the primary cell
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+    CALL Intra_n0_(_INIT_EXCHANGE_)
+    
+!!$--- Shift atoms
+    CALL PI__ResetSecondary
+    CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
+!!$--- Gets all n1 interactions beloging to the primary cell
+    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+    CALL Intra_n1_(_INIT_EXCHANGE_)
+
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'First time',PI_Node_Cart,timea
 
 
 !!$    CALL FORCES_Memory(SIZE(Atoms))
@@ -218,4 +275,29 @@ CONTAINS
 !!$    nstep=nstep+1
 !!$    out=nstep*Integrator_ % t
 !!$  END FUNCTION Update_Step
+  SUBROUTINE InterForces_(n,Flag)
+    INTEGER :: n,Flag
+    LOGICAL :: pme
+    TYPE(Force), POINTER :: fp(:)
+    pme= (n-2 == Integrator_ % Ewald_Shell)
+    CALL PI__ResetSecondary
+    IF(pme) THEN
+       IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+            & Ewald__Param % nz /= 0) THEN
+          CALL PI__Shift(n,Flag,_PME_)
+       END IF
+    ELSE
+       CALL PI__Shift(n,Flag)
+    END IF
+    CALL DIR_Forces(n)
+    IF(pme) THEN
+       CALL PME_(n)
+    END IF
+!!$
+!!$--- Fold forces contributions to atoms inside the cell
+!!$
+    fp=>FORCES_Pick(n)
+    CALL PI__Fold_F(fp,n,Flag)
+
+  END SUBROUTINE InterForces_
 END MODULE MDintegrate

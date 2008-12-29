@@ -36,3 +36,6 @@
 #define  _PLUS_  1
 #define _MINUS_ -1
 #define _2NDHALF_ 1
+
+#define _XA_TO_X_   1
+#define _X_TO_XA_  -1

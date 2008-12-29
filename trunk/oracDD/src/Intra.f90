@@ -58,7 +58,6 @@ MODULE Intra
   USE IndIntraBox, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
        &,Indx_Angles,Param_Dihed,Indx_Dihed,Param_Imph,Indx_Imph&
        &,Indx_Int14
-  USE IndBox
   USE Atom
   USE Groups
   USE PI_Communicate, ONLY: PI__FoldIntra

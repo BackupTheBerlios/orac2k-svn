@@ -138,19 +138,9 @@ CONTAINS
 
     Axis_L=Margin(Axis)
     Axis_R=Margin(Axis)+Dir*rcut(Axis)
+    nmax=SIZE(Groupa)
 
-!!$    IF(i_p == NShell_Max) THEN
-       nmax=SIZE(Groupa)
-!!$    ELSE
-!!$       nmax=SIZE(iFold(Calls) % sh(i_p+1) % iBuff_S)
-!!$    END IF
-
-    DO nn=1,nmax
-!!$       IF(i_p == NShell_Max) THEN
-          n=nn
-!!$       ELSE
-!!$          n=iFold(Calls) % sh(i_p+1) % iBuff_S(nn)
-!!$       END IF
+    DO n=1,nmax
        IF(Groupa(n) % knwn == 2) THEN
           v1(1)=Groupa(n) % xa
           v1(2)=Groupa(n) % ya

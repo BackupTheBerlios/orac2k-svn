@@ -48,7 +48,8 @@ MODULE Direct
   USE PI_ATOM
   USE POTENTIAL
   USE Units
-  USE Forces, Forces_Init=>Init,Forces_Memory=>Memory
+  USE Forces,ONLY: Force, fp_m,fp_l,fp_h, Forces_Init=>Init,Forces_Memory&
+       &=>Memory, FORCES_Pick=>Pick, Radii
   USE LennardJones, ONLY: LennardJones__Par
   USE Cell, ONLY: oc,co, Volume
 #ifdef HAVE_MPI
@@ -61,9 +62,9 @@ MODULE Direct
   
   IMPLICIT none
   PRIVATE 
-  PUBLIC Compute, fp
+  PUBLIC Compute
   
-  TYPE(Force), ALLOCATABLE, SAVE :: fp(:)
+  TYPE(Force), POINTER :: fp(:)
   INTEGER, SAVE :: No_Calls=0
   REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
@@ -89,21 +90,25 @@ CONTAINS
     i_p=i_pa-2
 
     Times_of_Call=Times_of_Call+1
-    IF(ngroup == 0 .AND. natom == 0) THEN
-       errmsg_f='Direct lattice forces routine must be called after PI&
-            &_Atom_'
-       CALL Print_Errors()
-       STOP
-    END IF
     IF(PRESENT(Initialize)) THEN
        CALL Init
        RETURN
     END IF
     
+    IF(ngroup == 0 .AND. natom == 0) THEN
+       errmsg_f='Direct lattice forces routine must be called after PI&
+            &_Atom_'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+       STOP
+    END IF
+
+    fp=>FORCES_Pick(i_pa)
     CALL Memory
     CALL Forces
-    IF(Times_of_Call == 1) CALL PI__Fold_F(fp,i_p,_INIT_)
-    CALL PI__Fold_F(fp,i_p,_FOLD_)
+
+!!$    IF(Times_of_Call == 1) CALL PI__Fold_F(fp,i_p,_INIT_)
+!!$    CALL PI__Fold_F(fp,i_p,_FOLD_)
 
 !!$    DO nn=1,SIZE(IndBox_a_p)
 !!$       n=IndBox_a_p(nn)
@@ -146,11 +151,7 @@ CONTAINS
       
       ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
            &,p_index_jj(natom)) 
-      IF(ALLOCATED(fp)) DEALLOCATE(fp)
-      ALLOCATE(fp(natom))
-      fp(:) % x =0.0_8
-      fp(:) % y =0.0_8
-      fp(:) % z =0.0_8
+
     END SUBROUTINE Memory
 !!$
 !!$--- Compute Forces

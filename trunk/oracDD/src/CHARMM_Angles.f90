@@ -37,7 +37,7 @@ SUBROUTINE Angles(fpx,fpy,fpz)
        &,z12,z32,rs12,rs32,uux1,uux2,uux3,uuy1,uuy2,uuy3,uuz1,uuz2&
        &,uuz3,xr31,yr31,zr31,rs31,rsp31,x31,y31,z31,rsp12,rsp32,k12&
        &,r1,r2 
-  REAL(8) :: dcc2,cb,sb,bb,qforce,pforce,pi,ubend(2),pota,potb&
+  REAL(8) :: dcc2,cb,sb,bb,qforce,pforce,ubend(2),pota,potb&
        &,potc,potd
   INTEGER i,la,lb,lc,type,nbend
   
