@@ -74,7 +74,7 @@ MODULE PI_Communicate
   IMPLICIT none
   PRIVATE
   PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,PI__ZeroPrimary,&
-       & PI__ShiftIntra, PI__ResetSecondary,PI__FoldIntra
+       & PI__ShiftIntra, PI__ResetSecondary, PI__ResetSecondaryP,PI__FoldIntra
   TYPE :: Communicate__Chain
      INTEGER :: i,j,k
      INTEGER :: p
@@ -406,6 +406,10 @@ CONTAINS
     WHERE(Groupa(IndBox_g_t(:)) % knwn /= 1) Groupa(IndBox_g_t(:)) % knwn = 0
     WHERE(Atoms(IndBox_a_t(:)) % knwn /= 1) Atoms(IndBox_a_t(:)) % knwn = 0
   END SUBROUTINE PI__ResetSecondary
+  SUBROUTINE PI__ResetSecondaryP
+    WHERE(Groupa(IndBoxP_g_t(:)) % knwn /= 1) Groupa(IndBoxP_g_t(:)) % knwn = 0
+    WHERE(Atoms(IndBoxP_a_t(:)) % knwn /= 1) Atoms(IndBoxP_a_t(:)) % knwn = 0
+  END SUBROUTINE PI__ResetSecondaryP
   SUBROUTINE PI__ZeroSecondary
     INTEGER :: n,AtSt,AtEn,mm
 

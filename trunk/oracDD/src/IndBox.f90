@@ -49,10 +49,12 @@ MODULE IndBox
   IMPLICIT none
   PRIVATE
   PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t&
-       &,BoxInd_a_p
+       &,BoxInd_a_p,IndBoxP_, IndBoxP_a_t, IndBoxP_g_t
   INTEGER :: natom_local
   INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
   INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  INTEGER, ALLOCATABLE, SAVE :: IndBoxP_a_t(:)
+  INTEGER, ALLOCATABLE, SAVE :: IndBoxP_g_t(:)
 CONTAINS
   FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
     INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
@@ -134,4 +136,46 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
     END IF
   END FUNCTION IndBox_
+  FUNCTION IndBoxP_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
+    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
+    LOGICAL :: out
+    INTEGER :: n,m,count_a_t,count_g_t,q,AtSt,AtEn
+
+    count_a_t=0
+    count_g_t=0
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       IF(m /= 0) THEN
+          count_g_t=count_g_t+1
+          count_a_t=count_a_t+(AtEn-AtSt+1)
+       END IF
+    END DO
+    IF(ALLOCATED(IndBoxP_a_t)) DEALLOCATE(IndBoxP_a_t)
+    IF(ALLOCATED(IndBoxP_g_t)) DEALLOCATE(IndBoxP_g_t)
+    ALLOCATE(IndBoxP_a_t(count_a_t)) 
+    ALLOCATE(IndBoxP_g_t(count_g_t)) 
+
+    count_a_t=0 
+    count_g_t=0
+    DO n=1,SIZE(G_Knwn)
+       AtSt=G_AtSt(n)
+       AtEn=G_AtEn(n)
+       m=G_knwn(n)
+       IF(m /= 0) THEN
+          count_g_t=count_g_t+1
+          IndBoxP_g_t(count_g_t)=n
+          DO q=AtSt,AtEn
+             count_a_t=count_a_t+1
+             IndBoxP_a_t(count_a_t)=q
+          END DO
+       END IF
+    END DO
+    out=count_a_t /= 0
+    IF(.NOT. out) THEN
+       errmsg_f='No Atoms found in the unit box'
+       CALL Add_Errors(-1,errmsg_f)
+    END IF
+  END FUNCTION IndBoxP_
 END MODULE IndBox

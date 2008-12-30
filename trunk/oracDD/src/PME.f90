@@ -58,6 +58,7 @@ MODULE PME
   USE Groups
   USE Atom
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
+  USE IndBox, ONLY: IndBoxP_, IndBoxP_a_t
   USE PI_Communicate
   IMPLICIT none
   PRIVATE
@@ -83,7 +84,6 @@ MODULE PME
   REAL(8), ALLOCATABLE, SAVE :: bsp_mod1(:),bsp_mod2(:),bsp_mod3(:)
   REAL(8), POINTER :: theta1(:,:),theta2(:,:),theta3(:,:)&
        &,dtheta1(:,:),dtheta2(:,:),dtheta3(:,:)
-  INTEGER, ALLOCATABLE :: IndBox_a_t(:)
 !!$
 !!$--- System Data
 !!$
@@ -125,10 +125,10 @@ CONTAINS
 !!$--- Copy coordinates and charges to local arrays
 !!$
 
-    IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+    IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
          & AtEn)) CALL Print_Errors() 
 
-    natom=SIZE(IndBox_a_t)
+    natom=SIZE(IndBoxP_a_t)
     ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
     ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
     ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
@@ -170,9 +170,9 @@ CONTAINS
 
     fp=>FORCE_Pick(i_pa)
 
-    fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fx(:)
-    fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fy(:)
-    fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fz(:)
+    fp(IndBoxP_a_t(:)) % x = fp(IndBoxP_a_t(:)) % x + fx(:)
+    fp(IndBoxP_a_t(:)) % y = fp(IndBoxP_a_t(:)) % y + fy(:)
+    fp(IndBoxP_a_t(:)) % z = fp(IndBoxP_a_t(:)) % z + fz(:)
 
 !!$
 !!$--- Fold forces contributions to atoms inside the cell
@@ -185,7 +185,7 @@ CONTAINS
 !!$       WRITE(60,'(i7,3e17.9)') (n,fp(n) % x, fp(n) % y, fp(n) % z, n=1,natom)
 !!$    ELSE
 !!$       DO m=1,natom
-!!$          n=IndBox_t(m)
+!!$          n=IndBoxP_t(m)
 !!$          IF(groupa(Atoms(n) % Grp_No) % Knwn == 1) THEN
 !!$             WRITE(60+PI_Node_Cart,'(i7,3e17.9)') n,fp(m) % x, fp(m) % y&
 !!$                  &, fp(m) % z
@@ -206,7 +206,7 @@ CONTAINS
       REAL(8) :: w1,w2,w3,x,y,z,v1,v2,v3
       
       DO n=1,natom
-         m=IndBox_a_t(n)
+         m=IndBoxP_a_t(n)
          chg(n)=Atoms(m) % chg
          x=Atoms(m) % x
          y=Atoms(m) % y
@@ -317,39 +317,6 @@ CONTAINS
          &,MPI_REAL8,PI_Comm_Z,ierr)
 
   END SUBROUTINE Transpose_FFTW2Cart
-  FUNCTION IndBox_(g_knwn,g_AtSt,g_AtEn) RESULT(out)
-    INTEGER :: g_knwn(:),g_AtSt(:),g_AtEn(:)
-    LOGICAL :: out
-    INTEGER :: n,m,count_a_t,q,AtSt,AtEn
-
-    count_a_t=0
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       IF(m /= 0) count_a_t=count_a_t+(AtEn-AtSt+1)
-    END DO
-    IF(ALLOCATED(IndBox_a_t)) DEALLOCATE(IndBox_a_t)
-    ALLOCATE(IndBox_a_t(count_a_t)) 
-    count_a_t=0 
-
-    DO n=1,SIZE(G_Knwn)
-       AtSt=G_AtSt(n)
-       AtEn=G_AtEn(n)
-       m=G_knwn(n)
-       DO q=AtSt,AtEn
-          IF(m /= 0) THEN
-             count_a_t=count_a_t+1
-             IndBox_a_t(count_a_t)=q
-          END IF
-       END DO
-    END DO
-    out=count_a_t /= 0
-    IF(.NOT. out) THEN
-       errmsg_f='No Atoms found in the unit box'
-       CALL Add_Errors(-1,errmsg_f)
-    END IF
-  END FUNCTION IndBox_
 
   INCLUDE 'PME__Sources.f90'
 END MODULE PME

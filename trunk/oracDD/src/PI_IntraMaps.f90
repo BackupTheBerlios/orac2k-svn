@@ -56,11 +56,8 @@ MODULE PI_IntraMaps
   USE IndBox, ONLY: IndBox_g_t,IndBox_g_p
   IMPLICIT none
   PRIVATE
-  PUBLIC IntraMaps_n0_, IntraMaps_n1_, Map_n0, Map_n1, Bonds,Angles&
-       &,Imph,Dihed,Int14 
+  PUBLIC IntraMaps_n0_, IntraMaps_n1_, Map_n0, Map_n1
   INTEGER, ALLOCATABLE, TARGET, SAVE :: Map_n0(:),Map_n1(:)
-  LOGICAL, ALLOCATABLE, SAVE :: Bonds(:),Angles(:),Imph(:),Dihed(:)&
-       &,Int14(:),oks(:)
   INTEGER, SAVE :: Init_Calls=0
   
 CONTAINS
@@ -78,7 +75,6 @@ CONTAINS
 
     n0=SIZE(IndBox_g_p)
     ALLOCATE(ind_o(n0))
-
     ind_o=0
     count0=0
     DO nn=1,n0
@@ -123,6 +119,7 @@ CONTAINS
     END IF
 
     n0=SIZE(IndBox_g_p)
+
     ALLOCATE(ind_o(n0))
     ind_o=0
     count0=0
@@ -151,7 +148,6 @@ CONTAINS
     Map_n1=ind_o(1:count0)
   END SUBROUTINE IntraMaps_n1_
   FUNCTION Choose_Atom(q, Tpga, Tpgb) RESULT(out)
-    
     LOGICAL :: out
     INTEGER :: q,Tpga(:,:), Tpgb(:)
     
@@ -169,7 +165,7 @@ CONTAINS
        DO s=1,p
           ss=Tpga(s,t)
           IF(ss == q) CYCLE
-          ssk=Groupa(Atoms(ss) % Grp_No) % knwn
+          ssk=Atoms(ss) % knwn
           IF(ssk == 0) THEN
              ok=.TRUE.
              EXIT
@@ -179,40 +175,4 @@ CONTAINS
     END DO
     out=ok
   END FUNCTION Choose_Atom
-  SUBROUTINE Pick_Atoms(Tpga, oks)
-    
-    LOGICAL :: out
-    LOGICAL :: oks(:)
-    INTEGER :: q,Tpga(:,:)
-    
-    INTEGER :: n,p
-    LOGICAL :: ok
-    INTEGER :: r,t,s,ss,ssk
-    
-
-    n=SIZE(Tpga,2)
-    p=SIZE(Tpga,1)
-    
-    DO t=1,n
-       ok=.FALSE.
-       DO s=1,p
-          ss=Tpga(s,t)
-          ssk=Groupa(Atoms(ss) % Grp_No) % knwn
-          IF(ssk == 0) THEN
-             ok=.TRUE.
-             EXIT
-          END IF
-       END DO
-       IF(ok) THEN
-          DO s=1,p
-             ss=Tpga(s,t)
-             ssk=Groupa(Atoms(ss) % Grp_No) % knwn
-             IF(ssk == 1) THEN
-                oks(ss)=.TRUE.
-             END IF
-          END DO
-       END IF
-    END DO
-    out=.TRUE.
-  END SUBROUTINE Pick_Atoms
 END MODULE PI_IntraMaps

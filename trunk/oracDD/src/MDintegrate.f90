@@ -64,7 +64,7 @@ MODULE MDintegrate
   USE PI_Communicate
   USE IndBox
   USE IndIntraBox
-  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
+  USE PI_IntraMaps
   USE Intra, ONLY: Intra_n0_,Intra_n1_
   IMPLICIT none
   PRIVATE
@@ -128,6 +128,7 @@ CONTAINS
     CALL Pi__ZeroSecondary
     IF(nstep == 0) CALL Init_
 
+
 !!$--- Reset secondary cell. Need it before shifting
 
     CALL PI__ResetSecondary
@@ -154,51 +155,41 @@ CONTAINS
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
-    DO n=NShell,3,-1
+    DO n=NShell,1,-1
        CALL FORCES_Zero(n)
-       CALL InterForces_(n,_INIT_EXCHANGE_)
+       CALL Forces_(n,_INIT_EXCHANGE_)
     END DO
-
-!!$
-!!$--- Pick all groups within the range of the bonded interactions in
-!!$--- the primary cell. Used by ShiftIntra
-!!$
-
-    CALL IntraMaps_n0_
-    CALL IntraMaps_n1_
-
-!!$--- Shift atoms
-    CALL PI__ResetSecondary
-    CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
-!!$--- Gets all n0 interactions beloging to the primary cell
-    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-    CALL Intra_n0_(_INIT_EXCHANGE_)
-    
-!!$--- Shift atoms
-    CALL PI__ResetSecondary
-    CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
-!!$--- Gets all n1 interactions beloging to the primary cell
-    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-    CALL Intra_n1_(_INIT_EXCHANGE_)
-
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
 
+!!$    DO m=1,2
+!!$       DO n=NShell,1,-1
+!!$          CALL Integrate_Shell(n)
+!!$       END DO
+!!$    END DO
 
-!!$    CALL FORCES_Memory(SIZE(Atoms))
-!!$    CALL PI__AssignAtomsToCells
-!!$
-!!$    CALL PI__Shift(1,_INIT_EXCHANGE_)
-!!$    CALL DIR_Forces(1,_INIT_)
-!!$
-!!$
+
 !!$    CALL Integrate_m
 !!$
 !!$    Time_at_Step=Update_Step()
 !!$  CONTAINS
   END SUBROUTINE Integrate
-
+!!$  SUBROUTINE Integrate_Shell(n)
+!!$    INTEGER :: n
+!!$    SELECT CASE(n)
+!!$    CASE(_N0_)
+!!$       CALL Integrate_N0
+!!$    CASE(_N1_)
+!!$       CALL Integrate_N1
+!!$    CASE(_M_)
+!!$       CALL Integrate_M
+!!$    CASE(_L_)
+!!$       CALL Integrate_L
+!!$    CASE(_H_)
+!!$       CALL Integrate_H
+!!$    END SELECT
+!!$  END SUBROUTINE Integrate_Shell
 !!$  SUBROUTINE Integrate_n0
 !!$    DO n0=1,n0_
 !!$       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
@@ -275,29 +266,61 @@ CONTAINS
 !!$    nstep=nstep+1
 !!$    out=nstep*Integrator_ % t
 !!$  END FUNCTION Update_Step
-  SUBROUTINE InterForces_(n,Flag)
+  SUBROUTINE Forces_(n,Flag)
     INTEGER :: n,Flag
-    LOGICAL :: pme
-    TYPE(Force), POINTER :: fp(:)
-    pme= (n-2 == Integrator_ % Ewald_Shell)
-    CALL PI__ResetSecondary
-    IF(pme) THEN
-       IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-            & Ewald__Param % nz /= 0) THEN
-          CALL PI__Shift(n,Flag,_PME_)
-       END IF
-    ELSE
-       CALL PI__Shift(n,Flag)
+    IF(n >= 3) THEN
+       CALL InterForces_
+    ELSE 
+       CALL IntraForces_
     END IF
-    CALL DIR_Forces(n)
-    IF(pme) THEN
-       CALL PME_(n)
-    END IF
+  CONTAINS
+    SUBROUTINE IntraForces_
+      CALL PI__ResetSecondary
+      SELECT CASE(n)
+      CASE(_N0_)
+         CALL IntraMaps_n0_
+!!$--- Shift atoms
+         CALL PI__ShiftIntra(_N0_,Flag)
+!!$--- Gets all n0 interactions beloging to the primary cell
+         IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+         CALL Intra_n0_(Flag)
+      CASE(_N1_)
+         CALL IntraMaps_n1_
+!!$--- Shift atoms
+         CALL PI__ShiftIntra(_N1_,Flag)
+!!$--- Gets all n1 interactions beloging to the primary cell
+         IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+         CALL Intra_n1_(Flag)
+      END SELECT
+      
+    END SUBROUTINE IntraForces_
+    
+    SUBROUTINE InterForces_
+      LOGICAL :: pme
+      TYPE(Force), POINTER :: fp(:)
+      pme= (n-2 == Integrator_ % Ewald_Shell)
+      CALL PI__ResetSecondary
+      IF(pme) THEN
+         IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+              & Ewald__Param % nz /= 0) THEN
+            CALL PI__Shift(n,Flag,_PME_)
+         END IF
+      ELSE
+         CALL PI__Shift(n,Flag)
+      END IF
+      CALL DIR_Forces(n)
+      IF(pme) CALL PME_(n)
+
 !!$
 !!$--- Fold forces contributions to atoms inside the cell
 !!$
-    fp=>FORCES_Pick(n)
-    CALL PI__Fold_F(fp,n,Flag)
 
-  END SUBROUTINE InterForces_
+      fp=>FORCES_Pick(n)
+      CALL PI__Fold_F(fp,n,Flag)
+
+!!$--- Reset Secondary region atoms from PME
+
+      IF(pme) CALL Pi__ResetSecondaryP
+    END SUBROUTINE InterForces_
+  END SUBROUTINE Forces_
 END MODULE MDintegrate
