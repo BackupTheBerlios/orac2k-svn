@@ -176,7 +176,7 @@ CONTAINS
     END DO
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'Second Time time',PI_Node_Cart,timea/(4.0D0)
+    WRITE(*,*) 'Second Time time',PI_Node_Cart,timea
 
   END SUBROUTINE Integrate
   SUBROUTINE Integrate_Shell(n)
@@ -326,18 +326,22 @@ CONTAINS
       CALL PI__ResetSecondary
       SELECT CASE(n)
       CASE(_N0_)
-         CALL IntraMaps_n0_
+         IF(Flag == 0) CALL IntraMaps_n0_
 !!$--- Shift atoms
          CALL PI__ShiftIntra(_N0_,Flag)
 !!$--- Gets all n0 interactions beloging to the primary cell
-         IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+         IF(Flag == 0) THEN
+            IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+         END IF
          CALL Intra_n0_(Flag)
       CASE(_N1_)
-         CALL IntraMaps_n1_
+         IF(Flag == 0) CALL IntraMaps_n1_
 !!$--- Shift atoms
          CALL PI__ShiftIntra(_N1_,Flag)
 !!$--- Gets all n1 interactions beloging to the primary cell
-         IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+         IF(Flag == 0) THEN
+            IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+         END IF
          CALL Intra_n1_(Flag)
       END SELECT
       
