@@ -71,10 +71,15 @@ MODULE MDintegrate
   PUBLIC Integrate
   REAL(8), SAVE :: dt_h, dt_l, dt_m, dt_n1, dt_n0
   INTEGER, SAVE :: n0_,n1_,m_,l_,h_
-  INTEGER, SAVE :: nstep=0,Nshell0=0,Nshell=0
+  INTEGER, SAVE :: nstep,Nshell0=0,Nshell=0
   REAL(8), SAVE :: Time_at_Step=0.0_8
-  
+  INTEGER, SAVE :: n0,n1,ma,la,ha
+  INTEGER, SAVE :: counter !!-- How many N0 steps have been run
 CONTAINS
+  FUNCTION Update_Step RESULT(out)
+    REAL(8) :: out
+    out=nstep*Integrator_ % t
+  END FUNCTION Update_Step
   SUBROUTINE Init_
 
     INTEGER :: n
@@ -163,109 +168,152 @@ CONTAINS
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
 
-!!$    DO m=1,2
-!!$       DO n=NShell,1,-1
-!!$          CALL Integrate_Shell(n)
-!!$       END DO
-!!$    END DO
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+    startime=MPI_WTIME()
+    DO Nstep=1,2
+       CALL Integrate_Shell(NShell)
+       Time_at_Step=Update_Step()
+    END DO
+    endtime=MPI_WTIME()
+    timea=endtime-startime
+    WRITE(*,*) 'Second Time time',PI_Node_Cart,timea/(4.0D0)
 
-
-!!$    CALL Integrate_m
-!!$
-!!$    Time_at_Step=Update_Step()
-!!$  CONTAINS
   END SUBROUTINE Integrate
-!!$  SUBROUTINE Integrate_Shell(n)
-!!$    INTEGER :: n
-!!$    SELECT CASE(n)
-!!$    CASE(_N0_)
-!!$       CALL Integrate_N0
-!!$    CASE(_N1_)
-!!$       CALL Integrate_N1
-!!$    CASE(_M_)
-!!$       CALL Integrate_M
-!!$    CASE(_L_)
-!!$       CALL Integrate_L
-!!$    CASE(_H_)
-!!$       CALL Integrate_H
-!!$    END SELECT
-!!$  END SUBROUTINE Integrate_Shell
-!!$  SUBROUTINE Integrate_n0
-!!$    DO n0=1,n0_
-!!$       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
-!!$       
-!!$       IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
-!!$       
-!!$       CALL GetForces(_N0_)
-!!$       
-!!$       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
-!!$    END DO
-!!$  END SUBROUTINE Integrate_n0
-!!$
-!!$  SUBROUTINE Integrate_n1
-!!$    DO n1=1,n1_
-!!$       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
-!!$
-!!$       CALL Integrate_n0
-!!$
-!!$       CALL GetForces(_N1_)
-!!$       
-!!$       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
-!!$    END DO
-!!$  END SUBROUTINE Integrate_n1
-!!$
-!!$  SUBROUTINE Integrate_m
-!!$    DO m=1,m_
-!!$       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
-!!$
-!!$       CALL Initialize_Intra
-!!$
-!!$       CALL Integrate_n1
-!!$
-!!$       CALL GetForces(_M_)
-!!$       
-!!$       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
-!!$    END DO
-!!$  END SUBROUTINE Integrate_m
-!!$
-!!$  SUBROUTINE GetForces(Init)
-!!$    
-!!$    SELECT CASE(Init)
-!!$    CASE(_N0_)
-!!$       CALL PI__ShiftIntra(_N0_,Track_Intra)
-!!$       CALL Intra_n0_(Track_Intra)
-!!$    CASE(_N1_)
-!!$       CALL PI__ShiftIntra(_N1_,Track_Intra)
-!!$       CALL Intra_n1_(Track_Intra)
-!!$    CASE(_M_)
-!!$
-!!$    END SELECT
-!!$
-!!$  END SUBROUTINE GetForces
-!!$  
-!!$  SUBROUTINE Initialize_Intra
-!!$    
-!!$    CALL PI__ZeroSecondary
-!!$    CALL PI__ResetSecondary
-!!$    
-!!$    CALL IntraMaps_n0_
-!!$    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
-!!$    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-!!$    
-!!$    CALL PI__ZeroSecondary
-!!$    CALL PI__ResetSecondary
-!!$    
-!!$    CALL IntraMaps_n1_
-!!$    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
-!!$    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-!!$    Track_Intra=0
-!!$  END SUBROUTINE Initialize_Intra
-!!$  
-!!$  FUNCTION Update_Step RESULT(out)
-!!$    REAL(8) :: out
-!!$    nstep=nstep+1
-!!$    out=nstep*Integrator_ % t
-!!$  END FUNCTION Update_Step
+  SUBROUTINE Integrate_Shell(n)
+    INTEGER :: n
+    SELECT CASE(n)
+    CASE(_N0_)
+       CALL Integrate_N0
+    CASE(_N1_)
+       CALL Integrate_N1
+    CASE(_M_)
+       CALL Integrate_M
+    CASE(_L_)
+       CALL Integrate_L
+    CASE(_H_)
+       CALL Integrate_H
+    END SELECT
+  END SUBROUTINE Integrate_Shell
+  FUNCTION Pick_Init(na,c) RESULT(out)
+    INTEGER :: na,c,out
+    
+    INTEGER, SAVE :: First_Call=0
+    INTEGER, ALLOCATABLE, SAVE :: Mult_Shell(:)
+    INTEGER :: n
+    IF(First_Call == 0) THEN
+       ALLOCATE(Mult_Shell(NShell))
+       DO n=1,NShell
+          Mult_shell(n)=Get_Mult(n)
+       END DO
+       First_Call=First_Call+1
+    END IF
+    IF(MOD(c,Mult_shell(na)) == 0) THEN
+       out=0
+    ELSE
+       out=1
+    END IF
+    IF(c == 0) out=1
+  CONTAINS
+    RECURSIVE FUNCTION Get_Mult(n) RESULT(out)
+      INTEGER :: n,out
+      IF(n > NShell) THEN
+         out=1
+         RETURN
+      END IF
+      SELECT CASE(n)
+       CASE(_N0_)
+          out=n0_*Get_Mult(n+1)
+       CASE(_N1_)
+          out=n1_*Get_Mult(n+1)
+       CASE(_M_)
+          out=m_*Get_Mult(n+1)
+       CASE(_L_)
+          out=l_*Get_Mult(n+1)
+       CASE(_H_)
+          out=h_*Get_Mult(n+1)
+       END SELECT
+    END FUNCTION Get_Mult
+  END FUNCTION Pick_Init
+  SUBROUTINE Integrate_n0
+    INTEGER, SAVE :: counter=0
+    INTEGER :: Init
+    DO n0=1,n0_
+       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
+       
+       IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
+
+       Init=Pick_Init(_N0_,counter)
+       CALL FORCES_Zero(_N0_)
+       WRITE(*,*) 'Init =',Init, counter+1
+       CALL Forces_(_N0_,Init)
+       IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
+       counter=counter+1
+    END DO
+  END SUBROUTINE Integrate_n0
+
+  SUBROUTINE Integrate_n1
+    INTEGER, SAVE :: counter=0
+    INTEGER :: Init
+
+    DO n1=1,n1_
+       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
+
+       CALL Integrate_n0
+
+       Init=Pick_Init(_N1_,counter)
+       CALL FORCES_Zero(_N1_)
+       CALL Forces_(_N1_,Init)
+       IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
+       counter=counter+1
+    END DO
+  END SUBROUTINE Integrate_n1
+
+  SUBROUTINE Integrate_m
+    INTEGER, SAVE :: counter=0
+    INTEGER :: Init
+    DO ma=1,m_
+       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+
+       CALL Integrate_n1
+
+       Init=Pick_Init(_M_,counter)
+       CALL FORCES_Zero(_M_)
+       CALL Forces_(_M_,_INIT_EXCHANGE_)
+       IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+       counter=counter+1
+    END DO
+  END SUBROUTINE Integrate_m
+  SUBROUTINE Integrate_l
+    INTEGER, SAVE :: counter=0
+    INTEGER :: Init
+    DO la=1,l_
+       IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
+
+       CALL Integrate_m
+
+       Init=Pick_Init(_L_,counter)
+       CALL FORCES_Zero(_L_)
+       CALL Forces_(_L_,Init)
+       IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
+       counter=counter+1
+    END DO
+  END SUBROUTINE Integrate_l
+  SUBROUTINE Integrate_h
+    INTEGER, SAVE :: counter=0
+    INTEGER :: Init
+    DO ha=1,h_
+       IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
+
+       CALL Integrate_l
+
+       Init=Pick_Init(_H_,counter)
+       CALL FORCES_Zero(_H_)
+       CALL Forces_(_H_,Init)
+       IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
+       counter=counter+1
+    END DO
+  END SUBROUTINE Integrate_h
+
   SUBROUTINE Forces_(n,Flag)
     INTEGER :: n,Flag
     IF(n >= 3) THEN

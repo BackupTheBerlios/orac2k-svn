@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Integrator
+MODULE Run
 
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-09 10:56:45 marchi>                           *
@@ -65,24 +65,24 @@ MODULE Integrator
 
   IMPLICIT none
   PRIVATE
-  PUBLIC Integrator__Scan, Integrator__Input, Integrator_
-  TYPE :: Integrator__Input
-     REAL(8) :: t=12.0_8
-     INTEGER :: Mult_Intra(2)=(/2,2/)
-     INTEGER :: Mult_Inter(3)=(/2,3,1/)
-     INTEGER :: Ewald_shell
-  END type Integrator__Input
-  TYPE(Integrator__Input), SAVE :: Integrator_
+  PUBLIC Run__Scan, Run__Input, Run_
+  TYPE :: Run__Input
+     REAL(8) :: Time=0.0_8
+     REAL(8) :: Reject=0.0_8
+     REAL(8) :: Print=0.0_8
+     INTEGER :: Control=0
+  END type Run__Input
+  TYPE(Run__Input), SAVE :: Run_
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
 
-  SUBROUTINE Integrator__Scan
+  SUBROUTINE Run__Scan
     CHARACTER(len=max_pars) :: line,linea
     INTEGER :: n,nword
     TYPE(Branch), SAVE :: check
 
-    CALL Tree__Check_Tree('&INTEGRATOR',check)
+    CALL Tree__Check_Tree('&RUN',check)
     IF(.NOT. ASSOCIATED(check%children)) RETURN
 
     DO n=1,SIZE(check%children)
@@ -91,34 +91,30 @@ CONTAINS
        
        linea=strngs(1)
 
-       IF(MY_Fxm('EWALD',linea)) THEN
-          CALL Ewald
-       ELSE IF(MY_Fxm('TIME',linea)) THEN
-          CALL Timestep
-       ELSE IF(MY_Fxm('INTRA',linea)) THEN
-          CALL Intra
-       ELSE IF(MY_Fxm('INTER',linea)) THEN
-          CALL Inter
+       IF(MY_Fxm('TIME',linea)) THEN
+          CALL Time
+       ELSE IF(MY_Fxm('CONT',linea)) THEN
+          CALL Control
+       ELSE IF(MY_Fxm('REJE',linea)) THEN
+          CALL Reject
+       ELSE IF(MY_Fxm('PRIN',linea)) THEN
+          CALL Print
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)
        END IF
     END DO
-  CONTAINS
-    SUBROUTINE Validate
-      LOGICAL :: ex
-    END SUBROUTINE Validate
-  END SUBROUTINE Integrator__Scan
-  SUBROUTINE Ewald
+  END SUBROUTINE Run__Scan
+  SUBROUTINE Time
     INTEGER ::  nword,iflags,of
 
     nword=SIZE(strngs)
     SELECT CASE(nword)
     CASE(2)
-       CALL SP_Getnum(strngs(2),Integrator_ % Ewald_Shell,iflags)
+       CALL SP_Getnum(strngs(2),Run_ % Time,iflags)
        IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(of+1))//' '//TRIM(strngs(of+2))&
+          errmsg_f='Cannot convert to Real: '''&
+               &//TRIM(strngs(1))//' '//TRIM(strngs(2))&
                &//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
@@ -127,98 +123,63 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
     END SELECT
     CALL Print_Errors()
-  END SUBROUTINE Ewald
-
-  SUBROUTINE Intra
-    INTEGER ::  nword,iflags
-
-    nword=SIZE(strngs)
-    SELECT CASE(nword)
-    CASE(3)
-       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Intra(1),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(2))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Intra(2),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(3))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-    CASE DEFAULT 
-       errmsg_f='INTRA '//TRIM(error_args % g (4))//' 2 '
-       CALL Add_Errors(-1,errmsg_f)
-    END SELECT
-    CALL Print_Errors()
-  END SUBROUTINE Intra
-  SUBROUTINE Inter
-    INTEGER ::  nword,iflags
+  END SUBROUTINE Time
+  SUBROUTINE Reject
+    INTEGER ::  nword,iflags,of
 
     nword=SIZE(strngs)
     SELECT CASE(nword)
     CASE(2)
-       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(2))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-    CASE(3)
-       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(2))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Inter(2),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(3))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-    CASE(4)
-       CALL SP_Getnum(strngs(2),Integrator_ % Mult_Inter(1),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(2))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-       CALL SP_Getnum(strngs(3),Integrator_ % Mult_Inter(2),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(3))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-       CALL SP_Getnum(strngs(4),Integrator_ % Mult_Inter(3),iflags)
-       IF(iflags /=0) THEN
-          errmsg_f='Cannot convert to integer: '''&
-               &//TRIM(strngs(4))//''' '
-          CALL Add_Errors(-1,errmsg_f)
-       END IF
-    CASE DEFAULT 
-       errmsg_f='INTER '//TRIM(error_args % g (4))//' 2 '
-       CALL Add_Errors(-1,errmsg_f)
-    END SELECT
-    CALL Print_Errors()
-  END SUBROUTINE Inter
-  SUBROUTINE Timestep
-    INTEGER ::  nword,iflags
-
-    nword=SIZE(strngs)
-    SELECT CASE(nword)
-    CASE(2)
-       CALL SP_Getnum(strngs(2),Integrator_ % t,iflags)
+       CALL SP_Getnum(strngs(2),Run_ % Reject,iflags)
        IF(iflags /=0) THEN
           errmsg_f='Cannot convert to Real: '''&
-               &//TRIM(strngs(3))//''' '
+               &//TRIM(strngs(1))//' '//TRIM(strngs(2))&
+               &//''' '
           CALL Add_Errors(-1,errmsg_f)
        END IF
     CASE DEFAULT 
-       errmsg_f=error_args % g (4)//' 1 '
+       errmsg_f=error_args % g (4)//' 1'
        CALL Add_Errors(-1,errmsg_f)
     END SELECT
     CALL Print_Errors()
-  END SUBROUTINE Timestep
-END MODULE Integrator
+  END SUBROUTINE Reject
+  SUBROUTINE Print
+    INTEGER ::  nword,iflags,of
+
+    nword=SIZE(strngs)
+    SELECT CASE(nword)
+    CASE(2)
+       CALL SP_Getnum(strngs(2),Run_ % Print,iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to Real: '''&
+               &//TRIM(strngs(1))//' '//TRIM(strngs(2))&
+               &//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    CASE DEFAULT 
+       errmsg_f=error_args % g (4)//' 1'
+       CALL Add_Errors(-1,errmsg_f)
+    END SELECT
+    CALL Print_Errors()
+  END SUBROUTINE Print
+  SUBROUTINE Control
+    INTEGER ::  nword,iflags,of
+
+    nword=SIZE(strngs)
+    SELECT CASE(nword)
+    CASE(2)
+       CALL SP_Getnum(strngs(2),Run_ % Control,iflags)
+       IF(iflags /=0) THEN
+          errmsg_f='Cannot convert to integer: '''&
+               &//TRIM(strngs(1))//' '//TRIM(strngs(2))&
+               &//''' '
+          CALL Add_Errors(-1,errmsg_f)
+       END IF
+    CASE DEFAULT 
+       errmsg_f=error_args % g (4)//' 1'
+       CALL Add_Errors(-1,errmsg_f)
+    END SELECT
+    CALL Print_Errors()
+  END SUBROUTINE Control
+
+END MODULE Run
