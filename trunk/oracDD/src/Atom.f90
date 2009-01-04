@@ -64,7 +64,6 @@ MODULE Atom
   USE LA_Routines
   USE IndBox, ONLY: IndBox_a_t,IndBox_a_p
   USE Forces, Forces__Pick=>Pick
-
   IMPLICIT none
   PRIVATE
   PUBLIC Atom_,Atom__Tpg_, Atom__PDB, Atom__InitCoords,Atom__,&
@@ -179,21 +178,28 @@ CONTAINS
     INTEGER, OPTIONAL :: nozero_write
     INTEGER :: unit
     TYPE(AtomPdb), ALLOCATABLE :: PDB__Coords(:)
-    INTEGER :: n
+    INTEGER :: n,ierr,nn
 
     ALLOCATE(PDB__Coords(SIZE(Atoms)))
-    DO n=1,SIZE(Atoms)
+    
+    FORALL(n=1:SIZE(Atoms)) PDB__Coords(n) % Serial = n
+    DO nn=1,SIZE(Indbox_a_p)
+       n=Indbox_a_t(Indbox_a_p(nn))
        PDB__Coords(n) % x = Atoms(n) % x
        PDB__Coords(n) % y = Atoms(n) % y
        PDB__Coords(n) % z = Atoms(n) % z
-       PDB__Coords(n) % Serial = n
     END DO
-    IF(PRESENT(nozero_write)) THEN
-       CALL PDB__Write(unit,PDB__Coords, nozero_write)
-    ELSE
-       CALL PDB__Write(unit,PDB__Coords)
+    CALL PI_Gather_(PDB__Coords(:) % x, PDB__Coords(:) % y, PDB__Coords(:) % z)
+    IF(Pi_node_cart == 0) THEN
+       IF(PRESENT(nozero_write)) THEN
+          CALL PDB__Write(unit,PDB__Coords, nozero_write)
+       ELSE
+          CALL PDB__Write(unit,PDB__Coords)
+       END IF
     END IF
-    DEALLOCATE(PDB__Coords)
+#ifdef HAVE_MPI
+    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+#endif    
   END SUBROUTINE Atom__PDB
   FUNCTION Atom__Tpg_() RESULT(out)
     LOGICAL :: out

@@ -65,21 +65,26 @@ MODULE MDintegrate
   USE IndBox
   USE IndIntraBox
   USE PI_IntraMaps
+  USE Rattle, ONLY: RATTLE__Init_=>Init_,RATTLE__Parameters_&
+       &=>Parameters_,RATTLE__Verlet_=>Verlet_,RATTLE__Correct_&
+       &=>Correct_ 
   USE Intra, ONLY: Intra_n0_,Intra_n1_
+  USE Potential, ONLY: Rattle__Param 
+  USE Inout, ONLY: Inout__PDB, Inout__
   IMPLICIT none
   PRIVATE
   PUBLIC Integrate
   REAL(8), SAVE :: dt_h, dt_l, dt_m, dt_n1, dt_n0
   INTEGER, SAVE :: n0_,n1_,m_,l_,h_
-  INTEGER, SAVE :: nstep,Nshell0=0,Nshell=0
+  INTEGER, SAVE :: Nshell0=0,Nshell=0
   REAL(8), SAVE :: Time_at_Step=0.0_8
   INTEGER, SAVE :: n0,n1,ma,la,ha
-  INTEGER, SAVE :: counter !!-- How many N0 steps have been run
+  INTEGER, SAVE :: Nstep_N0=0 !!-- How many N0 steps have been run
 CONTAINS
-  FUNCTION Update_Step RESULT(out)
+  FUNCTION Time_Step() RESULT(out)
     REAL(8) :: out
-    out=nstep*Integrator_ % t
-  END FUNCTION Update_Step
+    out=DBLE(Nstep_N0)*dt_N0
+  END FUNCTION Time_Step
   SUBROUTINE Init_
 
     INTEGER :: n
@@ -110,17 +115,18 @@ CONTAINS
 
   END SUBROUTINE Init_
   SUBROUTINE Integrate
-    INTEGER :: n
+    INTEGER :: iter,n
     REAL(8) :: startime,endtime,timea
 
     
-!!$--- Lennard Jones Arrays
+!!$--- Lennard Jones Arrays. _M_ is not used here it could be zero
+!!$--- for what it matters 
 
     CALL DIR_Forces(_M_,_INIT_)
 
 !!$--- Initialize Ewald parameters for the run
 
-    CALL Ewald__Validate
+    IF(Ewald__Param % Switch) CALL Ewald__Validate
 
 !!$
 !!$--- Assign atoms to simulation cells. 
@@ -131,8 +137,12 @@ CONTAINS
 !!$---  without it
 
     CALL Pi__ZeroSecondary
-    IF(nstep == 0) CALL Init_
+    IF(Nstep_N0 == 0) CALL Init_
 
+!!$
+!!$--- Initialize Rattle
+!!$
+    IF(.NOT. RATTLE__Init_(SIZE(Atoms))) CALL Print_Errors()
 
 !!$--- Reset secondary cell. Need it before shifting
 
@@ -152,7 +162,7 @@ CONTAINS
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
 
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+    IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
        CALL PME_(0)
     END IF
@@ -164,15 +174,16 @@ CONTAINS
        CALL FORCES_Zero(n)
        CALL Forces_(n,_INIT_EXCHANGE_)
     END DO
+    IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) % knwn))&
+         & CALL Print_Errors()
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'First time',PI_Node_Cart,timea
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
-    DO Nstep=1,2
+    DO Iter=1,2
        CALL Integrate_Shell(NShell)
-       Time_at_Step=Update_Step()
     END DO
     endtime=MPI_WTIME()
     timea=endtime-startime
@@ -239,15 +250,23 @@ CONTAINS
     INTEGER :: Init
     DO n0=1,n0_
        IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
+       IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
+
        
        IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
 
+       IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
+
        Init=Pick_Init(_N0_,counter)
        CALL FORCES_Zero(_N0_)
-       WRITE(*,*) 'Init =',Init, counter+1
        CALL Forces_(_N0_,Init)
        IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
        counter=counter+1
+       IF(NShell == _N0_ .AND. Init == 0) THEN
+          IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+               & knwn)) CALL Print_Errors()
+       END IF
+       nstep_n0=nstep_n0+1
     END DO
   END SUBROUTINE Integrate_n0
 
@@ -257,6 +276,7 @@ CONTAINS
 
     DO n1=1,n1_
        IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
+       IF(.NOT. Rattle_it(dt_n1,RATTLE__Correct_)) CALL Print_Errors()
 
        CALL Integrate_n0
 
@@ -265,14 +285,20 @@ CONTAINS
        CALL Forces_(_N1_,Init)
        IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
        counter=counter+1
+       IF(NShell == _N1_ .AND. Init == 0) THEN
+          IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+               & knwn)) CALL Print_Errors()
+       END IF
     END DO
   END SUBROUTINE Integrate_n1
 
   SUBROUTINE Integrate_m
     INTEGER, SAVE :: counter=0
     INTEGER :: Init
+    REAL(8) :: Time_at_step
     DO ma=1,m_
        IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+       IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
 
        CALL Integrate_n1
 
@@ -281,6 +307,16 @@ CONTAINS
        CALL Forces_(_M_,_INIT_EXCHANGE_)
        IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
        counter=counter+1
+       IF(NShell == _M_ .AND. Init == 0) THEN
+          IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+               & knwn)) CALL Print_Errors()
+       END IF
+
+       Time_at_Step=Time_Step()
+
+       IF(ABS(MOD(Time_at_step,Inout__PDB % Freq)) < 1.0D-6) THEN
+          CALL Atom__PDB(Inout__PDB % Unit)
+       END IF
     END DO
   END SUBROUTINE Integrate_m
   SUBROUTINE Integrate_l
@@ -288,6 +324,7 @@ CONTAINS
     INTEGER :: Init
     DO la=1,l_
        IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
+       IF(.NOT. Rattle_it(dt_l,RATTLE__Correct_)) CALL Print_Errors()
 
        CALL Integrate_m
 
@@ -296,6 +333,10 @@ CONTAINS
        CALL Forces_(_L_,Init)
        IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
        counter=counter+1
+       IF(NShell == _L_ .AND. Init == 0) THEN
+          IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+               & knwn)) CALL Print_Errors()
+       END IF
     END DO
   END SUBROUTINE Integrate_l
   SUBROUTINE Integrate_h
@@ -303,6 +344,7 @@ CONTAINS
     INTEGER :: Init
     DO ha=1,h_
        IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
+       IF(.NOT. Rattle_it(dt_h,RATTLE__Correct_)) CALL Print_Errors()
 
        CALL Integrate_l
 
@@ -311,6 +353,10 @@ CONTAINS
        CALL Forces_(_H_,Init)
        IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
        counter=counter+1
+       IF(NShell == _H_ .AND. Init == 0) THEN
+          IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+               & knwn)) CALL Print_Errors()
+       END IF
     END DO
   END SUBROUTINE Integrate_h
 
@@ -350,8 +396,8 @@ CONTAINS
     SUBROUTINE InterForces_
       LOGICAL :: pme
       TYPE(Force), POINTER :: fp(:)
-      pme= (n-2 == Integrator_ % Ewald_Shell)
       CALL PI__ResetSecondary
+      pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
       IF(pme) THEN
          IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
               & Ewald__Param % nz /= 0) THEN
@@ -371,8 +417,22 @@ CONTAINS
       CALL PI__Fold_F(fp,n,Flag)
 
 !!$--- Reset Secondary region atoms from PME
-
+      
       IF(pme) CALL Pi__ResetSecondaryP
     END SUBROUTINE InterForces_
   END SUBROUTINE Forces_
+  FUNCTION Rattle_it(dt,Func) RESULT(out)
+    LOGICAL :: out
+    REAL(8) :: dt
+    INTERFACE
+       FUNCTION Func(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
+         LOGICAL :: out
+         REAL(8) :: dt,xp0a(:),yp0a(:),zp0a(:),vpxa(:),vpya(:),vpza(:)
+       END FUNCTION Func
+    END INTERFACE
+    out=.TRUE.
+    IF(.NOT. Rattle__Param % switch) RETURN  
+    out=Func(dt, Atoms(:) % x,  Atoms(:) % y, Atoms(:) % z, Atoms(:) &
+         &% vx,  Atoms(:) % vy, Atoms(:) % vz)
+  END FUNCTION Rattle_it
 END MODULE MDintegrate

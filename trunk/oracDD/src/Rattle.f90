@@ -102,7 +102,8 @@ CONTAINS
     LOGICAL :: oka
 
     Call_Init=.TRUE.
-    out=.FALSE.
+    out=.TRUE.
+    IF(.NOT. Rattle__Param % switch) RETURN
     nc=SIZE(Prm % Constr)
 
     ALLOCATE(ind0(ntot),ind1(nmax,ntot))
@@ -122,7 +123,6 @@ CONTAINS
        ind1(ind0(i2),i2)=-nn
     END DO
 
-    out=.TRUE.
     ALLOCATE(cnlist(ntot),oks0(SIZE(Tpg % Bonds,2)),oks(ntot))
 
 !!$
@@ -214,6 +214,10 @@ CONTAINS
           cnst0(n) % g(m) = Prm % Constr(nn) % g(1)
        END DO
     END DO
+    nmat=Rattle__Param % mim_Max
+    ALLOCATE(mat(nmat,nmat),gam(nmat),gamo(nmat),matx(2*nmat&
+         &*nmat),maty(2*nmat*nmat),matz(2*nmat*nmat),xc(nmat)&
+         &,yc(nmat),zc(nmat),dd(nmat),ipiv(2*nmat))
 
     out=.TRUE.
 
@@ -255,6 +259,8 @@ CONTAINS
     TYPE(ClusterList), ALLOCATABLE:: cnst1(:)
     INTEGER, ALLOCATABLE :: indx(:)
 
+    out=.TRUE.
+    IF(.NOT. Rattle__Param % switch) RETURN
     IF(.NOT. Call_Init) THEN
        out=.FALSE.
        errmsg_f='Internal: In Rattle Parameters_() must be called afte&
@@ -262,7 +268,6 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        RETURN
     END IF
-    
     IF(ALLOCATED(cnst)) DEALLOCATE(cnst)
     IF(ALLOCATED(dss)) DEALLOCATE(dss)
     IF(ALLOCATED(coeff)) DEALLOCATE(coeff)
@@ -323,12 +328,6 @@ CONTAINS
        n=IndBox_a_t(IndBox_a_p(nn))
        mass0(nn)=1.0_8/mass(n)
     END DO
-
-    nmat=Rattle__Param % mim_Max
-    ALLOCATE(mat(nmat,nmat),gam(nmat),gamo(nmat),matx(2*nmat&
-         &*nmat),maty(2*nmat*nmat),matz(2*nmat*nmat),xc(nmat)&
-         &,yc(nmat),zc(nmat),dd(nmat),ipiv(2*nmat))
-
     out=.TRUE.
   END FUNCTION Parameters_
   INCLUDE "Rattle__Verlet.f90"

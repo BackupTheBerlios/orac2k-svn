@@ -77,6 +77,7 @@ MODULE Potential
      INTEGER :: nx=0,ny=0,nz=0
      INTEGER :: order=5
      REAL(8) :: rkcut=1.0D9
+     LOGICAL :: Switch=.FALSE.
   END TYPE Ewald__Input
   TYPE(Ewald__Input), SAVE, TARGET :: Ewald__Param
   TYPE :: Direct__Input
@@ -126,7 +127,7 @@ CONTAINS
   END SUBROUTINE Potential__Scan
   SUBROUTINE Ewald
     INTEGER ::  nword,iflags,of
-
+    Ewald__Param % Switch=.TRUE.
     of=1
     nword=SIZE(strngs)
     IF(MY_Fxm('FIX',strngs(2))) THEN

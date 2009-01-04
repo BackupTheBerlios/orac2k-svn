@@ -69,9 +69,6 @@ MODULE MDRun
   USE IndIntraBox
   USE Intra, ONLY: Intra_n0_,Intra_n1_
   USE Minimize
-  USE Rattle, ONLY: RATTLE__Init_=>Init_,RATTLE__Parameters_&
-       &=>Parameters_,RATTLE__Verlet_=>Verlet_,RATTLE__Correct_&
-       &=>Correct_ 
   USE IndBox
   USE MDintegrate
   IMPLICIT none

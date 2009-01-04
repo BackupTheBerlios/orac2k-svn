@@ -30,9 +30,9 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
-  
-  REAL(8) :: xp0a(:),yp0a(:),zp0a(:),vpxa(:),vpya(:),vpza(:)
+FUNCTION Correct_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
+  LOGICAL :: out
+  REAL(8) :: dt,xp0a(:),yp0a(:),zp0a(:),vpxa(:),vpya(:),vpza(:)
   INTEGER, POINTER :: cnstp(:,:)
   REAL(8), POINTER :: dssp(:),coeffp(:),xp1(:),yp1(:),zp1(:),dssip(:)&
        &,coeffip(:) 
@@ -55,6 +55,8 @@ SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
   INTEGER :: info
   LOGICAL, ALLOCATABLE :: mask(:)
 
+  out=.TRUE.
+  IF(.NOT. Rattle__Param % switch) RETURN
   CALL Gather_Atoms
   
   ALLOCATE(xxp1(nc),yyp1(nc),zzp1(nc),dssi(nc),coeffi(nc),mask(natom))
@@ -62,11 +64,11 @@ SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
   DO nn=1,nc
      cnstp=>cnst(nn) % n1
      n0=SIZE(cnstp,2)
-     ALLOCATE(xxp1(n) % g(n0))
-     ALLOCATE(yyp1(n) % g(n0))
-     ALLOCATE(zzp1(n) % g(n0))
-     ALLOCATE(dssi(n) % g(n0))
-     ALLOCATE(coeffi(n) % g(n0))
+     ALLOCATE(xxp1(nn) % g(n0))
+     ALLOCATE(yyp1(nn) % g(n0))
+     ALLOCATE(zzp1(nn) % g(n0))
+     ALLOCATE(dssi(nn) % g(n0))
+     ALLOCATE(coeffi(nn) % g(n0))
   END DO
   DO nn=1,nc
      cnstp=>cnst(nn) % n1
@@ -76,8 +78,8 @@ SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
      yp1=>yyp1(nn) % g
      zp1=>zzp1(nn) % g
      n0=SIZE(cnstp,2)
-     coeffi(m) % g=1.0D0/coeffp
-     dssi(m) % g=1.0D0/dssp
+     coeffi(nn) % g=1.0D0/coeffp
+     dssi(nn) % g=1.0D0/dssp
      DO m=1,n0
         la=cnstp(1,m)
         lb=cnstp(2,m)
@@ -132,7 +134,8 @@ SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
               errmsg_f='While RATTLEing: The iteration procedure did n&
                    &ot converge.'
               CALL Add_Errors(-1,errmsg_f)
-              CALL Print_Errors()
+              out=.FALSE.
+              RETURN
            END IF
            GOTO 1000
         END IF
@@ -290,7 +293,8 @@ SUBROUTINE Correct_(xp0a,yp0a,zp0a,vpxa,vpya,vpza)
               errmsg_f='While constraining with MIM: matrix inversion &
                    &has failed.'
               CALL Add_Errors(-1,errmsg_f)
-              CALL Print_Errors()
+              out=.FALSE.
+              RETURN
            END IF
         END IF
         
@@ -357,4 +361,4 @@ CONTAINS
        vpza(n)=vpz(nn)
     END DO
   END SUBROUTINE Scatter_Atoms
-END SUBROUTINE Correct_
+END FUNCTION Correct_

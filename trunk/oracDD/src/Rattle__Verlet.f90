@@ -30,10 +30,9 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Verlet_(dt,xp0a,yp0a,zp0a,xp1a,yp1a,zp1a,vpxa,vpya,vpza)
-  
-  REAL(8) :: dt,xp0a(:),yp0a(:),zp0a(:),xp1a(:),yp1a(:),zp1a(:)&
-       &,vpxa(:),vpya(:),vpza(:)
+FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
+  LOGICAL :: out
+  REAL(8) :: dt,xp0a(:),yp0a(:),zp0a(:),vpxa(:),vpya(:),vpza(:)
   INTEGER, POINTER :: cnstp(:,:)
   REAL(8), POINTER :: dssp(:),coeffp(:),x0(:),y0(:),z0(:)
   TYPE(Rattle__Type2), ALLOCATABLE, TARGET :: xx0(:),yy0(:),zz0(:)
@@ -42,17 +41,19 @@ SUBROUTINE Verlet_(dt,xp0a,yp0a,zp0a,xp1a,yp1a,zp1a,vpxa,vpya,vpza)
        &,kb,count1
   REAL(8) ::  xab,yab,zab,dpx,dpy,dpz,dpp,dps,gg,amsla,amslb&
        &,dpax,dpay,dpaz,dpbx,dpby,dpbz
-  REAL(8) ::  gg1,gg2,dcnt,dti,xk,yk,zk,tol_mim,aux1,aux2,aux3&
+  REAL(8) ::  gg1,gg2,dcnt,dti,xk,yk,zk,aux1,aux2,aux3&
        &,det,a11,a12,a13,a21,a22,a23,a31,a32,a33,b11,b12&
        &,b13,b21,b22,b23,b31,b32,b33,gcpu_mm,vfcp_mm,tfcp_mm&
        &,tdelta_mm,elapse
   
-  REAL(8), SAVE :: tol=1.0D-7,tol_min=1.0D-5,zero=0.0_8,one=1.0_8&
+  REAL(8), SAVE :: tol=1.0D-7,tol_mim=1.0D-5,zero=0.0_8,one=1.0_8&
        &,two=2.0_8,three=3.0_8,four=4.0_8
   REAL(8) ::   aux,xd,yd,zd
   INTEGER :: info
   LOGICAL, ALLOCATABLE :: mask(:)
-  
+
+  out=.TRUE.
+  IF(.NOT. Rattle__Param % switch) RETURN  
   dti=1.0D0/dt
   
   CALL Gather_Atoms
@@ -60,7 +61,7 @@ SUBROUTINE Verlet_(dt,xp0a,yp0a,zp0a,xp1a,yp1a,zp1a,vpxa,vpya,vpza)
   ALLOCATE(xx0(nc),yy0(nc),zz0(nc),mask(natom))
   
   DO n=1,nc
-     cnstp=>cnst(nn) % n1
+     cnstp=>cnst(n) % n1
      n0=SIZE(cnstp,2)
      ALLOCATE(xx0(n) % g(n0))
      ALLOCATE(yy0(n) % g(n0))
@@ -148,7 +149,8 @@ SUBROUTINE Verlet_(dt,xp0a,yp0a,zp0a,xp1a,yp1a,zp1a,vpxa,vpya,vpza)
               errmsg_f=' While SHAKEing : The iteration procedure &
                    &did not converge.'
               CALL Add_Errors(-1,errmsg_f)
-              CALL Print_Errors()
+              out=.FALSE.
+              RETURN
            END IF
            GOTO 1000
         END IF
@@ -362,14 +364,16 @@ SUBROUTINE Verlet_(dt,xp0a,yp0a,zp0a,xp1a,yp1a,zp1a,vpxa,vpya,vpza)
            IF(info .NE. 0) THEN
               errmsg_f=' While constraining with MIM: matrix inversion failed. '
               CALL Add_Errors(-1,errmsg_f)
-              CALL Print_Errors()
+              out=.FALSE.
+              RETURN
            END IF
            iter=iter+1
            IF(iter.GT.5000)THEN
               errmsg_f=' While constraining with MIM: The iteration &
                    &procedure did not converge.' 
               CALL Add_Errors(-1,errmsg_f)
-              CALL Print_Errors()
+              out=.FALSE.
+              RETURN
            END IF
            iox=0
            DO ka=1,n0
@@ -437,9 +441,9 @@ CONTAINS
        xp0(nn)=xp0a(n)
        yp0(nn)=yp0a(n)
        zp0(nn)=zp0a(n)
-       xp1(nn)=xp1a(n)
-       yp1(nn)=yp1a(n)
-       zp1(nn)=zp1a(n)
+       xp1(nn)=xp0a(n)
+       yp1(nn)=yp0a(n)
+       zp1(nn)=zp0a(n)
        vpx(nn)=vpxa(n)
        vpy(nn)=vpya(n)
        vpz(nn)=vpza(n)
@@ -449,15 +453,12 @@ CONTAINS
     INTEGER :: n,nn
     DO nn=1,natom
        n=IndBox_a_t(IndBox_a_p(nn))
-       xp0a(n)=xp0(nn)
-       yp0a(n)=yp0(nn)
-       zp0a(n)=zp0(nn)
-       xp1a(n)=xp1(nn)
-       yp1a(n)=yp1(nn)
-       zp1a(n)=zp1(nn)
+       xp0a(n)=xp1(nn)
+       yp0a(n)=yp1(nn)
+       zp0a(n)=zp1(nn)
        vpxa(n)=vpx(nn)
        vpya(n)=vpy(nn)
        vpza(n)=vpz(nn)
     END DO
   END SUBROUTINE Scatter_Atoms
-END SUBROUTINE Verlet_
+END FUNCTION Verlet_
