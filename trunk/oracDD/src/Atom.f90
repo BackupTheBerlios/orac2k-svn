@@ -564,9 +564,9 @@ CONTAINS
        mass=Atoms(m) % mass
        tfact=0.5_8*ts2/mass
 
-       Atoms(m) % x=Atoms(m) % x+tfact*fp(m) % x
-       Atoms(m) % y=Atoms(m) % y+tfact*fp(m) % y
-       Atoms(m) % z=Atoms(m) % z+tfact*fp(m) % z
+       Atoms(m) % x=Atoms(m) % x+tfact*fp(m) % x+dt*Atoms(m) % vx
+       Atoms(m) % y=Atoms(m) % y+tfact*fp(m) % y+dt*Atoms(m) % vy
+       Atoms(m) % z=Atoms(m) % z+tfact*fp(m) % z+dt*Atoms(m) % vz
     END DO
   END FUNCTION Atom__Verlet_
   FUNCTION Atom__Correct_(dt,level) RESULT(out)

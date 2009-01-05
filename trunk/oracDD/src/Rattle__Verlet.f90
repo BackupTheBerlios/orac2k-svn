@@ -97,7 +97,8 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
      y0=>yy0(nn) % g
      z0=>zz0(nn) % g
      n0=SIZE(cnstp,2)
-     IF(n0 > Rattle__Param % mim_Max) THEN
+     
+     IF(n0 > Rattle__Param % mim_Max .OR. (.NOT. Rattle__Param % mim)) THEN
         iter=0
 1000    CONTINUE
         iox=0
@@ -362,15 +363,16 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
               END IF
            END IF
            IF(info .NE. 0) THEN
-              errmsg_f=' While constraining with MIM: matrix inversion failed. '
+              errmsg_f=' In Rattle__Verlet: While constraining with MI&
+                   &M: matrix inversion failed. '
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
               RETURN
            END IF
            iter=iter+1
            IF(iter.GT.5000)THEN
-              errmsg_f=' While constraining with MIM: The iteration &
-                   &procedure did not converge.' 
+              errmsg_f=' In Rattle__Verlet: While constraining with MI&
+                   &M: The iteration procedure did not converge.'
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
               RETURN

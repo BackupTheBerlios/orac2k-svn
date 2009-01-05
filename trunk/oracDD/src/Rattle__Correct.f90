@@ -290,8 +290,8 @@ FUNCTION Correct_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
         ELSE
            CALL dgesv(n0,1,mat,nmat,ipiv,gam,nmat,info)
            IF(info .NE. 0) THEN
-              errmsg_f='While constraining with MIM: matrix inversion &
-                   &has failed.'
+              errmsg_f='In Rattle__Correct: While constraining with MIM&
+                   &: matrix inversion has failed.' 
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
               RETURN
