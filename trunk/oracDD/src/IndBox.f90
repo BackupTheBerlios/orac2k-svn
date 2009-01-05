@@ -123,7 +123,7 @@ CONTAINS
              IndBox_a_t(count_a_t)=q
              IF(m == 1) THEN
                 count_a_p=count_a_p+1
-                IndBox_a_p(count_a_p)=count_a_t
+                IndBox_a_p(count_a_p)=q
                 BoxInd_a_p(q)=count_a_p
              END IF
           END IF

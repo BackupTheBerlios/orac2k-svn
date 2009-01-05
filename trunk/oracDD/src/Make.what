@@ -90,6 +90,6 @@ endif
 
 #FFLAGS = -O3
 #FFLAGS = -g -C
-#include Make.Lx_ifc_breizh
+include Make.Lx_ifc_breizh
 #include Make.MAC_GF
-include Make.MAC
+#include Make.MAC

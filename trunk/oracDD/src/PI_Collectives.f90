@@ -49,7 +49,7 @@ MODULE PI_Collectives
   USE mpi
 #endif
   USE PI_
-  USE IndBox, ONLY: IndBox_a_t,IndBox_a_p
+  USE IndBox, ONLY: IndBox_a_p
   IMPLICIT none
   PRIVATE
   PUBLIC PI_Gather_, PI_AllGather_
@@ -77,7 +77,7 @@ CONTAINS
        
        pt=displ(PI_Node_Cart+1)
        DO nn=1,SIZE(IndBox_a_p)
-          n=IndBox_a_t(IndBox_a_p(nn))
+          n=IndBox_a_p(nn)
           iBuff(pt+nn)=n
           x(pt+nn)=xc(n)
           y(pt+nn)=yc(n)
@@ -127,7 +127,7 @@ CONTAINS
        
        pt=displ(PI_Node_Cart+1)
        DO nn=1,SIZE(IndBox_a_p)
-          n=IndBox_a_t(IndBox_a_p(nn))
+          n=IndBox_a_p(nn)
           iBuff(pt+nn)=n
           x(pt+nn)=xc(n)
           y(pt+nn)=yc(n)

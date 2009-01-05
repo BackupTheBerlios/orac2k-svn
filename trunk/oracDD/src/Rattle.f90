@@ -325,7 +325,7 @@ CONTAINS
          &,zp1(natom),vpx(natom),vpy(natom),vpz(natom),mass0(natom))
 
     DO nn=1,natom
-       n=IndBox_a_t(IndBox_a_p(nn))
+       n=IndBox_a_p(nn)
        mass0(nn)=1.0_8/mass(n)
     END DO
     out=.TRUE.

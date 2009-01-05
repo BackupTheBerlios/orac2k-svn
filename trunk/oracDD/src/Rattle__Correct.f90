@@ -340,7 +340,7 @@ CONTAINS
   SUBROUTINE Gather_Atoms
     INTEGER :: n,nn
     DO nn=1,natom
-       n=IndBox_a_t(IndBox_a_p(nn))
+       n=IndBox_a_p(nn)
        xp0(nn)=xp0a(n)
        yp0(nn)=yp0a(n)
        zp0(nn)=zp0a(n)
@@ -352,7 +352,7 @@ CONTAINS
   SUBROUTINE Scatter_Atoms
     INTEGER :: n,nn
     DO nn=1,natom
-       n=IndBox_a_t(IndBox_a_p(nn))
+       n=IndBox_a_p(nn)
        xp0a(n)=xp0(nn)
        yp0a(n)=yp0(nn)
        zp0a(n)=zp0(nn)

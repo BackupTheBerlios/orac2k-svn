@@ -30,51 +30,75 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Mon Jan  5 2009 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
-
-!!$---- This module is part of the program  ----*
-
-  USE Parallel
-  USE Parameters
-  USE Setup
-  USE Potential
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
-  USE Tree
-  USE InOut
-  USE Simulation
-  USE Integrator
-  USE Run
-  IMPLICIT none
-  PRIVATE
-  PUBLIC Process_
+!!$---- This module is part of the program oracDD ----*
+SUBROUTINE Forces_(n,Flag)
+  INTEGER :: n,Flag
+  IF(n >= 3) THEN
+     CALL InterForces_
+  ELSE 
+     CALL IntraForces_
+  END IF
 CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Potential__Scan
-    CALL Parallel__Scan
-    CALL Simulation__Scan
-    CALL Integrator__Scan
-    CALL Run__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+  SUBROUTINE IntraForces_
+    CALL PI__ResetSecondary
+    SELECT CASE(n)
+    CASE(_N0_)
+       IF(Flag == 0) CALL IntraMaps_n0_
+!!$--- Shift atoms
+       CALL PI__ShiftIntra(_N0_,Flag)
+!!$--- Gets all n0 interactions beloging to the primary cell
+       IF(Flag == 0) THEN
+          IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+       END IF
+       CALL Intra_n0_(Flag)
+    CASE(_N1_)
+       IF(Flag == 0) CALL IntraMaps_n1_
+!!$--- Shift atoms
+       CALL PI__ShiftIntra(_N1_,Flag)
+!!$--- Gets all n1 interactions beloging to the primary cell
+       IF(Flag == 0) THEN
+          IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+       END IF
+       CALL Intra_n1_(Flag)
+    END SELECT
+    
+  END SUBROUTINE IntraForces_
+  
+  SUBROUTINE InterForces_
+    LOGICAL :: pme
+    TYPE(Force), POINTER :: fp(:)
+    CALL PI__ResetSecondary
+    pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
+    IF(pme) THEN
+       IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+            & Ewald__Param % nz /= 0) THEN
+          CALL PI__Shift(n,Flag,_PME_)
+       END IF
+    ELSE
+       CALL PI__Shift(n,Flag)
+    END IF
+    CALL DIR_Forces(n)
+    IF(pme) CALL PME_(n)
+    
+!!$
+!!$--- Fold forces contributions to atoms inside the cell
+!!$
+    
+    fp=>FORCES_Pick(n)
+    CALL PI__Fold_F(fp,n,Flag)
+    
+!!$--- Reset Secondary region atoms from PME
+    
+    IF(pme) CALL Pi__ResetSecondaryP
+  END SUBROUTINE InterForces_
+END SUBROUTINE Forces_

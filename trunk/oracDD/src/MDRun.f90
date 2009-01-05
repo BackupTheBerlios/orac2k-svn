@@ -70,7 +70,7 @@ MODULE MDRun
   USE Intra, ONLY: Intra_n0_,Intra_n1_
   USE Minimize
   USE IndBox
-  USE MDintegrate
+  USE Integrate
   IMPLICIT none
   PRIVATE
   PUBLIC MDRun_
@@ -111,9 +111,9 @@ CONTAINS
 !!$--- Adjust bond length by minimizing the bond stretching part of the potential
 !!$
 
-    CALL Adjust_Bonds
+!!$    CALL Adjust_Bonds
 
-    CALL Integrate
+    CALL Integrate_
 
     STOP
     CALL PI__Shift(_M_,_INIT_EXCHANGE_)

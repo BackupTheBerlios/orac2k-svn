@@ -433,11 +433,12 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
      END IF
   END DO
   CALL Scatter_Atoms
+  WRITE(*,*) 'Iter 1',DBLE(Iter1)/DBLE(nc),Rattle__Param % mim_Max
 CONTAINS
   SUBROUTINE Gather_Atoms
     INTEGER :: n,nn
     DO nn=1,natom
-       n=IndBox_a_t(IndBox_a_p(nn))
+       n=IndBox_a_p(nn)
        xp0(nn)=xp0a(n)
        yp0(nn)=yp0a(n)
        zp0(nn)=zp0a(n)
@@ -452,7 +453,7 @@ CONTAINS
   SUBROUTINE Scatter_Atoms
     INTEGER :: n,nn
     DO nn=1,natom
-       n=IndBox_a_t(IndBox_a_p(nn))
+       n=IndBox_a_p(nn)
        xp0a(n)=xp1(nn)
        yp0a(n)=yp1(nn)
        zp0a(n)=zp1(nn)

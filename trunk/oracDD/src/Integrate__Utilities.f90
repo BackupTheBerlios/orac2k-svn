@@ -30,51 +30,109 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Mon Jan  5 2009 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program  ----*
-
-  USE Parallel
-  USE Parameters
-  USE Setup
-  USE Potential
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
-  USE Tree
-  USE InOut
-  USE Simulation
-  USE Integrator
-  USE Run
-  IMPLICIT none
-  PRIVATE
-  PUBLIC Process_
+!!$---- This module is part of the program oracDD ----*
+FUNCTION Pick_Init(na,c) RESULT(out)
+  INTEGER :: na,c,out
+  
+  INTEGER, SAVE :: First_Call=0
+  INTEGER, ALLOCATABLE, SAVE :: Mult_Shell(:)
+  INTEGER :: n
+  IF(First_Call == 0) THEN
+     ALLOCATE(Mult_Shell(NShell))
+     DO n=1,NShell
+        Mult_shell(n)=Get_Mult(n)
+     END DO
+     First_Call=First_Call+1
+  END IF
+  IF(MOD(c,Mult_shell(na)) == 0) THEN
+     out=0
+  ELSE
+     out=1
+  END IF
+  IF(c == 0) out=1
 CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Potential__Scan
-    CALL Parallel__Scan
-    CALL Simulation__Scan
-    CALL Integrator__Scan
-    CALL Run__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+  RECURSIVE FUNCTION Get_Mult(n) RESULT(out)
+    INTEGER :: n,out
+    IF(n > NShell) THEN
+       out=1
+       RETURN
+    END IF
+    SELECT CASE(n)
+    CASE(_N0_)
+       out=n0_*Get_Mult(n+1)
+    CASE(_N1_)
+       out=n1_*Get_Mult(n+1)
+    CASE(_M_)
+       out=m_*Get_Mult(n+1)
+    CASE(_L_)
+       out=l_*Get_Mult(n+1)
+    CASE(_H_)
+       out=h_*Get_Mult(n+1)
+    END SELECT
+  END FUNCTION Get_Mult
+END FUNCTION Pick_Init
+
+FUNCTION Print_Now(n,Freq) RESULT(out)
+  INTEGER :: n
+  REAL(8) :: Freq
+  LOGICAL :: out
+  
+  INTEGER :: My
+  REAL(8) :: Time_at_step,dt,My_Freq
+  
+  SELECT CASE(n)
+  CASE(_N0_)
+     dt=dt_n0
+  CASE(_N1_)
+     dt=dt_n1
+  CASE(_M_)
+     dt=dt_m
+  CASE(_L_)
+     dt=dt_l
+  CASE(_H_)
+     dt=dt_h
+  END SELECT
+  
+  Time_at_Step=Time_Step()
+  
+  My=INT(Freq/dt)
+  IF(My == 0) My=1
+  My_Freq=My*dt
+  
+  out=MOD(Time_at_Step,My_Freq) == 0
+END FUNCTION Print_Now
+FUNCTION  Get_RunLength() RESULT(out)
+  TYPE(Length) :: out
+  out % nstep=-1
+  out % Time=-1.0_8
+  
+  SELECT CASE(NShell)
+  CASE(_N0_)
+     out % nstep=INT(Run_ % Time/dt_N0)
+     out % Time=out % nstep*dt_n0
+  CASE(_N1_)
+     out % nstep=INT(Run_ % Time/dt_n1)
+     out % Time=out % nstep*dt_n1
+  CASE(_M_)
+     out % nstep=INT(Run_ % Time/dt_m)
+     out % Time=out % nstep*dt_m
+  CASE(_L_)
+     out % nstep=INT(Run_ % Time/dt_l)
+     out % Time=out % nstep*dt_l
+  CASE(_H_)
+     out % nstep=INT(Run_ % Time/dt_h)
+     out % Time=out % nstep*dt_h
+  END SELECT
+  WRITE(*,*) NShell,Run_ % Time,dt_H
+END FUNCTION Get_RunLength

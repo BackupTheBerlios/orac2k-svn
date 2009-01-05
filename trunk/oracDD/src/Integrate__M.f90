@@ -30,51 +30,40 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE Process
-
 !!$***********************************************************************
-!!$   Time-stamp: <2007-01-04 18:04:11 marchi>                           *
-!!$                                                                      *
-!!$                                                                      *
-!!$                                                                      *
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
 !!$                                                                      *
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Tue Nov 21 2006 -                                     *
+!!$              - Mon Jan  5 2009 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
-!!$---- This module is part of the program  ----*
+!!$---- This module is part of the program oracDD ----*
 
-  USE Parallel
-  USE Parameters
-  USE Setup
-  USE Potential
-  USE Grammars
-  USE Errors, ONLY: Print_Errors, Add_Errors=>Add,Setup_Errors
-  USE Tree
-  USE InOut
-  USE Simulation
-  USE Integrator
-  USE Run
-  IMPLICIT none
-  PRIVATE
-  PUBLIC Process_
-CONTAINS
-  SUBROUTINE Process_
-    INTEGER :: o
-    CALL Setup_Errors
-    CALL Tree__Get_Tree(Grammars__Inputs)
-    CALL Setups__Scan
-    CALL Parameters__Scan
-    CALL Inout__Scan
-    CALL Potential__Scan
-    CALL Parallel__Scan
-    CALL Simulation__Scan
-    CALL Integrator__Scan
-    CALL Run__Scan
-    CALL Print_Errors()
-  END SUBROUTINE Process_
-END MODULE Process
+SUBROUTINE Integrate_m
+  INTEGER, SAVE :: counter=0
+  INTEGER :: Init
+  DO ma=1,m_
+     IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+     IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
+     
+     CALL Integrate_n1
+     
+     Init=Pick_Init(_M_,counter)
+     CALL FORCES_Zero(_M_)
+     CALL Forces_(_M_,_INIT_EXCHANGE_)
+     IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+     counter=counter+1
+     IF(NShell == _M_ .AND. Init == 0) THEN
+        IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
+             & knwn)) CALL Print_Errors()
+     END IF
+     
+     IF(Inout__PDB % Unit /= 0 .AND. Print_Now(_M_,Inout__PDB % Freq)) THEN
+        CALL Atom__PDB(Inout__PDB % Unit)
+     END IF
+  END DO
+END SUBROUTINE Integrate_m

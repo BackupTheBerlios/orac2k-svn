@@ -62,7 +62,7 @@ MODULE Atom
   USE PDB
   USE GAUSS
   USE LA_Routines
-  USE IndBox, ONLY: IndBox_a_t,IndBox_a_p
+  USE IndBox, ONLY: IndBox_a_p
   USE Forces, Forces__Pick=>Pick
   IMPLICIT none
   PRIVATE
@@ -184,7 +184,7 @@ CONTAINS
     
     FORALL(n=1:SIZE(Atoms)) PDB__Coords(n) % Serial = n
     DO nn=1,SIZE(Indbox_a_p)
-       n=Indbox_a_t(Indbox_a_p(nn))
+       n=Indbox_a_p(nn)
        PDB__Coords(n) % x = Atoms(n) % x
        PDB__Coords(n) % y = Atoms(n) % y
        PDB__Coords(n) % z = Atoms(n) % z
@@ -406,22 +406,22 @@ CONTAINS
     ALLOCATE(xa(SIZE(IndBox_a_p)),ya(SIZE(IndBox_a_p))&
          &,za(SIZE(IndBox_a_p)))
 
-    vx=Atoms(IndBox_a_t(IndBox_a_p(:))) % vx
-    vy=Atoms(IndBox_a_t(IndBox_a_p(:))) % vy
-    vz=Atoms(IndBox_a_t(IndBox_a_p(:))) % vz
-    xa=Atoms(IndBox_a_t(IndBox_a_p(:))) % xa
-    ya=Atoms(IndBox_a_t(IndBox_a_p(:))) % ya
-    za=Atoms(IndBox_a_t(IndBox_a_p(:))) % za
-    mass=Atoms(IndBox_a_t(IndBox_a_p(:))) % mass
+    vx=Atoms(IndBox_a_p(:)) % vx
+    vy=Atoms(IndBox_a_p(:)) % vy
+    vz=Atoms(IndBox_a_p(:)) % vz
+    xa=Atoms(IndBox_a_p(:)) % xa
+    ya=Atoms(IndBox_a_p(:)) % ya
+    za=Atoms(IndBox_a_p(:)) % za
+    mass=Atoms(IndBox_a_p(:)) % mass
     xa=xa+PBC(xa)
     ya=ya+PBC(ya)
     za=za+PBC(za)
     
     CALL Velocities
 
-    Atoms(IndBox_a_t(IndBox_a_p(:))) % vx=vx
-    Atoms(IndBox_a_t(IndBox_a_p(:))) % vy=vy
-    Atoms(IndBox_a_t(IndBox_a_p(:))) % vz=vz
+    Atoms(IndBox_a_p(:)) % vx=vx
+    Atoms(IndBox_a_p(:)) % vy=vy
+    Atoms(IndBox_a_p(:)) % vz=vz
 
     out=.TRUE.
   CONTAINS
@@ -560,8 +560,7 @@ CONTAINS
     fp=>Forces__Pick(level)
 
     DO nn=1,SIZE(IndBox_a_p)
-       n=IndBox_a_p(nn)
-       m=IndBox_a_t(n)
+       m=IndBox_a_p(nn)
        mass=Atoms(m) % mass
        tfact=0.5_8*ts2/mass
 
@@ -582,8 +581,7 @@ CONTAINS
     fp=>Forces__Pick(level)
 
     DO nn=1,SIZE(IndBox_a_p)
-       n=IndBox_a_p(nn)
-       m=IndBox_a_t(n)
+       m=IndBox_a_p(nn)
        mass=Atoms(m) % mass
        tfact=0.5_8*dt/mass
 

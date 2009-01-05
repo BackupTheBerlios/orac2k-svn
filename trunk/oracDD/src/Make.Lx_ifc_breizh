@@ -3,3 +3,6 @@ LIB=/share/apps/intel/mkl/10.0.1.014/lib/em64t
 
 LOCFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
 	 -lguide -lpthread -lmkl_core 
+
+##LOCFLAGS=  -lrfftw_mpi -lfftw_mpi -lfftw2x_cdft_DOUBLE -lfftw2xf_intel -lfftw2xc_intel -lmkl_intel_lp64 -lmkl_intel_thread\
+##	 -lguide -lpthread -lmkl_core 
