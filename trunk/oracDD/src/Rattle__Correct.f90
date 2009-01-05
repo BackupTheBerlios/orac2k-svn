@@ -98,7 +98,7 @@ FUNCTION Correct_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
      yp1=>yyp1(nn) % g
      zp1=>zzp1(nn) % g
      n0=SIZE(cnstp,2)
-     IF(n0 > Rattle__Param % mim_Max) THEN
+     IF(n0 > Rattle__Param % mim_Max .OR. (.NOT. Rattle__Param % mim)) THEN
         iter=0
 1000    CONTINUE
         iox=0
