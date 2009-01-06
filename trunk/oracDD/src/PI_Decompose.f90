@@ -73,8 +73,7 @@ MODULE PI_Decompose
        &,0.0D0, 0.0D0, 0.0D0, 1.0D0, 0.0D0, 1.0D0, 1.0D0, 1.0D0 &
        &/),(/8, 3/))
 CONTAINS
-  SUBROUTINE PI__Decomposition_nb(rcut,npxa,npya,npza)
-    REAL(8) :: rcut(:)
+  SUBROUTINE PI__Decomposition_nb(npxa,npya,npza)
     INTEGER, OPTIONAL :: npxa,npya,npza
     INTEGER, POINTER :: vect(:)=>NULL()
     LOGICAL, ALLOCATABLE :: Mask(:)
@@ -82,7 +81,6 @@ CONTAINS
     REAL(8) :: cube
     INTEGER, ALLOCATABLE :: combs(:)
     INTEGER, POINTER :: vect1(:)=>NULL()
-    REAL(8), POINTER :: vec(:,:)=> NULL()
     LOGICAL :: ok
     INTEGER :: n_combs, m_combs, l_combs
     REAL(8) :: d_x, d_Min
@@ -156,7 +154,7 @@ CONTAINS
 
     WRITE(kprint,100) PI_nprocs,PI_npx,PI_npy,PI_npz
     CALL PI__Setup_Cart
-    CALL PI__Setup_SndRcv
+!!$    CALL PI__Setup_SndRcv
 
 100 FORMAT(' ====> Running with ',i3,' Processors ',' nx = ',i2,' ny =&
          & ',i2,' nz = ',i2,' <====')

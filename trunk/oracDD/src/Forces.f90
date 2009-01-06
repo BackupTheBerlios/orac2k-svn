@@ -49,6 +49,7 @@ MODULE Forces
   USE Constants, ONLY: max_pars,max_data, max_char
   USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&
        &, errmsg_f, Print_Errors
+  USE Print_defs
   IMPLICIT none
   PRIVATE
   PUBLIC :: Force,fp_n0,fp_n1,fp_m,fp_l,fp_h,fp_ew,fs_n0,fs_n1,fs_m&
@@ -66,6 +67,7 @@ CONTAINS
   SUBROUTINE Memory(natom)
     INTEGER :: natom
     ALLOCATE(fp_n0(natom),fp_n1(natom),fp_m(natom),fp_l(natom),fp_h(natom),fp_ew(natom))
+    WRITE(kprint,*) '=====> Memory Allocated to Forces on 5 Shells <====='
   END SUBROUTINE Memory
   SUBROUTINE Init(NShell,Rcut_Table)
     INTEGER :: NShell

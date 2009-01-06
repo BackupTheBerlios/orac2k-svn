@@ -86,11 +86,9 @@ CONTAINS
     IF(.NOT. Atom__InitCoords()) CALL Print_Errors()
     IF(.NOT. Groups__InitCoords()) CALL Print_Errors()
 
-    ALLOCATE(rcut_o(SIZE(Radii)))
-    rcut_o=Radii(:) % out+Radii(:) % update
     IF(PA_npx == 0) THEN
        IF(PI_nprocs /= 0) THEN
-          CALL PI__Decomposition_NB(rcut_o)
+          CALL PI__Decomposition_NB
        END IF
     END IF
 
