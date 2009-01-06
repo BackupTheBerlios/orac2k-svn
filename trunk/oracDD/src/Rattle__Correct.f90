@@ -112,6 +112,7 @@ FUNCTION Correct_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
            vdpy=vpy(la)-vpy(lb)
            vdpz=vpz(la)-vpz(lb)
            dpp=dpx*vdpx+dpy*vdpy+dpz*vdpz
+
            IF(DABS(dpp) > tolh) THEN
               gab=-dpp*dssip(k)*coeffip(k)
               iox=1

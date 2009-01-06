@@ -87,7 +87,7 @@ CONTAINS
   END FUNCTION Groups_
   FUNCTION Groups__InitCoords() RESULT(out)
     INTEGER :: ntap,ngrp,n,p1
-    REAL(8) :: mass
+    REAL(8) :: pmass
     REAL(8), ALLOCATABLE :: Tmass(:)
     LOGICAL :: out
     
@@ -111,15 +111,15 @@ CONTAINS
     
     DO n=1,ntap
        p1=Atoms(n) % Grp_No
-       mass=Atoms(n) % mass
-       tmass(p1)=tmass(p1)+ mass
-       Groupa(p1) % xa = Groupa(p1) % xa + mass*Atoms(n) % xa
-       Groupa(p1) % ya = Groupa(p1) % ya + mass*Atoms(n) % ya
-       Groupa(p1) % za = Groupa(p1) % za + mass*Atoms(n) % za
+       pmass=Atoms(n) % pmass
+       tmass(p1)=tmass(p1)+ Atoms(n) % mass
+       Groupa(p1) % xa = Groupa(p1) % xa + pmass*Atoms(n) % xa
+       Groupa(p1) % ya = Groupa(p1) % ya + pmass*Atoms(n) % ya
+       Groupa(p1) % za = Groupa(p1) % za + pmass*Atoms(n) % za
        
-       Groupa(p1) % x = Groupa(p1) % x + mass*Atoms(n) % x
-       Groupa(p1) % y = Groupa(p1) % y + mass*Atoms(n) % y
-       Groupa(p1) % z = Groupa(p1) % z + mass*Atoms(n) % z
+       Groupa(p1) % x = Groupa(p1) % x + pmass*Atoms(n) % x
+       Groupa(p1) % y = Groupa(p1) % y + pmass*Atoms(n) % y
+       Groupa(p1) % z = Groupa(p1) % z + pmass*Atoms(n) % z
        Groupa(p1) % Res_No = Atoms(n) % Res_No
        Groupa(p1) % Grp_No = Atoms(n) % Grp_No
        Groupa(p1) % Id_Res = Atoms(n) % Id_Res
@@ -127,13 +127,6 @@ CONTAINS
        Groupa(p1) % Id_Slv = Atoms(n) % Id_slv
     END DO
     DO n=1,ngrp
-       Groupa(n)%xa=Groupa(n)%xa/tmass(n)
-       Groupa(n)%ya=Groupa(n)%ya/tmass(n)
-       Groupa(n)%za=Groupa(n)%za/tmass(n)
-       
-       Groupa(n)%x=Groupa(n)%x/tmass(n)
-       Groupa(n)%y=Groupa(n)%y/tmass(n)
-       Groupa(n)%z=Groupa(n)%z/tmass(n)
        Groupa(n) % mass = tmass(n)
     END DO
     CALL IndSequence__Update
@@ -145,8 +138,7 @@ CONTAINS
   END FUNCTION Groups__InitCoords
   FUNCTION Groups__Update_Knwn() RESULT(out)
     INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
-    REAL(8) :: mass
-    REAL(8) :: Tmass
+    REAL(8) :: pmass
     LOGICAL :: out
     
     
@@ -175,31 +167,19 @@ CONTAINS
        AtSt=Groupa(nn) % AtSt
        AtEn=Groupa(nn) % Aten
        DO n=AtSt,AtEn
-          mass=Atoms(n) % mass
-          Groupa(nn) % xa = Groupa(nn) % xa + mass*Atoms(n) % xa
-          Groupa(nn) % ya = Groupa(nn) % ya + mass*Atoms(n) % ya
-          Groupa(nn) % za = Groupa(nn) % za + mass*Atoms(n) % za
-          Groupa(nn) % x = Groupa(nn) % x + mass*Atoms(n) % x
-          Groupa(nn) % y = Groupa(nn) % y + mass*Atoms(n) % y
-          Groupa(nn) % z = Groupa(nn) % z + mass*Atoms(n) % z
+          pmass=Atoms(n) % pmass
+          Groupa(nn) % xa = Groupa(nn) % xa + pmass*Atoms(n) % xa
+          Groupa(nn) % ya = Groupa(nn) % ya + pmass*Atoms(n) % ya
+          Groupa(nn) % za = Groupa(nn) % za + pmass*Atoms(n) % za
+          Groupa(nn) % x = Groupa(nn) % x + pmass*Atoms(n) % x
+          Groupa(nn) % y = Groupa(nn) % y + pmass*Atoms(n) % y
+          Groupa(nn) % z = Groupa(nn) % z + pmass*Atoms(n) % z
        END DO
-    END DO
-    DO n=1,ngrp
-       IF(Groupa(n) % knwn /= 2) CYCLE
-       tmass=Groupa(n) % Mass
-       Groupa(n)%xa=Groupa(n)%xa/tmass
-       Groupa(n)%ya=Groupa(n)%ya/tmass
-       Groupa(n)%za=Groupa(n)%za/tmass
-       
-       Groupa(n)%x=Groupa(n)%x/tmass
-       Groupa(n)%y=Groupa(n)%y/tmass
-       Groupa(n)%z=Groupa(n)%z/tmass
     END DO
   END FUNCTION Groups__Update_Knwn
   FUNCTION Groups__Update() RESULT(out)
     INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
-    REAL(8) :: mass
-    REAL(8) :: Tmass
+    REAL(8) :: pmass
     LOGICAL :: out
     
     
@@ -223,24 +203,14 @@ CONTAINS
        AtSt=Groupa(nn) % AtSt
        AtEn=Groupa(nn) % Aten
        DO n=AtSt,AtEn
-          mass=Atoms(n) % mass
-          Groupa(nn) % xa = Groupa(nn) % xa + mass*Atoms(n) % xa
-          Groupa(nn) % ya = Groupa(nn) % ya + mass*Atoms(n) % ya
-          Groupa(nn) % za = Groupa(nn) % za + mass*Atoms(n) % za
-          Groupa(nn) % x = Groupa(nn) % x + mass*Atoms(n) % x
-          Groupa(nn) % y = Groupa(nn) % y + mass*Atoms(n) % y
-          Groupa(nn) % z = Groupa(nn) % z + mass*Atoms(n) % z
+          pmass=Atoms(n) % pmass
+          Groupa(nn) % xa = Groupa(nn) % xa + pmass*Atoms(n) % xa
+          Groupa(nn) % ya = Groupa(nn) % ya + pmass*Atoms(n) % ya
+          Groupa(nn) % za = Groupa(nn) % za + pmass*Atoms(n) % za
+          Groupa(nn) % x = Groupa(nn) % x + pmass*Atoms(n) % x
+          Groupa(nn) % y = Groupa(nn) % y + pmass*Atoms(n) % y
+          Groupa(nn) % z = Groupa(nn) % z + pmass*Atoms(n) % z
        END DO
-    END DO
-    DO n=1,ngrp
-       tmass=Groupa(n) % Mass
-       Groupa(n)%xa=Groupa(n)%xa/tmass
-       Groupa(n)%ya=Groupa(n)%ya/tmass
-       Groupa(n)%za=Groupa(n)%za/tmass
-       
-       Groupa(n)%x=Groupa(n)%x/tmass
-       Groupa(n)%y=Groupa(n)%y/tmass
-       Groupa(n)%z=Groupa(n)%z/tmass
     END DO
   END FUNCTION Groups__Update
 END MODULE Groups

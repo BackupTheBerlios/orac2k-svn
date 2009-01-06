@@ -472,7 +472,7 @@ SUBROUTINE Forces
   fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
   fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
   fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
-  
+
   CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)

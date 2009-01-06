@@ -222,6 +222,7 @@ CONTAINS
   FUNCTION Rattle_it(dt,Func) RESULT(out)
     LOGICAL :: out
     REAL(8) :: dt
+    INTEGER :: n
     INTERFACE
        FUNCTION Func(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
          LOGICAL :: out

@@ -110,6 +110,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
            dpz=zp1(la)-zp1(lb)
            dpp=dpx**2+dpy**2+dpz**2
            dcnt=dpp-dssp(k)
+
            IF(DABS(dcnt) >= tol) THEN
               iox=1
               xk=x0(k)
@@ -439,6 +440,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
 CONTAINS
   SUBROUTINE Gather_Atoms
     INTEGER :: n,nn
+    WRITE(*,*) SiZE(IndBox_a_p),natom
     DO nn=1,natom
        n=IndBox_a_p(nn)
        xp0(nn)=xp0a(n)

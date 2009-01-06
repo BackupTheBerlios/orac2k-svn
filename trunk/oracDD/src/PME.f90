@@ -91,7 +91,7 @@ MODULE PME
        &,phi(:)
   INTEGER, SAVE :: natom,alltoall_dim,ntot_atom
   INTEGER, POINTER, SAVE :: order
-  REAL(8), SAVE :: recip(3,3),vir(3,3),eer,energy
+  REAL(8), SAVE :: recip(3,3),vir(3,3),eer,energy,eer_i,energy_i
   
 CONTAINS
   SUBROUTINE PME_(i_pa)
@@ -193,8 +193,10 @@ CONTAINS
 !!$       END DO
 !!$    END IF
 
-    CALL MPI_ALLREDUCE(eer,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
-    CALL MPI_ALLREDUCE(Energy,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+    eer_i=eer
+    Energy_i=Energy
+    CALL MPI_ALLREDUCE(eer_i,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+    CALL MPI_ALLREDUCE(Energy_i,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
     CALL MPI_BARRIER(PI_Comm,ierr)
     endtime=MPI_WTIME()
     timea=endtime-startime

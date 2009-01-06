@@ -36,7 +36,7 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
   INTEGER :: i,la,lb,type,nbond
   REAL(8) ::  xr1,xr2,yr1,yr2,zr1,zr2,x21,y21,z21,rs21,uux1,uux2&
        &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb
-  REAL(8) ::  qforce,dsq
+  REAL(8) ::  qforce
   
   IF(Calls == 0) THEN
      Calls=Calls+1
@@ -49,7 +49,6 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
   
   nbond=SIZE(Indx_Bonds,2)
   ubond=0.0_8
-!!$  dsq=0.0_8
   DO i=1,nbond
      la=Indx_Bonds(1,i)
      lb=Indx_Bonds(2,i)
@@ -87,9 +86,7 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
      fpy(lb)=fpy(lb)+qforce*uuy2
      fpz(lb)=fpz(lb)+qforce*uuz2
      ubond(type)=ubond(type)+potb*(rs21-pota)**2       
-!!$     dsq=dsq+(rs21-pota)**2
   END DO
   Ubond_slt=ubond(1)
   Ubond_slv=ubond(2)
-!!$  dsq=dsq/DBLE(nbond)
 END SUBROUTINE Bonds

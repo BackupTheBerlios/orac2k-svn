@@ -72,7 +72,7 @@ MODULE Potential
 
   TYPE :: Ewald__Input
      LOGICAL :: Do_not_Change=.FALSE.
-     REAL(8) :: alpha
+     REAL(8) :: alpha=0.001_8
      REAL(8) :: Density
      INTEGER :: nx=0,ny=0,nz=0
      INTEGER :: order=5

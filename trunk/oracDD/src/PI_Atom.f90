@@ -142,7 +142,7 @@ CONTAINS
          Grp_No(n)=Atoms(m) % Grp_No
          gmass(n)=Atoms(m) % pmass
       END DO
-      
+
       ALLOCATE(Index_0(SIZE(Atoms)))
       Index_0=-1
       DO n=1,natom

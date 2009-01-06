@@ -126,7 +126,7 @@ CONTAINS
        Atoms(n) % Id_Res = AtomCnts(n) % Id_Res
        Atoms(n) % chg = AtomCnts(n) % chg/SQRT(unitc)
        Atoms(n) % mass = AtomCnts(n) % mass
-       Atoms(n) % mass = AtomCnts(n) % mass/massa(m)
+       Atoms(n) % pmass = AtomCnts(n) % mass/massa(m)
        Atoms(n) % Res = AtomCnts(n) % Res
        Atoms(n) % beta = AtomCnts(n) % Beta
        Atoms(n) % betab = AtomCnts(n) % Betab
@@ -427,6 +427,7 @@ CONTAINS
   CONTAINS
     SUBROUTINE Velocities
       REAL(8) :: lm(3),omega(3)
+      REAL(8) :: lm_i(3),cm_i(3),tmass_i,iner_i(3,3),am_i(3),ek_i
       REAL(8) :: cm(3),iner(3,3),i_iner(3,3),xc,yc,zc&
            &,am(3),massa,vax,vay,vaz,ek,scale
       INTEGER :: n
@@ -449,11 +450,12 @@ CONTAINS
       END DO
 #ifdef HAVE_MPI
       IF(PI_Nprocs > 1) THEN
-         CALL MPI_ALLREDUCE(tmass,tmass,1,MPI_REAL8,MPI_SUM&
+         tmass_i=tmass; lm_i=lm;cm_i=cm
+         CALL MPI_ALLREDUCE(tmass_i,tmass,1,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
-         CALL MPI_ALLREDUCE(lm,lm,3,MPI_REAL8,MPI_SUM&
+         CALL MPI_ALLREDUCE(lm_i,lm,3,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
-         CALL MPI_ALLREDUCE(cm,cm,3,MPI_REAL8,MPI_SUM&
+         CALL MPI_ALLREDUCE(cm_i,cm,3,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
       END IF
 #endif
@@ -482,9 +484,10 @@ CONTAINS
 
 #ifdef HAVE_MPI
       IF(PI_Nprocs > 1) THEN
-         CALL MPI_ALLREDUCE(am,am,3,MPI_REAL8,MPI_SUM&
+         am_i=am;iner_i=iner
+         CALL MPI_ALLREDUCE(am_i,am,3,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
-         CALL MPI_ALLREDUCE(iner,iner,9,MPI_REAL8,MPI_SUM&
+         CALL MPI_ALLREDUCE(iner_i,iner,9,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
       END IF
 #endif
@@ -517,7 +520,8 @@ CONTAINS
       END DO
 #ifdef HAVE_MPI
       IF(PI_Nprocs > 1) THEN
-         CALL MPI_ALLREDUCE(lm,lm,3,MPI_REAL8,MPI_SUM&
+         lm_i=lm
+         CALL MPI_ALLREDUCE(lm_i,lm,3,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
       END IF
 #endif
@@ -530,7 +534,8 @@ CONTAINS
       ek=0.5*ek*efact
 #ifdef HAVE_MPI
       IF(PI_Nprocs > 1) THEN
-         CALL MPI_ALLREDUCE(ek,ek,1,MPI_REAL8,MPI_SUM&
+         ek_i=ek
+         CALL MPI_ALLREDUCE(ek_i,ek,1,MPI_REAL8,MPI_SUM&
               &,PI_Comm_Cart,ierr)
       END IF
 #endif
@@ -578,7 +583,7 @@ CONTAINS
     REAL(8) :: tfact,mass
 
     out=.TRUE.
-    fp=>Forces__Pick(level)
+    fp=>Forces__Pick(level)    
 
     DO nn=1,SIZE(IndBox_a_p)
        m=IndBox_a_p(nn)

@@ -262,9 +262,8 @@ CONTAINS
        xpg=0.0D0
        ypg=0.0D0
        zpg=0.0D0
-       tmass=Groupa(l) % Mass
        DO n=AtSt,AtEn
-          xmass=Atoms(n) % mass/tmass
+          xmass=Atoms(n) % pmass
           nn=nn+1
           xc=Buff_r(1,nn)
           yc=Buff_r(2,nn)
@@ -371,9 +370,8 @@ CONTAINS
        xpg=0.0D0
        ypg=0.0D0
        zpg=0.0D0
-       tmass=Groupa(l) % Mass
        DO n=AtSt,AtEn
-          xmass=Atoms(n) % mass/tmass
+          xmass=Atoms(n) % pmass
           nn=nn+1
           xc=Buff_r(1,nn)
           yc=Buff_r(2,nn)
