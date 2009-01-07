@@ -1,5 +1,5 @@
 !!$/---------------------------------------------------------------------\
-!!$   Copyright  © 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
+!!$   Copyright  Â© 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
 !!$                                                                      |
 !!$    This software is a computer program named oracDD whose            |
 !!$    purpose is to simulate and model complex molecular systems.       |

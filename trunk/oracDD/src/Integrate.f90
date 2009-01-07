@@ -202,7 +202,7 @@ CONTAINS
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(*,*) 'Second Time time',PI_Node_Cart,timea/Iteration % Time
-
+    WRITE(*,*) Iteration % Time
   END SUBROUTINE Integrate_
   SUBROUTINE Integrate_Shell(n)
     INTEGER :: n

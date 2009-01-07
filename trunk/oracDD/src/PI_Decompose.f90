@@ -55,7 +55,6 @@ MODULE PI_Decompose
   USE Cell
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f
   USE Print_Defs
-  USE PI_Neighbors
   USE Atom
   USE Groups
   IMPLICIT none
@@ -154,8 +153,6 @@ CONTAINS
 
     WRITE(kprint,100) PI_nprocs,PI_npx,PI_npy,PI_npz
     CALL PI__Setup_Cart
-!!$    CALL PI__Setup_SndRcv
-
 100 FORMAT(' ====> Running with ',i3,' Processors ',' nx = ',i2,' ny =&
          & ',i2,' nz = ',i2,' <====')
   CONTAINS
@@ -185,64 +182,46 @@ CONTAINS
     nprocsa=PI_nprocs; npxa=PI_npx; npya=PI_npy; npza=PI_npz
   END SUBROUTINE PI__GetParameters
   SUBROUTINE PI__AssignAtomsToCells
-    INTEGER :: npx,npy,npz,n,m,nx,ny,nz,mx,my,mz,numcell,l,nmin,ntap&
+    INTEGER :: n,m,nx,ny,nz,numcell,l,nmin,ntap&
          &,ngrp,cp_0,cp_3, AtSt, AtEn,mm,ox,oy,oz,mpe,mp&
-         &,count0
-    LOGICAL, ALLOCATABLE :: Mask(:)
+         &,count0,numcell1,ncx,ncy,ncz
+    REAL(8) :: x1,y1,z1,dx,dy,dz
     INTEGER :: i_p
 
-    npx=PI_npx
-    npy=PI_npy
-    npz=PI_npz
+    ncx=PI_npx
+    ncy=PI_npy
+    ncz=PI_npz
 
-    ntap=SIZE(Atoms)
+    dx=2.d0/DBLE(ncx)
+    dy=2.d0/DBLE(ncy)
+    dz=2.d0/DBLE(ncz)
+
     ngrp=SIZE(Groupa)
 
-    groupa(:) % knwn=3
-
-    IF(.NOT. PI_Neighbors_(Groupa(:) % xa, Groupa(:) % ya, Groupa(:) &
-         &% za, Groupa(:) % knwn)) CALL Print_Errors()
-
     m=PI_Node_Cart+1
-    mx=PI__Ranks(m) % nx + 1
-    my=PI__Ranks(m) % ny + 1
-    mz=PI__Ranks(m) % nz + 1
     numcell=PI__Ranks(m) % n
 
-    l=Head_xyz(numcell)
-    nmin=0
-    count0=0
-    DO WHILE(l > nmin)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       count0=count0+AtEn-AtSt+1
-       Groupa(l) % knwn = 1
-       Atoms(AtSt:AtEn) % knwn = 1
-       l=Chain_xyz(l) % p
+    DO n=1,ngrp
+       IF(Groupa(n) % knwn == 0) CYCLE
+       x1=Groupa(n) % xa/dx
+       y1=Groupa(n) % ya/dy
+       z1=Groupa(n) % za/dz
+       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
+       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
+       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
+       nx=MOD(MOD(nx,ncx)+ncx,ncx)
+       ny=MOD(MOD(ny,ncy)+ncy,ncy)
+       nz=MOD(MOD(nz,ncz)+ncz,ncz)
+       numcell1=nz+ncz*(ny+ncy*nx)+1
+       IF(numcell == numcell1) THEN
+          AtSt=Groupa(n) % AtSt
+          AtEn=Groupa(n) % AtEn
+          Groupa(n) % knwn = 1
+          Atoms(AtSt:AtEn) % knwn = 1
+       ELSE 
+          Atoms(AtSt:AtEn) % knwn = 0
+          Groupa(n) % knwn = 0
+       END IF
     END DO
-    WHERE(Groupa(:) % knwn /= 1) Groupa(:) % knwn =0
-!!$    DO n=1,SIZE(Groupa)
-!!$       IF(Groupa(n) % knwn /= 1 ) THEN
-!!$          Groupa(n) % knwn = 0
-!!$          Groupa(n) % xa=0.0D0
-!!$          Groupa(n) % ya=0.0D0
-!!$          Groupa(n) % za=0.0D0
-!!$          Groupa(n) % x=0.0D0
-!!$          Groupa(n) % y=0.0D0
-!!$          Groupa(n) % z=0.0D0
-!!$          AtSt=Groupa(n) % AtSt
-!!$          AtEn=Groupa(n) % AtEn
-!!$          DO mm=AtSt,AtEn
-!!$             Atoms(mm) % knwn = 0
-!!$             Atoms(mm) % x = 0.0D0
-!!$             Atoms(mm) % y = 0.0D0
-!!$             Atoms(mm) % z = 0.0D0
-!!$             Atoms(mm) % xa = 0.0D0
-!!$             Atoms(mm) % ya = 0.0D0
-!!$             Atoms(mm) % za = 0.0D0
-!!$          END DO
-!!$       END IF          
-!!$    END DO
-
   END SUBROUTINE PI__AssignAtomsToCells
 END MODULE PI_Decompose

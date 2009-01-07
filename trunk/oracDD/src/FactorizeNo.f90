@@ -1,5 +1,4 @@
 MODULE FactorizeNo
-  USE Node
   IMPLICIT NONE
   PRIVATE
   PUBLIC FactorizeNo_
@@ -45,29 +44,37 @@ CONTAINS
 !!$  !Next generate and list all prime number factors for each
 !!$  !consecutive natural number N:
     
-    IF(.NOT. Node_()) STOP
-    m0=1
-    CALL Node__Push(m0)
+    count0=1
     n=No
     DO I=1,II
        DO WHILE (MOD(N,P(I)).EQ.0)
           m0=p(i)
-          CALL Node__Push(m0)
+          count0=count0+1
           n=INT(DBLE(n)/DBLE(p(I)))
        ENDDO
        IF((N /= 1) .AND. (i == ii)) THEN
-          CALL Node__Push(n)
+          count0=count0+1
        END IF
     END DO
-    count0=Node__Size()
+
     ALLOCATE(Factors(count0))
-    count0=0
-    DO WHILE(Node__Pop(m))
-       count0=count0+1
-       Factors(count0)=m(1)
+    m0=1
+    count0=1
+    Factors(count0)=1
+    n=No
+    DO I=1,II
+       DO WHILE (MOD(N,P(I)).EQ.0)
+          m0=p(i)
+          count0=count0+1
+          Factors(count0)=m0
+          n=INT(DBLE(n)/DBLE(p(I)))
+       ENDDO
+       IF((N /= 1) .AND. (i == ii)) THEN
+          count0=count0+1
+          Factors(count0)=m0
+       END IF
     END DO
     out=>Factors
-    CALL Node__Delete()
   END FUNCTION FactorizeNo_
   SUBROUTINE FactorizeNo__Destroy
     DEALLOCATE(Factors)
