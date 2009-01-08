@@ -219,6 +219,8 @@ CONTAINS
           Groupa(n) % knwn = 1
           Atoms(AtSt:AtEn) % knwn = 1
        ELSE 
+          AtSt=Groupa(n) % AtSt
+          AtEn=Groupa(n) % AtEn
           Atoms(AtSt:AtEn) % knwn = 0
           Groupa(n) % knwn = 0
        END IF
