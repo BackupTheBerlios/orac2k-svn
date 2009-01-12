@@ -53,7 +53,7 @@ MODULE Integrate
   USE Pi_Decompose 
   USE Print_Defs
   USE PI_Atom
-  USE Forces, ONLY: Radii, FORCES_Zero=>Zero, FORCES_Pick=>Pick, Force
+  USE Forces, FORCES_Zero=>Zero, FORCES_Pick=>Pick
   USE Integrator, ONLY: Integrator_
   USE Atom
   USE Groups
@@ -62,6 +62,7 @@ MODULE Integrate
   USE Ewald
   USE PME
   USE PI_Communicate
+  USE PI_Collectives
   USE IndBox
   USE IndIntraBox
   USE PI_IntraMaps

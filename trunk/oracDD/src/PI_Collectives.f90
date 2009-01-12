@@ -50,9 +50,12 @@ MODULE PI_Collectives
 #endif
   USE PI_
   USE IndBox, ONLY: IndBox_a_p
+  USE Print_Defs
+  USE CONSTANTS, ONLY: max_data
+  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   IMPLICIT none
   PRIVATE
-  PUBLIC PI_Gather_, PI_AllGather_
+  PUBLIC PI_Gather_, PI_AllGather_,PI_Write_, PI_ErrSignal_
 CONTAINS
   SUBROUTINE PI_Gather_(xc,yc,zc)
     REAL(8) :: xc(:),yc(:),zc(:)
@@ -151,4 +154,55 @@ CONTAINS
     RETURN
 #endif    
   END SUBROUTINE PI_AllGather_
+  SUBROUTINE PI_Write_(unit,xc,yc,zc,iv)
+    INTEGER, OPTIONAL :: unit
+    INTEGER :: iv(:)
+    REAL(8) :: xc(:),yc(:),zc(:)
+    REAL(8), ALLOCATABLE :: x(:),y(:),z(:)
+    INTEGER :: natom,n,U_print
+    u_Print=kprint
+    IF(PRESENT(unit)) u_Print=unit
+
+#ifdef HAVE_MPI
+    IF(Pi_Nprocs > 1) THEN
+       natom=SIZE(xc)
+       ALLOCATE(x(natom),y(natom),z(natom))
+       x=xc;y=yc;z=zc
+       CALL PI_Gather_(x,y,z)
+       IF(PI_Node == 0) WRITE(u_Print,'(i8,3e17.7)') (iv(n),x(iv(n)),y(iv(n)),z(iv(n)),n=1,SIZE(iv))
+    ELSE
+       IF(PI_Node == 0) WRITE(u_Print,'(i8,3e17.7)') (iv(n),xc(iv(n)),yc(iv(n)),zc(iv(n)),n=1,SIZE(iv))
+    END IF
+#else
+    WRITE(u_Print,'(i8,3e17.7)') (iv(n),xc(iv(n)),yc(iv(n)),zc(iv(n)),n=1,SIZE(iv))
+#endif    
+  END SUBROUTINE PI_Write_
+  SUBROUTINE PI_ErrSignal_(errmsg_f,out)
+    CHARACTER(len=max_data) :: errmsg_f
+    LOGICAL :: out 
+    LOGICAL, ALLOCATABLE :: couts(:)
+    CHARACTER(len=max_data), ALLOCATABLE :: errmsg(:)
+    CHARACTER(len=max_data) :: string
+    INTEGER :: cout,n
+
+#ifdef HAVE_MPI
+    IF(PI_Nprocs == 1) RETURN
+    cout=out
+    ALLOCATE(couts(PI_Nprocs),errmsg(PI_Nprocs))
+
+    CALL MPI_ALLGATHER(cout,1,MPI_LOGICAL,couts,1,MPI_LOGICAL,PI_Comm_Cart,ierr)
+    CALL MPI_ALLGATHER(errmsg_f,max_data,MPI_CHARACTER,errmsg,max_data,MPI_CHARACTER,PI_Comm_Cart,ierr)
+    DO n=1,PI_Nprocs
+       IF(.NOT. couts(n)) THEN
+          WRITE(string,'(''From Node No. '',i3,'' : '')') n-1
+          errmsg_f=TRIM(string)//TRIM(errmsg(n))
+          out=couts(n)
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
+    END DO
+#endif
+
+  END SUBROUTINE PI_ErrSignal_
+
 END MODULE PI_Collectives

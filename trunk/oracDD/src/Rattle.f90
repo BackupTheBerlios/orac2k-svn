@@ -51,6 +51,7 @@ MODULE Rattle
   USE IndBox
   USE IndIntraBox, ONLY: Param_Constr, Indx_Constr
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
+  USE PI_Collectives, ONLY: PI_ErrSignal_
   IMPLICIT none
   PRIVATE
   PUBLIC Init_, Parameters_,Verlet_,Correct_

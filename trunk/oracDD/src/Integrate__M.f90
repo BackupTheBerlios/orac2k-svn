@@ -45,12 +45,20 @@
 
 SUBROUTINE Integrate_m
   INTEGER, SAVE :: counter=0
-  INTEGER :: Init
+  INTEGER :: Init,Ind
   DO ma=1,m_
      IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
      
+     
      CALL Integrate_n1
+
+!!$
+!!$--- From Cartesian get reduced coordinate then recompute group coords
+!!$
+
+     IF(.NOT. Atom__Convert(_X_TO_XA_,Ind)) CALL Print_Errors()
+     IF(.NOT. Groups__Update()) CALL Print_Errors()
      
      Init=Pick_Init(_M_,counter)
      CALL FORCES_Zero(_M_)

@@ -200,6 +200,7 @@ CONTAINS
     Groupa(:) % za=0.0D0
 
     DO nn=1,ngrp
+       IF(Groupa(nn) % knwn == 0) CYCLE
        AtSt=Groupa(nn) % AtSt
        AtEn=Groupa(nn) % Aten
        DO n=AtSt,AtEn

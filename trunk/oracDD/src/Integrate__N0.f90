@@ -45,13 +45,18 @@
 SUBROUTINE Integrate_n0
   INTEGER, SAVE :: counter=0
   INTEGER :: Init
+!!$  IF(PI_Node == 0) WRITE(78, *) 'Illa '
+!!$  CALL PI_Write_(78,Atoms(:) % x, Atoms(:) % y, Atoms(:) % z,(/ 1:SIZE(Atoms)/))
   DO n0=1,n0_
      IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
      
      
      IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
-     
+
+!!$     IF(PI_Node == 0) WRITE(78, *) 'Illa '
+!!$     CALL PI_Write_(78,Atoms(:) % x, Atoms(:) % y, Atoms(:) % z,(/ 1:SIZE(Atoms)/))
+
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
      
      Init=Pick_Init(_N0_,counter)

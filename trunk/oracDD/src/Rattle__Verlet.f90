@@ -152,7 +152,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
                    &did not converge.'
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
-              RETURN
+              GOTO 30000
            END IF
            GOTO 1000
         END IF
@@ -368,7 +368,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
                    &M: matrix inversion failed. '
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
-              RETURN
+              GOTO 30000
            END IF
            iter=iter+1
            IF(iter.GT.5000)THEN
@@ -376,7 +376,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
                    &M: The iteration procedure did not converge.'
               CALL Add_Errors(-1,errmsg_f)
               out=.FALSE.
-              RETURN
+              GOTO 30000
            END IF
            iox=0
            DO ka=1,n0
@@ -436,11 +436,11 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
      END IF
   END DO
   CALL Scatter_Atoms
+30000 CALL PI_ErrSignal_(errmsg_f,out)
   WRITE(*,*) 'Iter 1',DBLE(Iter1)/DBLE(nc),Rattle__Param % mim_Max
 CONTAINS
   SUBROUTINE Gather_Atoms
     INTEGER :: n,nn
-    WRITE(*,*) SiZE(IndBox_a_p),natom
     DO nn=1,natom
        n=IndBox_a_p(nn)
        xp0(nn)=xp0a(n)

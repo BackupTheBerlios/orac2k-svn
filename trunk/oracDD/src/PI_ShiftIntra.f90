@@ -298,17 +298,11 @@ CONTAINS
           xpga = xpga + xmass*Atoms(n) % xa
           ypga = ypga + xmass*Atoms(n) % ya
           zpga = zpga + xmass*Atoms(n) % za
-          xpg = xpg + xmass*Atoms(n) % x
-          ypg = ypg + xmass*Atoms(n) % y
-          zpg = zpg + xmass*Atoms(n) % z
           Atoms(n) % knwn = 2
        END DO
        Groupa(l) % xa = xpga 
        Groupa(l) % ya = ypga
        Groupa(l) % za = zpga
-       Groupa(l) % x = xpg
-       Groupa(l) % y = ypg
-       Groupa(l) % z = zpg
        groupa(l) % Knwn = 2
        nMyMaps(i_p)=nMyMaps(i_p)+1
        MyMaps(nMyMaps(i_p),i_p)=l
@@ -395,9 +389,6 @@ CONTAINS
           atoms(n) % x=xc
           atoms(n) % y=yc
           atoms(n) % z=zc
-          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
-          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
-          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
           Atoms(n) % knwn = 2
        END DO
     END DO

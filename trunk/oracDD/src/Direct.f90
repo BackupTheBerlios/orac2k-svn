@@ -66,7 +66,7 @@ MODULE Direct
   
   TYPE(Force), POINTER :: fp(:)
   INTEGER, SAVE :: No_Calls=0
-  REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
+  REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:),eccc(:)
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
@@ -107,15 +107,6 @@ CONTAINS
 
     CALL Memory
     CALL Forces
-
-!!$    IF(Times_of_Call == 1) CALL PI__Fold_F(fp,i_p,_INIT_)
-!!$    CALL PI__Fold_F(fp,i_p,_FOLD_)
-
-!!$    DO nn=1,SIZE(IndBox_a_p)
-!!$       n=IndBox_a_p(nn)
-!!$       m=IndBox_a_t(n)
-!!$       WRITE(100+PI_Node_Cart,'(i8,3e15.7)') m,fp(n) % x, fp(n) % y, fp(n) % z
-!!$    END DO
     No_Calls=No_Calls+1
   CONTAINS
 !!$
@@ -123,20 +114,29 @@ CONTAINS
 !!$
     SUBROUTINE Init
       INTEGER :: n,m,ij
+      REAL(8) :: ecc_R,aux,ene
       
       twrtpi=2.0d0/SQRT(pi)
       alphal = Ewald__Param % alpha
-
+      ecc_R=-5.0D-3/(efact/1000.0D0)
       n=SIZE(LennardJones__Par % Par_SE)
       ALLOCATE(Id_ij(n,n))
-      ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2))
+      ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2),eccc(n*(n+1)/2))
       DO n=1,SIZE(LennardJones__Par % Par_SE)
          DO m=n,SIZE(LennardJones__Par % Par_SE)
             ij=m*(m-1)/2+n
             Id_ij(n,m)=ij
             Id_ij(m,n)=ij
+
             ecc6(ij)=LennardJones__Par % c6(ij)
             ecc12(ij)=LennardJones__Par % c12(ij)
+            ene=0.0D0
+            IF(ecc6(ij) /= 0.0D0 .AND. ecc12(ij) /= 0.0D0) THEN
+               aux=(SQRT(ecc6(ij)**2+4.0D0*ecc12(ij)*ecc_R)+ecc6(ij))/(-2.0D0*ecc_R)
+               eccc(ij)=aux**(1.0D0/3.0D0)
+            ELSE
+               eccc(ij)=0.0D0
+            END IF
          END DO
       END DO
     END SUBROUTINE Init
@@ -158,6 +158,6 @@ CONTAINS
 !!$--- Compute Forces
 !!$
 
-    INCLUDE 'DIRECT__Sources.f90'
+#include "DIRECT__Sources.f90"
   END SUBROUTINE Compute
 END MODULE Direct

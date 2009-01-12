@@ -30,6 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
+#include 'forces.h'
 SUBROUTINE Forces
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
@@ -60,6 +61,7 @@ SUBROUTINE Forces
   INTEGER :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
        &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,nbti,p_mapa,p_j,lij,i_pb&
        &,count_b,count_c,p_mapb
+  LOGICAL :: lskip_ewald
   TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
 
   IF(i_p > SIZE(Radii)) RETURN
@@ -130,8 +132,12 @@ SUBROUTINE Forces
   st7=0.0D0
   st8=0.0D0
   st9=0.0D0
-!!$  DO ii=1,SIZE(IndBox_g_p)
-!!$     ig=IndBox_g_p(ii)
+  qt=1.0d0/(1.0d0+qp*alphal*rinn)
+  expcst=DEXP(-alphal*rinn*alphal*rinn)
+  erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
+  lskip_ewald = erfcst.lt.10.d-4
+!!$  lskip_ewald = .FALSE.
+
   fppx=0.0_8
   fppy=0.0_8
   fppz=0.0_8
@@ -156,9 +162,9 @@ SUBROUTINE Forces
         xa=xpgi-xpgj
         ya=ypgi-ypgj
         za=zpgi-zpgj
-        X_PBC=PBC(xa)
-        Y_PBC=PBC(ya)
-        Z_PBC=PBC(za)
+        X_PBC=_PBC(xa)
+        Y_PBC=_PBC(ya)
+        Z_PBC=_PBC(za)
         xa=xa+X_PBC
         ya=ya+Y_PBC
         za=za+Z_PBC
@@ -276,45 +282,55 @@ SUBROUTINE Forces
            zc=                      co(3,3)*zg
            rsq=xc*xc+yc*yc+zc*zc
            rsqi=1.0d0/rsq
-           r6=rsqi*rsqi*rsqi
-           r12=r6*r6
-           ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
-           qforce=ssvir*rsqi
-           emvir = ssvir
-
-           conf=ecc12(lij)*r12-ecc6(lij)*r6
-           uconfa=uconfa+conf
-                           
-           furpar=chrgei*chg(j)
-           rsp=DSQRT(rsq)
-           rspi=1.0D0/rsp
-           rspqi=rsqi*rspi
-           alphar=alphal*rsp
+           qforce=0.0D0; emvir=0.0D0
+           IF(rsq < eccc(lij)) THEN
+              r6=rsqi*rsqi*rsqi
+              r12=r6*r6
+              ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
+              qforce=ssvir*rsqi
+              emvir = ssvir*rsqi
               
-           qt=1.0d0/(1.0d0+qp*alphar)
-           expcst=EXP(-alphar*alphar)
-           erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
-           ucoula=ucoula+furpar*erfcst*rspi
-           aux1  = furpar*(erfcst+twrtpi*alphar*expcst)*rspqi
-           qforce=qforce+aux1
-           emvir = emvir*rsqi + aux1
+              conf=ecc12(lij)*r12-ecc6(lij)*r6
+              uconfa=uconfa+conf
+           END IF
 
-           fppx(i1)=fppx(i1)+qforce*xc
-           fppy(i1)=fppy(i1)+qforce*yc
-           fppz(i1)=fppz(i1)+qforce*zc
-           fppx(j)=fppx(j)-qforce*xc
-           fppy(j)=fppy(j)-qforce*yc
-           fppz(j)=fppz(j)-qforce*zc
+           IF(.NOT. lskip_ewald) THEN
+              furpar=chrgei*chg(j)
+              rsp=DSQRT(rsq)
+              rspi=1.0D0/rsp
+              rspqi=rsqi*rspi
+              alphar=alphal*rsp
+              
+              qt=1.0d0/(1.0d0+qp*alphar)
+              expcst=EXP(-alphar*alphar)
+              erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
+              ucoula=ucoula+furpar*erfcst*rspi
+              aux1  = (furpar*erfcst*rspqi)+twrtpi*(alphar*expcst*rspqi)
+              qforce=qforce+aux1
+              emvir = emvir + aux1
+           END IF
+           
+           aux1=qforce*xc
+           fppx(i1)=fppx(i1)+aux1
+           fppx(j)=fppx(j)-aux1
+
+           aux1=qforce*yc
+           fppy(i1)=fppy(i1)+aux1
+           fppy(j)=fppy(j)-aux1
+
+           aux1=qforce*zc
+           fppz(i1)=fppz(i1)+aux1
+           fppz(j)=fppz(j)-aux1
 
            qfx=emvir*xc
-           qfy=emvir*yc
-           qfz=emvir*zc
            st1 = st1+qfx*xg
            st2 = st2+qfx*yg
            st3 = st3+qfx*zg
+           qfy=emvir*yc
            st4 = st4+qfy*xg
            st5 = st5+qfy*yg
            st6 = st6+qfy*zg
+           qfz=emvir*zc
            st7 = st7+qfz*xg
            st8 = st8+qfz*yg
            st9 = st9+qfz*zg
@@ -371,25 +387,31 @@ SUBROUTINE Forces
            zc=                      co(3,3)*zg
            rsq=xc*xc+yc*yc+zc*zc
            rsqi=1.0d0/rsq
-           r6=rsqi*rsqi*rsqi
-           r12=r6*r6
-           ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
-           qforce=ssvir*rsqi*swrs(jj)
-           conf=ecc12(lij)*r12-ecc6(lij)*r6
-           cmap2(jj)=cmap2(jj)+conf
-           uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
+
+           qforce=0.0D0
+           IF(rsq < eccc(lij)) THEN
+              r6=rsqi*rsqi*rsqi
+              r12=r6*r6
+              ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
+              qforce=ssvir*rsqi*swrs(jj)
+              conf=ecc12(lij)*r12-ecc6(lij)*r6
+              cmap2(jj)=cmap2(jj)+conf
+              uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
+           END IF
            
-           rsp=DSQRT(rsq)
-           rspqi=rsqi/rsp
-           alphar=alphal*rsp
-           qt=1.0d0/(1.0d0+qp*alphar)
-           expcst=EXP(-alphar*alphar)
-           erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
-           furpar=chrgei*chg(j)
-           ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*erfcst/rsp
-           cmap2(jj)=cmap2(jj)+furpar*erfcst/rsp
-           aux1=furpar*(erfcst+twrtpi*alphar*expcst)*rspqi*swrs(jj)
-           qforce=qforce+aux1
+           IF(.NOT. lskip_ewald) THEN
+              rsp=DSQRT(rsq)
+              rspqi=rsqi/rsp
+              alphar=alphal*rsp
+              qt=1.0d0/(1.0d0+qp*alphar)
+              expcst=EXP(-alphar*alphar)
+              erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
+              furpar=chrgei*chg(j)
+              ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*erfcst/rsp
+              cmap2(jj)=cmap2(jj)+furpar*erfcst/rsp
+              aux1=furpar*(erfcst+twrtpi*alphar*expcst)*rspqi*swrs(jj)
+              qforce=qforce+aux1
+           END IF
            emvir=qforce
 
            fppx(i1)=fppx(i1)+qforce*xc
@@ -447,7 +469,7 @@ SUBROUTINE Forces
            xg=-Xgs_PBC(jj)
            yg=-Ygs_PBC(jj)
            zg=-Zgs_PBC(jj)
-           !DEC$ IVDEP
+!DEC$ IVDEP
            DO j1=grppt(1,j),grppt(2,j)
               massj=gmass(j1)
               fppx(j1)=fppx(j1)-massj*xmap3(jj)
@@ -481,8 +503,3 @@ SUBROUTINE Forces
      WRITE(*,*) uconf_o
   END IF
 END SUBROUTINE Forces
-FUNCTION PBC(x) RESULT(out)
-  REAL(8) :: out
-  REAL(8) :: x
-  out=-2.0D0*ANINT(0.5D0*x)
-END FUNCTION PBC

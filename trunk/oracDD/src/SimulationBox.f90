@@ -52,6 +52,8 @@ MODULE SimulationBox
 !!$======================== DECLARATIONS ================================*
 
 
+#include 'forces.h'
+
   USE Setup
   USE Inout
   USE Neighbors
@@ -247,9 +249,9 @@ CONTAINS
                   y2=y1-Total(l) % y
                   z2=z1-Total(l) % z
 
-                  x2=x2-2.0*PBC(x2)
-                  y2=y2-2.0*PBC(y2)
-                  z2=z2-2.0*PBC(z2)
+                  x2=x2+_PBC(x2)
+                  y2=y2+_PBC(y2)
+                  z2=z2+_PBC(z2)
 
                   xx=co(1,1)*x2+co(1,2)*y2+co(1,3)*z2
                   yy=           co(2,2)*y2+co(2,3)*z2
@@ -330,11 +332,6 @@ CONTAINS
       Slv=>NULL()
       Slt=>NULL()
     END SUBROUTINE Add
-    FUNCTION PBC(x) RESULT(out)
-      REAL(8) :: out
-      REAL(8) :: x
-      out=ANINT(0.5D0*x)
-    END FUNCTION PBC
   END SUBROUTINE SimulationBox_
   SUBROUTINE SimulationBox__Read
     INTEGER :: m

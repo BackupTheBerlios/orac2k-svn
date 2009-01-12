@@ -44,6 +44,7 @@ MODULE PI_Atom
 
 !!$---- This module is part of the program oracDD ----*
 
+#include 'forces.h'
   USE Potential
 #ifdef HAVE_MPI
   USE mpi
@@ -282,9 +283,9 @@ CONTAINS
              xa=xpgj-xpgi
              ya=ypgj-ypgi
              za=zpgj-zpgi
-             X_PBC=PBC(xa)
-             Y_PBC=PBC(ya)
-             Z_PBC=PBC(za)
+             X_PBC=_PBC(xa)
+             Y_PBC=_PBC(ya)
+             Z_PBC=_PBC(za)
              xa=xa+X_PBC
              ya=ya+Y_PBC
              za=za+Z_PBC
@@ -312,9 +313,4 @@ CONTAINS
        WRITE(*,*) 'Neighbors (',No_Nei,')'
     END IF
   END FUNCTION PI_Atom__Neigh_
-  FUNCTION PBC(x) RESULT(out)
-    REAL(8) :: out
-    REAL(8) :: x
-    out=-2.0D0*ANINT(0.5D0*x)
-  END FUNCTION PBC
 END MODULE PI_Atom

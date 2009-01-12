@@ -45,6 +45,9 @@ MODULE Atom
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
+#define _IND  IndBox_a_t(:)
+#include 'forces.h'
+
 #ifdef HAVE_MPI
   USE mpi
 #endif
@@ -62,7 +65,7 @@ MODULE Atom
   USE PDB
   USE GAUSS
   USE LA_Routines
-  USE IndBox, ONLY: IndBox_a_p
+  USE IndBox, ONLY: IndBox_a_p,IndBox_a_t
   USE Forces, Forces__Pick=>Pick
   IMPLICIT none
   PRIVATE
@@ -159,20 +162,34 @@ CONTAINS
     Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
     Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
   END FUNCTION Atom__InitCoords
-  FUNCTION Atom__Convert(Dir) RESULT(out)
+  FUNCTION Atom__Convert(Dir,Ind) RESULT(out)
+    INTEGER, OPTIONAL :: Ind
     LOGICAL :: out
     INTEGER :: Dir
     out=.TRUE.
-    SELECT CASE(Dir)
-    CASE(_XA_TO_X_)
-       Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
-       Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
-       Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
-    CASE(_X_TO_XA_)
-       Atoms(:) % xa = oc(1,1)*Atoms(:) % x+oc(1,2)*Atoms(:) % y+oc(1,3)*Atoms(:) % z    
-       Atoms(:) % ya = oc(2,1)*Atoms(:) % x+oc(2,2)*Atoms(:) % y+oc(2,3)*Atoms(:) % z    
-       Atoms(:) % za = oc(3,1)*Atoms(:) % x+oc(3,2)*Atoms(:) % y+oc(3,3)*Atoms(:) % z
-    END SELECT
+    IF(PRESENT(Ind)) THEN
+       SELECT CASE(Dir)
+       CASE(_XA_TO_X_)
+          Atoms(:) % x = co(1,1)*Atoms(:) % xa+co(1,2)*Atoms(:) % ya+co(1,3)*Atoms(:) % za    
+          Atoms(:) % y = co(2,1)*Atoms(:) % xa+co(2,2)*Atoms(:) % ya+co(2,3)*Atoms(:) % za    
+          Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
+       CASE(_X_TO_XA_)
+          Atoms(:) % xa = oc(1,1)*Atoms(:) % x+oc(1,2)*Atoms(:) % y+oc(1,3)*Atoms(:) % z    
+          Atoms(:) % ya = oc(2,1)*Atoms(:) % x+oc(2,2)*Atoms(:) % y+oc(2,3)*Atoms(:) % z    
+          Atoms(:) % za = oc(3,1)*Atoms(:) % x+oc(3,2)*Atoms(:) % y+oc(3,3)*Atoms(:) % z
+       END SELECT
+    ELSE
+       SELECT CASE(Dir)
+       CASE(_XA_TO_X_)
+          Atoms(_IND) % x = co(1,1)*Atoms(_IND) % xa+co(1,2)*Atoms(_IND) % ya+co(1,3)*Atoms(_IND) % za    
+          Atoms(_IND) % y = co(2,1)*Atoms(_IND) % xa+co(2,2)*Atoms(_IND) % ya+co(2,3)*Atoms(_IND) % za    
+          Atoms(_IND) % z = co(3,1)*Atoms(_IND) % xa+co(3,2)*Atoms(_IND) % ya+co(3,3)*Atoms(_IND) % za    
+       CASE(_X_TO_XA_)
+          Atoms(_IND) % xa = oc(1,1)*Atoms(_IND) % x+oc(1,2)*Atoms(_IND) % y+oc(1,3)*Atoms(_IND) % z    
+          Atoms(_IND) % ya = oc(2,1)*Atoms(_IND) % x+oc(2,2)*Atoms(_IND) % y+oc(2,3)*Atoms(_IND) % z    
+          Atoms(_IND) % za = oc(3,1)*Atoms(_IND) % x+oc(3,2)*Atoms(_IND) % y+oc(3,3)*Atoms(_IND) % z
+       END SELECT
+    END IF
   END FUNCTION Atom__Convert
   SUBROUTINE Atom__PDB(unit, nozero_write)
     INTEGER, OPTIONAL :: nozero_write
@@ -413,9 +430,9 @@ CONTAINS
     ya=Atoms(IndBox_a_p(:)) % ya
     za=Atoms(IndBox_a_p(:)) % za
     mass=Atoms(IndBox_a_p(:)) % mass
-    xa=xa+PBC(xa)
-    ya=ya+PBC(ya)
-    za=za+PBC(za)
+    xa=xa+_PBC(xa)
+    ya=ya+_PBC(ya)
+    za=za+_PBC(za)
     
     CALL Velocities
 
@@ -618,9 +635,4 @@ CONTAINS
     END SELECT
   END FUNCTION Atom__Write_
 
-  ELEMENTAL FUNCTION PBC(x) RESULT(out)
-    REAL(8) :: out
-    REAL(8), INTENT(in) :: x
-    out=-2.0D0*ANINT(0.5D0*x)
-  END FUNCTION PBC
 END MODULE Atom
