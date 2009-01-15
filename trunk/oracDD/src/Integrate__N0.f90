@@ -46,16 +46,16 @@ SUBROUTINE Integrate_n0
   INTEGER, SAVE :: counter=0
   INTEGER :: Init,q
 
-  IF(PI_Node == 0) WRITE(78,*) 'Get one H'
-  CALL PI_Write_(78, fp_h(:) %x, fp_h(:) %y, fp_h(:) %z,(&
-       &/1:SIZE(fp_h)/))
-  IF(PI_Node == 0) WRITE(78,*) 'Get one L'
-  CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
-       &/1:SIZE(fp_l)/))
-  IF(PI_Node == 0) WRITE(78,*) 'Get one M'
-  CALL PI_Write_(78, fp_m(:) %x, fp_m(:) %y, fp_m(:) %z,(&
-       &/1:SIZE(fp_m)/))
-  STOP
+!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one H'
+!!$  CALL PI_Write_(78, fp_h(:) %x, fp_h(:) %y, fp_h(:) %z,(&
+!!$       &/1:SIZE(fp_h)/))
+!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one L'
+!!$  CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
+!!$       &/1:SIZE(fp_l)/))
+!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one M'
+!!$  CALL PI_Write_(78, fp_m(:) %x, fp_m(:) %y, fp_m(:) %z,(&
+!!$       &/1:SIZE(fp_m)/))
+!!$  STOP
   DO n0=1,n0_
      IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
@@ -92,7 +92,6 @@ SUBROUTINE Integrate_n0
         CALL IntraMaps_n1_
         IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
         CALL Init_TotalShells
-        STOP
      END IF
 
      CALL FORCES_Zero(_N0_)

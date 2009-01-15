@@ -77,27 +77,17 @@ CONTAINS
 
     CALL PI__ResetSecondary
 
-    WRITE(*,*) 'Lucillo ',PI_Node_CArt, COUNT(Groupa(:) % knwn == 2)
-
     pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
     IF(pme) THEN
        IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
             & Ewald__Param % nz /= 0) THEN
           CALL PI__Shift(n,Flag,_PME_)
-          WRITE(*,*) 'Illak'
        END IF
     ELSE
        CALL PI__Shift(n,Flag)
     END IF
 
     IF(.NOT. PI_Atom_Update_()) CALL Print_Errors()
-
-    IF(n == 3) THEN
-       WRITE(*,*) '2029 F',Groupa(Atoms(5756) % Grp_No) % knwn &
-            & ,Groupa(2029) % xa,Groupa(2029) % ya
-       WRITE(*,*) '2029 F',Atoms(5756) % Grp_No
-    END IF
-
 
     CALL DIR_Forces(n)
     IF(pme) CALL PME_(n)

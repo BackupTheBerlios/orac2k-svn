@@ -105,9 +105,6 @@ CONTAINS
           CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
           CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
 
-          WRITE(*,*) ' intra_n0 = ',init,COUNT(Atoms(:) % knwn /= 2)&
-               &,SIZE(Atoms)-COUNT(Atoms(:) % knwn == 0)-COUNT(Atoms(:) % knwn == 1)
-
           CALL PI__FoldIntra(fp_n0,1,init)
 
           IF(PI_Node_Cart == 0) WRITE(*,*) 'u1 ',ubond_Slv,ubond_Slt&

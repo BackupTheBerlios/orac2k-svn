@@ -47,8 +47,8 @@ ifeq ($(COMPILER), INTEL)
   CC = gcc
   LD = ifort
 
-#  FFLAGS += -fpp -O3
-  FFLAGS += -fpp  -g -traceback -fpe0 -check all 
+  FFLAGS += -fpp -O3
+#  FFLAGS += -fpp  -g -traceback -fpe0 -check all 
   LLFLAGS= -i_dynamic 
 endif
 

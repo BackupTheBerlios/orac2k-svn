@@ -144,55 +144,11 @@ SUBROUTINE Lists_(NShell0)
   count_b=SUM(Neighb(:) % no)
   count_c=SUM(Neighc(:) % no)
   
-!!$  npp=SIZE(Groupa)
-!!$  ALLOCATE(inda(npp),indb(npp))
-!!$
-!!$  inda=0
-!!$  inda(IndBox_g_t(:))=Neigha(:) % no
-!!$  WRITE(*,*) 'ippa 1',Nshell0,Nshell
-!!$  CALL MPI_ALLREDUCE(MPI_IN_PLACE,inda,npp,MPI_INTEGER4,MPI_SUM&
-!!$       &,PI_Comm_Cart,ierr)
-!!$
-!!$  IF(PI_Node_Cart == 0) THEN
-!!$     WRITE(400,*) 'Neigha '
-!!$     DO n=1,SIZE(Groupa)
-!!$        WRITE(400,'(i8,3x,i7)') n,inda(n)
-!!$     END DO
-!!$  END IF
-!!$
-!!$  CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-!!$  WRITE(*,*) 'ippa 1'
-!!$  inda=0
-!!$  inda(IndBox_g_t(:))=Neighb(:) % no
-!!$  CALL MPI_ALLREDUCE(MPI_IN_PLACE,inda,npp,MPI_INTEGER4,MPI_SUM&
-!!$       &,PI_Comm_Cart,ierr)
-!!$
-!!$  IF(PI_Node_Cart == 0) THEN
-!!$     WRITE(400,*) 'Neighb '
-!!$     DO n=1,SIZE(Groupa)
-!!$        WRITE(400,'(i8,3x,i7)') n,inda(n)
-!!$     END DO
-!!$  END IF
-!!$
-!!$  CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-!!$  inda=0
-!!$  inda(IndBox_g_t(:))=Neighc(:) % no
-!!$  CALL MPI_ALLREDUCE(MPI_IN_PLACE,inda,npp,MPI_INTEGER4,MPI_SUM&
-!!$       &,PI_Comm_Cart,ierr)
-!!$
-!!$  IF(PI_Node_Cart == 0) THEN
-!!$     WRITE(400,*) 'Neighac '
-!!$     DO n=1,SIZE(Groupa)
-!!$        WRITE(400,'(i8,3x,i7)') n,inda(n)
-!!$     END DO
-!!$  END IF
-
   CALL MPI_ALLREDUCE(MPI_IN_PLACE,count_a,1,MPI_INTEGER4,MPI_SUM&
        &,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(MPI_IN_PLACE,count_b,1,MPI_INTEGER4,MPI_SUM&
        &,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(MPI_IN_PLACE,count_c,1,MPI_INTEGER4,MPI_SUM&
        &,PI_Comm_Cart,ierr)
-  WRITE(*,*) 'inda = ',count_a
   IF(PI_Node_Cart == 0) WRITE(*,*) count_a,count_b,count_c
 END SUBROUTINE Lists_

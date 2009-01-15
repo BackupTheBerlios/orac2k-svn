@@ -138,9 +138,6 @@ SUBROUTINE Forces
   lskip_ewald = erfcst.lt.10.d-4
 !!$  lskip_ewald = .FALSE.
 
-  IF(i_p == 1) THEN
-     WRITE(500+PI_Node_Cart,*) 'New one'
-  END IF
   fppx=0.0_8
   fppy=0.0_8
   fppz=0.0_8
@@ -342,16 +339,6 @@ SUBROUTINE Forces
 !!$
            ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
            uconf(Slv_ij)=uconf(Slv_ij)+uconfa
-           IF(i_p == 1) THEN
-              IF(IndBox_a_t(i1) == 5756) THEN
-                 WRITE(500+PI_Node_Cart,'(4i8,e17.9,'' a'')') IndBox_a_t(i1)&
-                      &,IndBox_a_t(j),i1,j,fppx(i1)
-              END IF
-              IF(IndBox_a_t(j) == 5756) THEN
-                 WRITE(500+PI_Node_Cart,'(4i8,e17.9,'' b'')') IndBox_a_t(j)&
-                      &,IndBox_a_t(i1),j,i1,fppx(j) 
-              END IF
-           END IF
         END DO
 
         p_mapa=0        
@@ -442,16 +429,6 @@ SUBROUTINE Forces
            st7 = st7+emvir*zc*xg
            st8 = st8+emvir*zc*yg
            st9 = st9+emvir*zc*zg
-           IF(i_p == 1) THEN
-              IF(IndBox_a_t(i1) == 5756) THEN
-                 WRITE(500+PI_Node_Cart,'(4i8,e17.9,'' c'')') IndBox_a_t(i1)&
-                      &,IndBox_a_t(j),i1,j,fppx(i1)
-              END IF
-              IF(IndBox_a_t(j) == 5756) THEN
-                 WRITE(500+PI_Node_Cart,'(4i8,e17.9,'' d'')') IndBox_a_t(j)&
-                      &,IndBox_a_t(i1),j,i1,fppx(j) 
-              END IF
-           END IF
         END DO
         maplg(i1)=.TRUE.
         IF(ALLOCATED(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.TRUE.
@@ -517,19 +494,12 @@ SUBROUTINE Forces
   fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
   fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
   fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
-
-  IF(i_p == 1) THEN
-     WRITE(500+PI_Node_Cart,'(''final '',2i8)') Atoms(5756) % knwn,Atoms(5756) % Grp_No
-     WRITE(500+PI_Node_Cart,'(''final '',i8)') Groupa(Atoms(5756) % Grp_No) % knwn
-     WRITE(500+PI_Node_Cart,'(''final '',3e17.9)') Groupa(2029) % xa,Groupa(2029) % ya,Groupa(2029) % za
-     WRITE(500+PI_Node_Cart,'(''final '',e17.9)') fp(5756) % x
-  END IF
   
   CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
   IF(PI_Node_Cart == 0) THEN
-     WRITE(*,*) ucoul_o
-     WRITE(*,*) uconf_o
+!!$     WRITE(*,*) ucoul_o
+!!$     WRITE(*,*) uconf_o
   END IF
 END SUBROUTINE Forces

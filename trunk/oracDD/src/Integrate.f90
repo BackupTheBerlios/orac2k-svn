@@ -192,10 +192,6 @@ CONTAINS
        CALL Forces_(n)
     END DO
 
-    IF(PI_Node == 0) WRITE(78,*) 'Get one L'
-    CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
-         &/1:SIZE(fp_l)/))
-    STOP
     IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) % knwn))&
          & CALL Print_Errors()
 

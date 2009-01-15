@@ -106,7 +106,6 @@ CONTAINS
            & AtEn)) CALL Print_Errors()
 
       natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
-      WRITE(*,*) 'memory ',natom,ngroup
 
       IF(ALLOCATED(xpg)) THEN
          DEALLOCATE(xpg,ypg,zpg,grppt)

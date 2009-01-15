@@ -46,8 +46,6 @@
 SUBROUTINE Integrate_h
   INTEGER, SAVE :: counter=0
   INTEGER, PARAMETER :: Init=1
-!!$  IF(PI_Node == 0) WRITE(78, *) 'Illa ',PI_Nprocs
-!!$  CALL PI_Write_(78,Atoms(:) % xa, Atoms(:) % ya, Atoms(:) % za,(/ 1:SIZE(Atoms)/))
   DO ha=1,h_
      IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_h,RATTLE__Correct_)) CALL Print_Errors()
