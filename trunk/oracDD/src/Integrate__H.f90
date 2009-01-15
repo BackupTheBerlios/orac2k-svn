@@ -45,19 +45,21 @@
 
 SUBROUTINE Integrate_h
   INTEGER, SAVE :: counter=0
-  INTEGER :: Init
+  INTEGER, PARAMETER :: Init=1
+!!$  IF(PI_Node == 0) WRITE(78, *) 'Illa ',PI_Nprocs
+!!$  CALL PI_Write_(78,Atoms(:) % xa, Atoms(:) % ya, Atoms(:) % za,(/ 1:SIZE(Atoms)/))
   DO ha=1,h_
      IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_h,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_l
      
-     Init=Pick_Init(_H_,counter)
      CALL FORCES_Zero(_H_)
-     CALL Forces_(_H_,Init)
+     CALL Forces_(_H_)
+
      IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
      counter=counter+1
-     IF(NShell == _H_ .AND. Init == 0) THEN
+     IF(NShell == _H_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF

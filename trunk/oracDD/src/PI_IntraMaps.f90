@@ -78,7 +78,7 @@ CONTAINS
     ind_o=0
     count0=0
     DO nn=1,n0
-       n=IndBox_g_t(IndBox_g_p(nn))
+       n=IndBox_g_p(nn)
        AtSt=Groupa(n) % AtSt
        AtEn=Groupa(n) % AtEn
        ok=.FALSE.
@@ -124,7 +124,7 @@ CONTAINS
     ind_o=0
     count0=0
     DO nn=1,n0
-       n=IndBox_g_t(IndBox_g_p(nn))
+       n=IndBox_g_p(nn)
        AtSt=Groupa(n) % AtSt
        AtEn=Groupa(n) % AtEn
        ok=.FALSE.

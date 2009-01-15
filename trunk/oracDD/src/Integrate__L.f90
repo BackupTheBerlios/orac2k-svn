@@ -45,19 +45,19 @@
 
 SUBROUTINE Integrate_l
   INTEGER, SAVE :: counter=0
-  INTEGER :: Init
+  INTEGER, PARAMETER :: Init=1
   DO la=1,l_
      IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_l,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_m
      
-     Init=Pick_Init(_L_,counter)
      CALL FORCES_Zero(_L_)
-     CALL Forces_(_L_,Init)
+     CALL Forces_(_L_)
+
      IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
      counter=counter+1
-     IF(NShell == _L_ .AND. Init == 0) THEN
+     IF(NShell == _L_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF

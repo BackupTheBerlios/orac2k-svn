@@ -114,28 +114,29 @@ CONTAINS
     CALL Integrate_
 
     STOP
-    CALL PI__Shift(_M_,_INIT_EXCHANGE_)
-    IF(.NOT. PI_Atom_()) CALL Print_Errors()
-    IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
+!!$    CALL PI__Shift(_M_,_INIT_EXCHANGE_)
+!!$    IF(.NOT. PI_Atom_()) CALL Print_Errors()
+!!$    IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
 
 
 
 !!$    CALL PI__ZeroPrimary
 !!$    IF(Inout__PDB % unit /= 0 .AND. PI_Node_FFTW == 10) CALL Atom__PDB(Inout__PDB % unit, 1)
 
-    
-    CALL DIR_Forces(3,_INIT_)
+!!$    
+!!$    CALL DIR_Forces(3,_INIT_)
+!!$
+!!$    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+!!$    startime=MPI_WTIME()
+!!$    CALL PI__ResetSecondary
+!!$    CALL PI__Shift(_M_,_EXCHANGE_ONLY_)
+!!$    CALL DIR_Forces(3)
+!!$
+!!$    endtime=MPI_WTIME()
+!!$    timea=endtime-startime
+!!$    WRITE(*,*) 'First time',PI_Node_Cart,timea
+!!$    STOP
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
-    CALL PI__ResetSecondary
-    CALL PI__Shift(_M_,_EXCHANGE_ONLY_)
-    CALL DIR_Forces(3)
-
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    WRITE(*,*) 'First time',PI_Node_Cart,timea
-    STOP
 !!$
 !!$ --- Intramolecular
 !!$
@@ -145,150 +146,150 @@ CONTAINS
 !!$
 
 
-    CALL PI__ZeroSecondary
-    CALL PI__ResetSecondary
-
-    CALL IntraMaps_n0_
-    CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
-    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-    CALL Intra_n0_(_INIT_EXCHANGE_)
-    
-    CALL PI__ZeroSecondary
-    CALL PI__ResetSecondary
-
-    CALL IntraMaps_n1_
-    CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
-    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-    CALL Intra_n1_(_INIT_EXCHANGE_)
-
-
-
-
-    CALL PI__ZeroSecondary
-    CALL PI__ResetSecondary
+!!$    CALL PI__ZeroSecondary
+!!$    CALL PI__ResetSecondary
+!!$
+!!$    CALL IntraMaps_n0_
+!!$    CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
+!!$    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+!!$    CALL Intra_n0_(_INIT_EXCHANGE_)
+!!$    
+!!$    CALL PI__ZeroSecondary
+!!$    CALL PI__ResetSecondary
+!!$
+!!$    CALL IntraMaps_n1_
+!!$    CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
+!!$    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+!!$    CALL Intra_n1_(_INIT_EXCHANGE_)
+!!$
+!!$
+!!$
+!!$
+!!$    CALL PI__ZeroSecondary
+!!$    CALL PI__ResetSecondary
 
 
 !!$
 !!$--- Do n1
 !!$
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
 
-    DO n=1,10
-       CALL PI__ShiftIntra(_N1_,_EXCHANGE_ONLY_)
-       CALL Intra_n1_(_EXCHANGE_ONLY_)
-    END DO
-
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    WRITE(*,*) 'Third time',PI_Node_Cart,timea/10.0_8
+!!$    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+!!$    startime=MPI_WTIME()
+!!$
+!!$    DO n=1,10
+!!$       CALL PI__ShiftIntra(_N1_,_EXCHANGE_ONLY_)
+!!$       CALL Intra_n1_(_EXCHANGE_ONLY_)
+!!$    END DO
+!!$
+!!$    endtime=MPI_WTIME()
+!!$    timea=endtime-startime
+!!$    WRITE(*,*) 'Third time',PI_Node_Cart,timea/10.0_8
 
 !!$
 !!$--- Do n0
 !!$
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
-    
-    DO n=1,10
-       CALL PI__ShiftIntra(_N0_,_EXCHANGE_ONLY_)
-       CALL Intra_n0_(_EXCHANGE_ONLY_)
-    END DO
-
-    endtime=MPI_WTIME()
-    timea=endtime-startime
-    WRITE(*,*) 'Second time',PI_Node_Cart,timea/10.0_8
-
-    IF(.NOT. Atom__vInit_()) CALL Print_Errors()
-
-    IF(.NOT. Atom__Write_(10,_SIMPLE_)) CALL Print_Errors()
-
-    IF(.NOT. Minimize__Bonds_()) CALL Print_Errors()
-    
-    
-    STOP
+!!$    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+!!$    startime=MPI_WTIME()
+!!$    
+!!$    DO n=1,10
+!!$       CALL PI__ShiftIntra(_N0_,_EXCHANGE_ONLY_)
+!!$       CALL Intra_n0_(_EXCHANGE_ONLY_)
+!!$    END DO
+!!$
+!!$    endtime=MPI_WTIME()
+!!$    timea=endtime-startime
+!!$    WRITE(*,*) 'Second time',PI_Node_Cart,timea/10.0_8
+!!$
+!!$    IF(.NOT. Atom__vInit_()) CALL Print_Errors()
+!!$
+!!$    IF(.NOT. Atom__Write_(10,_SIMPLE_)) CALL Print_Errors()
+!!$
+!!$    IF(.NOT. Minimize__Bonds_()) CALL Print_Errors()
+!!$    
+!!$    
+!!$    STOP
 
 !!$    CALL PI__ShiftIntra(2,_INIT_EXCHANGE_)
 !!$    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
 
-    STOP
 !!$    CALL DIR_Forces(3)
 !!$    CALL DIR_Forces(2)
-    timea=0.0D0
-    DO n=1,80
-       CALL PI__ZeroSecondary
-       CALL PI__Shift(_M_,_EXCHANGE_ONLY_)
-       CALL DIR_Forces(_M_)
-    END DO
+!!$    timea=0.0D0
+!!$    DO n=1,80
+!!$       CALL PI__ZeroSecondary
+!!$       CALL PI__Shift(_M_,_EXCHANGE_ONLY_)
+!!$       CALL DIR_Forces(_M_)
+!!$    END DO
+!!$
+!!$    CALL MPI_BARRIER(PI_Comm_cart,ierr)
+!!$    endtime=MPI_WTIME()
+!!$    timea=timea+endtime-startime
+!!$    WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
+!!$
+!!$    IF(.NOT. PI__Write_Stats()) CALL Print_Errors()
+!!$
+!!$    STOP
+!!$    CALL PI__Finalize
+!!$    STOP
+!!$    
+!!$
+!!$    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+!!$         & Ewald__Param % nz /= 0) THEN
+!!$
+!!$       CALL PI__Shift(1,_INIT_EXCHANGE_,_PME_)
+!!$       CALL Ewald__Validate
+!!$
+!!$       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+!!$       startime=MPI_WTIME()
+!!$
+!!$       CALL PME_(3)
+!!$
+!!$       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+!!$       endtime=MPI_WTIME()
+!!$       timea=endtime-startime
+!!$    END IF
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    endtime=MPI_WTIME()
-    timea=timea+endtime-startime
-    WRITE(*,*) 'PI = ',PI_Node_Cart,' Time ',timea
-
-    IF(.NOT. PI__Write_Stats()) CALL Print_Errors()
-
-    STOP
-    CALL PI__Finalize
-    STOP
-    
-
-    IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
-
-       CALL PI__Shift(1,_INIT_EXCHANGE_,_PME_)
-       CALL Ewald__Validate
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       startime=MPI_WTIME()
-
-       CALL PME_(3)
-
-       CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-       endtime=MPI_WTIME()
-       timea=endtime-startime
-    END IF
-
-  CONTAINS
-    SUBROUTINE Adjust_Bonds
-      INTEGER :: n
-!!$--- Shift atoms of the M Shell
-
-      CALL PI__Shift(_M_,_INIT_EXCHANGE_)
-
-!!$--- Find out primary and secondary atoms arrays
-
-      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
-           & AtEn)) CALL Print_Errors()
-
-!!$--- Get all primary atoms bonded to secondary atoms 
-
-      CALL IntraMaps_n0_
-
-!!$--- Reset the secondary region 
-
-      CALL PI__ResetSecondary
-
-!!$--- Shift atoms for N0 interactions
-
-      CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
-
-!!$--- Decide which N0 interactions to include 
-
-      IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-
-!!$--- Adjust bonds by Minimization
-
-      IF(.NOT. Minimize__Bonds_()) CALL Print_Errors()
-
-      IF(.NOT. Groups__Update()) CALL Print_Errors()
-    END SUBROUTINE Adjust_Bonds
-
-    SUBROUTINE SetupIntra_n1
-      CALL IntraMaps_n1_
-      CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
-      IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-    END SUBROUTINE SetupIntra_n1
+!!$  CONTAINS
+!!$    SUBROUTINE Adjust_Bonds
+!!$      INTEGER :: n
+!!$!!$--- Shift atoms of the M Shell
+!!$
+!!$      CALL PI__Shift(_M_,_INIT_EXCHANGE_)
+!!$
+!!$!!$--- Find out primary and secondary atoms arrays
+!!$
+!!$      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+!!$           & AtEn)) CALL Print_Errors()
+!!$
+!!$!!$--- Get all primary atoms bonded to secondary atoms 
+!!$
+!!$      CALL IntraMaps_n0_
+!!$
+!!$!!$--- Reset the secondary region 
+!!$
+!!$      CALL PI__ResetSecondary
+!!$
+!!$!!$--- Shift atoms for N0 interactions
+!!$
+!!$      CALL PI__ShiftIntra(_N0_,_INIT_EXCHANGE_)
+!!$
+!!$!!$--- Decide which N0 interactions to include 
+!!$
+!!$      IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+!!$
+!!$!!$--- Adjust bonds by Minimization
+!!$
+!!$      IF(.NOT. Minimize__Bonds_()) CALL Print_Errors()
+!!$
+!!$      IF(.NOT. Groups__Update()) CALL Print_Errors()
+!!$    END SUBROUTINE Adjust_Bonds
+!!$
+!!$    SUBROUTINE SetupIntra_n1
+!!$      CALL IntraMaps_n1_
+!!$      CALL PI__ShiftIntra(_N1_,_INIT_EXCHANGE_)
+!!$      IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+!!$    END SUBROUTINE SetupIntra_n1
 
   END SUBROUTINE MDRun_
 END MODULE MDRun

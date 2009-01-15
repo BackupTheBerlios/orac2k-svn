@@ -225,5 +225,12 @@ CONTAINS
           Groupa(n) % knwn = 0
        END IF
     END DO
+    n=COUNT(groupa(:) % knwn == 1)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,n,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    WRITE(*,*) 'ngroup ',n
+    n=COUNT(Atoms(:) % knwn == 1)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,n,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    WRITE(*,*) 'natom ',n
+
   END SUBROUTINE PI__AssignAtomsToCells
 END MODULE PI_Decompose

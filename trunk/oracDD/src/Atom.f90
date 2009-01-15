@@ -45,7 +45,7 @@ MODULE Atom
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
-#define _IND  IndBox_a_t(:)
+#define _IND  IndBox_a_p(:)
 #include 'forces.h'
 
 #ifdef HAVE_MPI

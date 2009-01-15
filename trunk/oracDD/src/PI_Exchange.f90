@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE PI_FoldIntra
+MODULE PI_Exchange
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -38,7 +38,7 @@ MODULE PI_FoldIntra
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Thu Nov 13 2008 -                                     *
+!!$              - Thu Nov  6 2008 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
@@ -52,69 +52,47 @@ MODULE PI_FoldIntra
   USE PI_Statistics, ONLY: PI__Write_Stats=>Write_It, PI__Time_It&
        &=>Time_It, PI__Sample_Exchange=>Sample_Exchange, PI__Add_Calls&
        &=>Add_Calls
-  USE Forces, ONLY: Force, Radii
   USE Groups
   USE Atom
   USE Cell
   USE Constants, ONLY: max_pars,max_data,max_char
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
-  USE PI_ShiftIntra, ONLY: MyMaps,nMyMaps
   IMPLICIT none
   PRIVATE
-  PUBLIC Setup,iFold_init, Buff_Fold
-  TYPE :: Indx
-     INTEGER :: NoAtm_s,NoAtm_r
-     INTEGER :: NoGrp_s,NoGrp_r
-     INTEGER, ALLOCATABLE :: ibuff_r(:)
-     INTEGER, ALLOCATABLE :: ibuff_s(:)
-  END type Indx
-  TYPE :: iBuffer
-     TYPE(Indx) :: sh(2)
-  END type iBuffer
-  TYPE(iBuffer), SAVE, TARGET :: iFold(6)
-  INTEGER, SAVE :: Calls=0
+  PUBLIC Exchange_
   REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
+  LOGICAL, SAVE :: ok_pme
 CONTAINS
-  SUBROUTINE Setup
-    Calls=0
-  END SUBROUTINE Setup
-  SUBROUTINE iFold_init(fp0,i_p,Axis,Dir)
-    TYPE(Force) :: fp0(:)
-    INTEGER :: Axis,Dir,i_p
+  SUBROUTINE Exchange_(Axis,Dir)
+    INTEGER :: Axis,Dir
     INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
-    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
-         &,np,nind_o,NoGrp_s,NoGrp_r
-    INTEGER :: source,dest,nmax
+    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s6,NoAtm_r6,q,grp_no&
+         &,np,nind_o,NoGrp_s,NoGrp_r,nmax
+    INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
     REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
     REAL(8) :: point(3)
     REAL(8) :: vc(3),tx,ty,tz
     INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
+    REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
     INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
+    LOGICAL :: oks
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    LOGICAL :: ok_X,ok_Y,ok_Z
+    LOGICAL :: ok_X,ok_Y,ok_Z,Change_Nmax
     INTEGER, SAVE :: MyCalls=0
-    REAL(8) :: Axis_L,Axis_R,X_L,X_R
+    REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
-    
-    Calls=Calls+1
-    IF(Calls > SIZE(iFold)) THEN
-       WRITE(lab0,'(i1)') Calls
-       errmsg_f='Folds are set to 6 per box, but they were '&
-            &//TRIM(lab0)
-       CALL Add_Errors(-1,errmsg_f)
-       CALL Print_Errors()
-    END IF
 
+    
     IF(MyCalls == 0) THEN
        ALLOCATE(ind_o(SIZE(Groupa)))
     END IF
 
     MyCalls=MyCalls+1
-  
+
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
     
     aux1=0.5D0*(1.0D0+DBLE(Dir))
@@ -127,146 +105,123 @@ CONTAINS
     Margin(2)=DBLE(oy)*ddy
     Margin(3)=DBLE(oz)*ddz
 
+    Margin2_1=DBLE(PI__Ranks(PI_Node_Cart+1) % nx+1.0D0)*ddx
+    Margin2_2=DBLE(PI__Ranks(PI_Node_Cart+1) % ny)*ddy
+    Margin2_3=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*ddz
+
 
     count0=0
     count1=0
 
-
     Axis_L=Margin(Axis)
-    Axis_R=Margin(Axis)+Dir*rcut(Axis)
 
-    nmax=nMyMaps(i_p)
-    DO nn=1,nmax
-       n=MyMaps(nn,i_p)
-       IF(Groupa(n) % knwn == 2) THEN
-          v1(1)=Groupa(n) % xa
-          v1(2)=Groupa(n) % ya
-          v1(3)=Groupa(n) % za
-          v1(Axis)=v1(Axis)-Two*ANINT(Half*(v1(Axis)-1.0D0))
-          aux1=v1(Axis)-Axis_L
-          aux1=aux1-Two*ANINT(Half*aux1)
-          IF(Dir*aux1 > 0.0D0) THEN
-             AtSt=Groupa(n) % AtSt
-             AtEn=Groupa(n) % AtEn
-             count1=count1+1
-             ind_o(count1)=n
-             count0=count0+(AtEn-AtSt+1)
-           END IF
+    nmax=SIZE(Groupa)
+    DO n=1,nmax
+       IF(Groupa(n) % knwn == 0) CYCLE
+       v1(1)=Groupa(n) % xa
+       v1(2)=Groupa(n) % ya
+       v1(3)=Groupa(n) % za
+       v1(Axis)=v1(Axis)-Two*ANINT(Half*(v1(Axis)-1.0D0))
+       aux1=v1(Axis)-Axis_L
+       aux1=aux1-Two*ANINT(Half*aux1)
+       IF(Dir*aux1 > 0.0D0) THEN
+          AtSt=Groupa(n) % AtSt
+          AtEn=Groupa(n) % AtEn
+          count1=count1+1
+          ind_o(count1)=n
+          count0=count0+(AtEn-AtSt+1)
        END IF
     END DO
-    
+
     NoAtm_s=count0
     nind_o=count1
-    NoAtm_r=0
     NoGrp_s=count1
+    NoAtm_r=0
     NoGrp_r=0
-
-    iFold(Calls) % sh(i_p) % NoGrp_s=NoGrp_s
-    iFold(Calls) % sh(i_p) % NoAtm_s=NoAtm_s
-    iFold(Calls) % sh(i_p) % NoGrp_r=0
-    iFold(Calls) % sh(i_p) % NoAtm_r=0
-
-
-    CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,3,NoGrp_r&
-         &,1,MPI_INTEGER4,source,3,PI_Comm_Cart,STATUS,ierr)
+    
     CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
          &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,1,NoGrp_r&
+         &,1,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
 
-    iFold(Calls) % sh(i_p) % NoGrp_r=NoGrp_r
-    iFold(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
+    ALLOCATE(iBuff_s(NoGrp_S))
+    ALLOCATE(iBuff_r(NoGrp_R))
+    ALLOCATE(Buff_s(6,NoAtm_s))
+    ALLOCATE(Buff_r(6,NoAtm_r))
 
-    IF(ALLOCATED(iFold(Calls) % sh(i_p) % iBuff_S))&
-         & DEALLOCATE(iFold(Calls) % sh(i_p) % iBuff_S)
-    IF(ALLOCATED(iFold(Calls) % sh(i_p) % iBuff_R))&
-         & DEALLOCATE(iFold(Calls) % sh(i_p) % iBuff_R)
-
-    ALLOCATE(iFold(Calls) % sh(i_p) % iBuff_S(NoGrp_S))
-    ALLOCATE(iFold(Calls) % sh(i_p) % iBuff_R(NoGrp_R))
-
-    iFold(Calls) % sh(i_p) % iBuff_S=ind_o(1:NoGrp_S)
-    iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_S
-    iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_R
     
-    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,1,iBuff_r&
-         &,NoGrp_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
+    iBuff_S(1:NoGrp_S)=ind_o(1:NoGrp_S)
 
-  END SUBROUTINE IFold_init
-  SUBROUTINE Buff_Fold(fp0,i_p,Axis,Dir)
-    TYPE(Force) :: fp0(:)
-    INTEGER :: Axis,Dir,i_p
-    INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
-         &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
-    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
-         &,np,nind_o,NoGrp_s,NoGrp_r
-    INTEGER :: source,dest
-    REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
-    REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
-    REAL(8) :: point(3)
-    REAL(8) :: vc(3),tx,ty,tz
-    REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
-    INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
-    REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
-    REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    LOGICAL :: ok_X,ok_Y,ok_Z
-    INTEGER, SAVE :: MyCalls=0
-    REAL(8) :: Axis_L,Axis_R,X_L,X_R
-    CHARACTER(len=max_char) :: lab0
-
-    Calls=Calls+1
-    IF(Calls > SIZE(iFold)) THEN
-       WRITE(lab0,'(i1)') Calls
-       errmsg_f='Folds are set to 6 per box, but they were '&
-            &//TRIM(lab0)
-       CALL Add_Errors(-1,errmsg_f)
-       CALL Print_Errors()
-    END IF
-    
-  
-    CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
-    NoGrp_s=iFold(Calls) % sh(i_p) % NoGrp_s
-    NoGrp_r=iFold(Calls) % sh(i_p) % NoGrp_r
-    NoAtm_s=iFold(Calls) % sh(i_p) % NoAtm_s
-    NoAtm_r=iFold(Calls) % sh(i_p) % NoAtm_r
-
-    iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_s
-    iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_r
-
-    ALLOCATE(Buff_s(3,NoAtm_s))
-    ALLOCATE(Buff_r(3,NoAtm_r))
-        
     count0=0
     DO m=1,NoGrp_s
        l=iBuff_s(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Groupa(l) % knwn = 0
        DO q=AtSt,AtEn
           count0=count0+1
-          Buff_s(1,count0)=fp0(q) % x
-          Buff_s(2,count0)=fp0(q) % y
-          Buff_s(3,count0)=fp0(q) % z
+          Buff_s(1,count0)=Atoms(q) % x
+          Buff_s(2,count0)=Atoms(q) % y
+          Buff_s(3,count0)=Atoms(q) % z
+          Buff_s(4,count0)=Atoms(q) % vx
+          Buff_s(5,count0)=Atoms(q) % vy
+          Buff_s(6,count0)=Atoms(q) % vz
        END DO
     END DO
-       
-    NoAtm_s3=NoAtm_s*3
-    NoAtm_r3=NoAtm_r*3
 
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
+
+    NoAtm_s6=NoAtm_s*6
+    NoAtm_r6=NoAtm_r*6
+
+    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,2,iBuff_r&
+         &,NoGrp_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(Buff_s,NoAtm_s6,MPI_REAL8,dest,4,Buff_r&
+         &,NoAtm_r6,MPI_REAL8,source,4,PI_Comm_Cart,STATUS,ierr)
 
     nn=0
-    DO q=1,NoGrp_r
-       l=iBuff_r(q)
+    DO m=1,NoGrp_r
+       l=iBuff_r(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
+       xpga=0.0D0
+       ypga=0.0D0
+       zpga=0.0D0
+       xpg=0.0D0
+       ypg=0.0D0
+       zpg=0.0D0
        DO n=AtSt,AtEn
+          xmass=Atoms(n) % pmass
           nn=nn+1
-          fp0(n) % x=fp0(n) % x+Buff_r(1,nn)
-          fp0(n) % y=fp0(n) % y+Buff_r(2,nn)
-          fp0(n) % z=fp0(n) % z+Buff_r(3,nn)
+          xc=Buff_r(1,nn)
+          yc=Buff_r(2,nn)
+          zc=Buff_r(3,nn)
+          Atoms(n) % vx=Buff_r(4,nn)
+          Atoms(n) % vy=Buff_r(5,nn)
+          Atoms(n) % vz=Buff_r(6,nn)
+
+          Atoms(n) % x=xc
+          Atoms(n) % y=yc
+          Atoms(n) % z=zc
+
+          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
+          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
+          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
+          xpga = xpga + xmass*Atoms(n) % xa
+          ypga = ypga + xmass*Atoms(n) % ya
+          zpga = zpga + xmass*Atoms(n) % za
+          xpg = xpg + xmass*Atoms(n) % x
+          ypg = ypg + xmass*Atoms(n) % y
+          zpg = zpg + xmass*Atoms(n) % z
+          Atoms(n) % knwn = 2
        END DO
+       Groupa(l) % xa = xpga 
+       Groupa(l) % ya = ypga
+       Groupa(l) % za = zpga
+       Groupa(l) % x = xpg
+       Groupa(l) % y = ypg
+       Groupa(l) % z = zpg
+       groupa(l) % Knwn = 2
     END DO
 
-  END SUBROUTINE Buff_Fold
-
-END MODULE PI_FoldIntra
+  END SUBROUTINE Exchange_
+ 
+END MODULE PI_Exchange

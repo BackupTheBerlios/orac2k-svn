@@ -1,5 +1,5 @@
 !!$/---------------------------------------------------------------------\
-!!$   Copyright  © 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
+!!$   Copyright  Â© 2006-2007 Massimo Marchi <Massimo.Marchi at cea.fr>   |
 !!$                                                                      |
 !!$    This software is a computer program named oracDD whose            |
 !!$    purpose is to simulate and model complex molecular systems.       |
@@ -58,6 +58,8 @@ MODULE PI_Communicate
   USE PI_FoldIntra, ONLY: FOLDINTRA__iFold_Init=>iFold_Init, FOLDINTRA__Setup&
        &=>Setup, FOLDINTRA__Buff_Fold=>Buff_Fold 
 
+  USE Errors, ONLY: Add_Errors=>Add, errmsg_f,Print_Errors
+  USE PI_Exchange, ONLY: EX_Exchange=>Exchange_
   USE PI_Cutoffs
   USE Geometry
   USE Forces, ONLY: Force, Radii
@@ -74,7 +76,8 @@ MODULE PI_Communicate
   IMPLICIT none
   PRIVATE
   PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,PI__ZeroPrimary,&
-       & PI__ShiftIntra, PI__ResetSecondary, PI__ResetSecondaryP,PI__FoldIntra
+       & PI__ShiftIntra, PI__ResetSecondary, PI__ResetSecondaryP&
+       &,PI__FoldIntra, PI__Exchange,PI__Initialize_Shell
   TYPE :: Communicate__Chain
      INTEGER :: i,j,k
      INTEGER :: p
@@ -92,6 +95,30 @@ MODULE PI_Communicate
   INTEGER, SAVE :: Calls=0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
+  SUBROUTINE PI__Initialize_Shell(i_pa,pme)
+    INTEGER , OPTIONAL :: pme
+    INTEGER :: i_pa
+    TYPE(Force), POINTER :: fp(:)=>NULL()
+
+    CALL PI__ResetSecondary
+    IF(i_pa >= 3) THEN
+       IF(PRESENT(pme)) THEN
+          CALL PI__Shift(i_pa,_INIT_,pme)
+          IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+               & AtEn)) CALL Print_Errors() 
+       ELSE
+          CALL PI__Shift(i_pa,_INIT_)
+       END IF
+       CALL PI__Fold_F(fp,i_pa,_INIT_)
+       IF(PRESENT(pme)) THEN
+          CALL PI__ResetSecondaryP
+       END IF
+    ELSE
+       CALL PI__ShiftIntra(i_pa,_INIT_)
+       CALL PI__FoldIntra(fp,i_pa,_INIT_)
+    END IF
+
+  END SUBROUTINE PI__Initialize_Shell
   SUBROUTINE PI__Shift(i_pa,init,pme)
     INTEGER, OPTIONAL :: pme
     INTEGER :: init,i_pa
@@ -183,16 +210,11 @@ CONTAINS
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
-    TYPE(Force), ALLOCATABLE :: fp0(:)
     INTEGER :: iv(3),Axis,i_p
-
+    INTEGER, SAVE :: MyownCalls=0
     i_p=i_pa-2
-    ALLOCATE(fp0(SIZE(Atoms)))
-    fp0(:) % x=0.0D0
-    fp0(:) % y=0.0D0
-    fp0(:) % z=0.0D0
-    fp0(IndBox_a_t(:))=fp(:)
     
+
     CALL Thickness(i_p)
 
     npx=PI_npx
@@ -213,59 +235,55 @@ CONTAINS
     CALL FOLD__Setup(ok_pme)
 
     SELECT CASE(init)
-    CASE(_INIT_EXCHANGE_)
+    CASE(_INIT_)
        CALL Fold_it(FOLD__iFold_init)
-    CASE(_EXCHANGE_ONLY_)
+    CASE(_EXCHANGE_)
        CALL Fold_it(FOLD__Buff_Fold)
     END SELECT
 
     CALL PI__Add_Calls
-
-    DO nn=1,SIZE(IndBox_a_t)
-       n=Indbox_a_t(nn)
-       fp(nn)=fp0(n)
-       Grp_No=Atoms(n) % Grp_No
-       IF(Groupa(Grp_No) % knwn == 3) Groupa(Grp_No) % knwn = 2
-    END DO
+    MyOwnCalls=MyOwnCalls+1
   CONTAINS
     SUBROUTINE Fold_it(Routine)
       INTERFACE
-         SUBROUTINE Routine(fp0,i_p,Axis,Dir)
+         SUBROUTINE Routine(fp,i_p,Axis,Dir)
            USE Forces, ONLY: Force
-           TYPE(Force) :: fp0(:)
+           TYPE(Force) :: fp(:)
            INTEGER :: Axis,Dir,i_p
          END SUBROUTINE Routine
       END INTERFACE
+      LOGICAL :: ok_pmeb
+      ok_pmeb=.FALSE.
       IF(ok_pme) THEN
          IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
-            CALL Routine(fp0,i_p,3,_PLUS_)
-            CALL Routine(fp0,i_p,3,_MINUS_)
-            CALL Routine(fp0,i_p,2,_PLUS_)
-            CALL Routine(fp0,i_p,2,_MINUS_)
+            CALL Routine(fp,i_p,3,_PLUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,2,_PLUS_)
+            CALL Routine(fp,i_p,2,_MINUS_)
          ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
-            CALL Routine(fp0,i_p,3,_PLUS_)
-            CALL Routine(fp0,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,3,_PLUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
          ELSE
-            CALL Routine(fp0,i_p,1,_PLUS_)
-            CALL Routine(fp0,i_p,1,_MINUS_)
-            CALL Routine(fp0,i_p,2,_PLUS_)
-            CALL Routine(fp0,i_p,2,_MINUS_)
-            CALL Routine(fp0,i_p,3,_MINUS_)
-            CALL Routine(fp0,i_p,3,_PLUS_)
+            CALL Routine(fp,i_p,1,_PLUS_)
+            CALL Routine(fp,i_p,1,_MINUS_)
+            CALL Routine(fp,i_p,2,_PLUS_)
+            CALL Routine(fp,i_p,2,_MINUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,3,_PLUS_)
          END IF
       ELSE
          IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
-            CALL Routine(fp0,i_p,3,_PLUS_)
-            CALL Routine(fp0,i_p,3,_MINUS_)
-            CALL Routine(fp0,i_p,2,_MINUS_)
+            CALL Routine(fp,i_p,3,_PLUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,2,_MINUS_)
          ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
-            CALL Routine(fp0,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
          ELSE
-            CALL Routine(fp0,i_p,3,_PLUS_)
-            CALL Routine(fp0,i_p,2,_PLUS_)
-            CALL Routine(fp0,i_p,3,_MINUS_)
-            CALL Routine(fp0,i_p,2,_MINUS_)
-            CALL Routine(fp0,i_p,1,_MINUS_)
+            CALL Routine(fp,i_p,3,_PLUS_)
+            CALL Routine(fp,i_p,2,_PLUS_)
+            CALL Routine(fp,i_p,3,_MINUS_)
+            CALL Routine(fp,i_p,2,_MINUS_)
+            CALL Routine(fp,i_p,1,_MINUS_)
          END IF
       END IF
     END SUBROUTINE Fold_it
@@ -380,9 +398,9 @@ CONTAINS
   CONTAINS
     SUBROUTINE Fold_it(Routine)
       INTERFACE
-         SUBROUTINE Routine(fp0,i_p,Axis,Dir)
+         SUBROUTINE Routine(fp,i_p,Axis,Dir)
            USE Forces, ONLY: Force
-           TYPE(Force) :: fp0(:)
+           TYPE(Force) :: fp(:)
            INTEGER :: Axis,Dir,i_p
          END SUBROUTINE Routine
       END INTERFACE
@@ -401,6 +419,47 @@ CONTAINS
       END IF
     END SUBROUTINE Fold_it
   END SUBROUTINE PI__FoldIntra
+  SUBROUTINE PI__Exchange
+    INTEGER, SAVE :: ShiftTime,source, dest
+    INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
+    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
+    INTEGER :: iv(3),Axis,i_p
+
+!!$
+!!$ --- Atoms to send
+!!$
+
+    npx=PI_npx
+    npy=PI_npy
+    npz=PI_npz
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+    IF(PI_Nprocs == 1) RETURN
+    CALL Exchange_it
+
+  CONTAINS
+    SUBROUTINE Exchange_it
+      IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+         CALL EX_Exchange(2,_PLUS_)
+         CALL EX_Exchange(3,_PLUS_)
+         CALL EX_Exchange(2,_MINUS_)
+         CALL EX_Exchange(3,_MINUS_)
+      ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+         CALL EX_Exchange(3,_PLUS_)
+         CALL EX_Exchange(3,_MINUS_)
+      ELSE
+         CALL EX_Exchange(1,_MINUS_)
+         CALL EX_Exchange(2,_PLUS_)
+         CALL EX_Exchange(3,_PLUS_)
+         CALL EX_Exchange(1,_PLUS_)
+         CALL EX_Exchange(2,_MINUS_)
+         CALL EX_Exchange(3,_MINUS_)
+      END IF
+    END SUBROUTINE Exchange_it
+  END SUBROUTINE PI__Exchange
 
   SUBROUTINE PI__ResetSecondary
     WHERE(Groupa(IndBox_g_t(:)) % knwn /= 1) Groupa(IndBox_g_t(:)) % knwn = 0

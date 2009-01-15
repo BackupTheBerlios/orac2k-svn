@@ -49,7 +49,7 @@ MODULE PI_Collectives
   USE mpi
 #endif
   USE PI_
-  USE IndBox, ONLY: IndBox_a_p
+  USE IndBox, ONLY: IndBox_a=>IndBox_a_p,IndBox_g=>IndBox_g_p
   USE Print_Defs
   USE CONSTANTS, ONLY: max_data
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
@@ -61,7 +61,8 @@ CONTAINS
     REAL(8) :: xc(:),yc(:),zc(:)
     REAL(8), ALLOCATABLE :: x(:),y(:),z(:)
     INTEGER, ALLOCATABLE :: iBuff(:),locals(:),displ(:)
-    INTEGER :: natom,nlocal,n,nn,pt
+    INTEGER :: natom,nlocal,n,nn,pt,Mynatom,Myngroup
+    INTEGER, POINTER :: MyIndBox(:)=>NULL()
 
 #ifdef HAVE_MPI
     natom=SIZE(xc)
@@ -69,8 +70,16 @@ CONTAINS
     ALLOCATE(x(natom),y(natom),z(natom),iBuff(natom))
     ALLOCATE(locals(PI_Nprocs),displ(PI_Nprocs))
 
+    MyNatom=SIZE(IndBox_a)
+    MyNgroup=SIZE(IndBox_g)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,MyNatom,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,MyNgroup,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+
+    IF(natom == MyNatom) MyIndBox=>IndBox_a
+    IF(natom == MyNgroup) MyIndBox=>IndBox_g
+
     IF(PI_Nprocs > 1) THEN
-       nlocal=SIZE(IndBox_a_p)
+       nlocal=SIZE(MyIndBox)
        CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1&
             &,MPI_INTEGER4,PI_Comm_Cart,ierr)
        displ(1)=0
@@ -79,8 +88,8 @@ CONTAINS
        END DO
        
        pt=displ(PI_Node_Cart+1)
-       DO nn=1,SIZE(IndBox_a_p)
-          n=IndBox_a_p(nn)
+       DO nn=1,SIZE(MyIndBox)
+          n=MyIndBox(nn)
           iBuff(pt+nn)=n
           x(pt+nn)=xc(n)
           y(pt+nn)=yc(n)
@@ -111,7 +120,8 @@ CONTAINS
     REAL(8) :: xc(:),yc(:),zc(:)
     REAL(8), ALLOCATABLE :: x(:),y(:),z(:)
     INTEGER, ALLOCATABLE :: iBuff(:),locals(:),displ(:)
-    INTEGER :: natom,nlocal,n,nn,pt
+    INTEGER :: natom,nlocal,n,nn,pt,Mynatom,Myngroup
+    INTEGER, POINTER :: MyIndBox(:)=>NULL()
 
 #ifdef HAVE_MPI
     natom=SIZE(xc)
@@ -119,8 +129,16 @@ CONTAINS
     ALLOCATE(x(natom),y(natom),z(natom),iBuff(natom))
     ALLOCATE(locals(PI_Nprocs),displ(PI_Nprocs))
 
+    MyNatom=SIZE(IndBox_a)
+    MyNgroup=SIZE(IndBox_g)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,MyNatom,1,MPI_SUM,MPI_INTEGER4,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,MyNgroup,1,MPI_SUM,MPI_INTEGER4,PI_Comm_Cart,ierr)
+
+    IF(natom == MyNatom) MyIndBox=>IndBox_a
+    IF(natom == MyNgroup) MyIndBox=>IndBox_g
+
     IF(PI_Nprocs > 1) THEN
-       nlocal=SIZE(IndBox_a_p)
+       nlocal=SIZE(MyIndBox)
        CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1&
             &,MPI_INTEGER4,PI_Comm_Cart,ierr)
        displ(1)=0
@@ -129,8 +147,8 @@ CONTAINS
        END DO
        
        pt=displ(PI_Node_Cart+1)
-       DO nn=1,SIZE(IndBox_a_p)
-          n=IndBox_a_p(nn)
+       DO nn=1,SIZE(MyIndBox)
+          n=MyIndBox(nn)
           iBuff(pt+nn)=n
           x(pt+nn)=xc(n)
           y(pt+nn)=yc(n)

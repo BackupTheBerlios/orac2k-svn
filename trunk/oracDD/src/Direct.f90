@@ -45,6 +45,8 @@ MODULE Direct
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
+  USE Groups ! Debugging
+  USE Atom ! Debugging
   USE PI_ATOM
   USE POTENTIAL
   USE Units
@@ -62,7 +64,7 @@ MODULE Direct
   
   IMPLICIT none
   PRIVATE 
-  PUBLIC Compute
+  PUBLIC Compute,Lists
   
   TYPE(Force), POINTER :: fp(:)
   INTEGER, SAVE :: No_Calls=0
@@ -81,7 +83,7 @@ CONTAINS
          &,dswrs,cmap2,xmap3,ymap3,zmap3
     INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
          &,p_index_j(:),p_index_jj(:)
-    INTEGER, ALLOCATABLE :: nei(:)
+    INTEGER, ALLOCATABLE :: neib(:),neic(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
     INTEGER, SAVE :: Times_of_Call=0
     INTEGER :: i_p
@@ -146,9 +148,9 @@ CONTAINS
     SUBROUTINE Memory
       ALLOCATE(Xg_PBC(ngroup),Yg_PBC(ngroup),Zg_PBC(ngroup),Xgs_PBC(ngroup)&
            &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
-           &,IndGrps(ngroup),nei(ngroup),xcs(ngroup),ycs(ngroup)&
+           &,IndGrps(ngroup),neib(ngroup),xcs(ngroup),ycs(ngroup)&
            &,zcs(ngroup),swrs(ngroup),dswrs(ngroup),cmap2(ngroup)&
-           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup))
+           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup),neic(ngroup))
       
       ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
            &,p_index_jj(natom)) 
@@ -160,4 +162,29 @@ CONTAINS
 
 #include "DIRECT__Sources.f90"
   END SUBROUTINE Compute
+
+  SUBROUTINE Lists(NShell)
+    INTEGER :: NShell
+    INTEGER :: ierr,nnn,nn,n,m
+    INTEGER, ALLOCATABLE :: neib(:),neic(:)
+    REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
+    INTEGER, SAVE :: Times_of_Call=0
+    INTEGER :: i_p
+
+
+    Times_of_Call=Times_of_Call+1
+    IF(ngroup == 0 .AND. natom == 0) THEN
+       errmsg_f='Direct lattice Lists routine must be called after PI&
+            &_Atom_'
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+       STOP
+    END IF
+
+    ALLOCATE(neib(ngroup),neic(ngroup))
+    CALL Lists_(Nshell)
+    No_Calls=No_Calls+1
+  CONTAINS
+#include "DIRECT__Lists.f90"
+  END SUBROUTINE Lists
 END MODULE Direct

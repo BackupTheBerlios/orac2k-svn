@@ -54,7 +54,7 @@ MODULE Groups
   IMPLICIT none
   PRIVATE
   PUBLIC Groups_, Groups__Chain,  Groups__Base,Groupa&
-       &,Groups__InitCoords,Groups__Update_Knwn, Groups__Update
+       &,Groups__InitCoords,Groups__Update
   TYPE :: Groups__Base
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -136,8 +136,9 @@ CONTAINS
        Groupa(n) % AtEn = Grp_atm(2,n)
     END DO
   END FUNCTION Groups__InitCoords
-  FUNCTION Groups__Update_Knwn() RESULT(out)
-    INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
+  FUNCTION Groups__Update(Ind) RESULT(out)
+    INTEGER, OPTIONAL :: Ind(:)
+    INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn,mm,m
     REAL(8) :: pmass
     LOGICAL :: out
     
@@ -148,47 +149,30 @@ CONTAINS
        RETURN
     END IF
     
-    ngrp=SIZE(groupa)
-    ntap=SIZE(Atoms)
-    
-    DO n=1,ngrp
-       IF(Groupa(n) % knwn == 2) THEN
-          Groupa(n) % xa = 0.0D0
-          Groupa(n) % ya = 0.0D0
-          Groupa(n) % za = 0.0D0
-          Groupa(n) % x = 0.0D0
-          Groupa(n) % y = 0.0D0
-          Groupa(n) % z = 0.0D0
-       END IF
-    END DO
-    
-    DO nn=1,ngrp
-       IF(Groupa(nn) % knwn /= 2) CYCLE
-       AtSt=Groupa(nn) % AtSt
-       AtEn=Groupa(nn) % Aten
-       DO n=AtSt,AtEn
-          pmass=Atoms(n) % pmass
-          Groupa(nn) % xa = Groupa(nn) % xa + pmass*Atoms(n) % xa
-          Groupa(nn) % ya = Groupa(nn) % ya + pmass*Atoms(n) % ya
-          Groupa(nn) % za = Groupa(nn) % za + pmass*Atoms(n) % za
-          Groupa(nn) % x = Groupa(nn) % x + pmass*Atoms(n) % x
-          Groupa(nn) % y = Groupa(nn) % y + pmass*Atoms(n) % y
-          Groupa(nn) % z = Groupa(nn) % z + pmass*Atoms(n) % z
+    IF(PRESENT(Ind)) THEN
+       DO mm=1,SIZE(Ind)
+          m=Ind(mm)
+          AtSt=Groupa(m) % AtSt
+          AtEn=Groupa(m) % Aten
+          Groupa(m) % x=0.0D0
+          Groupa(m) % y=0.0D0
+          Groupa(m) % z=0.0D0
+          Groupa(m) % xa=0.0D0
+          Groupa(m) % ya=0.0D0
+          Groupa(m) % za=0.0D0
+          DO n=AtSt,AtEn
+             pmass=Atoms(n) % pmass
+             Groupa(m) % xa = Groupa(m) % xa + pmass*Atoms(n) % xa
+             Groupa(m) % ya = Groupa(m) % ya + pmass*Atoms(n) % ya
+             Groupa(m) % za = Groupa(m) % za + pmass*Atoms(n) % za
+             Groupa(m) % x = Groupa(m) % x + pmass*Atoms(n) % x
+             Groupa(m) % y = Groupa(m) % y + pmass*Atoms(n) % y
+             Groupa(m) % z = Groupa(m) % z + pmass*Atoms(n) % z
+          END DO
        END DO
-    END DO
-  END FUNCTION Groups__Update_Knwn
-  FUNCTION Groups__Update() RESULT(out)
-    INTEGER :: ntap,ngrp,n,AtSt,AtEn,nn
-    REAL(8) :: pmass
-    LOGICAL :: out
-    
-    
-    out=.TRUE.
-    IF(.NOT. ALLOCATED(Atoms)) THEN
-       out=.FALSE.
        RETURN
     END IF
-    
+
     ngrp=SIZE(groupa)
     ntap=SIZE(Atoms)
     

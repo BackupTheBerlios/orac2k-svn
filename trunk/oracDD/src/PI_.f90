@@ -86,7 +86,7 @@ CONTAINS
     IF(PI_node /=0 ) THEN
        OPEN(unit=kprint,file="/dev/null")
     END IF
-    CALL MPI_BUFFER_ATTACH(Buffer_a,_SIZE)
+    CALL MPI_BUFFER_ATTACH(Buffer_a,_SIZE,ierr)
 #endif
   END SUBROUTINE PI__
   SUBROUTINE PI__Nodes

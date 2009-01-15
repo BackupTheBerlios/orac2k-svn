@@ -41,8 +41,10 @@
 !!$                                                                      *
 !!$***********************************************************************
 !!$---- This module is part of the program oracDD ----*
-SUBROUTINE Forces_(n,Flag)
-  INTEGER :: n,Flag
+SUBROUTINE Forces_(n)
+  INTEGER :: n
+  INTEGER, PARAMETER :: Flag=1
+
   IF(n >= 3) THEN
      CALL InterForces_
   ELSE 
@@ -50,25 +52,18 @@ SUBROUTINE Forces_(n,Flag)
   END IF
 CONTAINS
   SUBROUTINE IntraForces_
+    
     CALL PI__ResetSecondary
     SELECT CASE(n)
     CASE(_N0_)
-       IF(Flag == 0) CALL IntraMaps_n0_
 !!$--- Shift atoms
        CALL PI__ShiftIntra(_N0_,Flag)
 !!$--- Gets all n0 interactions beloging to the primary cell
-       IF(Flag == 0) THEN
-          IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-       END IF
        CALL Intra_n0_(Flag)
     CASE(_N1_)
-       IF(Flag == 0) CALL IntraMaps_n1_
 !!$--- Shift atoms
        CALL PI__ShiftIntra(_N1_,Flag)
 !!$--- Gets all n1 interactions beloging to the primary cell
-       IF(Flag == 0) THEN
-          IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-       END IF
        CALL Intra_n1_(Flag)
     END SELECT
     
@@ -77,26 +72,43 @@ CONTAINS
   SUBROUTINE InterForces_
     LOGICAL :: pme
     TYPE(Force), POINTER :: fp(:)
+    INTEGER :: m
+    INTEGER :: callsa=0
+
     CALL PI__ResetSecondary
+
+    WRITE(*,*) 'Lucillo ',PI_Node_CArt, COUNT(Groupa(:) % knwn == 2)
+
     pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
     IF(pme) THEN
        IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
             & Ewald__Param % nz /= 0) THEN
           CALL PI__Shift(n,Flag,_PME_)
+          WRITE(*,*) 'Illak'
        END IF
     ELSE
        CALL PI__Shift(n,Flag)
     END IF
+
+    IF(.NOT. PI_Atom_Update_()) CALL Print_Errors()
+
+    IF(n == 3) THEN
+       WRITE(*,*) '2029 F',Groupa(Atoms(5756) % Grp_No) % knwn &
+            & ,Groupa(2029) % xa,Groupa(2029) % ya
+       WRITE(*,*) '2029 F',Atoms(5756) % Grp_No
+    END IF
+
+
     CALL DIR_Forces(n)
     IF(pme) CALL PME_(n)
-    
+     
 !!$
 !!$--- Fold forces contributions to atoms inside the cell
 !!$
     
     fp=>FORCES_Pick(n)
     CALL PI__Fold_F(fp,n,Flag)
-    
+
 !!$--- Reset Secondary region atoms from PME
     
     IF(pme) CALL Pi__ResetSecondaryP

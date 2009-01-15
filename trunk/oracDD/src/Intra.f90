@@ -76,9 +76,6 @@ CONTAINS
     INTEGER, OPTIONAL :: Pick
     INTEGER :: init
     INTEGER :: n,nn
-    fp_n0(:) % x  = 0.0_8
-    fp_n0(:) % y  = 0.0_8
-    fp_n0(:) % z  = 0.0_8
     IF(charmm) THEN
        IF(PRESENT(Pick)) THEN
           SELECT CASE(Pick)
@@ -108,6 +105,9 @@ CONTAINS
           CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
           CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
 
+          WRITE(*,*) ' intra_n0 = ',init,COUNT(Atoms(:) % knwn /= 2)&
+               &,SIZE(Atoms)-COUNT(Atoms(:) % knwn == 0)-COUNT(Atoms(:) % knwn == 1)
+
           CALL PI__FoldIntra(fp_n0,1,init)
 
           IF(PI_Node_Cart == 0) WRITE(*,*) 'u1 ',ubond_Slv,ubond_Slt&
@@ -120,9 +120,6 @@ CONTAINS
   SUBROUTINE Intra_n1_(init)
     INTEGER :: init
     INTEGER :: n,nn
-    fp_n1(:) % x  = 0.0_8
-    fp_n1(:) % y  = 0.0_8
-    fp_n1(:) % z  = 0.0_8
     IF(charmm) THEN
        CALL Intra_(CHARMM_Dihed,fp_n1 % x,fp_n1 % y,fp_n1 % z)
        CALL Intra_(CHARMM_Int14,fp_n1 % x,fp_n1 % y,fp_n1 % z)

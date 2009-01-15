@@ -21,6 +21,7 @@
 
 #define _INIT_EXCHANGE_     0
 #define _EXCHANGE_ONLY_     1
+#define _EXCHANGE_          1
 #define _CONSTRS_           0
 #define _STRETCHS_          1
 #define _ANGLES_            2

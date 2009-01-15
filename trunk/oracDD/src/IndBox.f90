@@ -51,8 +51,8 @@ MODULE IndBox
   PUBLIC IndBox_,IndBox_g_p,IndBox_g_t,IndBox_a_p,IndBox_a_t&
        &,BoxInd_a_p,IndBoxP_, IndBoxP_a_t, IndBoxP_g_t
   INTEGER :: natom_local
-  INTEGER, ALLOCATABLE, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
-  INTEGER, ALLOCATABLE, SAVE :: indBox_g_p(:),indBox_g_t(:)
+  INTEGER, ALLOCATABLE, TARGET, SAVE :: indBox_a_p(:),indBox_a_t(:),BoxInd_a_p(:)
+  INTEGER, ALLOCATABLE, TARGET, SAVE :: indBox_g_p(:),indBox_g_t(:)
   INTEGER, ALLOCATABLE, SAVE :: IndBoxP_a_t(:)
   INTEGER, ALLOCATABLE, SAVE :: IndBoxP_g_t(:)
 CONTAINS
@@ -83,7 +83,7 @@ CONTAINS
           IndBox_g_t(count_g_t)=n
           IF(m == 1) THEN
              count_g_p=count_g_p+1
-             IndBox_g_p(count_g_p)=count_g_t
+             IndBox_g_p(count_g_p)=n
           END IF
        END IF
     END DO

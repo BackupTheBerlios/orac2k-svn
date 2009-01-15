@@ -86,7 +86,7 @@ CONTAINS
     INTEGER :: Axis,Dir,i_p
     INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
-    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
+    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoGrp_s3,NoGrp_r3,q,grp_no&
          &,np,nind_o,NoGrp_s,NoGrp_r,nmax
     INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
@@ -103,6 +103,7 @@ CONTAINS
     INTEGER, SAVE :: MyCalls=0
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
+    INTEGER :: iv_s(2),iv_r(2)
 
     Calls=Calls+1
     IF(Calls > SIZE(iShift)) THEN
@@ -213,15 +214,13 @@ CONTAINS
     iShift(Calls) % sh(i_p) % NoGrp_r=0
     iShift(Calls) % sh(i_p) % NoAtm_r=0
 
-    startime=MPI_WTIME()
     
-    CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
-         &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
-    CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,1,NoGrp_r&
-         &,1,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
-    endtime=MPI_WTIME()
+    iv_s(1)=NoGrp_s;iv_s(2)=NoAtm_s
 
-    CALL PI__Time_It(startime,endtime)
+    CALL MPI_SENDRECV(iv_s,2,MPI_INTEGER4,dest,0,iv_r&
+         &,2,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
+
+    NoGrp_r=iv_r(1);NoAtm_r=iv_r(2)
 
     iShift(Calls) % sh(i_p) % NoGrp_r=NoGrp_r
     iShift(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
@@ -236,73 +235,36 @@ CONTAINS
 
     iShift(Calls) % sh(i_p) % iBuff_S(1:NoGrp_S)=ind_o(1:NoGrp_S)
 
-
-
     iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_S
     iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_R
 
 
-    ALLOCATE(Buff_s(3,NoAtm_s))
-    ALLOCATE(Buff_r(3,NoAtm_r))
-    count0=0
+    ALLOCATE(Buff_s(3,NoGrp_s))
+    ALLOCATE(Buff_r(3,NoGrp_r))
+
+
     DO m=1,NoGrp_s
        l=iBuff_s(m)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       DO q=AtSt,AtEn
-          count0=count0+1
-          Buff_s(1,count0)=Atoms(q) % x
-          Buff_s(2,count0)=Atoms(q) % y
-          Buff_s(3,count0)=Atoms(q) % z
-       END DO
+       Buff_s(1,m)=Groupa(l) % xa
+       Buff_s(2,m)=Groupa(l) % ya
+       Buff_s(3,m)=Groupa(l) % za
     END DO
 
 
-    NoAtm_s3=NoAtm_s*3
-    NoAtm_r3=NoAtm_r*3
+    NoGrp_s3=NoGrp_s*3
+    NoGrp_r3=NoGrp_r*3
 
-    startime=MPI_WTIME()
     CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,2,iBuff_r&
          &,NoGrp_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,4,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,4,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(Buff_s,NoGrp_s3,MPI_REAL8,dest,4,Buff_r&
+         &,NoGrp_r3,MPI_REAL8,source,4,PI_Comm_Cart,STATUS,ierr)
 
-    endtime=MPI_WTIME()
-    CALL PI__Time_It(startime,endtime) 
-
-    nn=0
     DO m=1,NoGrp_r
        l=iBuff_r(m)
        IF(groupa(l) % Knwn == 2) CYCLE
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       xpga=0.0D0
-       ypga=0.0D0
-       zpga=0.0D0
-       xpg=0.0D0
-       ypg=0.0D0
-       zpg=0.0D0
-       tmass=Groupa(l) % Mass
-       DO n=AtSt,AtEn
-          xmass=Atoms(n) % mass/tmass
-          nn=nn+1
-          xc=Buff_r(1,nn)
-          yc=Buff_r(2,nn)
-          zc=Buff_r(3,nn)
-          atoms(n) % x=xc
-          atoms(n) % y=yc
-          atoms(n) % z=zc
-          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
-          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
-          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
-          xpga = xpga + xmass*Atoms(n) % xa
-          ypga = ypga + xmass*Atoms(n) % ya
-          zpga = zpga + xmass*Atoms(n) % za
-          Atoms(n) % knwn = 2
-       END DO
-       Groupa(l) % xa = xpga 
-       Groupa(l) % ya = ypga
-       Groupa(l) % za = zpga
+       Groupa(l) % xa = Buff_r(1,m)
+       Groupa(l) % ya = Buff_r(2,m)
+       Groupa(l) % za = Buff_r(3,m)
        groupa(l) % Knwn = 2
        nMyMaps(i_p)=nMyMaps(i_p)+1
        MyMaps(nMyMaps(i_p),i_p)=l
@@ -368,12 +330,9 @@ CONTAINS
 
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
-    startime=MPI_WTIME()
 
     CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
          &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
-    endtime=MPI_WTIME()
-    CALL PI__Time_It(startime,endtime)
 
     nn=0
     DO m=1,NoGrp_r

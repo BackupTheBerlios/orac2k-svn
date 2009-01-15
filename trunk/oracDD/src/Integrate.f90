@@ -52,13 +52,13 @@ MODULE Integrate
   USE PI_
   USE Pi_Decompose 
   USE Print_Defs
-  USE PI_Atom
+  USE PI_Atom, PI_Atom_Update_=>Update_
   USE Forces, FORCES_Zero=>Zero, FORCES_Pick=>Pick
   USE Integrator, ONLY: Integrator_
   USE Atom
   USE Groups
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
-  USE Direct, ONLY: DIR_Forces=>Compute
+  USE Direct, ONLY: DIR_Forces=>Compute,DIR_Lists=>Lists
   USE Ewald
   USE PME
   USE PI_Communicate
@@ -110,9 +110,10 @@ CONTAINS
     NShell0=SIZE(Radii)
     NShell=Nshell0+2
 
-!!$--- Shit it in the smallest possible shell
+!!$--- Shift it in the smallest possible shell
 
-    CALL PI__Shift(_M_,_INIT_EXCHANGE_)
+    CALL PI__Shift(_M_,_INIT_)
+    CALL PI__Shift(_M_,_EXCHANGE_)
 
 !!$--- Find out primary and secondary atoms arrays
 
@@ -158,7 +159,8 @@ CONTAINS
 
 !!$--- Shift the outer most atoms around the primary cell
 
-    CALL PI__Shift(NShell,_INIT_EXCHANGE_)
+    CALL PI__Shift(NShell,_INIT_)
+    CALL PI__Shift(NShell,_EXCHANGE_)
 
 !!$--- Setup the primary and secondary atom cells: IndBox_?_? arrays
 !!$--- are created
@@ -169,20 +171,31 @@ CONTAINS
 !!$
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
+    CALL DIR_Lists(Nshell)
 
     IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
        CALL PME_(0)
     END IF
 
+    CALL IntraMaps_n0_
+    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+    CALL IntraMaps_n1_
+    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+    CALL Init_TotalShells
+
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
     DO n=NShell,1,-1
        CALL FORCES_Zero(n)
-       CALL Forces_(n,_INIT_EXCHANGE_)
+       CALL Forces_(n)
     END DO
 
+    IF(PI_Node == 0) WRITE(78,*) 'Get one L'
+    CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
+         &/1:SIZE(fp_l)/))
+    STOP
     IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) % knwn))&
          & CALL Print_Errors()
 
@@ -195,7 +208,6 @@ CONTAINS
     
     Iteration=Get_RunLength()
     
-
     DO Iter=1,Iteration % nstep
        CALL Integrate_Shell(NShell)
     END DO
@@ -235,6 +247,22 @@ CONTAINS
     out=Func(dt, Atoms(:) % x,  Atoms(:) % y, Atoms(:) % z, Atoms(:) &
          &% vx,  Atoms(:) % vy, Atoms(:) % vz)
   END FUNCTION Rattle_it
+  SUBROUTINE Init_TotalShells
+    LOGICAL :: pme
+    INTEGER :: n
+
+    DO n=NShell,1,-1
+       pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
+       IF(pme) THEN
+          IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
+               & Ewald__Param % nz /= 0) THEN
+             CALL PI__Initialize_Shell(n,_PME_)
+          END IF
+       ELSE
+          CALL PI__Initialize_Shell(n)
+       END IF
+    END DO
+  END SUBROUTINE Init_TotalShells
 
 #include "Integrate__N0.f90"
 #include "Integrate__N1.f90"

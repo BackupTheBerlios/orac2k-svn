@@ -95,7 +95,6 @@ CONTAINS
     REAL(8) :: point(3)
     REAL(8) :: vc(3),tx,ty,tz
     INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
-    REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
     INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
@@ -170,13 +169,10 @@ CONTAINS
     iFold(Calls) % sh(i_p) % NoAtm_r=0
 
 
-    startime=MPI_WTIME()
     CALL MPI_SENDRECV(NoGrp_s,1,MPI_INTEGER4,dest,3,NoGrp_r&
          &,1,MPI_INTEGER4,source,3,PI_Comm_Cart,STATUS,ierr)
     CALL MPI_SENDRECV(NoAtm_s,1,MPI_INTEGER4,dest,0,NoAtm_r&
          &,1,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
-    endtime=MPI_WTIME()
-    CALL PI__Time_It(startime,endtime)
 
     iFold(Calls) % sh(i_p) % NoGrp_r=NoGrp_r
     iFold(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
@@ -192,48 +188,16 @@ CONTAINS
     iFold(Calls) % sh(i_p) % iBuff_S=ind_o(1:NoGrp_S)
     iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_S
     iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_R
-    
-    ALLOCATE(Buff_s(3,NoAtm_s))
-    ALLOCATE(Buff_r(3,NoAtm_r))
-        
     count0=0
+
     DO m=1,NoGrp_s
        l=iBuff_s(m)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       Groupa(l) % knwn=3
-       DO q=AtSt,AtEn
-          count0=count0+1
-          Buff_s(1,count0)=fp0(q) % x
-          Buff_s(2,count0)=fp0(q) % y
-          Buff_s(3,count0)=fp0(q) % z
-       END DO
+       Groupa(l) % knwn=0
     END DO
-       
-    NoAtm_s3=NoAtm_s*3
-    NoAtm_r3=NoAtm_r*3
-
-    startime=MPI_WTIME()
+    
     CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,1,iBuff_r&
          &,NoGrp_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
-    endtime=MPI_WTIME()
-    CALL PI__Time_It(startime,endtime)
 
-    nn=0
-    DO q=1,NoGrp_r
-       l=iBuff_r(q)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       DO n=AtSt,AtEn
-          nn=nn+1
-          fp0(n) % x=fp0(n) % x+Buff_r(1,nn)
-          fp0(n) % y=fp0(n) % y+Buff_r(2,nn)
-          fp0(n) % z=fp0(n) % z+Buff_r(3,nn)
-       END DO
-    END DO
-    CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
   END SUBROUTINE IFold_init
   SUBROUTINE Buff_Fold(fp0,i_p,Axis,Dir)
     TYPE(Force) :: fp0(:)
@@ -283,7 +247,6 @@ CONTAINS
        l=iBuff_s(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Groupa(l) % knwn = 3
        DO q=AtSt,AtEn
           count0=count0+1
           Buff_s(1,count0)=fp0(q) % x
@@ -291,15 +254,11 @@ CONTAINS
           Buff_s(3,count0)=fp0(q) % z
        END DO
     END DO
-       
+
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
-
-    startime=MPI_WTIME()
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,2,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,2,PI_Comm_Cart,STATUS,ierr)
-    endtime=MPI_WTIME()
-    CALL PI__Time_It(startime,endtime)
+    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,5,Buff_r&
+         &,NoAtm_r3,MPI_REAL8,source,5,PI_Comm_Cart,STATUS,ierr)
 
     nn=0
     DO q=1,NoGrp_r
@@ -314,7 +273,6 @@ CONTAINS
        END DO
     END DO
 
-    CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
   END SUBROUTINE Buff_Fold
 
 END MODULE PI_Fold

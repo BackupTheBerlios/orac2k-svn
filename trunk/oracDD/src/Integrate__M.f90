@@ -45,7 +45,9 @@
 
 SUBROUTINE Integrate_m
   INTEGER, SAVE :: counter=0
-  INTEGER :: Init,Ind
+  INTEGER :: Ind,p,o
+  INTEGER, PARAMETER :: init=1
+  INTEGER :: kalls=0
   DO ma=1,m_
      IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
@@ -58,14 +60,18 @@ SUBROUTINE Integrate_m
 !!$
 
      IF(.NOT. Atom__Convert(_X_TO_XA_,Ind)) CALL Print_Errors()
-     IF(.NOT. Groups__Update()) CALL Print_Errors()
+     IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
      
-     Init=Pick_Init(_M_,counter)
      CALL FORCES_Zero(_M_)
-     CALL Forces_(_M_,_INIT_EXCHANGE_)
+     CALL Forces_(_M_)
+
+     IF(PI_Node == 0) WRITE(78, *) 'Groupa before ',PI_Nprocs,counter
+     CALL PI_Write_(78,fp_m(:) % x, fp_m(:) % y, fp_m(:) % z,(/1:SIZE(fp_m)/))
+
      IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
      counter=counter+1
-     IF(NShell == _M_ .AND. Init == 0) THEN
+
+     IF(NShell == _M_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF
@@ -73,5 +79,9 @@ SUBROUTINE Integrate_m
      IF(Inout__PDB % Unit /= 0 .AND. Print_Now(_M_,Inout__PDB % Freq)) THEN
         CALL Atom__PDB(Inout__PDB % Unit)
      END IF
+!!$     IF(init == 0 .AND. kalls /= 0) stop
+!!$     kalls=kalls+1
+        
+     WRITE(*,*) '_M_ step = ',counter,Init
   END DO
 END SUBROUTINE Integrate_m

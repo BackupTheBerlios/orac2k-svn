@@ -60,7 +60,7 @@ MODULE PI_Atom
   IMPLICIT none
   PRIVATE
   PUBLIC PI_Atom_,xpg,ypg,zpg,xp0,yp0,zp0,chg,gmass,Id,Slv,Grp_No,grppt,maplg&
-       &,Mapnl,Maps,natom,ngroup,PI_Atom__Neigh_,List,Neigha__,Neigha_
+       &,Mapnl,Maps,natom,ngroup,PI_Atom__Neigh_,List,Neigha__,Neigha_,Update_
 
   TYPE Neigha__
      INTEGER :: no=0
@@ -106,7 +106,8 @@ CONTAINS
            & AtEn)) CALL Print_Errors()
 
       natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
-      
+      WRITE(*,*) 'memory ',natom,ngroup
+
       IF(ALLOCATED(xpg)) THEN
          DEALLOCATE(xpg,ypg,zpg,grppt)
          DEALLOCATE(xp0,yp0,zp0,chg,Id,Slv,Maps,maplg,gmass,Grp_No)
@@ -124,6 +125,8 @@ CONTAINS
 !!$
     SUBROUTINE Gather_Atoms
       INTEGER :: n,m,p,q,nn,count0,g1,g2
+      INTEGER :: Timesa=0
+
       DO n=1,ngroup
          m=IndBox_g_t(n)
          xpg(n)=Groupa(m) % xa
@@ -143,6 +146,15 @@ CONTAINS
          Grp_No(n)=Atoms(m) % Grp_No
          gmass(n)=Atoms(m) % pmass
       END DO
+      IF(Timesa == 1) THEN
+!!$         WRITE(200+PI_Node_Cart,'(i8,3x,3e17.8)') (IndBox_g_p(n)&
+!!$              &,Groupa(IndBox_g_p(n)) % xa,Groupa(IndBox_g_p(n)) % ya&
+!!$              & ,Groupa(IndBox_g_p(n)) % za,n=1,SIZE(IndBox_g_p))
+!!$         WRITE(200+PI_Node_Cart,'(2i8,3x,3e17.8)')&
+!!$              & (Groupa(IndBox_g_t(n)) % knwn, IndBox_g_t(n)&
+!!$              & ,xpg(n),ypg(n),zpg(n),n=1,ngroup)
+      END IF
+      Timesa=Timesa+1
 
       ALLOCATE(Index_0(SIZE(Atoms)))
       Index_0=-1
@@ -204,6 +216,39 @@ CONTAINS
 
 
   END FUNCTION PI_Atom_
+  FUNCTION Update_() RESULT(out)
+    LOGICAL :: out
+    CALL Gather_Update
+    out=.TRUE.
+  CONTAINS
+!!$
+!!$--- Gather Atoms to the CPU box
+!!$
+    SUBROUTINE Gather_Update
+      INTEGER :: n,m,p,q
+      INTEGER :: Timesa=0
+
+      DO n=1,ngroup
+         m=IndBox_g_t(n)
+         IF(Groupa(m) % knwn == 0) CYCLE != no need to update atoms outside range
+         xpg(n)=Groupa(m) % xa
+         ypg(n)=Groupa(m) % ya
+         zpg(n)=Groupa(m) % za
+         DO p=grppt(1,n),grppt(2,n)
+            q=IndBox_a_t(p)
+            xp0(p)=Atoms(q) % xa
+            yp0(p)=Atoms(q) % ya
+            zp0(p)=Atoms(q) % za
+         END DO
+      END DO
+    END SUBROUTINE Gather_Update
+
+!!$
+!!$--- Compute Forces
+!!$
+
+
+  END FUNCTION Update_
   FUNCTION PI_Atom__Neigh_(Keep) RESULT(out)
     LOGICAL, OPTIONAL :: Keep
     LOGICAL :: out
@@ -227,6 +272,7 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)       
        RETURN
     END IF
+
     ALLOCATE(nei(ngroup),known(ngroup))
 
 

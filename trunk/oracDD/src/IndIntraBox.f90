@@ -145,7 +145,7 @@ CONTAINS
        Indx(:,nnn)=via
        Param(nnn) % pot=Prm(nn) % g
     END DO
-    CALL MPI_ALLREDUCE(count0,count1,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+!!$    CALL MPI_ALLREDUCE(MPI_IN_PLACE,count0,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
   END SUBROUTINE IntraPot
   SUBROUTINE IntraPot14(Tpg, Indx)
     INTEGER :: Tpg(:,:)

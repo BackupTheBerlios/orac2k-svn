@@ -44,24 +44,60 @@
 !!$---- This module is part of the program oracDD ----*
 SUBROUTINE Integrate_n0
   INTEGER, SAVE :: counter=0
-  INTEGER :: Init
-!!$  IF(PI_Node == 0) WRITE(78, *) 'Illa '
-!!$  CALL PI_Write_(78,Atoms(:) % x, Atoms(:) % y, Atoms(:) % z,(/ 1:SIZE(Atoms)/))
+  INTEGER :: Init,q
+
+  IF(PI_Node == 0) WRITE(78,*) 'Get one H'
+  CALL PI_Write_(78, fp_h(:) %x, fp_h(:) %y, fp_h(:) %z,(&
+       &/1:SIZE(fp_h)/))
+  IF(PI_Node == 0) WRITE(78,*) 'Get one L'
+  CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
+       &/1:SIZE(fp_l)/))
+  IF(PI_Node == 0) WRITE(78,*) 'Get one M'
+  CALL PI_Write_(78, fp_m(:) %x, fp_m(:) %y, fp_m(:) %z,(&
+       &/1:SIZE(fp_m)/))
+  STOP
   DO n0=1,n0_
      IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
      
      
      IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
-
-!!$     IF(PI_Node == 0) WRITE(78, *) 'Illa '
-!!$     CALL PI_Write_(78,Atoms(:) % x, Atoms(:) % y, Atoms(:) % z,(/ 1:SIZE(Atoms)/))
-
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
      
      Init=Pick_Init(_N0_,counter)
+
+     IF(Init == _INIT_) THEN
+        IF(.NOT.  Atom__Convert(_X_TO_XA_)) CALL Print_Errors()
+        IF(.NOT. Groups__Update()) CALL Print_Errors()
+
+        CALL PI__ResetSecondary
+        CALL PI__Exchange
+        CALL PI__AssignAtomsToCells
+
+        
+        CALL PI__Shift(NShell,_INIT_)
+        CALL PI__Shift(NShell,_EXCHANGE_)
+
+        WRITE(*,*) '2029 ',Groupa(Atoms(5756) % Grp_No) % knwn&
+             &,Groupa(2029) % xa,Groupa(2029) % ya
+        WRITE(*,*) '2029 ',Atoms(5756) % Grp_No
+
+        IF(.NOT. PI_Atom_()) CALL Print_Errors()
+        IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
+        CALL DIR_Lists(Nshell)
+
+
+        CALL IntraMaps_n0_
+        IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+        CALL IntraMaps_n1_
+        IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
+        CALL Init_TotalShells
+        STOP
+     END IF
+
      CALL FORCES_Zero(_N0_)
-     CALL Forces_(_N0_,Init)
+     CALL Forces_(_N0_)
+
      IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
      counter=counter+1
      IF(NShell == _N0_ .AND. Init == 0) THEN
