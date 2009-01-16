@@ -48,6 +48,9 @@ PROGRAM OracDD
 
 !!$======================== DECLARATIONS ================================*
 
+#ifdef HAVE_MPI
+  USE mpi
+#endif
   USE MDRun
   USE Errors,ONLY: Print_Errors, Print_Warnings, errmsg_w
   USE Tree, ONLY: Tree__Start
@@ -76,9 +79,13 @@ PROGRAM OracDD
 !!$  USE SYSTEM_Mod, ONLY: System__Setup=>Setup
   IMPLICIT none
   REAL(8) :: Time_Begin,Time_End
-!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+  REAL(8) :: startime,endtime,timea
 
+!!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+  CALL CPU_TIME(Time_Begin)
   CALL PI__
+  CALL MPI_BARRIER(PI_Comm,ierr)
+  startime=MPI_WTIME()
 
   CALL Banner_
   CALL Units_
@@ -121,7 +128,29 @@ PROGRAM OracDD
 
 !!$  CALL Run_oracS
 
+  CALL MPI_BARRIER(PI_Comm,ierr)
+  endtime=MPI_WTIME()
+  timea=endtime-startime
+  CALL MPI_ALLREDUCE(MPI_IN_PLACE,timea,1,MPI_REAL8,MPI_SUM,PI_Comm,ierr)
+
   CALL PI__Finalize
+  CALL CPU_TIME(Time_End)
+  WRITE(kprint,100) PI_Nprocs,timea,timea/DBLE(PI_Nprocs)
+  WRITE(kprint,*) Time_End-Time_Begin
+100 FORMAT(/'=========================================================&
+         &==================='&
+         &/'=                                                         &
+         &                 ='/&
+         &'=                      Run with          ',i3,' CPUs       &
+         &                   ='&
+         &/'=                                                         &
+         &                 ='/&
+         &'=      Total CPU Time     ',f12.3,' s    Time per CPU  ',f12&
+         &.3,'s    ='&
+         &/'=                                                         &
+         &                 ='/&
+         &'=========================================================&
+         &==================='/)
 
 CONTAINS
   SUBROUTINE VerifyParameters

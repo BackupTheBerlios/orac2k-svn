@@ -113,7 +113,7 @@ CONTAINS
 
     CALL Integrate_
 
-    STOP
+
 !!$    CALL PI__Shift(_M_,_INIT_EXCHANGE_)
 !!$    IF(.NOT. PI_Atom_()) CALL Print_Errors()
 !!$    IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
