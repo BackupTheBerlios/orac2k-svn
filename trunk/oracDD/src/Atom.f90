@@ -163,7 +163,8 @@ CONTAINS
     Atoms(:) % z = co(3,1)*Atoms(:) % xa+co(3,2)*Atoms(:) % ya+co(3,3)*Atoms(:) % za    
   END FUNCTION Atom__InitCoords
   FUNCTION Atom__Convert(Dir,Ind) RESULT(out)
-    INTEGER, OPTIONAL :: Ind
+    INTEGER, OPTIONAL :: Ind(:)
+
     LOGICAL :: out
     INTEGER :: Dir
     out=.TRUE.
@@ -181,13 +182,19 @@ CONTAINS
     ELSE
        SELECT CASE(Dir)
        CASE(_XA_TO_X_)
-          Atoms(_IND) % x = co(1,1)*Atoms(_IND) % xa+co(1,2)*Atoms(_IND) % ya+co(1,3)*Atoms(_IND) % za    
-          Atoms(_IND) % y = co(2,1)*Atoms(_IND) % xa+co(2,2)*Atoms(_IND) % ya+co(2,3)*Atoms(_IND) % za    
-          Atoms(_IND) % z = co(3,1)*Atoms(_IND) % xa+co(3,2)*Atoms(_IND) % ya+co(3,3)*Atoms(_IND) % za    
+          Atoms(Ind(:)) % x = co(1,1)*Atoms(Ind(:)) % xa+co(1,2)&
+               &*Atoms(Ind(:)) % ya+co(1,3)*Atoms(Ind(:)) % za 
+          Atoms(Ind(:)) % y = co(2,1)*Atoms(Ind(:)) % xa+co(2,2)&
+               &*Atoms(Ind(:)) % ya+co(2,3)*Atoms(Ind(:)) % za 
+          Atoms(Ind(:)) % z = co(3,1)*Atoms(Ind(:)) % xa+co(3,2)&
+               &*Atoms(Ind(:)) % ya+co(3,3)*Atoms(Ind(:)) % za
        CASE(_X_TO_XA_)
-          Atoms(_IND) % xa = oc(1,1)*Atoms(_IND) % x+oc(1,2)*Atoms(_IND) % y+oc(1,3)*Atoms(_IND) % z    
-          Atoms(_IND) % ya = oc(2,1)*Atoms(_IND) % x+oc(2,2)*Atoms(_IND) % y+oc(2,3)*Atoms(_IND) % z    
-          Atoms(_IND) % za = oc(3,1)*Atoms(_IND) % x+oc(3,2)*Atoms(_IND) % y+oc(3,3)*Atoms(_IND) % z
+          Atoms(Ind(:)) % xa = oc(1,1)*Atoms(Ind(:)) % x+oc(1,2)&
+               &*Atoms(Ind(:)) % y+oc(1,3)*Atoms(Ind(:)) % z
+          Atoms(Ind(:)) % ya = oc(2,1)*Atoms(Ind(:)) % x+oc(2,2)&
+               &*Atoms(Ind(:)) % y+oc(2,3)*Atoms(Ind(:)) % z
+          Atoms(Ind(:)) % za = oc(3,1)*Atoms(Ind(:)) % x+oc(3,2)&
+               &*Atoms(Ind(:)) % y+oc(3,3)*Atoms(Ind(:)) % z
        END SELECT
     END IF
   END FUNCTION Atom__Convert

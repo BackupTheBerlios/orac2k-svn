@@ -126,6 +126,7 @@ CONTAINS
   SUBROUTINE Integrate_
     INTEGER :: iter,n,Iter_End
     REAL(8) :: startime,endtime,timea
+    TYPE(Force), POINTER :: fp_d(:)
 
     
 !!$--- Lennard Jones Arrays. _M_ is not used here it could be zero
@@ -172,7 +173,6 @@ CONTAINS
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
     CALL DIR_Lists(Nshell)
-
     IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
          & Ewald__Param % nz /= 0) THEN
        CALL PME_(0)
@@ -182,7 +182,8 @@ CONTAINS
     IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
     CALL IntraMaps_n1_
     IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-    CALL Init_TotalShells
+
+    CALL Init_TotalShells(NShell)
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
@@ -197,7 +198,7 @@ CONTAINS
 
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'First time',PI_Node_Cart,timea
+    WRITE(kprint,*) 'First time',PI_Node_Cart,timea
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
@@ -210,8 +211,8 @@ CONTAINS
 
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'Second Time time',PI_Node_Cart,timea/Iteration % Time
-    WRITE(*,*) Iteration % Time
+    WRITE(kprint,*) 'Second Time time',PI_Node_Cart,timea/Iteration % Time
+    WRITE(kprint,*) Iteration % Time
   END SUBROUTINE Integrate_
   SUBROUTINE Integrate_Shell(n)
     INTEGER :: n
@@ -243,20 +244,12 @@ CONTAINS
     out=Func(dt, Atoms(:) % x,  Atoms(:) % y, Atoms(:) % z, Atoms(:) &
          &% vx,  Atoms(:) % vy, Atoms(:) % vz)
   END FUNCTION Rattle_it
-  SUBROUTINE Init_TotalShells
-    LOGICAL :: pme
+  SUBROUTINE Init_TotalShells(Nstart)
+    INTEGER :: Nstart
     INTEGER :: n
 
-    DO n=NShell,1,-1
-       pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
-       IF(pme) THEN
-          IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-               & Ewald__Param % nz /= 0) THEN
-             CALL PI__Initialize_Shell(n,_PME_)
-          END IF
-       ELSE
-          CALL PI__Initialize_Shell(n)
-       END IF
+    DO n=NStart,1,-1
+       CALL PI__Initialize_Shell(n)
     END DO
   END SUBROUTINE Init_TotalShells
 

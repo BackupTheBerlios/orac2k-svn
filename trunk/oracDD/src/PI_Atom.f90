@@ -45,6 +45,7 @@ MODULE PI_Atom
 !!$---- This module is part of the program oracDD ----*
 
 #include 'forces.h'
+  USE Print_Defs
   USE Potential
 #ifdef HAVE_MPI
   USE mpi
@@ -355,7 +356,7 @@ CONTAINS
     END DO
     CALL MPI_ALLREDUCE(counter,No_Nei,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
     IF(PI_Node_Cart == 0) THEN
-       WRITE(*,*) 'Neighbors (',No_Nei,')'
+       WRITE(kprint,*) 'Neighbors (',No_Nei,')'
     END IF
   END FUNCTION PI_Atom__Neigh_
 END MODULE PI_Atom

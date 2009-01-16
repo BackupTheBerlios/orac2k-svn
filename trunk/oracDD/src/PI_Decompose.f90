@@ -48,7 +48,6 @@ MODULE PI_Decompose
   USE mpi
 #endif
   USE PI_
-  USE PI_Communicate
   USE UNITS
   USE Node
   USE FactorizeNo
@@ -227,10 +226,10 @@ CONTAINS
     END DO
     n=COUNT(groupa(:) % knwn == 1)
     CALL MPI_ALLREDUCE(MPI_IN_PLACE,n,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
-    WRITE(*,*) 'ngroup ',n
+    WRITE(kprint,*) 'ngroup ',n
     n=COUNT(Atoms(:) % knwn == 1)
     CALL MPI_ALLREDUCE(MPI_IN_PLACE,n,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
-    WRITE(*,*) 'natom ',n
+    WRITE(kprint,*) 'natom ',n
 
   END SUBROUTINE PI__AssignAtomsToCells
 END MODULE PI_Decompose

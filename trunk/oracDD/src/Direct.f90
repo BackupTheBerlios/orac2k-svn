@@ -45,8 +45,7 @@ MODULE Direct
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
-  USE Groups ! Debugging
-  USE Atom ! Debugging
+  USE Print_Defs
   USE PI_ATOM
   USE POTENTIAL
   USE Units

@@ -150,5 +150,5 @@ SUBROUTINE Lists_(NShell0)
        &,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(MPI_IN_PLACE,count_c,1,MPI_INTEGER4,MPI_SUM&
        &,PI_Comm_Cart,ierr)
-  IF(PI_Node_Cart == 0) WRITE(*,*) count_a,count_b,count_c
+  WRITE(kprint,*) count_a,count_b,count_c
 END SUBROUTINE Lists_

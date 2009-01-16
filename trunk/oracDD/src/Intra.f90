@@ -45,6 +45,7 @@ MODULE Intra
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
+  USE Print_Defs
   USE Units, ONLY: efact
   USE PI_
   USE CHARMM_Intra, ONLY: CHARMM_Bonds=>Bonds,CHARMM_Angles=>Angles&
@@ -107,10 +108,10 @@ CONTAINS
 
           CALL PI__FoldIntra(fp_n0,1,init)
 
-          IF(PI_Node_Cart == 0) WRITE(*,*) 'u1 ',ubond_Slv,ubond_Slt&
+          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u1 ',ubond_Slv,ubond_Slt&
                &,(ubond_Slt+ubond_Slv)*efact/1000.0_8
-          IF(PI_Node_Cart == 0) WRITE(*,*) 'u2 ',ubend_Slv,ubend_Slt
-          IF(PI_Node_Cart == 0) WRITE(*,*) 'u3 ',uitors_Slv,uitors_Slt
+          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u2 ',ubend_Slv,ubend_Slt
+          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u3 ',uitors_Slv,uitors_Slt
        END IF
     END IF
   END SUBROUTINE Intra_n0_
@@ -126,9 +127,9 @@ CONTAINS
 
        CALL PI__FoldIntra(fp_n1,2,init)
 
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u4 ',uptors_Slv,uptors_Slt
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
-       IF(PI_Node_Cart == 0) WRITE(*,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
+       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u4 ',uptors_Slv,uptors_Slt
+       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
+       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
     END IF
   END SUBROUTINE Intra_n1_
 

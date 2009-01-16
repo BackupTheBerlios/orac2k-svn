@@ -437,7 +437,7 @@ FUNCTION Verlet_(dt,xp0a,yp0a,zp0a,vpxa,vpya,vpza) RESULT(out)
   END DO
   CALL Scatter_Atoms
 30000 CALL PI_ErrSignal_(errmsg_f,out)
-  WRITE(*,*) 'Iter 1',DBLE(Iter1)/DBLE(nc),Rattle__Param % mim_Max
+  WRITE(kprint,*) 'Iter 1',DBLE(Iter1)/DBLE(nc),Rattle__Param % mim_Max
 CONTAINS
   SUBROUTINE Gather_Atoms
     INTEGER :: n,nn

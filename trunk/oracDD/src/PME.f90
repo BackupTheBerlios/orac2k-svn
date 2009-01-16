@@ -46,6 +46,7 @@ MODULE PME
 
 #include "config.h"
 
+  USE Print_Defs
   USE Units, ONLY: Pi, TwoPi
   USE Rfft3d
   USE Cell, ONLY: oc,co, Volume
@@ -200,8 +201,8 @@ CONTAINS
     CALL MPI_BARRIER(PI_Comm,ierr)
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(*,*) 'timeo ',timea
-    WRITE(*,*) PI_Node_FFTW,eer,energy
+    WRITE(kprint,*) 'timeo ',timea
+    WRITE(kprint,*) 'Energies = ',eer,energy
   CONTAINS
     SUBROUTINE Fractionals
       INTEGER :: n,m,mm,count0,AtSt,AtEn

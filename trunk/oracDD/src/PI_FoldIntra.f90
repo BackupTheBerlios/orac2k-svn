@@ -187,6 +187,11 @@ CONTAINS
     iBuff_s=>iFold(Calls) % sh(i_p) % iBuff_S
     iBuff_r=>iFold(Calls) % sh(i_p) % iBuff_R
     
+    DO m=1,NoGrp_s
+       l=iBuff_s(m)
+       Groupa(l) % knwn=0
+    END DO
+
     CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,1,iBuff_r&
          &,NoGrp_r,MPI_INTEGER4,source,1,PI_Comm_Cart,STATUS,ierr)
 

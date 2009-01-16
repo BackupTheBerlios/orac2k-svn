@@ -47,6 +47,7 @@ MODULE PI_Statistics
 #ifdef HAVE_MPI
   USE mpi
 #endif
+  USE Print_Defs
   USE PI_
   IMPLICIT none
   PRIVATE
@@ -104,8 +105,8 @@ CONTAINS
        Atoms_r=Atoms_r/DBLE(PI_Nprocs)
        Timeb=Timeb/DBLE(PI_Nprocs)
        Timec=Timec/DBLE(PI_Nprocs)
-       WRITE(*,100) Atoms_s,Kbyte_s,Atoms_r,Kbyte_r
-       WRITE(*,200) Timeb,Timec,Timec-Timeb
+       WRITE(kprint,100) Atoms_s,Kbyte_s,Atoms_r,Kbyte_r
+       WRITE(kprint,200) Timeb,Timec,Timec-Timeb
     END IF
 100 FORMAT(/'=====>    Average data transfer by each CPU per full shift    <====='&
          &/'=====>    ',f12.2,' atoms (',f12.4,' KB ) sent          <====='&

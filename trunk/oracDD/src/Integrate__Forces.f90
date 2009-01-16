@@ -76,20 +76,16 @@ CONTAINS
     INTEGER :: callsa=0
 
     CALL PI__ResetSecondary
-
-    pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param % Switch
-    IF(pme) THEN
-       IF(Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-            & Ewald__Param % nz /= 0) THEN
-          CALL PI__Shift(n,Flag,_PME_)
-       END IF
-    ELSE
-       CALL PI__Shift(n,Flag)
-    END IF
-
+    CALL PI__Shift(n,Flag)
+    
     IF(.NOT. PI_Atom_Update_()) CALL Print_Errors()
 
     CALL DIR_Forces(n)
+
+    pme=(n-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
+         & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
+         & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
+
     IF(pme) CALL PME_(n)
      
 !!$

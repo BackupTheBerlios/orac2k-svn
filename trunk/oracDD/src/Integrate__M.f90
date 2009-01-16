@@ -59,7 +59,7 @@ SUBROUTINE Integrate_m
 !!$--- From Cartesian get reduced coordinate then recompute group coords
 !!$
 
-     IF(.NOT. Atom__Convert(_X_TO_XA_,Ind)) CALL Print_Errors()
+     IF(.NOT. Atom__Convert(_X_TO_XA_,IndBox_a_p(:))) CALL Print_Errors()
      IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
      
      CALL FORCES_Zero(_M_)

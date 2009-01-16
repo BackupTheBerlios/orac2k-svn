@@ -58,6 +58,8 @@ MODULE PI_Communicate
   USE PI_FoldIntra, ONLY: FOLDINTRA__iFold_Init=>iFold_Init, FOLDINTRA__Setup&
        &=>Setup, FOLDINTRA__Buff_Fold=>Buff_Fold 
 
+  USE Integrator, ONLY: Integrator_
+  USE Ewald
   USE Errors, ONLY: Add_Errors=>Add, errmsg_f,Print_Errors
   USE PI_Exchange, ONLY: EX_Exchange=>Exchange_
   USE PI_Cutoffs
@@ -90,51 +92,55 @@ MODULE PI_Communicate
   TYPE(Communicate__Chain), ALLOCATABLE,SAVE :: Chain_xyz(:)
   INTEGER, ALLOCATABLE,SAVE :: Head_xyz(:)
   REAL(8), SAVE :: Thick(3)
-  LOGICAL, SAVE :: ok_pme
+  LOGICAL, SAVE :: do_pme
   REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
   INTEGER, SAVE :: Calls=0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
-  SUBROUTINE PI__Initialize_Shell(i_pa,pme)
-    INTEGER , OPTIONAL :: pme
+  SUBROUTINE PI__Initialize_Shell(i_pa)
     INTEGER :: i_pa
     TYPE(Force), POINTER :: fp(:)=>NULL()
 
     CALL PI__ResetSecondary
     IF(i_pa >= 3) THEN
-       IF(PRESENT(pme)) THEN
-          CALL PI__Shift(i_pa,_INIT_,pme)
+       CALL PI__Shift(i_pa,_INIT_)
+
+       do_pme=(i_pa-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
+            & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
+            & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
+
+       IF(do_pme) THEN
           IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
                & AtEn)) CALL Print_Errors() 
-       ELSE
-          CALL PI__Shift(i_pa,_INIT_)
        END IF
+
        CALL PI__Fold_F(fp,i_pa,_INIT_)
-       IF(PRESENT(pme)) THEN
-          CALL PI__ResetSecondaryP
-       END IF
+
+       IF(do_pme) CALL PI__ResetSecondaryP
     ELSE
        CALL PI__ShiftIntra(i_pa,_INIT_)
        CALL PI__FoldIntra(fp,i_pa,_INIT_)
     END IF
 
   END SUBROUTINE PI__Initialize_Shell
-  SUBROUTINE PI__Shift(i_pa,init,pme)
-    INTEGER, OPTIONAL :: pme
+  SUBROUTINE PI__Shift(i_pa,init)
     INTEGER :: init,i_pa
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
     INTEGER :: iv(3),Axis,i_p
+    LOGICAL :: pme
 
     i_p=i_pa-2
+    do_pme=(i_p == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
+         & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
+         & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
+
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
     CALL Thickness(i_p)
     
-    ok_pme=PRESENT(pme)
-
 !!$
 !!$ --- Atoms to send
 !!$
@@ -146,18 +152,19 @@ CONTAINS
 
     IF(PI_Nprocs == 1) RETURN
 
-    CALL SHIFT__Setup(ok_pme)
+    CALL SHIFT__Setup(do_pme)
 
     SELECT CASE(init)
-    CASE(_INIT_EXCHANGE_)
+    CASE(_INIT_)
        CALL Shift_it(SHIFT__iShift_init)
-    CASE(_EXCHANGE_ONLY_)
+    CASE(_EXCHANGE_)
        CALL Shift_it(SHIFT__Buff_Shift)
     END SELECT
 
 !!$
 !!$--- Add to Calls counter: One data exchange has occurred
 !!$
+    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
     CALL PI__Add_Calls
   CONTAINS
     SUBROUTINE Shift_it(Routine)
@@ -167,7 +174,7 @@ CONTAINS
            INTEGER :: Axis,Dir,i_p
          END SUBROUTINE Routine
       END INTERFACE
-      IF(ok_pme) THEN
+      IF(do_pme) THEN
          IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
             CALL Routine(i_p,2,_PLUS_)
             CALL Routine(i_p,3,_PLUS_)
@@ -232,7 +239,11 @@ CONTAINS
 
     IF(PI_Nprocs == 1) RETURN
 
-    CALL FOLD__Setup(ok_pme)
+    do_pme=(i_p == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
+         & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
+         & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
+
+    CALL FOLD__Setup(do_pme)
 
     SELECT CASE(init)
     CASE(_INIT_)
@@ -241,6 +252,7 @@ CONTAINS
        CALL Fold_it(FOLD__Buff_Fold)
     END SELECT
 
+    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
     CALL PI__Add_Calls
     MyOwnCalls=MyOwnCalls+1
   CONTAINS
@@ -252,9 +264,7 @@ CONTAINS
            INTEGER :: Axis,Dir,i_p
          END SUBROUTINE Routine
       END INTERFACE
-      LOGICAL :: ok_pmeb
-      ok_pmeb=.FALSE.
-      IF(ok_pme) THEN
+      IF(do_pme) THEN
          IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
             CALL Routine(fp,i_p,3,_PLUS_)
             CALL Routine(fp,i_p,3,_MINUS_)
@@ -321,17 +331,13 @@ CONTAINS
     CASE(_EXCHANGE_ONLY_)
        CALL Shift_it(SHIFTINTRA__Buff_Shift)
     END SELECT
-!!$    DO n=1,SIZE(Atoms)
-!!$       ng=Atoms(n) % Grp_no
-!!$       m=Groupa(ng) % knwn
-!!$       IF(m == 0) CYCLE
-!!$       WRITE(100+PI_Node_Cart,'(3i8,3x,3f14.5)') n,m,ng,atoms(n) % x,atoms(n) % y,atoms(n) % z
-!!$    END DO
-!!$    STOP
+
 
 !!$
 !!$--- Add to Calls counter: One data exchange has occurred
 !!$
+    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+
     CALL PI__Add_Calls
   CONTAINS
     SUBROUTINE Shift_it(Routine)
@@ -394,6 +400,7 @@ CONTAINS
        CALL Fold_it(FOLDINTRA__Buff_Fold)
     END SELECT
 
+    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
     CALL PI__Add_Calls
   CONTAINS
     SUBROUTINE Fold_it(Routine)

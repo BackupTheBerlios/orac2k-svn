@@ -52,7 +52,6 @@ FUNCTION Pick_Init(na,c) RESULT(out)
      ALLOCATE(Mult_Shell(NShell))
      DO n=1,NShell
         Mult_shell(n)=Get_Mult(n)
-        WRITE(*,*) n,Mult_shell(n)
      END DO
      First_Call=First_Call+1
   END IF
@@ -61,11 +60,7 @@ FUNCTION Pick_Init(na,c) RESULT(out)
   ELSE
      out=1
   END IF
-  IF(na == _N0_) WRITE(*,*) 'n0 =',c,Mult_shell(na)
   IF(c == 0 .AND. na /= Nshell) out=1
-  IF(na == 5) THEN
-     WRITE(*,*) 'iak ',c,Mult_shell(na)
-  END IF
 CONTAINS
   RECURSIVE FUNCTION Get_Mult(n) RESULT(out)
     INTEGER :: n,out
@@ -139,5 +134,5 @@ FUNCTION  Get_RunLength() RESULT(out)
      out % nstep=INT(Run_ % Time/dt_h)
      out % Time=out % nstep*dt_h
   END SELECT
-  WRITE(*,*) NShell,Run_ % Time,dt_H
+  WRITE(kprint,*) NShell,Run_ % Time,dt_H
 END FUNCTION Get_RunLength

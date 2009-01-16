@@ -45,6 +45,7 @@
 SUBROUTINE Integrate_n0
   INTEGER, SAVE :: counter=0
   INTEGER :: Init,q
+  TYPE(Force), POINTER :: fp_d(:)
 
 !!$  IF(PI_Node == 0) WRITE(78,*) 'Get one H'
 !!$  CALL PI_Write_(78, fp_h(:) %x, fp_h(:) %y, fp_h(:) %z,(&
@@ -67,8 +68,9 @@ SUBROUTINE Integrate_n0
      Init=Pick_Init(_N0_,counter)
 
      IF(Init == _INIT_) THEN
-        IF(.NOT.  Atom__Convert(_X_TO_XA_)) CALL Print_Errors()
-        IF(.NOT. Groups__Update()) CALL Print_Errors()
+        WRITE(kprint,*) 'Nstep = ',counter,nstep_n0
+        IF(.NOT.  Atom__Convert(_X_TO_XA_,IndBox_g_p)) CALL Print_Errors()
+        IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
 
         CALL PI__ResetSecondary
         CALL PI__Exchange
@@ -78,20 +80,16 @@ SUBROUTINE Integrate_n0
         CALL PI__Shift(NShell,_INIT_)
         CALL PI__Shift(NShell,_EXCHANGE_)
 
-        WRITE(*,*) '2029 ',Groupa(Atoms(5756) % Grp_No) % knwn&
-             &,Groupa(2029) % xa,Groupa(2029) % ya
-        WRITE(*,*) '2029 ',Atoms(5756) % Grp_No
-
         IF(.NOT. PI_Atom_()) CALL Print_Errors()
         IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
         CALL DIR_Lists(Nshell)
-
 
         CALL IntraMaps_n0_
         IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
         CALL IntraMaps_n1_
         IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-        CALL Init_TotalShells
+
+        CALL Init_TotalShells(NShell)
      END IF
 
      CALL FORCES_Zero(_N0_)
