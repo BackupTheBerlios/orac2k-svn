@@ -30,9 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Constraints(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Constraints
   INTEGER :: i,la,lb,type,nbond
   REAL(8) ::  xr1,xr2,yr1,yr2,zr1,zr2,x21,y21,z21,rs21,uux1,uux2&
        &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb
@@ -42,10 +40,6 @@ SUBROUTINE Constraints(fpx,fpy,fpz)
      Calls=Calls+1
      Conv_Fact=1000.0D0*4.184/(unite*avogad)
   END IF
-  
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
   
   nbond=SIZE(Indx_Bonds,2)
   ubond=0.0_8

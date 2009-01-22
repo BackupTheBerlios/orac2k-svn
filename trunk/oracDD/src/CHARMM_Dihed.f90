@@ -30,13 +30,11 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Dihed(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Dihed
   INTEGER, SAVE :: MyCalls=0
   REAL(8), SAVE :: quasi_zero=1.0D-12
 
-  INTEGER :: i,l1,l2,l3,l4,ntph,tmp,type,ntors
+  INTEGER :: i,l1,l2,l3,l4,ntph,tmp,type,ntors,nWeight
   REAL(8) ::  xr1,xr2,xr3,xr4,yr1,yr2,yr3,yr4,zr1,zr2,zr3,zr4,x21,x32&
        &,x43,y21,y32,y43,z21,z32,z43,rsq21,rsq32,rsq43,rsp21,rsp32&
        &,rsp43,pota,potb,potc
@@ -46,7 +44,7 @@ SUBROUTINE Dihed(fpx,fpy,fpz)
        &,dby24,dby34,dbz11,dbz31,dbz12,dbz22,dbz32,dbz13,dbz23&
        &,dbz33,dbz24,dbz34,uux1,uux2,uux3,uux4,uuy1,uuy2,uuy3&
        &,uuy4,uuz1,uuz2,uuz3,uuz4,aux3 
-  REAL(8) ::  coa,enrg,qforce,sig,utors(2)
+  REAL(8) ::  coa,enrg,qforce,sig,utors(2),Weight
 
 
 
@@ -77,10 +75,6 @@ SUBROUTINE Dihed(fpx,fpy,fpz)
   END IF
 
 
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
-  
   utors=0.0_8
   DO i=1,ntors
      l1=Indx_Dihed(1,i)
@@ -92,8 +86,12 @@ SUBROUTINE Dihed(fpx,fpy,fpz)
      potc=COS(Param_Dihed(i) % pot(3)*Degree_To_Rad)
      pota=SIGN(pota,potb)
      potb=ABS(potb)*potc
+     nWeight=SIZE(Param_Dihed(i) % pot)
+     Weight=Param_Dihed(i) % pot(nWeight)
 
-     type=Atoms(l1) % Id_Slv
+
+     type=Slv(l1)
+
      xr1=xp0(l1)
      yr1=yp0(l1)
      zr1=zp0(l1)
@@ -212,7 +210,7 @@ SUBROUTINE Dihed(fpx,fpy,fpz)
         qforce=sig*qforce
      END SELECT
 
-     utors(type)=utors(type)+enrg
+     utors(type)=utors(type)+enrg*Weight
      uux1=auxa*dbx11+auxc*dbx31
      uux2=auxa*dbx12+auxb*dbx22+auxc*dbx32
      uux3=auxa*dbx13+auxb*dbx23+auxc*dbx33

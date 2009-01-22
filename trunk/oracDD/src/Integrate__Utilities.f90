@@ -134,5 +134,4 @@ FUNCTION  Get_RunLength() RESULT(out)
      out % nstep=INT(Run_ % Time/dt_h)
      out % Time=out % nstep*dt_h
   END SELECT
-  WRITE(kprint,*) NShell,Run_ % Time,dt_H
 END FUNCTION Get_RunLength

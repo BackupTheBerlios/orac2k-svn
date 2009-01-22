@@ -49,9 +49,10 @@ MODULE CHARMM_Intra
 #endif
   USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   USE Units
-  USE IndIntraBox, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
+  USE IntraAtoms, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
        &,Indx_Angles,Param_Dihed,Param_Constr,Indx_Dihed,Param_Imph,Indx_Imph&
-       &,Indx_Int14,Indx_Constr
+       &,Indx_Int14,Indx_Constr,xp0,yp0,zp0,fpx,fpy,fpz,Slv,Id,Charge&
+       &,Param_Int14 
   USE Potential
   USE Atom
   USE Groups

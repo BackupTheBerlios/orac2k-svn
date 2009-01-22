@@ -30,16 +30,14 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Angles(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Angles
   REAL(8) ::  xr1,xr2,xr3,yr1,yr2,yr3,zr1,zr2,zr3,x12,x32,y12,y32&
        &,z12,z32,rs12,rs32,uux1,uux2,uux3,uuy1,uuy2,uuy3,uuz1,uuz2&
        &,uuz3,xr31,yr31,zr31,rs31,rsp31,x31,y31,z31,rsp12,rsp32,k12&
        &,r1,r2 
   REAL(8) :: dcc2,cb,sb,bb,qforce,pforce,ubend(2),pota,potb&
-       &,potc,potd
-  INTEGER i,la,lb,lc,type,nbend
+       &,potc,potd,Weight
+  INTEGER :: i,la,lb,lc,type,nbend,nWeight
   
   
   
@@ -47,11 +45,6 @@ SUBROUTINE Angles(fpx,fpy,fpz)
      Calls=Calls+1
      Conv_Fact=1000.0D0*4.184/(unite*avogad)
   END IF
-  
-  
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
   
   nbend=SIZE(Indx_Angles,2)
   ubend=0.0_8
@@ -61,8 +54,11 @@ SUBROUTINE Angles(fpx,fpy,fpz)
      lc=Indx_Angles(3,i)
      pota=Param_Angles(i) % pot(2)*Degree_To_Rad
      potb=Param_Angles(i) % pot(1)*Conv_Fact
-     type=Atoms(la) % Id_Slv
-     
+     nWeight=SIZE(Param_Angles(i) % pot)
+     Weight=Param_Angles(i) % pot(nWeight)
+
+     type=Slv(la)
+
      xr1=xp0(la)
      yr1=yp0(la)
      zr1=zp0(la)
@@ -114,11 +110,11 @@ SUBROUTINE Angles(fpx,fpy,fpz)
 !!$c--      switch to singularity free potential for 
 !!$c--      linear bending V = 2*K(cos(theta) + 1)  
      IF(ABS(pota-pi) < 0.01) THEN 
-        ubend(type)=ubend(type)+2.d0*potb*(cb + 1.d0) 
+        ubend(type)=ubend(type)+Weight*2.d0*potb*(cb + 1.d0) 
      ELSE
-        ubend(type)=ubend(type)+potb*(bb-pota)**2
+        ubend(type)=ubend(type)+Weight*potb*(bb-pota)**2
      END IF
-     IF(SIZE(Param_Angles(i) % pot) /= 4) CYCLE
+     IF(SIZE(Param_Angles(i) % pot)-1 /= 4) CYCLE
      
 !!$*=======================================================================
 !!$*---  Compute the Urey-Bradley term ------------------------------------
@@ -145,7 +141,7 @@ SUBROUTINE Angles(fpx,fpy,fpz)
      fpx(lc)=fpx(lc)+qforce*uux2
      fpy(lc)=fpy(lc)+qforce*uuy2
      fpz(lc)=fpz(lc)+qforce*uuz2
-     ubend(type)=ubend(type)+potd*(rsp31-potc)**2 
+     ubend(type)=ubend(type)+Weight*potd*(rsp31-potc)**2 
   END DO
   Ubend_slt=ubend(1)
   Ubend_slv=ubend(2)

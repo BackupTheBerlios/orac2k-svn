@@ -118,7 +118,8 @@ CONTAINS
       ALLOCATE(xp0(natom),yp0(natom),zp0(natom),chg(natom),Id(natom)&
            &,Slv(natom),Maps(natom),maplg(natom),gmass(natom)&
            &,Grp_No(natom))
-      
+!!$      WRITE(*,*) 'Gr',PI_Node,COUNT(Groupa(:) % knwn ==1),COUNT(Groupa(:) % knwn ==2),ngroup
+!!$      WRITE(*,*) 'Gr',PI_Node,COUNT(Atoms(:) % knwn ==1),COUNT(Atoms(:) % knwn ==2),natom,SIZE(Atoms)/DBLE(PI_Nprocs)
     END SUBROUTINE Memory
 !!$
 !!$--- Gather Atoms to the CPU box
@@ -262,6 +263,7 @@ CONTAINS
     REAL(8) :: xpgi,ypgi,zpgi,xpgj,ypgj,zpgj,xa,ya,za,X_PBC,Y_PBC&
          &,Z_PBC,xc,yc,zc,rsq
     INTEGER, ALLOCATABLE :: nei(:),known(:),nei0(:)
+    LOGICAL, ALLOCATABLE :: okk(:)
     LOGICAL :: ok
 
     out=.FALSE.
@@ -290,11 +292,12 @@ CONTAINS
 
     IF(.NOT. Neighbors_(rcut, nnx, nny, nnz)) CALL Print_Errors()
     IF(.NOT. Neighbors__Particles(xpg,ypg,zpg)) CALL Print_Errors()
-    
+
     counter=0
     known(:)=Groupa(IndBox_g_t(:)) % knwn
-
-
+    
+    ALLOCATE(okk(ngroup))
+    okk=.FALSE.
     DO ig=1,ngroup
        knw_ig=known(ig)
        xpgi=xpg(ig)
@@ -342,6 +345,12 @@ CONTAINS
              IF(rsq <= rcut2 .AND. knw_l /= 4) THEN
                 count0=count0+1
                 nei(count0)=l
+                IF(known(ig) == 2) THEN
+                   okk(ig)=.TRUE.
+                END IF
+                IF(known(l) == 2) THEN
+                   okk(l)=.TRUE.
+                END IF
              END IF
              l=Chain_xyz(l) % p
           END DO

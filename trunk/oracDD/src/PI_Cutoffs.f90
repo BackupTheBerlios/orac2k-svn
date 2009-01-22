@@ -51,7 +51,7 @@ MODULE PI_Cutoffs
   USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC Thickness,rcut,ddx,ddy,ddz
+  PUBLIC Thickness,Thick_Intra,rcut,ddx,ddy,ddz
   REAL(8), SAVE :: dx,dy,dz,ddx,ddy,ddz
   TYPE :: Cuts
      REAL(8) :: r(3)=0.0_8
@@ -59,13 +59,15 @@ MODULE PI_Cutoffs
   TYPE(Cuts), SAVE :: rcuts0(10)
   REAL(8), SAVE :: Thick(3),rcut(3)
 CONTAINS
-  SUBROUTINE Thickness(i_p)
+  SUBROUTINE Thickness(i_pa)
+    INTEGER :: i_pa
     INTEGER :: i_p
     REAL(8) :: x1,x2,y1,y2,z1,z2,v1(3),v2(3),v3(3),r1(3),r2(3)&
            &,r3(3),r0(3),qq(4)
-    
-    IF(rcuts0(i_p) % r(1) /= 0.0_8) THEN
-       rcut(:)=rcuts0(i_p) % r(:)
+
+    i_p=i_pa-2
+    IF(rcuts0(i_pa) % r(1) /= 0.0_8) THEN
+       rcut(:)=rcuts0(i_pa) % r(:)
        RETURN
     END IF
 
@@ -106,17 +108,66 @@ CONTAINS
 !!$    
 !!$---- Thickness along x
 !!$
-    rcuts0(i_p) % r (:)=(Radii(i_p) % out+Radii(i_p)% update)*Thick(:)
-    rcut(:)=rcuts0(i_p) % r (:)
-  CONTAINS
-    FUNCTION Convert(v1) RESULT(out)
-      REAL(8) :: v1(3),out(3)
-      REAL(8) :: r1(3)
-      r1(1)=co(1,1)*v1(1)+co(1,2)*v1(2)+co(1,3)*v1(3)
-      r1(2)=co(2,1)*v1(1)+co(2,2)*v1(2)+co(2,3)*v1(3)
-      r1(3)=co(3,1)*v1(1)+co(3,2)*v1(2)+co(3,3)*v1(3)
-      out=r1
-    END FUNCTION Convert
+    rcuts0(i_pa) % r (:)=(Radii(i_p) % out+Radii(i_p)% update)*Thick(:)
+    rcut(:)=rcuts0(i_pa) % r (:)
   END SUBROUTINE Thickness
+  SUBROUTINE Thick_Intra(i_p,MyCutoff)
+    REAL(8) :: MyCutoff
+    INTEGER :: i_p
+    REAL(8) :: x1,x2,y1,y2,z1,z2,v1(3),v2(3),v3(3),r1(3),r2(3)&
+           &,r3(3),r0(3),qq(4)
+    
+    IF(rcuts0(i_p) % r(1) /= 0.0_8) THEN
+       rcut(:)=0.0_8
+    END IF
+
+    ddx=2.d0/PI_npx
+    ddy=2.d0/PI_npy
+    ddz=2.d0/PI_npz
+
+    r0=0.0D0
+    v1(1)=1.0D0
+    v1(2)=0.0D0
+    v1(3)=0.0D0
+    r1=Convert(v1)
+    v2(1)=0.0D0
+    v2(2)=1.0D0
+    v2(3)=0.0D0
+    r2=Convert(v2)
+    v3(1)=0.0D0
+    v3(2)=0.0D0
+    v3(3)=1.0D0
+    r3=Convert(v3)
+
+!!$    
+!!$---- Thickness along x
+!!$
+    qq=Equation_Plane(r0,r2,r3)
+    Thick(1)=1.0D0/ABS(qq(1)*r1(1)+qq(2)*r1(2)+qq(3)*r1(3)-qq(4))
+!!$    
+!!$---- Thickness along y
+!!$
+    qq=Equation_Plane(r0,r1,r3)
+    Thick(2)=1.0D0/ABS(qq(1)*r2(1)+qq(2)*r2(2)+qq(3)*r2(3)-qq(4))
+!!$    
+!!$---- Thickness along z
+!!$
+    qq=Equation_Plane(r0,r1,r2)
+    Thick(3)=1.0D0/ABS(qq(1)*r3(1)+qq(2)*r3(2)+qq(3)*r3(3)-qq(4))
+    
+!!$    
+!!$---- Thickness along x
+!!$
+    rcuts0(i_p) % r (:)=MyCutoff*Thick(:)
+    rcut(:)=rcuts0(i_p) % r (:)
+  END SUBROUTINE Thick_Intra
+  FUNCTION Convert(v1) RESULT(out)
+    REAL(8) :: v1(3),out(3)
+    REAL(8) :: r1(3)
+    r1(1)=co(1,1)*v1(1)+co(1,2)*v1(2)+co(1,3)*v1(3)
+    r1(2)=co(2,1)*v1(1)+co(2,2)*v1(2)+co(2,3)*v1(3)
+    r1(3)=co(3,1)*v1(1)+co(3,2)*v1(2)+co(3,3)*v1(3)
+    out=r1
+  END FUNCTION Convert
 
 END MODULE PI_Cutoffs

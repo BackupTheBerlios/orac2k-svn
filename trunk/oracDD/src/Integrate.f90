@@ -51,6 +51,7 @@ MODULE Integrate
 #endif
   USE PI_
   USE Pi_Decompose 
+  USE PI_Statistics, ONLY: STAT_Write_it=>Write_it
   USE Print_Defs
   USE PI_Atom, PI_Atom_Update_=>Update_
   USE Forces, FORCES_Zero=>Zero, FORCES_Pick=>Pick
@@ -64,8 +65,9 @@ MODULE Integrate
   USE PI_Communicate
   USE PI_Collectives
   USE IndBox
-  USE IndIntraBox
-  USE PI_IntraMaps
+
+  USE IntraAtoms, ONLY: IntraAtoms_,PI__ShiftIntra
+
   USE Rattle, ONLY: RATTLE__Init_=>Init_,RATTLE__Parameters_&
        &=>Parameters_,RATTLE__Verlet_=>Verlet_,RATTLE__Correct_&
        &=>Correct_ 
@@ -73,6 +75,8 @@ MODULE Integrate
   USE Potential, ONLY: Rattle__Param 
   USE Inout, ONLY: Inout__PDB, Inout__
   USE Run
+  USE PI_Statistics, ONLY: PI__Time_It=>Time_It, PI__TTime_It&
+       &=>TTime_It, PI__Set_time=>Set_Time
   IMPLICIT none
   PRIVATE
   PUBLIC Integrate_
@@ -110,11 +114,6 @@ CONTAINS
     NShell0=SIZE(Radii)
     NShell=Nshell0+2
 
-!!$--- Shift it in the smallest possible shell
-
-    CALL PI__Shift(_M_,_INIT_)
-    CALL PI__Shift(_M_,_EXCHANGE_)
-
 !!$--- Find out primary and secondary atoms arrays
 
     IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
@@ -125,7 +124,7 @@ CONTAINS
   END SUBROUTINE Init_
   SUBROUTINE Integrate_
     INTEGER :: iter,n,Iter_End
-    REAL(8) :: startime,endtime,timea
+    REAL(8) :: startime,endtime,timea,starta,enda
     TYPE(Force), POINTER :: fp_d(:)
 
     
@@ -154,17 +153,18 @@ CONTAINS
 !!$
     IF(.NOT. RATTLE__Init_(SIZE(Atoms))) CALL Print_Errors()
 
+!!$--- Define the Intramolecular environment
+
+    IF(.NOT. IntraAtoms_()) CALL Print_Errors()
+
 !!$--- Reset secondary cell. Need it before shifting
-
-    CALL PI__ResetSecondary
-
-!!$--- Shift the outer most atoms around the primary cell
 
     CALL PI__Shift(NShell,_INIT_)
     CALL PI__Shift(NShell,_EXCHANGE_)
 
 !!$--- Setup the primary and secondary atom cells: IndBox_?_? arrays
 !!$--- are created
+
     IF(.NOT. PI_Atom_()) CALL Print_Errors()
 
 !!$
@@ -173,22 +173,17 @@ CONTAINS
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
     CALL DIR_Lists(Nshell)
-    IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND. Ewald__Param % ny  /= 0 .AND.&
-         & Ewald__Param % nz /= 0) THEN
+    IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND.&
+         & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0) THEN
        CALL PME_(0)
     END IF
-
-    CALL IntraMaps_n0_
-    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-    CALL IntraMaps_n1_
-    IF(.NOT. IndIntraBox_n1_()) CALL Print_Errors()
-
+    
     CALL Init_TotalShells(NShell)
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
-    DO n=NShell,1,-1
+    DO n=1,NShell
        CALL FORCES_Zero(n)
        CALL Forces_(n)
     END DO
@@ -200,10 +195,14 @@ CONTAINS
     timea=endtime-startime
     WRITE(kprint,*) 'First time',PI_Node_Cart,timea
 
-    CALL MPI_BARRIER(PI_Comm_cart,ierr)
-    startime=MPI_WTIME()
-    
+    IF(.NOT. STAT_Write_it()) CALL Print_Errors()
+
+    CALL PI__Set_time
+    starta=MPI_WTIME()
+
     Iteration=Get_RunLength()
+    
+    startime=MPI_WTIME()
     
     DO Iter=1,Iteration % nstep
        CALL Integrate_Shell(NShell)
@@ -211,8 +210,13 @@ CONTAINS
 
     endtime=MPI_WTIME()
     timea=endtime-startime
-    WRITE(kprint,*) 'Second Time time',PI_Node_Cart,timea/Iteration % Time
+
+    WRITE(*,*) 'Second Time time',PI_Node_Cart,Timea,timea/Iteration % Time
     WRITE(kprint,*) Iteration % Time
+
+    enda=MPI_WTIME()
+    CALL PI__TTime_It(starta,enda) 
+    IF(.NOT. STAT_Write_it()) CALL Print_Errors()
   END SUBROUTINE Integrate_
   SUBROUTINE Integrate_Shell(n)
     INTEGER :: n
@@ -247,10 +251,30 @@ CONTAINS
   SUBROUTINE Init_TotalShells(Nstart)
     INTEGER :: Nstart
     INTEGER :: n
-
-    DO n=NStart,1,-1
+    DO n=Nstart,3,-1
        CALL PI__Initialize_Shell(n)
     END DO
+  CONTAINS
+    SUBROUTINE PI__Initialize_Shell(i_pa)
+      INTEGER :: i_pa
+      TYPE(Force), POINTER :: fp(:)=>NULL()
+      LOGICAL :: do_pme
+
+      CALL PI__ResetSecondary
+
+      CALL PI__Shift(i_pa,_INIT_)
+
+      do_pme=(i_pa-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
+           & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
+           & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)      
+      IF(do_pme) THEN
+         IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+              & AtEn)) CALL Print_Errors() 
+      END IF
+      CALL PI__Fold_F(fp,i_pa,_INIT_)
+      IF(do_pme) CALL PI__ResetSecondaryP
+    END SUBROUTINE PI__Initialize_Shell
+
   END SUBROUTINE Init_TotalShells
 
 #include "Integrate__N0.f90"

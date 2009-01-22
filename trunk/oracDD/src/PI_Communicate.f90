@@ -53,16 +53,13 @@ MODULE PI_Communicate
        &=>Setup, SHIFT__Buff_Shift=>Buff_Shift 
   USE PI_Fold, ONLY: FOLD__iFold_Init=>iFold_Init, FOLD__Setup&
        &=>Setup, FOLD__Buff_Fold=>Buff_Fold 
-  USE PI_ShiftIntra, ONLY: SHIFTINTRA__iShift_Init=>iShift_Init, SHIFTINTRA__Setup&
-       &=>Setup, SHIFTINTRA__Buff_Shift=>Buff_Shift 
-  USE PI_FoldIntra, ONLY: FOLDINTRA__iFold_Init=>iFold_Init, FOLDINTRA__Setup&
-       &=>Setup, FOLDINTRA__Buff_Fold=>Buff_Fold 
 
   USE Integrator, ONLY: Integrator_
   USE Ewald
   USE Errors, ONLY: Add_Errors=>Add, errmsg_f,Print_Errors
   USE PI_Exchange, ONLY: EX_Exchange=>Exchange_
   USE PI_Cutoffs
+!!$  USE CellAtoms
   USE Geometry
   USE Forces, ONLY: Force, Radii
   USE UNITS
@@ -78,51 +75,14 @@ MODULE PI_Communicate
   IMPLICIT none
   PRIVATE
   PUBLIC PI__Shift,PI__Fold_F, PI__ZeroSecondary,PI__ZeroPrimary,&
-       & PI__ShiftIntra, PI__ResetSecondary, PI__ResetSecondaryP&
-       &,PI__FoldIntra, PI__Exchange,PI__Initialize_Shell
-  TYPE :: Communicate__Chain
-     INTEGER :: i,j,k
-     INTEGER :: p
-  END TYPE Communicate__Chain
+       & PI__ResetSecondary, PI__ResetSecondaryP&
+       &,PI__FoldIntra, PI__Exchange
 
-  REAL(8), ALLOCATABLE, SAVE :: Buffer(:)
-  REAL(8), SAVE :: vp(3),vd(3)
   INTEGER, SAVE :: npx,npy,npz
 
-  TYPE(Communicate__Chain), ALLOCATABLE,SAVE :: Chain_xyz(:)
-  INTEGER, ALLOCATABLE,SAVE :: Head_xyz(:)
-  REAL(8), SAVE :: Thick(3)
   LOGICAL, SAVE :: do_pme
-  REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
-  INTEGER, SAVE :: Calls=0
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
-  SUBROUTINE PI__Initialize_Shell(i_pa)
-    INTEGER :: i_pa
-    TYPE(Force), POINTER :: fp(:)=>NULL()
-
-    CALL PI__ResetSecondary
-    IF(i_pa >= 3) THEN
-       CALL PI__Shift(i_pa,_INIT_)
-
-       do_pme=(i_pa-2 == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
-            & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
-            & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
-
-       IF(do_pme) THEN
-          IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
-               & AtEn)) CALL Print_Errors() 
-       END IF
-
-       CALL PI__Fold_F(fp,i_pa,_INIT_)
-
-       IF(do_pme) CALL PI__ResetSecondaryP
-    ELSE
-       CALL PI__ShiftIntra(i_pa,_INIT_)
-       CALL PI__FoldIntra(fp,i_pa,_INIT_)
-    END IF
-
-  END SUBROUTINE PI__Initialize_Shell
   SUBROUTINE PI__Shift(i_pa,init)
     INTEGER :: init,i_pa
     INTEGER, SAVE :: ShiftTime,source, dest
@@ -131,6 +91,7 @@ CONTAINS
     INTEGER :: iv(3),Axis,i_p
     LOGICAL :: pme
 
+    startime=MPI_WTIME()
     i_p=i_pa-2
     do_pme=(i_p == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
          & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
@@ -139,8 +100,8 @@ CONTAINS
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
-    CALL Thickness(i_p)
-    
+    CALL Thickness(i_pa)
+
 !!$
 !!$ --- Atoms to send
 !!$
@@ -164,8 +125,24 @@ CONTAINS
 !!$
 !!$--- Add to Calls counter: One data exchange has occurred
 !!$
-    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
+!!$    IF(do_pme) THEN
+!!$       IF(ASSOCIATED(CellAtoms_at__(Atoms(:)%xa,Atoms(:)%ya&
+!!$            &,Atoms(:)%za,IndBoxP_a_t))) CALL Print_Errors()
+!!$       IF(ASSOCIATED(CellAtoms_gr__(Groupa(:)%xa,Groupa(:)%ya&
+!!$            &,Groupa(:)%za,IndBoxP_g_t))) CALL Print_Errors()
+!!$       IF(ASSOCIATED(CellAtoms_kn__(Groupa(:)%knwn&
+!!$            &,IndBoxP_g_t))) CALL Print_Errors()
+!!$    ELSE
+!!$       IF(ASSOCIATED(CellAtoms_at__(Atoms(:)%xa,Atoms(:)%ya&
+!!$            &,Atoms(:)%za,IndBox_a_t))) CALL Print_Errors()
+!!$       IF(ASSOCIATED(CellAtoms_gr__(Groupa(:)%xa,Groupa(:)%ya&
+!!$            &,Groupa(:)%za,IndBox_g_t))) CALL Print_Errors()
+!!$       IF(ASSOCIATED(CellAtoms_kn__(Groupa(:)%knwn&
+!!$            &,IndBox_g_t))) CALL Print_Errors()
+!!$    END IF
     CALL PI__Add_Calls
+    endtime=MPI_WTIME()
+    CALL PI__Time_It(startime,endtime) 
   CONTAINS
     SUBROUTINE Shift_it(Routine)
       INTERFACE
@@ -219,10 +196,15 @@ CONTAINS
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
     INTEGER :: iv(3),Axis,i_p
     INTEGER, SAVE :: MyownCalls=0
+
+    REAL(8) :: xpga,ypga,zpga,xpg,ypg,zpg,xmass,xc,yc,zc
+
+    startime=MPI_WTIME()
+
     i_p=i_pa-2
     
 
-    CALL Thickness(i_p)
+    CALL Thickness(i_pa)
 
     npx=PI_npx
     npy=PI_npy
@@ -252,9 +234,46 @@ CONTAINS
        CALL Fold_it(FOLD__Buff_Fold)
     END SELECT
 
-    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
     CALL PI__Add_Calls
     MyOwnCalls=MyOwnCalls+1
+
+    endtime=MPI_WTIME()
+    CALL PI__Time_It(startime,endtime) 
+    nn=0
+    DO l=1,SIZE(Groupa)
+       IF(Groupa(l) % knwn /= 2) CYCLE
+       AtSt=Groupa(l) % AtSt
+       AtEn=Groupa(l) % AtEn
+       xpga=0.0D0
+       ypga=0.0D0
+       zpga=0.0D0
+       xpg=0.0D0
+       ypg=0.0D0
+       zpg=0.0D0
+       DO n=AtSt,AtEn
+          xmass=Atoms(n) % pmass
+          xc=atoms(n) % x
+          yc=atoms(n) % y
+          zc=atoms(n) % z
+          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
+          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
+          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
+          xpga = xpga + xmass*Atoms(n) % xa
+          ypga = ypga + xmass*Atoms(n) % ya
+          zpga = zpga + xmass*Atoms(n) % za
+          xpg = xpg + xmass*Atoms(n) % x
+          ypg = ypg + xmass*Atoms(n) % y
+          zpg = zpg + xmass*Atoms(n) % z
+          Atoms(n) % knwn = 2
+       END DO
+       Groupa(l) % xa = xpga 
+       Groupa(l) % ya = ypga
+       Groupa(l) % za = zpga
+       Groupa(l) % x = xpg
+       Groupa(l) % y = ypg
+       Groupa(l) % z = zpg
+    END DO
+
   CONTAINS
     SUBROUTINE Fold_it(Routine)
       INTERFACE
@@ -298,71 +317,6 @@ CONTAINS
       END IF
     END SUBROUTINE Fold_it
   END SUBROUTINE PI__Fold_F
-  SUBROUTINE PI__ShiftIntra(i_p,init)
-    INTEGER :: init,i_p
-
-    INTEGER, SAVE :: ShiftTime,source, dest
-    INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
-    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
-    INTEGER :: iv(3),Axis
-    INTEGER :: ng
-    npx=PI_npx
-    npy=PI_npy
-    npz=PI_npz
-
-    CALL Thickness(i_p)
-
-!!$
-!!$ --- Atoms to send
-!!$
-    
-
-    iv(1)=npx
-    iv(2)=npy
-    iv(3)=npz
-
-    IF(PI_Nprocs == 1) RETURN
-
-    CALL SHIFTINTRA__Setup
-
-    SELECT CASE(init)
-    CASE(_INIT_EXCHANGE_)
-       CALL Shift_it(SHIFTINTRA__iShift_init)
-    CASE(_EXCHANGE_ONLY_)
-       CALL Shift_it(SHIFTINTRA__Buff_Shift)
-    END SELECT
-
-
-!!$
-!!$--- Add to Calls counter: One data exchange has occurred
-!!$
-    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-
-    CALL PI__Add_Calls
-  CONTAINS
-    SUBROUTINE Shift_it(Routine)
-      INTERFACE
-         SUBROUTINE Routine(i_p,Axis,Dir,scnd_half)
-           INTEGER, OPTIONAL :: scnd_half
-           INTEGER :: Axis,Dir,i_p
-         END SUBROUTINE Routine
-      END INTERFACE
-      IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
-         CALL Routine(i_p,2,_PLUS_)
-         CALL Routine(i_p,3,_PLUS_)
-         CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
-      ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
-         CALL Routine(i_p,3,_PLUS_)
-      ELSE
-         CALL Routine(i_p,1,_MINUS_)
-         CALL Routine(i_p,2,_PLUS_)
-         CALL Routine(i_p,3,_PLUS_)
-         CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
-         CALL Routine(i_p,2,_MINUS_,_2NDHALF_)
-      END IF
-    END SUBROUTINE Shift_it
-  END SUBROUTINE PI__ShiftIntra
-
 !!$
 !!$---- Fold forces
 !!$
@@ -373,64 +327,13 @@ CONTAINS
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q,nn,grp_no
     INTEGER :: iv(3),Axis
-
-    CALL Thickness(i_p)
-
-    npx=PI_npx
-    npy=PI_npy
-    npz=PI_npz
-    
-!!$
-!!$ --- Fold Forces
-!!$
-
-    iv(1)=npx
-    iv(2)=npy
-    iv(3)=npz
-
-
-    IF(PI_Nprocs == 1) RETURN
-
-    CALL FOLDINTRA__Setup
-
-    SELECT CASE(init)
-    CASE(_INIT_EXCHANGE_)
-       CALL Fold_it(FOLDINTRA__iFold_init)
-    CASE(_EXCHANGE_ONLY_)
-       CALL Fold_it(FOLDINTRA__Buff_Fold)
-    END SELECT
-
-    CALL MPI_BARRIER(PI_Comm_Cart,ierr)
-    CALL PI__Add_Calls
-  CONTAINS
-    SUBROUTINE Fold_it(Routine)
-      INTERFACE
-         SUBROUTINE Routine(fp,i_p,Axis,Dir)
-           USE Forces, ONLY: Force
-           TYPE(Force) :: fp(:)
-           INTEGER :: Axis,Dir,i_p
-         END SUBROUTINE Routine
-      END INTERFACE
-      IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
-         CALL Routine(fp,i_p,3,_PLUS_)
-         CALL Routine(fp,i_p,3,_MINUS_)
-         CALL Routine(fp,i_p,2,_MINUS_)
-      ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
-         CALL Routine(fp,i_p,3,_MINUS_)
-      ELSE
-         CALL Routine(fp,i_p,3,_PLUS_)
-         CALL Routine(fp,i_p,2,_PLUS_)
-         CALL Routine(fp,i_p,3,_MINUS_)
-         CALL Routine(fp,i_p,2,_MINUS_)
-         CALL Routine(fp,i_p,1,_MINUS_)
-      END IF
-    END SUBROUTINE Fold_it
   END SUBROUTINE PI__FoldIntra
   SUBROUTINE PI__Exchange
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
     INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
     INTEGER :: iv(3),Axis,i_p
+    startime=MPI_WTIME()
 
 !!$
 !!$ --- Atoms to send
@@ -447,6 +350,9 @@ CONTAINS
     IF(PI_Nprocs == 1) RETURN
     CALL Exchange_it
 
+    endtime=MPI_WTIME()
+    CALL PI__Time_It(startime,endtime) 
+    CALL PI__Add_Calls
   CONTAINS
     SUBROUTINE Exchange_it
       IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
@@ -480,7 +386,7 @@ CONTAINS
     INTEGER :: n,AtSt,AtEn,mm
 
     DO n=1,SIZE(Groupa)
-       IF(Groupa(n) % knwn /= 1 ) THEN
+       IF(Groupa(n) % knwn == 2 ) THEN
           Groupa(n) % knwn = 0
           Groupa(n) % xa=0.0D0
           Groupa(n) % ya=0.0D0

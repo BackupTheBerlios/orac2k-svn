@@ -51,7 +51,7 @@ MODULE PI_Statistics
   USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC Write_It, Time_It, Sample_Exchange, Add_Calls, Calls
+  PUBLIC Write_It, TTime_it, Time_It, Sample_Exchange, Add_Calls, Calls,Set_Time
   TYPE :: Statistics
      REAL(8) :: KByte_S=0.0_8,KByte_R=0.0_8
      REAL(8) :: Atoms_S=0.0_8,Atoms_R=0.0_8
@@ -74,10 +74,18 @@ CONTAINS
     Comms % KByte_S=Comms % KByte_S+DBLE(NoAtm_s*3*8)/1024.0_8
     Comms % KByte_R=Comms % KByte_R+DBLE(NoAtm_r*3*8)/1024.0_8
   END SUBROUTINE Sample_Exchange
+  SUBROUTINE Set_Time()
+    REAL(8) :: out 
+    timea % Comms=0.0
+  END SUBROUTINE Set_Time
   SUBROUTINE Time_It(startime,endtime)
     REAL(8) :: out ,startime,endtime
     timea % Comms=timea % Comms+endtime-startime
   END SUBROUTINE Time_It
+  SUBROUTINE TTime_It(startime,endtime)
+    REAL(8) :: out ,startime,endtime
+    timea % Tot=timea % Tot+endtime-startime
+  END SUBROUTINE TTime_It
   FUNCTION Write_It() RESULT(out)
     LOGICAL :: out
     REAL(8) :: Kbyte_s, Kbyte_r, Atoms_s, Atoms_r

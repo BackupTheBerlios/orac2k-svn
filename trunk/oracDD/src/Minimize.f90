@@ -50,13 +50,13 @@ MODULE Minimize
   USE PI_
   USE Potential
   USE Units, ONLY: efact
-  USE IndIntraBox
+!!$  USE IndIntraBox
   USE Forces, ONLY: Force, fp=>fp_n0
   USE PI_Communicate
   USE PI_Collectives
   USE Atom
   USE Intra, ONLY: Intra_n0_,uconstr_slt,uconstr_slv
-  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
+!!$  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, errmsg_f, errmsg_w
   USE IndBox
   IMPLICIT none
@@ -82,59 +82,59 @@ CONTAINS
     ALLOCATE(x(ntot),g(ntot),d(ntot),Gold(ntot),w(ntot))
 
     CALL PI__ResetSecondary
-    CALL IntraMaps_n0_
-    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
-    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
-    CALL Intra_n0_(_INIT_EXCHANGE_,_CONSTRS_)
-    Energy=(uconstr_Slv+uconstr_Slt)
-
-    icall=1
-20  CONTINUE
-    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
-    CALL Intra_n0_(_EXCHANGE_ONLY_,_CONSTRS_)
-    Energy=(uconstr_Slv+uconstr_Slt)
-    CALL Arrays_Get
-
-30  CONTINUE
-    CALL cgfam(ntot,x,Energy,g,d,Gold,iprint,eps,w,iflag,irest,method,finish)
-    CALL Arrays_Put
-
-    IF(iflag < 0 .OR. iCall > 1000) THEN
-       errmsg_f='Stopped adjusting bond lengths. No convergence.'
-       CALL Add_Errors(-1,errmsg_f)
-       out=.FALSE.
-       RETURN
-    END IF
-    IF(iflag == 1) THEN
-       icall=icall+1
-       IF(iCall > step_max) GOTO 50
-       GOTO 20
-    ELSE IF(iflag == 2) THEN
-             
+!!$    CALL IntraMaps_n0_
+!!$    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+!!$    IF(.NOT. IndIntraBox_n0_()) CALL Print_Errors()
+!!$    CALL Intra_n0_(_INIT_EXCHANGE_,_CONSTRS_)
+!!$    Energy=(uconstr_Slv+uconstr_Slt)
 !!$
+!!$    icall=1
+!!$20  CONTINUE
+!!$    CALL PI__ShiftIntra(1,_INIT_EXCHANGE_)
+!!$    CALL Intra_n0_(_EXCHANGE_ONLY_,_CONSTRS_)
+!!$    Energy=(uconstr_Slv+uconstr_Slt)
+!!$    CALL Arrays_Get
+!!$
+!!$30  CONTINUE
+!!$    CALL cgfam(ntot,x,Energy,g,d,Gold,iprint,eps,w,iflag,irest,method,finish)
+!!$    CALL Arrays_Put
+!!$
+!!$    IF(iflag < 0 .OR. iCall > 1000) THEN
+!!$       errmsg_f='Stopped adjusting bond lengths. No convergence.'
+!!$       CALL Add_Errors(-1,errmsg_f)
+!!$       out=.FALSE.
+!!$       RETURN
+!!$    END IF
+!!$    IF(iflag == 1) THEN
+!!$       icall=icall+1
+!!$       IF(iCall > step_max) GOTO 50
+!!$       GOTO 20
+!!$    ELSE IF(iflag == 2) THEN
+!!$             
+
 !!$ Termination Test.  The user may replace it by some other test. However, 
 !!$ the parameter 'FINISH' must be set to 'TRUE' when the test is satisfied.
+
 !!$
-
-       tlev=eps*(1.0_8 + dabs(Energy))
-       i=0
-40     i=i+1
-       IF(i > ntot) THEN
-          Finish=.TRUE.
-          GOTO 30
-       END IF
-       IF(ABS(g(i)) > Tlev) THEN
-          GOTO 30
-       ELSE
-          GOTO 40
-       END IF       
-    END IF
-50  CONTINUE
-
-    CALL Arrays_Put
-    IF(.NOT. Atom__Convert(_X_TO_XA_)) CALL Print_Errors()
-
-    WRITE(kprint,200) Energy/DBLE(SIZE(Indx_Constr,2)+SIZE(Indx_Bonds,2))
+!!$       tlev=eps*(1.0_8 + dabs(Energy))
+!!$       i=0
+!!$40     i=i+1
+!!$       IF(i > ntot) THEN
+!!$          Finish=.TRUE.
+!!$          GOTO 30
+!!$       END IF
+!!$       IF(ABS(g(i)) > Tlev) THEN
+!!$          GOTO 30
+!!$       ELSE
+!!$          GOTO 40
+!!$       END IF       
+!!$    END IF
+!!$50  CONTINUE
+!!$
+!!$    CALL Arrays_Put
+!!$    IF(.NOT. Atom__Convert(_X_TO_XA_)) CALL Print_Errors()
+!!$
+!!$    WRITE(kprint,200) Energy/DBLE(SIZE(Indx_Constr,2)+SIZE(Indx_Bonds,2))
 100 FORMAT(10x,'=======>  Adjusting Bonds <======')
 200 FORMAT('===> Bond Average RMS deviation from force field bond leng&
          &th ',e14.5,' A^2 ') 

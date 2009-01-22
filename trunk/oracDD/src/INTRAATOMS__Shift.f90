@@ -30,57 +30,92 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-MODULE PI_Shift
-!!$***********************************************************************
-!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
-!!$======================================================================*
-!!$                                                                      *
-!!$              Author:  Massimo Marchi                                 *
-!!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
-!!$                                                                      *
-!!$              - Thu Nov  6 2008 -                                     *
-!!$                                                                      *
-!!$***********************************************************************
 
-!!$---- This module is part of the program oracDD ----*
+  SUBROUTINE PI__ShiftIntra(i_p,init,Ind)
+    INTEGER :: init,i_p
+    INTEGER, OPTIONAL :: Ind
 
-#ifdef HAVE_MPI
-  USE mpi
-#endif
-  USE PI_
-  USE PI_Cutoffs
-  USE PI_Statistics, ONLY: PI__Write_Stats=>Write_It, PI__Time_It&
-       &=>Time_It, PI__Sample_Exchange=>Sample_Exchange, PI__Add_Calls&
-       &=>Add_Calls
-  USE Groups
-  USE Atom
-  USE Cell
-  USE Constants, ONLY: max_pars,max_data,max_char
-  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
-  IMPLICIT none
-  PRIVATE
-  PUBLIC Setup,iShift_init, Buff_Shift, iShift, Indx, iBuffer
-  INTEGER, PARAMETER :: NSHell_Max=3
-  TYPE :: Indx
-     INTEGER :: NoAtm_s,NoAtm_r
-     INTEGER :: NoGrp_s,NoGrp_r
-     INTEGER, ALLOCATABLE :: ibuff_r(:)
-     INTEGER, ALLOCATABLE :: ibuff_s(:)
-  END type Indx
-  TYPE :: iBuffer
-     TYPE(Indx) :: sh(NShell_Max)
-  END type iBuffer
-  TYPE(iBuffer), SAVE, TARGET :: iShift(6)
-  INTEGER, SAVE :: Calls=0
-  REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
-  REAL(8), SAVE :: startime,endtime,startime0,endtime0
-  LOGICAL, SAVE :: ok_pme
-CONTAINS
-  SUBROUTINE Setup(ok_pmea)
-    LOGICAL :: ok_pmea
-    Calls=0
-    ok_pme=ok_pmea
-  END SUBROUTINE Setup
+    INTEGER, SAVE :: ShiftTime,source, dest
+    INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
+    INTEGER :: nmin,i,j,k,np,AtSt,AtEn,l,q
+    INTEGER :: iv(3),Axis
+    INTEGER :: ng
+    startime=MPI_WTIME()
+    npx=PI_npx
+    npy=PI_npy
+    npz=PI_npz
+
+    CALL Thick_Intra(i_p,MyCutoff(i_p))
+
+!!$
+!!$ --- Atoms to send
+!!$
+    
+
+    iv(1)=npx
+    iv(2)=npy
+    iv(3)=npz
+
+    IF(PI_Nprocs == 1) RETURN
+
+    CALL Setup
+
+    SELECT CASE(init)
+    CASE(_INIT_EXCHANGE_)
+       CALL Shift_it(iShift_init)
+    CASE(_EXCHANGE_ONLY_)
+       CALL Shift_it(Buff_Shift)
+    END SELECT
+
+
+!!$
+!!$--- Add to Calls counter: One data exchange has occurred
+!!$
+    CALL PI__Add_Calls
+    endtime=MPI_WTIME()
+    CALL PI__Time_It(startime,endtime) 
+  CONTAINS
+    SUBROUTINE Shift_it(Routine)
+      INTERFACE
+         SUBROUTINE Routine(i_p,Axis,Dir,scnd_half)
+           INTEGER, OPTIONAL :: scnd_half
+           INTEGER :: Axis,Dir,i_p
+         END SUBROUTINE Routine
+      END INTERFACE
+      IF(PRESENT(Ind)) THEN
+         IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+            CALL Routine(i_p,2,_PLUS_)
+            CALL Routine(i_p,3,_PLUS_)
+            CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
+         ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+            CALL Routine(i_p,3,_PLUS_)
+         ELSE
+            CALL Routine(i_p,1,_MINUS_)
+            CALL Routine(i_p,2,_PLUS_)
+            CALL Routine(i_p,3,_PLUS_)
+            CALL Routine(i_p,3,_MINUS_,_2NDHALF_)
+            CALL Routine(i_p,2,_MINUS_,_2NDHALF_)
+         END IF
+      ELSE
+         IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+            CALL Routine(i_p,2,_PLUS_)
+            CALL Routine(i_p,3,_PLUS_)
+            CALL Routine(i_p,2,_MINUS_)
+            CALL Routine(i_p,3,_MINUS_)
+         ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+            CALL Routine(i_p,3,_PLUS_)
+            CALL Routine(i_p,3,_MINUS_)
+         ELSE
+            CALL Routine(i_p,1,_MINUS_)
+            CALL Routine(i_p,2,_PLUS_)
+            CALL Routine(i_p,3,_PLUS_)
+            CALL Routine(i_p,1,_PLUS_)
+            CALL Routine(i_p,2,_MINUS_)
+            CALL Routine(i_p,3,_MINUS_)
+         END IF
+      END IF
+    END SUBROUTINE Shift_it
+  END SUBROUTINE PI__ShiftIntra
 
   SUBROUTINE iShift_init(i_p,Axis,Dir,scnd_half)
     INTEGER, OPTIONAL :: scnd_half
@@ -96,15 +131,17 @@ CONTAINS
     REAL(8) :: vc(3),tx,ty,tz
     INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
     REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
-    INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
+    INTEGER, ALLOCATABLE, SAVE :: ind_g(:),ind_o(:)
+    INTEGER, ALLOCATABLE :: Struct_s(:),Struct_r(:)
+    INTEGER :: nstruct_s,nstruct_r
     LOGICAL :: oks
     REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
     REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    LOGICAL :: ok_X,ok_Y,ok_Z,Change_Nmax
+    LOGICAL :: ok_X,ok_Y,ok_Z
     INTEGER, SAVE :: MyCalls=0
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
-    INTEGER :: iv_s(2),iv_r(2)
+    INTEGER :: iv_s(3),iv_r(3),g0
 
     Calls=Calls+1
     IF(Calls > SIZE(iShift)) THEN
@@ -116,10 +153,12 @@ CONTAINS
     END IF
     
     IF(MyCalls == 0) THEN
-       ALLOCATE(ind_o(SIZE(Groupa)))
+       ALLOCATE(ind_g(SIZE(Groupa)))
+       ALLOCATE(ind_o(SIZE(Atoms)))
+       ALLOCATE(MyMaps(SIZE(Groupa)))
     END IF
 
-    oks=PRESENT(scnd_half) .AND. (.NOT. ok_PME)
+    oks=PRESENT(scnd_half)
     MyCalls=MyCalls+1
 
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
@@ -139,16 +178,24 @@ CONTAINS
     Margin2_3=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*ddz
 
 
-    count0=0
-    count1=0
 
-    Axis_L=Margin(Axis)-Dir*rcut(Axis)
+    Axis_L=Margin(Axis)-Dir*rcut(Axis)*0.6D0
     Axis_R=Margin(Axis)
     X_L=Margin2_1
-    X_R=Margin2_1+rcut(1)
+    X_R=Margin2_1+rcut(1)*0.6D0
 
-    nmax=SIZE(Groupa)
-    DO n=1,nmax
+    IF(i_p == 1 .AND. Calls == 1) THEN
+       CALL Delete_Maps
+       CALL Copy_Maps(Map_n0)
+    ELSE IF(i_p == 2 .AND. Calls == 1) THEN
+       CALL Delete_Maps
+       CALL Copy_Maps(Map_n1)
+    END IF
+
+    count1=0
+    nmax=nMyMaps
+    DO nn=1,nmax
+       n=MyMaps(nn) % Grp_No
        IF(Groupa(n) % knwn == 0) CYCLE
        IF(Groupa(n) % knwn == 1 .AND. oks) CYCLE
        IF(oks .AND. Axis == 2) THEN
@@ -160,11 +207,8 @@ CONTAINS
           aux2=v1(1)-X_R
           aux2=aux2-Two*ANINT(Half*aux2)
           IF(aux1 > 0.0D0 .AND. aux2 < 0.0D0) THEN
-             AtSt=Groupa(n) % AtSt
-             AtEn=Groupa(n) % AtEn
              count1=count1+1
-             ind_o(count1)=n
-             count0=count0+(AtEn-AtSt+1)
+             ind_g(count1)=nn
           END IF
           CYCLE
        END IF
@@ -177,81 +221,135 @@ CONTAINS
        aux2=v1(Axis)-Axis_R
        aux2=aux2-Two*ANINT(Half*aux2)
        IF(Dir*aux1 > 0.0D0 .AND. Dir*aux2 < 0.0D0 ) THEN
-          AtSt=Groupa(n) % AtSt
-          AtEn=Groupa(n) % AtEn
           count1=count1+1
-          ind_o(count1)=n
-          count0=count0+(AtEn-AtSt+1)
+          ind_g(count1)=nn
        END IF
     END DO
 
-    NoAtm_s=count0
-    nind_o=count1
     NoGrp_s=count1
+    Nstruct_s=SUM(MyMaps(Ind_g(1:count1)) % g0)+2*count1
+    
+    ALLOCATE(Struct_s(Nstruct_s))
+    count0=0
+    count1=0
+    DO nn=1,NoGrp_s
+       n=Ind_g(nn)
+       Struct_s(count1+1)=MyMaps(n) % Grp_no
+       Struct_s(count1+2)=MyMaps(n) % g0
+       count1=count1+2
+
+       DO m=1,MyMaps(n) % g0
+          Struct_s(count1+m)=MyMaps(n) % idx(m)
+          ind_o(count0+m)=MyMaps(n) % idx(m)
+       END DO
+       count1=count1+MyMaps(n) % g0
+       count0=count0+MyMaps(n) % g0
+    END DO
+    
+    NoAtm_s=count0
+    nstruct_r=0
     NoAtm_r=0
     NoGrp_r=0
-    iShift(Calls) % sh(i_p) % NoGrp_s=NoGrp_s
+
     iShift(Calls) % sh(i_p) % NoAtm_s=NoAtm_s
-    iShift(Calls) % sh(i_p) % NoGrp_r=0
     iShift(Calls) % sh(i_p) % NoAtm_r=0
 
-    iv_s(1)=NoGrp_s;iv_s(2)=NoAtm_s
+    
+    iv_s(1)=NoGrp_s;iv_s(2)=NoAtm_s;iv_s(3)=nstruct_s
+    CALL MPI_SENDRECV(iv_s,3,MPI_INTEGER4,dest,0,iv_r&
+         &,3,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
 
-    CALL MPI_SENDRECV(iv_s,2,MPI_INTEGER4,dest,0,iv_r&
-         &,2,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
+    NoGrp_r=iv_r(1);NoAtm_r=iv_r(2);Nstruct_r=iv_r(3)
 
-    NoGrp_r=iv_r(1);NoAtm_r=iv_r(2)
+!!$
+!!$--- Set ishifts
+!!$
 
-    iShift(Calls) % sh(i_p) % NoGrp_r=NoGrp_r
     iShift(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
-
     IF(ALLOCATED(iShift(Calls) % sh(i_p) % iBuff_S))&
          & DEALLOCATE(iShift(Calls) % sh(i_p) % iBuff_S)
     IF(ALLOCATED(iShift(Calls) % sh(i_p) % iBuff_R))&
          & DEALLOCATE(iShift(Calls) % sh(i_p) % iBuff_R)
 
-    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_S(NoGrp_S))
-    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_R(NoGrp_R))
+    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_S(NoAtm_S))
+    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_R(NoAtm_R))
 
-    iShift(Calls) % sh(i_p) % iBuff_S(1:NoGrp_S)=ind_o(1:NoGrp_S)
-
-
-
-    iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_S
-    iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_R
+    iShift(Calls) % sh(i_p) % iBuff_S(1:NoAtm_S)=ind_o(1:NoAtm_S)
 
 
+    ALLOCATE(Struct_r(Nstruct_r))
     ALLOCATE(Buff_s(3,NoGrp_s))
     ALLOCATE(Buff_r(3,NoGrp_r))
 
-    DO m=1,NoGrp_s
-       l=iBuff_s(m)
+    n=0
+    m=0
+    DO WHILE(n < Nstruct_s)
+       m=m+1
+       l=Struct_s(n+1)
        Buff_s(1,m)=Groupa(l) % xa
        Buff_s(2,m)=Groupa(l) % ya
        Buff_s(3,m)=Groupa(l) % za
+       g0=Struct_s(n+2)
+       n=n+2+g0
     END DO
 
 
     NoGrp_s3=NoGrp_s*3
     NoGrp_r3=NoGrp_r*3
 
-    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,2,iBuff_r&
-         &,NoGrp_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(Struct_s,Nstruct_s,MPI_INTEGER4,dest,2,Struct_r&
+         &,Nstruct_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
+
     CALL MPI_SENDRECV(Buff_s,NoGrp_s3,MPI_REAL8,dest,4,Buff_r&
          &,NoGrp_r3,MPI_REAL8,source,4,PI_Comm_Cart,STATUS,ierr)
 
-    DO m=1,NoGrp_r
-       l=iBuff_r(m)
-       Groupa(l) % xa = Buff_r(1,m)
-       Groupa(l) % ya = Buff_r(2,m)
-       Groupa(l) % za = Buff_r(3,m)
+    n=0
+    m=0
+    count1=0
+    DO WHILE(n < Nstruct_r)
+       m=m+1
+       l =Struct_r(n+1)
+       g0=Struct_r(n+2)
+       Groupa(l) % xa=Buff_r(1,m)
+       Groupa(l) % ya=Buff_r(2,m)
+       Groupa(l) % za=Buff_r(3,m)
        groupa(l) % Knwn = 2
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       DO n=AtSt,AtEn
-          Atoms(n) % knwn = 2
+
+       nMyMaps=nMyMaps+1
+       MyMaps(nMyMaps) % Grp_no=l
+       MyMaps(nMyMaps) % g0=g0
+       ALLOCATE(MyMaps(nMyMaps) % idx(g0))
+       DO q=1,g0
+          MyMaps(nMyMaps) % idx(q)=Struct_r(n+2+q)
+          iShift(Calls) % sh(i_p) % iBuff_r(count1+q)=Struct_r(n+2+q)
+          Atoms(Struct_r(n+2+q)) % knwn = 2
        END DO
+       n=n+2+g0
+       count1=count1+g0
     END DO
+  CONTAINS
+    SUBROUTINE Copy_Maps(Map_n)
+      TYPE(MyMAps_) :: Map_n(:)
+      INTEGER :: n,g0
+      
+      nMyMaps=SIZE(Map_n)
+      DO n=1,nMyMaps
+         g0=Map_n(n) % g0
+         IF(ALLOCATED(MyMaps(n) % idx)) DEALLOCATE(MyMaps(n) % idx)
+         ALLOCATE(MyMaps(n) % idx(g0))
+      END DO
+      MyMaps(1:nMyMaps)=Map_n
+    END SUBROUTINE Copy_Maps
+    SUBROUTINE Delete_Maps
+      INTEGER :: n,g0
+      DO n=1,nMyMaps
+         g0=MyMaps(n) % g0
+         IF(ALLOCATED(MyMaps(n) % idx)) DEALLOCATE(MyMaps(n) % idx)
+         MyMaps(n) % g0=0
+         MyMaps(n) % Grp_No=0
+      END DO
+      nMyMaps=0
+    END SUBROUTINE Delete_Maps
  END SUBROUTINE IShift_init
   SUBROUTINE Buff_Shift(i_p,Axis,Dir,scnd_half)
     INTEGER, OPTIONAL :: scnd_half
@@ -259,7 +357,7 @@ CONTAINS
     INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
     INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
-         &,np,nind_o,NoGrp_s,NoGrp_r
+         &,np,nind_o
     INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
     REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
@@ -287,30 +385,21 @@ CONTAINS
 
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
 
-    NoGrp_s=iShift(Calls) % sh(i_p) % NoGrp_s
-    NoGrp_r=iShift(Calls) % sh(i_p) % NoGrp_r
     NoAtm_s=iShift(Calls) % sh(i_p) % NoAtm_s
     NoAtm_r=iShift(Calls) % sh(i_p) % NoAtm_r
 
     iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_s
     iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_r
 
-
     ALLOCATE(Buff_s(3,NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
     count0=0
-    DO m=1,NoGrp_s
-       l=iBuff_s(m)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       DO q=AtSt,AtEn
-          count0=count0+1
-          Buff_s(1,count0)=Atoms(q) % x
-          Buff_s(2,count0)=Atoms(q) % y
-          Buff_s(3,count0)=Atoms(q) % z
-       END DO
+    DO n=1,NoAtm_s
+       q=iBuff_s(n)
+       Buff_s(1,n)=Atoms(q) % x
+       Buff_s(2,n)=Atoms(q) % y
+       Buff_s(3,n)=Atoms(q) % z
     END DO
-
 
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
@@ -318,46 +407,17 @@ CONTAINS
     CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
          &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
 
-    nn=0
-    DO m=1,NoGrp_r
-       l=iBuff_r(m)
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       xpga=0.0D0
-       ypga=0.0D0
-       zpga=0.0D0
-       xpg=0.0D0
-       ypg=0.0D0
-       zpg=0.0D0
-       DO n=AtSt,AtEn
-          xmass=Atoms(n) % pmass
-          nn=nn+1
-          xc=Buff_r(1,nn)
-          yc=Buff_r(2,nn)
-          zc=Buff_r(3,nn)
-          atoms(n) % x=xc
-          atoms(n) % y=yc
-          atoms(n) % z=zc
-          Atoms(n) % xa = oc(1,1)*xc+oc(1,2)*yc+oc(1,3)*zc    
-          Atoms(n) % ya = oc(2,1)*xc+oc(2,2)*yc+oc(2,3)*zc    
-          Atoms(n) % za = oc(3,1)*xc+oc(3,2)*yc+oc(3,3)*zc
-          xpga = xpga + xmass*Atoms(n) % xa
-          ypga = ypga + xmass*Atoms(n) % ya
-          zpga = zpga + xmass*Atoms(n) % za
-          xpg = xpg + xmass*Atoms(n) % x
-          ypg = ypg + xmass*Atoms(n) % y
-          zpg = zpg + xmass*Atoms(n) % z
-          Atoms(n) % knwn = 2
-       END DO
-       Groupa(l) % xa = xpga 
-       Groupa(l) % ya = ypga
-       Groupa(l) % za = zpga
-       Groupa(l) % x = xpg
-       Groupa(l) % y = ypg
-       Groupa(l) % z = zpg
-       groupa(l) % Knwn = 2
+    DO n=1,NoAtm_r
+       q=iBuff_r(n)
+       xc=Buff_r(1,n)
+       yc=Buff_r(2,n)
+       zc=Buff_r(3,n)
+       atoms(q) % x=xc
+       atoms(q) % y=yc
+       atoms(q) % z=zc
     END DO
 
   END SUBROUTINE Buff_Shift
-
-END MODULE PI_Shift
+  SUBROUTINE Setup
+    Calls=0
+  END SUBROUTINE Setup

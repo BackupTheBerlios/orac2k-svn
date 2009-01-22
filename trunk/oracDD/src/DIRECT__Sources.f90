@@ -60,11 +60,13 @@ SUBROUTINE Forces
 
   INTEGER :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
        &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,nbti,p_mapa,p_j,lij,i_pb&
-       &,count_b,count_c,p_mapb
+       &,count_b,count_c,p_mapb,nol,natom1
   LOGICAL :: lskip_ewald
+  LOGICAL, ALLOCATABLE :: ol(:)
   TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
 
   IF(i_p > SIZE(Radii)) RETURN
+
   
   Neigha=>List(i_p) % Neigh
   i_pb=i_p-1
@@ -491,6 +493,11 @@ SUBROUTINE Forces
         END DO
      END IF
   END DO
+!!$  ALLOCATE(ol(SIZE(fppx)))
+!!$  WHERE(fppx == 0.0D0 .AND. fppy == 0.0D0 .AND. fppz == 0.0D0) ol=.TRUE.
+!!$  natom1=COUNT(Atoms(:) % knwn == 2)+COUNT(Atoms(:) % knwn == 1)
+!!$  nol=COUNT(ol)-(natom-natom1)
+!!$  WRITE(*,*) 'Zero forces',nol,COUNT(Atoms(:) % knwn == 2)
   fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
   fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
   fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
@@ -499,7 +506,7 @@ SUBROUTINE Forces
   CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
   CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
   IF(PI_Node_Cart == 0) THEN
-!!$     WRITE(*,*) ucoul_o
-!!$     WRITE(*,*) uconf_o
+     WRITE(*,*) ucoul_o
+     WRITE(*,*) uconf_o
   END IF
 END SUBROUTINE Forces

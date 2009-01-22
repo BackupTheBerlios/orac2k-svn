@@ -30,13 +30,11 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Imph(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Imph
   INTEGER, SAVE :: MyCalls=0
   REAL(8), SAVE :: quasi_zero=1.0D-12
 
-  INTEGER :: i,l1,l2,l3,l4,ntph,tmp,type,ntors
+  INTEGER :: i,l1,l2,l3,l4,ntph,tmp,type,ntors,nWeight
   REAL(8) ::  xr1,xr2,xr3,xr4,yr1,yr2,yr3,yr4,zr1,zr2,zr3,zr4,x21,x32&
        &,x43,y21,y32,y43,z21,z32,z43,rsq21,rsq32,rsq43,rsp21,rsp32&
        &,rsp43,pota,potb,potc
@@ -46,7 +44,7 @@ SUBROUTINE Imph(fpx,fpy,fpz)
        &,dby24,dby34,dbz11,dbz31,dbz12,dbz22,dbz32,dbz13,dbz23&
        &,dbz33,dbz24,dbz34,uux1,uux2,uux3,uux4,uuy1,uuy2,uuy3&
        &,uuy4,uuz1,uuz2,uuz3,uuz4,aux3,bb,soa
-  REAL(8) ::  coa,enrg,qforce,sig,utors(2)
+  REAL(8) ::  coa,enrg,qforce,sig,utors(2),Weight
 
 
 
@@ -58,10 +56,6 @@ SUBROUTINE Imph(fpx,fpy,fpz)
   ntors=SIZE(Indx_Imph,2)
 
 
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
-  
   utors=0.0_8
   DO i=1,ntors
      l1=Indx_Imph(1,i)
@@ -70,7 +64,10 @@ SUBROUTINE Imph(fpx,fpy,fpz)
      l4=Indx_Imph(4,i)
      pota=Param_Imph(i) % pot(1)*Conv_Fact
      potc=Param_Imph(i) % pot(3)*Degree_To_Rad
-     type=Atoms(l1) % Id_Slv
+     nWeight=SIZE(Param_Imph(i) % pot)
+     Weight=Param_Imph(i) % pot(nWeight)
+
+     type=Slv(l1)
 
 
      xr1=xp0(l1)
@@ -156,7 +153,7 @@ SUBROUTINE Imph(fpx,fpy,fpz)
      IF(bb.LT.1.0D-06) bb=1.0D-06
      soa=SIN(bb)
      qforce=(2.0d0*pota*(bb-potc))/soa
-     utors(type)=utors(type)+pota*(bb-potc)**2
+     utors(type)=utors(type)+Weight*pota*(bb-potc)**2
      uux1=auxa*dbx11+auxc*dbx31
      uux2=auxa*dbx12+auxb*dbx22+auxc*dbx32
      uux3=auxa*dbx13+auxb*dbx23+auxc*dbx33

@@ -116,7 +116,6 @@ CONTAINS
        RETURN
     END IF
 
-    CALL MPI_BARRIER(PI_Comm,ierr)
     startime=MPI_WTIME()
     ALLOCATE(Cq_r(ndim_fftw1,ndim_fftw2,ndim_fftw3))
     ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
@@ -196,9 +195,9 @@ CONTAINS
 
     eer_i=eer
     Energy_i=Energy
-    CALL MPI_ALLREDUCE(eer_i,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
-    CALL MPI_ALLREDUCE(Energy_i,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
-    CALL MPI_BARRIER(PI_Comm,ierr)
+!!$    CALL MPI_ALLREDUCE(eer_i,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+!!$    CALL MPI_ALLREDUCE(Energy_i,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
+
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(kprint,*) 'timeo ',timea

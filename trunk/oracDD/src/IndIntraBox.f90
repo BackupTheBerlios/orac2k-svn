@@ -126,6 +126,7 @@ CONTAINS
        n1=COUNT(oks(via(:)))
        IF(n1 == 0) CYCLE
        n2=COUNT(okt(via(:)))
+       IF(n_Tpg == 4) WRITE(200+Pi_node_cart,'(5i8)') nn,n,n1,n2,n1+n2
        IF(n1+n2 == n_Tpg) THEN
           count0=count0+1
           ind_o(count0)=nn
@@ -141,11 +142,13 @@ CONTAINS
        n=Prm (nn) % pt
        via=Tpg (:,n)
        ng=SIZE(Prm (nn) % g)
-       ALLOCATE(Param(nnn) % pot(ng))
+       ALLOCATE(Param(nnn) % pot(ng+1))
        Indx(:,nnn)=via
-       Param(nnn) % pot=Prm(nn) % g
+       Param(nnn) % pot(1:ng)=Prm(nn) % g
+       Param(nnn) % pot(ng+1)=1.0_8
     END DO
-!!$    CALL MPI_ALLREDUCE(MPI_IN_PLACE,count0,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,count0,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    WRITE(*,*) 'here ',Pi_node_cart,count0
   END SUBROUTINE IntraPot
   SUBROUTINE IntraPot14(Tpg, Indx)
     INTEGER :: Tpg(:,:)
@@ -178,6 +181,8 @@ CONTAINS
        via=Tpg (:,n)
        Indx(:,nn)=via
     END DO    
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE,count0,1,MPI_INTEGER4,MPI_SUM,PI_Comm_Cart,ierr)
+    WRITE(*,*) 'here ',Pi_node_cart,count0
   END SUBROUTINE IntraPot14
 
   FUNCTION IndIntraBox_() RESULT(out)

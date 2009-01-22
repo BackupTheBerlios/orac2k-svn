@@ -56,12 +56,9 @@ MODULE Intra
        & CHARMM_Constr_=>Constraints_
   USE Keyword, ONLY: charmm
   USE Forces, ONLY: fp_n0,fp_n1
-  USE IndIntraBox, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
-       &,Indx_Angles,Param_Dihed,Indx_Dihed,Param_Imph,Indx_Imph&
-       &,Indx_Int14
+  USE IntraAtoms, ONLY: xp0,yp0,zp0,fpx,fpy,fpz,Scatter_Forces_,Gather_Coords_
   USE Atom
   USE Groups
-  USE PI_Communicate, ONLY: PI__FoldIntra
   IMPLICIT none
   PRIVATE
   PUBLIC Intra_n0_, Intra_n1_,ubond_Slv,ubond_Slt,ubend_Slv,ubend_Slt,uitors_Slv&
@@ -77,36 +74,34 @@ CONTAINS
     INTEGER, OPTIONAL :: Pick
     INTEGER :: init
     INTEGER :: n,nn
+
+    CALL Gather_Coords_(Atoms(:) % x,Atoms(:) % y,Atoms(:) % z)
+    fpx=0.0_8; fpy=0.0_8; fpz=0.0_8
+
     IF(charmm) THEN
        IF(PRESENT(Pick)) THEN
           SELECT CASE(Pick)
           CASE(_CONSTRS_)
-             CALL Intra_(CHARMM_Constr,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Intra_(CHARMM_Constr)
              CALL Energy_(CHARMM_Constr_,uconstr_Slv,uconstr_Slt)
-             CALL PI__FoldIntra(fp_n0,1,init)
           CASE(_STRETCHS_)
-             CALL Intra_(CHARMM_Bonds,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Intra_(CHARMM_Bonds)
              CALL Energy_(CHARMM_Bonds_,ubond_Slv,ubond_Slt)
-             CALL PI__FoldIntra(fp_n0,1,init)
           CASE(_ANGLES_)
-             CALL Intra_(CHARMM_Angles,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Intra_(CHARMM_Angles)
              CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
-             CALL PI__FoldIntra(fp_n0,1,init)
           CASE(_IMPHS_)
-             CALL Intra_(CHARMM_Imph,fp_n0 % x,fp_n0 % y,fp_n0 % z)
+             CALL Intra_(CHARMM_Imph)
              CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
-             CALL PI__FoldIntra(fp_n0,1,init)
           END SELECT
        ELSE
-          CALL Intra_(CHARMM_Bonds,fp_n0 % x,fp_n0 % y,fp_n0 % z)
-          CALL Intra_(CHARMM_Angles,fp_n0 % x,fp_n0 % y,fp_n0 % z)
-          CALL Intra_(CHARMM_Imph,fp_n0 % x,fp_n0 % y,fp_n0 % z)
-
+          CALL Intra_(CHARMM_Bonds)
+          CALL Intra_(CHARMM_Angles)
+          CALL Intra_(CHARMM_Imph)
           CALL Energy_(CHARMM_Bonds_,ubond_Slv,ubond_Slt)
           CALL Energy_(CHARMM_Angles_,ubend_Slv,ubend_Slt)
           CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
 
-          CALL PI__FoldIntra(fp_n0,1,init)
 
           IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u1 ',ubond_Slv,ubond_Slt&
                &,(ubond_Slt+ubond_Slv)*efact/1000.0_8
@@ -114,33 +109,36 @@ CONTAINS
           IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u3 ',uitors_Slv,uitors_Slt
        END IF
     END IF
+    CALL Scatter_Forces_(fp_n0(:) % x,fp_n0(:) % y,fp_n0(:) % z)
   END SUBROUTINE Intra_n0_
   SUBROUTINE Intra_n1_(init)
     INTEGER :: init
     INTEGER :: n,nn
+
+    CALL Gather_Coords_(Atoms(:) % x,Atoms(:) % y,Atoms(:) % z)
+    fpx=0.0_8; fpy=0.0_8; fpz=0.0_8
+
     IF(charmm) THEN
-       CALL Intra_(CHARMM_Dihed,fp_n1 % x,fp_n1 % y,fp_n1 % z)
-       CALL Intra_(CHARMM_Int14,fp_n1 % x,fp_n1 % y,fp_n1 % z)
+       CALL Intra_(CHARMM_Dihed)
+       CALL Intra_(CHARMM_Int14)
        CALL Energy_(CHARMM_Dihed_,uptors_Slv,uptors_Slt)
        CALL Energy_(CHARMM_Int14coul_,ucoulint14_Slv,ucoulint14_Slt)
        CALL Energy_(CHARMM_Int14conf_,uconfint14_Slv,uconfint14_Slt)
 
-       CALL PI__FoldIntra(fp_n1,2,init)
 
        IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u4 ',uptors_Slv,uptors_Slt
        IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
        IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
     END IF
+    CALL Scatter_Forces_(fp_n1(:) % x,fp_n1(:) % y,fp_n1(:) % z)
   END SUBROUTINE Intra_n1_
 
-  SUBROUTINE Intra_(Routine,fpx,fpy,fpz)
-    REAL(8) :: fpx(:),fpy(:),fpz(:)
+  SUBROUTINE Intra_(Routine)
     INTERFACE
-       SUBROUTINE Routine(fpx,fpy,fpz)
-         REAL(8) :: fpx(:),fpy(:),fpz(:)
+       SUBROUTINE Routine
        END SUBROUTINE Routine
     END INTERFACE
-    CALL Routine(fpx,fpy,fpz)
+    CALL Routine
   END SUBROUTINE Intra_
   SUBROUTINE Energy_(Routine,u_slv,u_slt)
     REAL(8) :: u_slv,u_slt

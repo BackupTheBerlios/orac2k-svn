@@ -30,23 +30,17 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Bonds(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Bonds
   INTEGER :: i,la,lb,type,nbond
   REAL(8) ::  xr1,xr2,yr1,yr2,zr1,zr2,x21,y21,z21,rs21,uux1,uux2&
-       &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb
+       &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb,Weight
   REAL(8) ::  qforce
   
   IF(Calls == 0) THEN
      Calls=Calls+1
      Conv_Fact=1000.0D0*4.184/(unite*avogad)
   END IF
-  
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
-  
+    
   nbond=SIZE(Indx_Bonds,2)
   ubond=0.0_8
   DO i=1,nbond
@@ -54,8 +48,9 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
      lb=Indx_Bonds(2,i)
      pota=Param_Bonds(i) % pot(2)
      potb=Param_Bonds(i) % pot(1)*Conv_Fact
-     
-     type=Atoms(la) % Id_Slv
+     Weight=Param_Bonds(i) % pot(3)
+
+     type=Slv(la)
      
      
      
@@ -85,7 +80,7 @@ SUBROUTINE Bonds(fpx,fpy,fpz)
      fpx(lb)=fpx(lb)+qforce*uux2
      fpy(lb)=fpy(lb)+qforce*uuy2
      fpz(lb)=fpz(lb)+qforce*uuz2
-     ubond(type)=ubond(type)+potb*(rs21-pota)**2       
+     ubond(type)=ubond(type)+Weight*potb*(rs21-pota)**2       
   END DO
   Ubond_slt=ubond(1)
   Ubond_slv=ubond(2)

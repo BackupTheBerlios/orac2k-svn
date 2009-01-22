@@ -52,13 +52,18 @@ SUBROUTINE Forces_(n)
   END IF
 CONTAINS
   SUBROUTINE IntraForces_
+    REAL(8) :: startime0,endtime0,startime1,endtime1,startime2&
+         &,endtime2,startime3,endtime3,total,tcalc,tcomm 
+    REAL(8), ALLOCATABLE :: totals(:),tcomms(:)
     
     CALL PI__ResetSecondary
     SELECT CASE(n)
     CASE(_N0_)
 !!$--- Shift atoms
        CALL PI__ShiftIntra(_N0_,Flag)
+
 !!$--- Gets all n0 interactions beloging to the primary cell
+
        CALL Intra_n0_(Flag)
     CASE(_N1_)
 !!$--- Shift atoms
@@ -66,7 +71,7 @@ CONTAINS
 !!$--- Gets all n1 interactions beloging to the primary cell
        CALL Intra_n1_(Flag)
     END SELECT
-    
+
   END SUBROUTINE IntraForces_
   
   SUBROUTINE InterForces_
@@ -74,8 +79,12 @@ CONTAINS
     TYPE(Force), POINTER :: fp(:)
     INTEGER :: m
     INTEGER :: callsa=0
+    REAL(8) :: startime0,endtime0,startime1,endtime1,startime2&
+         &,endtime2,startime3,endtime3,total,tcalc,tcomm 
+    REAL(8), ALLOCATABLE :: totals(:),tcomms(:)
 
     CALL PI__ResetSecondary
+
     CALL PI__Shift(n,Flag)
     
     IF(.NOT. PI_Atom_Update_()) CALL Print_Errors()
@@ -93,10 +102,12 @@ CONTAINS
 !!$
     
     fp=>FORCES_Pick(n)
+
     CALL PI__Fold_F(fp,n,Flag)
 
 !!$--- Reset Secondary region atoms from PME
     
     IF(pme) CALL Pi__ResetSecondaryP
+    
   END SUBROUTINE InterForces_
 END SUBROUTINE Forces_

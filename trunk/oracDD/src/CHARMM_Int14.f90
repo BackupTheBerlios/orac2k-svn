@@ -30,22 +30,18 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Int14(fpx,fpy,fpz)
-  REAL(8) :: fpx(:),fpy(:),fpz(:)
-
-  REAL(8), POINTER :: xp0(:),yp0(:),zp0(:)
+SUBROUTINE Int14
   INTEGER, SAVE :: MyCalls=0
   REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:)
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
   REAL(8), SAVE :: alphal,twrtpi
-  INTEGER, POINTER :: Slv(:),Id(:)
-  REAL(8), POINTER :: Charge(:)
   INTEGER :: i,i1,i2,j,lij,type,nint14
   REAL(8) :: xpi,ypi,zpi,xa,ya,za,rsq,rsp,rsqi,qforce,xpj,ypj,zpj&
        &,ssvir,r6,r12,chrgei,chrgej,qt,expcst,erfcst 
-  REAL(8) :: rspqi,alphar,furpar,elj,ucon,ucou,ucoul(2),uconf(2)
+  REAL(8) :: rspqi,alphar,furpar,elj,ucon,ucou,ucoul(2),uconf(2)&
+       &,Weight 
 
 
   IF(Calls == 0) THEN
@@ -56,12 +52,6 @@ SUBROUTINE Int14(fpx,fpy,fpz)
      MyCalls=MyCalls+1
      CALL Init
   END IF
-  xp0=>Atoms(:) % x
-  yp0=>Atoms(:) % y
-  zp0=>Atoms(:) % z
-  Id =>Atoms(:) % Id_Type
-  Slv=>Atoms(:) % Id_Slv
-  Charge=>Atoms(:) % chg
 
   nint14=SIZE(Indx_Int14,2)
   ucoul=0.0_8
@@ -74,6 +64,7 @@ SUBROUTINE Int14(fpx,fpy,fpz)
      lij=Id_ij(Id(i1),Id(i2))
      chrgei=charge(i1)
      chrgej=charge(i2)
+     Weight=Param_Int14(i) % pot(1)
 
      xpi=xp0(i1)
      ypi=yp0(i1)
@@ -94,18 +85,15 @@ SUBROUTINE Int14(fpx,fpy,fpz)
      ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
      qforce=ssvir*rsqi
      ucon=(ecc12(lij)*r12-ecc6(lij)*r6)
-     uconf(type)=uconf(type)+ucon
+     uconf(type)=uconf(type)+ucon*Weight
      alphar=alphal*rsp
      qt=1.0d0/(1.0d0+qp*alphar)
      expcst=dexp(-alphar*alphar)
      erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
      furpar=chrgei*chrgej
      ucou=furpar*erfcst/rsp
-     ucoul(type)=ucoul(type)+ucou
+     ucoul(type)=ucoul(type)+ucou*Weight
      
-!!$     phi(i1)=phi(i1)+chrgej*erfcst/rsp
-!!$     phi(i2)=phi(i2)+chrgei*erfcst/rsp
-
      qforce=qforce+furpar*(erfcst+twrtpi*alphar*expcst)*rspqi
      fpx(i1)=fpx(i1)+qforce*xa
      fpy(i1)=fpy(i1)+qforce*ya

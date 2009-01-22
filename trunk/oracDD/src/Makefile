@@ -139,10 +139,10 @@ OBJS = Atom.o Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o St
 	Groups.o Banner.o Inout.o MDRun.o FactorizeNo.o PI_Decompose.o PI_.o \
 	PI_Communicate.o Potential.o Ewald.o PME.o PME_Routines.o Parallel.o\
 	Geometry.o Print_Defs.o Rfft3d.o IndBox.o Forces.o Direct.o PI_Atom.o oracDD.o \
-	PI_Statistics.o  PI_Cutoffs.o PI_Shift.o PI_Fold.o PI_ShiftIntra.o PI_FoldIntra.o\
-	PI_IntraMaps.o IndIntraBox.o CHARMM_Intra.o Intra.o Simulation.o GAUSS.o\
+	PI_Statistics.o  PI_Cutoffs.o PI_Shift.o PI_Fold.o\
+	CHARMM_Intra.o Intra.o Simulation.o GAUSS.o\
 	LA_Routines.o PI_Collectives.o Minimize.o Rattle.o Integrator.o\
-	Integrate.o Run.o PI_Exchange.o
+	Integrate.o Run.o PI_Exchange.o IntraAtoms.o
 
 OBJS_f = AddH.o duni.o indexx.o cgfam.o
 

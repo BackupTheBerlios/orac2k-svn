@@ -65,8 +65,6 @@ MODULE MDRun
   USE Print_Defs
   USE Direct, ONLY: DIR_Forces=>Compute
   USE Forces, ONLY: FORCES_Memory=>Memory,Radii
-  USE PI_IntraMaps, ONLY: IntraMaps_n0_, IntraMaps_n1_
-  USE IndIntraBox
   USE Intra, ONLY: Intra_n0_,Intra_n1_
   USE Minimize
   USE IndBox

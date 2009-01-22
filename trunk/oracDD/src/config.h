@@ -40,3 +40,4 @@
 
 #define _XA_TO_X_   1
 #define _X_TO_XA_  -1
+#define _COUNT_ONCE_ 1

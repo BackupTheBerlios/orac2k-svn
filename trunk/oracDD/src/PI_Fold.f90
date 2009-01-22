@@ -273,6 +273,7 @@ CONTAINS
        END DO
     END DO
 
+    CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
   END SUBROUTINE Buff_Fold
 
 END MODULE PI_Fold

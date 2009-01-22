@@ -30,6 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
+MODULE CellAtoms
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -37,65 +38,96 @@
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Mon Jan  5 2009 -                                     *
+!!$              - Fri Jan 16 2009 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-SUBROUTINE Integrate_n0
-  INTEGER, SAVE :: counter=0
-  INTEGER :: Init,q
-  TYPE(Force), POINTER :: fp_d(:)
 
-!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one H'
-!!$  CALL PI_Write_(78, fp_h(:) %x, fp_h(:) %y, fp_h(:) %z,(&
-!!$       &/1:SIZE(fp_h)/))
-!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one L'
-!!$  CALL PI_Write_(78, fp_l(:) %x, fp_l(:) %y, fp_l(:) %z,(&
-!!$       &/1:SIZE(fp_l)/))
-!!$  IF(PI_Node == 0) WRITE(78,*) 'Get one M'
-!!$  CALL PI_Write_(78, fp_m(:) %x, fp_m(:) %y, fp_m(:) %z,(&
-!!$       &/1:SIZE(fp_m)/))
-!!$  STOP
-  DO n0=1,n0_
+#include "CellAtoms.h"
 
-     IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
-     IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
-!!$
-!!$--- Verlet position step
-!!$
-     IF(.NOT. Atom__Verlet_(dt_n0,_N0_)) CALL Print_Errors()
-     IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
-     
-     Init=Pick_Init(_N0_,counter)
+  IMPLICIT none
+  PRIVATE
+  PUBLIC CellAtoms_at_,CellAtoms_gr_,CellAtoms_kn_,CellAtoms_at__&
+       &,CellAtoms_gr__,CellAtoms_kn__ 
 
-     IF(Init == _INIT_) THEN
-        IF(.NOT.  Atom__Convert(_X_TO_XA_,IndBox_g_p)) CALL Print_Errors()
-        IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
+  REAL(8), ALLOCATABLE, SAVE :: at(:,:),gr(:,:)
+  INTEGER, ALLOCATABLE, SAVE :: Idx(:)
+  INTEGER, SAVE :: Idx_Max=0
+  INTEGER, SAVE :: FCalls=0
+CONTAINS
+  FUNCTION CellAtoms_(n,m
+  FUNCTION CellAtoms_at_(x,y,z,Ind) RESULT(out)
+    REAL(8) :: x(:),y(:),z(:)
+    INTEGER, OPTIONAL :: Ind(:)
+    REAL(8), POINTER :: out(:,:)
+    INTEGER :: n
+    IF(PRESENT(Ind)) THEN
+       n=SIZE(Ind)
+       WRITE(*,*) ' at n = ',n
+       ALLOCATE(at(3,n))
+       at(1,:)=x(Ind(:))
+       at(2,:)=y(Ind(:))
+       at(3,:)=z(Ind(:))
+    END IF
+    out=>at
+  END FUNCTION CellAtoms_at_
+  FUNCTION CellAtoms_gr_(x,y,z,Ind) RESULT(out)
+    REAL(8), OPTIONAL :: x(:),y(:),z(:)
+    INTEGER, OPTIONAL :: Ind(:)
+    REAL(8), POINTER :: out(:,:)
+    INTEGER :: n
 
-        CALL PI__ResetSecondary
-        CALL PI__Exchange
-        CALL PI__AssignAtomsToCells
-        
-        CALL PI__Shift(NShell,_INIT_)
-        CALL PI__Shift(NShell,_EXCHANGE_)
+    IF(PRESENT(Ind)) THEN
+       n=SIZE(Ind)
+       WRITE(*,*) ' gr n = ',n
+       ALLOCATE(gr(3,n))
+       gr(1,:)=x(Ind(:))
+       gr(2,:)=y(Ind(:))
+       gr(3,:)=z(Ind(:))
+    END IF
+    out=>gr
+  END FUNCTION CellAtoms_gr_
+  FUNCTION CellAtoms_kn_(k,Ind) RESULT(out)
+    INTEGER, OPTIONAL :: Ind(:),k(:)
+    INTEGER, POINTER :: out(:)
+    INTEGER :: n
 
-        IF(.NOT. PI_Atom_()) CALL Print_Errors()
-        IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
-        CALL DIR_Lists(Nshell)
-!!$--- Redefine the Intramolecular environment
-        IF(.NOT. IntraAtoms_()) CALL Print_Errors()
-        CALL Init_TotalShells(NShell)
-     END IF
+    IF(PRESENT(Ind)) THEN
+       n=SIZE(Ind)
+       ALLOCATE(knwn(n))
+       knwn(:)=k(Ind(:))
+    END IF
+    out=>knwn
+  END FUNCTION CellAtoms_kn_
+  FUNCTION CellAtoms_at__(x,y,z,Ind) RESULT(out)
+    INTEGER :: Ind(:)
+    REAL(8), POINTER :: out(:,:)
+    REAL(8) :: x(:),y(:),z(:)
+    
+    x(Ind(:))=at(1,:)
+    y(Ind(:))=at(2,:)
+    z(Ind(:))=at(3,:)
+    DEALLOCATE(at)
+    out=>NULL()
+  END FUNCTION CellAtoms_at__
+  FUNCTION CellAtoms_gr__(x,y,z,Ind) RESULT(out)
+    INTEGER :: Ind(:)
+    REAL(8), POINTER :: out(:,:)
+    REAL(8) :: x(:),y(:),z(:)
 
-     CALL FORCES_Zero(_N0_)
-     CALL Forces_(_N0_)
-     IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
-     counter=counter+1
-     IF(NShell == _N0_ .AND. Init == 0) THEN
-        IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
-             & knwn)) CALL Print_Errors()
-     END IF
-     nstep_n0=nstep_n0+1
-  END DO
-END SUBROUTINE Integrate_n0
+    x(Ind(:))=gr(1,:)
+    y(Ind(:))=gr(2,:)
+    z(Ind(:))=gr(3,:)
+    DEALLOCATE(gr)
+    out=>NULL()
+  END FUNCTION CellAtoms_gr__
+  FUNCTION CellAtoms_kn__(k,Ind) RESULT(out)
+    INTEGER :: Ind(:),k(:)
+    INTEGER, POINTER :: out(:)
+
+    k(Ind(:))=knwn(:)
+    out=>NULL()
+    DEALLOCATE(knwn)
+  END FUNCTION CellAtoms_kn__
+END MODULE CellAtoms

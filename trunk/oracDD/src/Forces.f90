@@ -212,26 +212,47 @@ CONTAINS
        STOP
     END SELECT
   END FUNCTION Pick
-  SUBROUTINE Zero(Level)
+  SUBROUTINE Zero(Level,Ind)
+    INTEGER, OPTIONAL :: Ind(:)
     INTEGER :: level
     TYPE(Force) :: fp0=Force(0.0_8, 0.0_8, 0.0_8)
-
-    SELECT CASE(level)
-    CASE(_N0_)
-       fp_n0=fp0
-    CASE(_N1_)
-       fp_n1=fp0
-    CASE(_M_)
-       fp_m=fp0
-    CASE(_L_)
-       fp_l=fp0
-    CASE(_H_)
-       fp_h=fp0
-    CASE DEFAULT
-       errmsg_f='In Zero, only five level RESPA is allowed'
-       CALL Add_Errors(-1,errmsg_f)
-       CALL Print_Errors()
-       STOP
-    END SELECT
+    
+    IF(PRESENT(Ind)) THEN
+       SELECT CASE(level)
+       CASE(_N0_)
+          fp_n0(Ind(:))=fp0
+       CASE(_N1_)
+          fp_n1(Ind(:))=fp0
+       CASE(_M_)
+          fp_m(Ind(:))=fp0
+       CASE(_L_)
+          fp_l(Ind(:))=fp0
+       CASE(_H_)
+          fp_h(Ind(:))=fp0
+       CASE DEFAULT
+          errmsg_f='In Zero, only five level RESPA is allowed'
+          CALL Add_Errors(-1,errmsg_f)
+          CALL Print_Errors()
+          STOP
+       END SELECT
+    ELSE
+       SELECT CASE(level)
+       CASE(_N0_)
+          fp_n0=fp0
+       CASE(_N1_)
+          fp_n1=fp0
+       CASE(_M_)
+          fp_m=fp0
+       CASE(_L_)
+          fp_l=fp0
+       CASE(_H_)
+          fp_h=fp0
+       CASE DEFAULT
+          errmsg_f='In Zero, only five level RESPA is allowed'
+          CALL Add_Errors(-1,errmsg_f)
+          CALL Print_Errors()
+          STOP
+       END SELECT
+    END IF
   END SUBROUTINE Zero
 END MODULE Forces
