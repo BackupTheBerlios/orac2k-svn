@@ -49,6 +49,7 @@ MODULE Direct
   USE PI_ATOM
   USE POTENTIAL
   USE Units
+  USE Energies, ONLY: EN_Coul_Dir_=>Coul_Dir_,EN_LJ_=>LJ_
   USE Forces,ONLY: Force, fp_m,fp_l,fp_h, Forces_Init=>Init,Forces_Memory&
        &=>Memory, FORCES_Pick=>Pick, Radii
   USE LennardJones, ONLY: LennardJones__Par

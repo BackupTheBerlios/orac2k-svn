@@ -49,6 +49,11 @@ MODULE CHARMM_Intra
 #endif
   USE Errors,ONLY: Add_errors=>Add, Print_Errors, errmsg_f
   USE Units
+  USE Energies, ONLY: EN_Lj_=>LJ_,EN_Coul_Dir_=>Coul_Dir_&
+       &,EN_Coul_Rec_=>Coul_Rec_,EN_Stretch_=>Stretch_,EN_Angle_&
+       &=>Angle_,EN_Imph_=>Imph_,EN_Int14LJ_=>Int14LJ_,EN_Int14Coul_&
+       &=>Int14Coul_,EN_Dihed_=>Dihed_
+
   USE IntraAtoms, ONLY: Param_Bonds,Indx_Bonds,Param_Angles&
        &,Indx_Angles,Param_Dihed,Param_Constr,Indx_Dihed,Param_Imph,Indx_Imph&
        &,Indx_Int14,Indx_Constr,xp0,yp0,zp0,fpx,fpy,fpz,Slv,Id,Charge&

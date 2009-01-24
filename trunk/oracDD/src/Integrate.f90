@@ -65,6 +65,7 @@ MODULE Integrate
   USE PI_Communicate
   USE PI_Collectives
   USE IndBox
+  USE Energies, ONLY: EN_Write_it_=>Write_it_,EN_Banner_=>Banner_,EN_Total_=>Total_
 
   USE IntraAtoms, ONLY: IntraAtoms_,PI__ShiftIntra
 
@@ -91,7 +92,7 @@ MODULE Integrate
      INTEGER :: Nstep=0
      REAL(8) :: Time=0.0_8
   END TYPE Length
-  TYPE(Length) :: Iteration
+  TYPE(Length) :: Iteration,Time_of_Print
 CONTAINS
   FUNCTION Time_Step() RESULT(out)
     REAL(8) :: out
@@ -201,9 +202,10 @@ CONTAINS
     starta=MPI_WTIME()
 
     Iteration=Get_RunLength()
-    
+    Time_of_Print=Get_PrintFrequency()
     startime=MPI_WTIME()
-    
+
+    CALL EN_Banner_
     DO Iter=1,Iteration % nstep
        CALL Integrate_Shell(NShell)
     END DO

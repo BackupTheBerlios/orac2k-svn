@@ -145,4 +145,5 @@ SUBROUTINE Angles
   END DO
   Ubend_slt=ubend(1)
   Ubend_slv=ubend(2)
+  CALL EN_Angle_(Ubend_Slv,Ubend_Slt,0.0D0)
 END SUBROUTINE Angles

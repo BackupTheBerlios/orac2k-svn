@@ -30,59 +30,36 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Bonds
-  INTEGER :: i,la,lb,type,nbond
-  REAL(8) ::  xr1,xr2,yr1,yr2,zr1,zr2,x21,y21,z21,rs21,uux1,uux2&
-       &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb,Weight
-  REAL(8) ::  qforce
-  
-  IF(Calls == 0) THEN
-     Calls=Calls+1
-     Conv_Fact=1000.0D0*4.184/(unite*avogad)
-  END IF
-    
-  nbond=SIZE(Indx_Bonds,2)
-  ubond=0.0_8
-  DO i=1,nbond
-     la=Indx_Bonds(1,i)
-     lb=Indx_Bonds(2,i)
-     pota=Param_Bonds(i) % pot(2)
-     potb=Param_Bonds(i) % pot(1)*Conv_Fact
-     Weight=Param_Bonds(i) % pot(3)
+!!$***********************************************************************
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
+!!$======================================================================*
+!!$                                                                      *
+!!$              Author:  Massimo Marchi                                 *
+!!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
+!!$                                                                      *
+!!$              - Fri Jan 23 2009 -                                     *
+!!$                                                                      *
+!!$***********************************************************************
 
-     type=Slv(la)
-     
-     
-     
-     xr1=xp0(la)
-     yr1=yp0(la)
-     zr1=zp0(la)
-     xr2=xp0(lb)
-     yr2=yp0(lb)
-     zr2=zp0(lb)
-     
-     x21=xr2-xr1
-     y21=yr2-yr1
-     z21=zr2-zr1
-     rs21=DSQRT(x21**2+y21**2+z21**2)
-     
-     qforce=-2.0D0*potb*(pota-rs21)
-     uux1=x21/rs21
-     uuy1=y21/rs21
-     uuz1=z21/rs21
-     uux2=-uux1
-     uuy2=-uuy1
-     uuz2=-uuz1
-     fpx(la)=fpx(la)+qforce*uux1
-     fpy(la)=fpy(la)+qforce*uuy1
-     fpz(la)=fpz(la)+qforce*uuz1
-     
-     fpx(lb)=fpx(lb)+qforce*uux2
-     fpy(lb)=fpy(lb)+qforce*uuy2
-     fpz(lb)=fpz(lb)+qforce*uuz2
-     ubond(type)=ubond(type)+Weight*potb*(rs21-pota)**2       
-  END DO
-  Ubond_slt=ubond(1)
-  Ubond_slv=ubond(2)
-  CALL EN_Stretch_(Ubond_Slv,Ubond_Slt,0.0D0)
-END SUBROUTINE Bonds
+#define _IN_     IndBox_a_P(:)
+
+!!$---- This module is part of the program oracDD ----*
+SUBROUTINE ATOM__KinCompute
+  REAL(8), POINTER :: vx(:),vy(:),vz(:),mass(:)
+  REAL(8) :: ek_Slt,ek_slv
+
+  vx=>Atoms(:) % vx
+  vy=>Atoms(:) % vy
+  vz=>Atoms(:) % vz
+  mass=>Atoms(:) % mass
+
+  ek_Slt=SUM(mass(_IN_)*(vx(_IN_)**2+vy(_IN_)**2+vz(_IN_)**2)&
+       &,Atoms(_IN_) % Id_Slv == 1) 
+  ek_Slv=SUM(mass(_IN_)*(vx(_IN_)**2+vy(_IN_)**2+vz(_IN_)**2)&
+       &,Atoms(_IN_) % Id_Slv == 2) 
+
+  ek_Slv=0.5*ek_Slv*efact
+  ek_Slv=0.5*ek_Slv*efact
+  CALL EN_Kinetic_(ek_Slv,ek_Slt)
+
+END SUBROUTINE ATOM__KinCompute

@@ -46,6 +46,8 @@ MODULE PME
 
 #include "config.h"
 
+
+  USE Energies, ONLY: EN_Coul_Rec_=>Coul_Rec_
   USE Print_Defs
   USE Units, ONLY: Pi, TwoPi
   USE Rfft3d
@@ -194,14 +196,11 @@ CONTAINS
 !!$    END IF
 
     eer_i=eer
+    CALL EN_Coul_Rec_(eer)
     Energy_i=Energy
-!!$    CALL MPI_ALLREDUCE(eer_i,eer,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
-!!$    CALL MPI_ALLREDUCE(Energy_i,Energy,1,MPI_REAL8,MPI_SUM,PI_Comm_FFTW,ierr)
-
     endtime=MPI_WTIME()
     timea=endtime-startime
     WRITE(kprint,*) 'timeo ',timea
-    WRITE(kprint,*) 'Energies = ',eer,energy
   CONTAINS
     SUBROUTINE Fractionals
       INTEGER :: n,m,mm,count0,AtSt,AtEn

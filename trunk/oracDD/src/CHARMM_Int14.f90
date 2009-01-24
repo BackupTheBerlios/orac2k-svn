@@ -106,6 +106,8 @@ SUBROUTINE Int14
   Uint14coul_slv=ucoul(2)
   Uint14conf_slt=uconf(1)
   Uint14conf_slv=uconf(2)
+  CALL EN_Int14LJ_(Uint14conf_slv,Uint14conf_slt,0.0D0)
+  CALL EN_Int14Coul_(Uint14coul_slv,Uint14coul_slt,0.0D0)
 CONTAINS
   SUBROUTINE Init
     INTEGER :: n,m,ij

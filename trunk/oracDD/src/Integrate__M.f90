@@ -72,6 +72,10 @@ SUBROUTINE Integrate_m
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF
+     IF(MOD(counter,Time_of_Print % nstep) == 0) THEN
+        CALL EN_Total_
+        CALL EN_Write_it_
+     END IF
      
      IF(Inout__PDB % Unit /= 0 .AND. Print_Now(_M_,Inout__PDB % Freq)) THEN
         CALL Atom__PDB(Inout__PDB % Unit)

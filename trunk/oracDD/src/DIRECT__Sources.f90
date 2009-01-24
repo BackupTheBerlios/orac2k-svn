@@ -501,12 +501,15 @@ SUBROUTINE Forces
   fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
   fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
   fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
-  
-  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
-  CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
-  IF(PI_Node_Cart == 0) THEN
-     WRITE(*,*) ucoul_o
-     WRITE(*,*) uconf_o
-  END IF
+
+  CALL EN_LJ_(i_p,uconf(3),uconf(1),uconf(2))
+  CALL EN_Coul_Dir_(i_p,ucoul(3),ucoul(1),ucoul(2))
+
+!!$  CALL MPI_ALLREDUCE(ucoul,ucoul_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  CALL MPI_ALLREDUCE(uconf,uconf_o,3,MPI_REAL8,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  CALL MPI_ALLREDUCE(count_c,jj,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
+!!$  IF(PI_Node_Cart == 0) THEN
+!!$     WRITE(*,*) ucoul_o
+!!$     WRITE(*,*) uconf_o
+!!$  END IF
 END SUBROUTINE Forces

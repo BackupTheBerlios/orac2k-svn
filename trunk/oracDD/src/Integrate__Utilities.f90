@@ -135,3 +135,13 @@ FUNCTION  Get_RunLength() RESULT(out)
      out % Time=out % nstep*dt_h
   END SELECT
 END FUNCTION Get_RunLength
+FUNCTION  Get_PrintFrequency() RESULT(out)
+  TYPE(Length) :: out
+  out % nstep=-1
+  out % Time=-1.0_8
+  
+  out % nstep=INT(Run_ % Print/dt_m)
+!!$-- By default write every m step  
+  IF(out % nstep == 0) out % nstep = 1 
+  out % Time=out % nstep*dt_m
+END FUNCTION Get_PrintFrequency

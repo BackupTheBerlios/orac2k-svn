@@ -238,4 +238,5 @@ SUBROUTINE Dihed
   END DO
   Uptors_slt=utors(1)
   Uptors_slv=utors(2)
+  CALL EN_Dihed_(Uptors_Slv,Uptors_Slt,0.0D0)
 END SUBROUTINE Dihed

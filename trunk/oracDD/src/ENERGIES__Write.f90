@@ -30,59 +30,64 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-SUBROUTINE Bonds
-  INTEGER :: i,la,lb,type,nbond
-  REAL(8) ::  xr1,xr2,yr1,yr2,zr1,zr2,x21,y21,z21,rs21,uux1,uux2&
-       &,uuy1,uuy2,uuz1,uuz2,ubond(2),pota,potb,Weight
-  REAL(8) ::  qforce
-  
-  IF(Calls == 0) THEN
-     Calls=Calls+1
-     Conv_Fact=1000.0D0*4.184/(unite*avogad)
-  END IF
-    
-  nbond=SIZE(Indx_Bonds,2)
-  ubond=0.0_8
-  DO i=1,nbond
-     la=Indx_Bonds(1,i)
-     lb=Indx_Bonds(2,i)
-     pota=Param_Bonds(i) % pot(2)
-     potb=Param_Bonds(i) % pot(1)*Conv_Fact
-     Weight=Param_Bonds(i) % pot(3)
+!!$***********************************************************************
+!!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
+!!$======================================================================*
+!!$                                                                      *
+!!$              Author:  Massimo Marchi                                 *
+!!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
+!!$                                                                      *
+!!$              - Fri Jan 23 2009 -                                     *
+!!$                                                                      *
+!!$***********************************************************************
 
-     type=Slv(la)
-     
-     
-     
-     xr1=xp0(la)
-     yr1=yp0(la)
-     zr1=zp0(la)
-     xr2=xp0(lb)
-     yr2=yp0(lb)
-     zr2=zp0(lb)
-     
-     x21=xr2-xr1
-     y21=yr2-yr1
-     z21=zr2-zr1
-     rs21=DSQRT(x21**2+y21**2+z21**2)
-     
-     qforce=-2.0D0*potb*(pota-rs21)
-     uux1=x21/rs21
-     uuy1=y21/rs21
-     uuz1=z21/rs21
-     uux2=-uux1
-     uuy2=-uuy1
-     uuz2=-uuz1
-     fpx(la)=fpx(la)+qforce*uux1
-     fpy(la)=fpy(la)+qforce*uuy1
-     fpz(la)=fpz(la)+qforce*uuz1
-     
-     fpx(lb)=fpx(lb)+qforce*uux2
-     fpy(lb)=fpy(lb)+qforce*uuy2
-     fpz(lb)=fpz(lb)+qforce*uuz2
-     ubond(type)=ubond(type)+Weight*potb*(rs21-pota)**2       
-  END DO
-  Ubond_slt=ubond(1)
-  Ubond_slv=ubond(2)
-  CALL EN_Stretch_(Ubond_Slv,Ubond_Slt,0.0D0)
-END SUBROUTINE Bonds
+!!$---- This module is part of the program oracDD ----*
+SUBROUTINE Write_it_
+  CHARACTER(len=max_char), SAVE :: str,str0
+  INTEGER :: Iflag,nlen
+  REAL(8) :: iop
+
+  iop=12.0D0
+  CALL Get_Energies_
+  str=' '
+  str0=' '
+  str0=pipe//cstre//TRIM(NiceWrite_R8(Stretch % Tot))
+  str0=TRIM(str0)//ctot//TRIM(NiceWrite_R8(Total % Tot))
+  str0=TRIM(str0)//clj//TRIM(NiceWrite_R8(SUM(Lj % Tot)))
+  str0=TRIM(str0)//ccdir//TRIM(NiceWrite_R8(SUM(Coul_Dir % Tot)))
+  str0=TRIM(str0)//ccrec//TRIM(NiceWrite_R8(Coul_rec % Tot))//pipe
+
+  WRITE(kprint,'(a)') REPEAT('-',107)
+  WRITE(kprint,'(a)') TRIM(str0)
+  WRITE(kprint,'(a)') REPEAT('-',107)
+  STOP
+
+END SUBROUTINE Write_it_
+FUNCTION NiceWrite_R8(number) RESULT(out)
+  CHARACTER(80) :: out
+  CHARACTER(80) :: fmt
+  REAL(8) :: number
+  REAL(8), PARAMETER :: three=10.0D0**(12-1-3)-0.001D0,two=10.0D0**(12-1&
+       &-2)-0.01D0,one=10.0D0**(12-1-1)-0.1D0,min=1.00D0
+  
+  REAL(8), PARAMETER :: threem=10.0D0**(11-1-3)-0.001D0,twom=10.0D0&
+       &**(11-1-2)-0.01D0,onem=10.0D0**(11-1-1)-0.1D0,minm=1.00D0
+  
+  fmt='(e12.5)'
+  IF(Number >= 0.0D0) THEN
+     IF(Number <= three) fmt='(f12.3)'
+     IF(Number > three .AND. Number <= two) fmt='(f12.2)'
+     IF(Number > two .AND. Number <= one) fmt='(f12.1)'
+     IF(Number > one) fmt='(e12.6)'
+     IF(Number <= min) fmt='(e12.6)'
+  ELSE
+     IF(ABS(Number) <= threem) fmt='(f12.3)'
+     IF(ABS(Number) > threem .AND. ABS(Number) <= twom) fmt='(f12.2)'
+     IF(ABS(Number) > twom .AND. ABS(Number) <= onem) fmt='(f12.1)'
+     IF(ABS(Number) > onem) fmt='(e12.5)'
+     IF(ABS(Number) <= minm) fmt='(e12.5)'
+  END IF
+  out=' '
+  WRITE(out(1:12),fmt) Number
+  
+END FUNCTION NiceWrite_R8
