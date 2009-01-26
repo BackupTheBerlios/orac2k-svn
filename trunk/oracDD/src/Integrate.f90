@@ -173,12 +173,13 @@ CONTAINS
 !!$
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
+
     CALL DIR_Lists(Nshell)
     IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND.&
          & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0) THEN
        CALL PME_(0)
     END IF
-    
+
     CALL Init_TotalShells(NShell)
 
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
@@ -213,7 +214,7 @@ CONTAINS
     endtime=MPI_WTIME()
     timea=endtime-startime
 
-    WRITE(*,*) 'Second Time time',PI_Node_Cart,Timea,timea/Iteration % Time
+    WRITE(kprint,*) 'Second Time time',PI_Node_Cart,Timea,timea/Iteration % Time
     WRITE(kprint,*) Iteration % Time
 
     enda=MPI_WTIME()

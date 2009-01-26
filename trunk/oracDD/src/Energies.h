@@ -21,22 +21,8 @@
        &               ,cbond=';Bnded = '&
        &                ,ckin='; Kin  = '&
        &               ,ctemp='; Temp = '
-  CHARACTER(12), SAVE ::Vtime='            '&
-       &                ,Vtot='            '&
-       &               ,Vtpot='            '&
-       &                 ,Vlj='            '&
-       &               ,Vcdir='            '&
-       &               ,Vcrec='            '&
-       &               ,Vstre='            '&
-       &              ,Vangle='            '&
-       &               ,Vimph='            '&
-       &               ,V14lj='            '&
-       &             ,V14coul='            '&
-       &              ,Vdihed='            '&
-       &               ,Vbond='            '&
-       &                ,Vkin='            '&
-       &               ,Vtemp='            '&
-       &               ,Vzero='            '
+  CHARACTER(12), SAVE ::blank12='            '
+  CHARACTER(9), SAVE ::blank9=';        '
   CHARACTER(1), SAVE :: pipe='|'
   Type :: Energy_Type
      REAL(8) :: tot=0.0_8,Slv=0.0_8,Slt=0.0_8,Mix=0.0_8

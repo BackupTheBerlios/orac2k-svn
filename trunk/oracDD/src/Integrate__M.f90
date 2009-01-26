@@ -73,8 +73,9 @@ SUBROUTINE Integrate_m
              & knwn)) CALL Print_Errors()
      END IF
      IF(MOD(counter,Time_of_Print % nstep) == 0) THEN
+        CALL ATOM__KinCompute
         CALL EN_Total_
-        CALL EN_Write_it_
+        CALL EN_Write_it_(dt_n0*DBLE(nstep_n0))
      END IF
      
      IF(Inout__PDB % Unit /= 0 .AND. Print_Now(_M_,Inout__PDB % Freq)) THEN

@@ -258,8 +258,9 @@ CONTAINS
 !!$
 !!$--- Constructor for Chain_xyz and Head_xyz
 !!$
-  FUNCTION Neighbors__Particles(x,y,z) RESULT(out)
+  FUNCTION Neighbors__Particles(x,y,z,gr) RESULT(out)
     LOGICAL :: out
+    INTEGER, OPTIONAL :: gr(:)
     REAL(8) :: x(:),y(:),z(:)
     REAL(8) :: x1,y1,z1,dx,dy,dz
     INTEGER :: n,nx,ny,nz,natp,numcell,l
@@ -290,25 +291,46 @@ CONTAINS
     dx=2.d0/ncx
     dy=2.d0/ncy
     dz=2.d0/ncz
-
     
-    DO n=1,natp
-       x1=x(n)/dx
-       y1=y(n)/dy
-       z1=z(n)/dz
-       nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
-       ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
-       nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
-       nx=MOD(MOD(nx,ncx)+ncx,ncx)
-       ny=MOD(MOD(ny,ncy)+ncy,ncy)
-       nz=MOD(MOD(nz,ncz)+ncz,ncz)
-       Chain_xyz (n) % i=nx
-       Chain_xyz (n) % j=ny
-       Chain_xyz (n) % k=nz
-       numcell=nz+ncz*(ny+ncy*nx)+1
-       Chain_xyz (n) % p=Head_xyz(numcell)
-       Head_xyz(numcell)=n       
-    END DO
+    IF(PRESENT(gr))THEN
+       DO n=1,natp
+          Chain_xyz (n) % p=0
+          IF(Gr(n) == 0) CYCLE
+          x1=x(n)/dx
+          y1=y(n)/dy
+          z1=z(n)/dz
+          nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
+          ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
+          nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
+          nx=MOD(MOD(nx,ncx)+ncx,ncx)
+          ny=MOD(MOD(ny,ncy)+ncy,ncy)
+          nz=MOD(MOD(nz,ncz)+ncz,ncz)
+          Chain_xyz (n) % i=nx
+          Chain_xyz (n) % j=ny
+          Chain_xyz (n) % k=nz
+          numcell=nz+ncz*(ny+ncy*nx)+1
+          Chain_xyz (n) % p=Head_xyz(numcell)
+          Head_xyz(numcell)=n
+       END DO
+    ELSE
+       DO n=1,natp
+          x1=x(n)/dx
+          y1=y(n)/dy
+          z1=z(n)/dz
+          nx=INT(x1)+(SIGN(1.D0,x1-INT(x1))-1.)/2
+          ny=INT(y1)+(SIGN(1.D0,y1-INT(y1))-1.)/2
+          nz=INT(z1)+(sign(1.d0,z1-int(z1))-1.)/2
+          nx=MOD(MOD(nx,ncx)+ncx,ncx)
+          ny=MOD(MOD(ny,ncy)+ncy,ncy)
+          nz=MOD(MOD(nz,ncz)+ncz,ncz)
+          Chain_xyz (n) % i=nx
+          Chain_xyz (n) % j=ny
+          Chain_xyz (n) % k=nz
+          numcell=nz+ncz*(ny+ncy*nx)+1
+          Chain_xyz (n) % p=Head_xyz(numcell)
+          Head_xyz(numcell)=n       
+       END DO
+    END IF
   END FUNCTION Neighbors__Particles
   SUBROUTINE Neighbors__Delete
     DEALLOCATE(Ind_xyz,Chain_xyz,Head_xyz)

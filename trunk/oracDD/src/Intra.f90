@@ -103,10 +103,10 @@ CONTAINS
           CALL Energy_(CHARMM_Imph_,uitors_Slv,uitors_Slt)
 
 
-          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u1 ',ubond_Slv,ubond_Slt&
-               &,(ubond_Slt+ubond_Slv)*efact/1000.0_8
-          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u2 ',ubend_Slv,ubend_Slt
-          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u3 ',uitors_Slv,uitors_Slt
+!!$          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u1 ',ubond_Slv,ubond_Slt&
+!!$               &,(ubond_Slt+ubond_Slv)*efact/1000.0_8
+!!$          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u2 ',ubend_Slv,ubend_Slt
+!!$          IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u3 ',uitors_Slv,uitors_Slt
        END IF
     END IF
     CALL Scatter_Forces_(fp_n0(:) % x,fp_n0(:) % y,fp_n0(:) % z)
@@ -126,9 +126,9 @@ CONTAINS
        CALL Energy_(CHARMM_Int14conf_,uconfint14_Slv,uconfint14_Slt)
 
 
-       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u4 ',uptors_Slv,uptors_Slt
-       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
-       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
+!!$       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u4 ',uptors_Slv,uptors_Slt
+!!$       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u5 ',uconfint14_Slv,ucoulint14_Slv
+!!$       IF(PI_Node_Cart == 0) WRITE(kprint,*) 'u6 ',uconfint14_Slt,ucoulint14_Slt
     END IF
     CALL Scatter_Forces_(fp_n1(:) % x,fp_n1(:) % y,fp_n1(:) % z)
   END SUBROUTINE Intra_n1_

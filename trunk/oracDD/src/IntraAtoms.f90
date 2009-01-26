@@ -62,6 +62,11 @@ MODULE IntraAtoms
   USE Constants, ONLY: max_pars,max_data,max_char
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
   USE PI_Communicate, ONLY: PI__ResetSecondary, PI__ZeroSecondary
+  USE PI_Atom, ONLY: PI_Atom_Indexes
+  USE Potential, ONLY: Reordering
+  USE Forces, ONLY: Radii
+  USE Neighbors
+  USE Print_Defs
   IMPLICIT none
   PRIVATE
   PUBLIC  IntraAtoms_,IntraParam, Param_Bonds,Param_Angles,Param_Imph&
@@ -187,7 +192,6 @@ CONTAINS
     Intra_t(1:natom_p)=Intra_P
     Intra_t(natom_p+1:)=PACK((/1:SIZE(Atoms)/),Atoms(:) % knwn == 2)
 
-
 !!$
 !!$--- Check to see if all atoms needed are there
 !!$
@@ -218,6 +222,8 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        RETURN
     END IF
+
+!!$    IF(Reordering) CALL Labelling
 
 !!$--- Intra_Conv gathers atoms to the simulation cell from Atoms(:) 
 
@@ -403,8 +409,7 @@ CONTAINS
          END DO
       END DO
     END FUNCTION Choose_Atom
-    
-    
+ 
   END FUNCTION IntraAtoms_
 
   SUBROUTINE IntraAtoms__

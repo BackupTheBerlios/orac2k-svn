@@ -173,3 +173,60 @@ FUNCTION IndIntraBox_() RESULT(out)
      CALL Add_Errors(-1,errmsg_f)
   END IF
 END FUNCTION IndIntraBox_
+SUBROUTINE Labelling
+  INTEGER :: n,nc,l
+  LOGICAL, ALLOCATABLE :: ok_tot(:)
+  INTEGER, SAVE :: count_label
+
+  IF(.NOT. IndIntraBox_()) RETURN
+  ALLOCATE(ok_tot(SIZE(Atoms)))
+  ok_tot=.FALSE.
+  count_Label=0
+  
+  CALL MyIntraPot(Prm % Dihed, Tpg % Dihed)
+  CALL MyIntraPot( Prm % Angles, Tpg % Angles)
+  CALL MyIntraPot( Prm % Bonds, Tpg % Bonds)
+  CALL MyIntraPot( Prm % Imph, Tpg % Imph)
+
+  nc=0
+  DO n=1,natom
+     l=Intra_t(n)
+     IF(Atoms(l) % knwn == 1) THEN
+        nc =nc +1
+        Intra_p(nc)=l
+     END IF
+  END DO
+     
+CONTAINS
+  SUBROUTINE MyIntraPot(Prm, Tpg)
+  TYPE(SystemPrm__Chain) :: Prm(:)
+  INTEGER :: Tpg(:,:)
+  INTEGER, ALLOCATABLE :: via(:)
+  INTEGER :: n_Tpg,m_Prm,count1,n,nn,ng,n1,n2,nnn,m,mm
+
+  m_Prm=SIZE(Prm)
+  n_Tpg=SIZE(Tpg,1)
+
+  ALLOCATE(via(n_Tpg))
+
+  DO nn=1,m_Prm
+     n=Prm (nn) % pt
+     IF(n < 0) CYCLE
+     via=Tpg(:,n)
+     n1=COUNT(oks(via(:)))
+     IF(n1 == 0) CYCLE
+     n2=COUNT(okt(via(:)))
+     IF(n1+n2 == n_Tpg) THEN
+        DO mm=1,n_Tpg
+           m=via(mm)
+           IF(.NOT. ok_tot(m)) THEN
+              ok_tot(m)=.TRUE.
+              count_Label=count_Label+1
+              Intra_T(count_Label)=m
+           END IF
+        END DO
+     END IF
+  END DO
+END SUBROUTINE MyIntraPot
+
+END SUBROUTINE Labelling

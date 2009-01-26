@@ -61,7 +61,8 @@ MODULE PI_Atom
   IMPLICIT none
   PRIVATE
   PUBLIC PI_Atom_,xpg,ypg,zpg,xp0,yp0,zp0,chg,gmass,Id,Slv,Grp_No,grppt,maplg&
-       &,Mapnl,Maps,natom,ngroup,PI_Atom__Neigh_,List,Neigha__,Neigha_,Update_
+       &,Mapnl,Maps,natom,ngroup,PI_Atom__Neigh_,List,Neigha__&
+       &,Neigha_,Update_, PI_Atom_Indexes
 
   TYPE Neigha__
      INTEGER :: no=0
@@ -82,7 +83,7 @@ MODULE PI_Atom
   END type Mapnl
   TYPE(Mapnl), ALLOCATABLE, SAVE :: Maps(:)
   INTEGER, SAVE :: No_Calls=0,natom=0,ngroup=0
-  INTEGER, SAVE :: nnx=24,nny=24,nnz=24
+  INTEGER, SAVE :: nnx=20,nny=20,nnz=20
   
 CONTAINS
   FUNCTION PI_Atom_() RESULT(out)
@@ -93,18 +94,62 @@ CONTAINS
        DEALLOCATE(xpg,ypg,zpg,xp0,yp0,zp0,chg,Id,Slv,grppt,Grp_No,Maps,maplg,gmass)
     END IF
 
+    CALL Labelling
     CALL Memory
     CALL Gather_Atoms
 
     No_Calls=No_Calls+1
     out=.TRUE.
   CONTAINS
+    SUBROUTINE Labelling
+      INTEGER :: ngroupa,nc,ncutoff
+      INTEGER, ALLOCATABLE :: Ind(:)
+      REAL(8) :: rcut
+      INTEGER :: nx,ny,nz,numcell,l,p,q,r,numcell1,nj
+      
+      IF(Reordering) THEN
+         WRITE(kprint, '('' --->   Reordering <---- '')')
+         ncutoff=SIZE(Radii)
+         rcut=Radii(ncutoff) % out + Radii(ncutoff) % update
+         IF(.NOT. Neighbors_(rcut, nnx, nny, nnz)) CALL Print_Errors()
+         
+         IF(.NOT. Neighbors__Particles(Groupa(:) % xa, Groupa(:) % ya,&
+              & Groupa(:) % za, Groupa(:) % knwn)) CALL Print_Errors()
+         
+         ngroupa=COUNT(Groupa(:) % knwn /= 0)
+         ALLOCATE(Ind(ngroupa))
+         nc=0
+         DO nx=0,nnx-1
+            DO ny=0,nny-1
+               DO nz=0,nnz-1
+                  numcell=nz+nnz*(ny+nny*nx)+1
+                  l=Head_xyz(numcell)
+                  DO WHILE(l > 0)
+                     p=Chain_xyz(l) % i
+                     q=Chain_xyz(l) % j
+                     r=Chain_xyz(l) % k
+                     numcell1=r+nnz*(q+nny*p)+1
+
+                     nc=nc+1
+                     Ind(nc)=l
+
+                     l=Chain_xyz(l) % p
+                  END DO
+               END DO
+            END DO
+         END DO
+         IF(.NOT. IndBoxL_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+              & AtEn, Ind)) CALL Print_Errors()
+
+      ELSE
+         IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
+              & AtEn)) CALL Print_Errors()
+      END IF
+    END SUBROUTINE Labelling
 !!$
 !!$--- Get Memory
 !!$
     SUBROUTINE Memory
-      IF(.NOT. IndBox_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
-           & AtEn)) CALL Print_Errors()
 
       natom=SIZE(IndBox_a_t) ; ngroup=SIZE(IndBox_g_t)
 
@@ -118,8 +163,6 @@ CONTAINS
       ALLOCATE(xp0(natom),yp0(natom),zp0(natom),chg(natom),Id(natom)&
            &,Slv(natom),Maps(natom),maplg(natom),gmass(natom)&
            &,Grp_No(natom))
-!!$      WRITE(*,*) 'Gr',PI_Node,COUNT(Groupa(:) % knwn ==1),COUNT(Groupa(:) % knwn ==2),ngroup
-!!$      WRITE(*,*) 'Gr',PI_Node,COUNT(Atoms(:) % knwn ==1),COUNT(Atoms(:) % knwn ==2),natom,SIZE(Atoms)/DBLE(PI_Nprocs)
     END SUBROUTINE Memory
 !!$
 !!$--- Gather Atoms to the CPU box
@@ -250,6 +293,10 @@ CONTAINS
 
 
   END FUNCTION Update_
+  SUBROUTINE PI_Atom_Indexes(nx,ny,nz)
+    INTEGER :: nx,ny,nz
+    nx=nnx; ny=nny; nz=nnz
+  END SUBROUTINE PI_Atom_Indexes
   FUNCTION PI_Atom__Neigh_(Keep) RESULT(out)
     LOGICAL, OPTIONAL :: Keep
     LOGICAL :: out
@@ -259,7 +306,7 @@ CONTAINS
     INTEGER, POINTER :: vect(:)
     TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha
     INTEGER :: ig,ii,n,p,q,r,iv,jv,kv,l,o,count0,nx,ny,nz,numcell&
-         &,counter,No_Nei,knw_ig,knw_l,n0
+         &,counter,No_Nei,knw_ig,knw_l,n0,numcell1
     REAL(8) :: xpgi,ypgi,zpgi,xpgj,ypgj,zpgj,xa,ya,za,X_PBC,Y_PBC&
          &,Z_PBC,xc,yc,zc,rsq
     INTEGER, ALLOCATABLE :: nei(:),known(:),nei0(:)
@@ -309,6 +356,7 @@ CONTAINS
        IF(ALLOCATED(Neigha(ig) % nb)) DEALLOCATE(Neigha(ig) % nb)
        Neigha(ig) % no=0
        count0=0
+       numcell1=r+nnz*(q+nny*p)+1
        DO o=1,SIZE(Ind_xyz)
           iv=Ind_xyz(o) % i
           jv=Ind_xyz(o) % j
@@ -325,6 +373,7 @@ CONTAINS
                 l=Chain_xyz(l) % p
                 CYCLE
              END IF
+             
              knw_l=known(l)+Knw_ig
              xpgj=xpg(l)
              ypgj=ypg(l)

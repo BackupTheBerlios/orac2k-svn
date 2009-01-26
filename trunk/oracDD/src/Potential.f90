@@ -50,6 +50,7 @@ MODULE Potential
 
 !!$---- DATA Only Modules -----------------------------------------------*
 
+  USE Erfc_Spline, ONLY: Erfc_switch
   USE Forces, ONLY: FOR_Init=>Init
   USE Node
   USE Constants, ONLY: max_pars,max_data, max_char
@@ -68,7 +69,7 @@ MODULE Potential
   IMPLICIT none
   PRIVATE
   PUBLIC Potential__Scan, Ewald__Input, Ewald__Param&
-       &,Constraint__Input, Rattle__Param
+       &,Constraint__Input, Rattle__Param, Reordering
 
   TYPE :: Ewald__Input
      LOGICAL :: Do_not_Change=.FALSE.
@@ -90,7 +91,7 @@ MODULE Potential
      REAL(8) :: adjust_eps=0.00001_8
   END type Constraint__Input
   TYPE(Constraint__Input), SAVE :: Rattle__Param
-
+  LOGICAL, SAVE :: Reordering
 CONTAINS
 
 !!$---- EXTECUTABLE Statements ------------------------------------------*
@@ -115,6 +116,10 @@ CONTAINS
           CALL Direct(TRIM(line))
        ELSE IF(MY_Fxm('CONSTR',linea)) THEN
           CALL Constraints
+       ELSE IF(MY_Fxm('REORD',linea)) THEN
+          Reordering=.TRUE.
+       ELSE IF(MY_Fxm('ERFC',linea)) THEN
+          CALL ErfcSpline
        ELSE
           errmsg_f='Illegal commmands found:'//TRIM(linea)
           CALL Add_Errors(-1,errmsg_f)
@@ -283,4 +288,22 @@ CONTAINS
     END SELECT
     CALL Print_Errors()
   END SUBROUTINE Constraints
+  SUBROUTINE ErfcSpline
+    INTEGER ::  nword,iflags
+    nword=SIZE(strngs)
+    SELECT CASE(nword)
+    CASE(2)
+       IF(MY_Fxm('OFF',strngs(2))) THEN
+          Erfc_Switch=.FALSE.
+       ELSE
+          errmsg_f=error_unr % g (3)//' Only OFF is allowed '
+          CALL Add_Errors(-1,errmsg_f)
+          RETURN
+       END IF
+    CASE DEFAULT 
+       errmsg_f=error_args % g (4)//' 2 '
+       CALL Add_Errors(-1,errmsg_f)
+    END SELECT
+    CALL Print_Errors()
+  END SUBROUTINE ErfcSpline
 END MODULE Potential

@@ -39,8 +39,7 @@ SUBROUTINE Bonds
   IF(Calls == 0) THEN
      Calls=Calls+1
      Conv_Fact=1000.0D0*4.184/(unite*avogad)
-  END IF
-    
+  END IF    
   nbond=SIZE(Indx_Bonds,2)
   ubond=0.0_8
   DO i=1,nbond

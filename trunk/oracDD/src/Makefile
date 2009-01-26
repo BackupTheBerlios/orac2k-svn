@@ -142,9 +142,9 @@ OBJS = Atom.o Constants.o Types.o Parameters_Globals.o Errors.o flib.o Node.o St
 	PI_Statistics.o  PI_Cutoffs.o PI_Shift.o PI_Fold.o\
 	CHARMM_Intra.o Intra.o Simulation.o GAUSS.o\
 	LA_Routines.o PI_Collectives.o Minimize.o Rattle.o Integrator.o\
-	Integrate.o Run.o PI_Exchange.o IntraAtoms.o Energies.o
+	Integrate.o Run.o PI_Exchange.o IntraAtoms.o Energies.o Erfc_Spline.o
 
-OBJS_f = AddH.o duni.o indexx.o cgfam.o
+OBJS_f = AddH.o duni.o indexx.o cgfam.o cubspl.o
 
 SRC = $(patsubst %.o, %.f90, $(OBJS)) $(patsubst %.o, %.f, $(OBJS_f)) 
 

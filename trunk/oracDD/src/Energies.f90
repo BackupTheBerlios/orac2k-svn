@@ -51,6 +51,7 @@ MODULE Energies
   USE Print_defs
   USE STRPAK, ONLY: SP_Putnum
   USE CONSTANTS
+  USE Units
   IMPLICIT none
   PRIVATE
   PUBLIC :: Lj_,Coul_Dir_,Coul_Rec_,Stretch_,Angle_,Imph_,Int14LJ_&
@@ -133,18 +134,19 @@ CONTAINS
 
   END SUBROUTINE Total_
   SUBROUTINE TotPot_
-    TotPot % Slv=SUM(Lj % Slv) + SUM(Coul_Dir % Slv) + Coul_Rec % Slv + Bond % Slv&
-         & + Stretch % Slv + Angle % Slv + Imph % Slv + Int14LJ % Slv&
+    Bond % Slv = Stretch % Slv + Angle % Slv + Imph % Slv + Int14LJ % Slv&
          & + Int14Coul % Slv + Dihed % Slv 
-    TotPot % Slt=SUM(Lj % Slt) + SUM(Coul_Dir % Slt) + Coul_Rec % Slt + Bond % Slt&
-         & + Stretch % Slt + Angle % Slt + Imph % Slv + Int14LJ % Slt&
+    Bond % Slt = Stretch % Slt + Angle % Slt + Imph % Slv + Int14LJ % Slt&
          & + Int14Coul % Slt + Dihed % Slt 
-    TotPot % Mix=SUM(Lj % Mix) + SUM(Coul_Dir % Mix) + Coul_Rec % Mix + Bond % Mix&
-         & + Stretch % Mix + Angle % Mix + Imph % Mix + Int14LJ % Mix&
+    Bond % Mix = Stretch % Mix + Angle % Mix + Imph % Mix + Int14LJ % Mix&
          & + Int14Coul % Mix + Dihed % Mix 
-    TotPot % Tot=SUM(Lj % Tot) + SUM(Coul_Dir % Tot) + Coul_Rec % Tot + Bond % Tot&
-         & + Stretch % Tot + Angle % Tot + Imph % Tot + Int14LJ % Tot&
+    Bond % Tot = Stretch % Tot + Angle % Tot + Imph % Tot + Int14LJ % Tot&
          & + Int14Coul % Tot + Dihed % Tot 
+
+    TotPot % Slv=SUM(Lj % Slv) + SUM(Coul_Dir % Slv) + Coul_Rec % Slv + Bond % Slv
+    TotPot % Slt=SUM(Lj % Slt) + SUM(Coul_Dir % Slt) + Coul_Rec % Slt + Bond % Slt
+    TotPot % Mix=SUM(Lj % Mix) + SUM(Coul_Dir % Mix) + Coul_Rec % Mix + Bond % Mix
+    TotPot % Tot=SUM(Lj % Tot) + SUM(Coul_Dir % Tot) + Coul_Rec % Tot + Bond % Tot
 
     TotPot_a % Slv=TotPot_a % Slv+TotPot % Slv
     TotPot_a % Slt=TotPot_a % Slt+TotPot % Slt

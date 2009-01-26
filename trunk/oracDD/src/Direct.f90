@@ -45,6 +45,7 @@ MODULE Direct
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
+  USE Erfc_Spline, ONLY: Erfc_,tau,c,E_dx=>dx,E_Xbeg=>Xbeg,Erfc_Switch
   USE Print_Defs
   USE PI_ATOM
   USE POTENTIAL
@@ -115,8 +116,8 @@ CONTAINS
 !!$--- Initialize things once for all
 !!$
     SUBROUTINE Init
-      INTEGER :: n,m,ij
-      REAL(8) :: ecc_R,aux,ene
+      INTEGER :: n,m,ij,ncutoff
+      REAL(8) :: ecc_R,aux,ene,rcut
       
       twrtpi=2.0d0/SQRT(pi)
       alphal = Ewald__Param % alpha
@@ -141,6 +142,12 @@ CONTAINS
             END IF
          END DO
       END DO
+      IF(Erfc_Switch) THEN
+         ncutoff=SIZE(Radii)
+         rcut=Radii(ncutoff) % out + Radii(ncutoff) % update
+         CALL Erfc_(rcut,Ewald__Param % alpha)
+      END IF
+
     END SUBROUTINE Init
 !!$
 !!$--- Get Memory

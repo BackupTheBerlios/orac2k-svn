@@ -30,6 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
+MODULE Erfc_Spline
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -37,70 +38,70 @@
 !!$              Author:  Massimo Marchi                                 *
 !!$              CEA/Centre d'Etudes Saclay, FRANCE                      *
 !!$                                                                      *
-!!$              - Fri Jan 23 2009 -                                     *
+!!$              - Mon Jan 26 2009 -                                     *
 !!$                                                                      *
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-SUBROUTINE Write_it_(Time)
-  CHARACTER(len=max_char), SAVE :: str,str0
-  REAL(8) :: Time
-  INTEGER :: Iflag,nlen
-  REAL(8), SAVE :: fact=efact/1000.0_8
-  REAL(8) :: iop
 
-  iop=12.0D0
-  CALL Get_Energies_
-  WRITE(kprint,'(a)') REPEAT('-',107)
-  str0=' '
-  str0=pipe//ctime//TRIM(NiceWrite_R8(Time))
-  str0=TRIM(str0)//ctot//TRIM(NiceWrite_R8(fact*Total % Tot))
-  str0=TRIM(str0)//ctpot//TRIM(NiceWrite_R8(fact*TotPot % Tot))
-  str0=TRIM(str0)//ccdir//TRIM(NiceWrite_R8(fact*SUM(Coul_Dir % Tot)))
-  str0=TRIM(str0)//clj//TRIM(NiceWrite_R8(fact*SUM(Lj % Tot)))//pipe
-  WRITE(kprint,'(a)') TRIM(str0)
-  str0=' '
-  str0=pipe//ccrec//TRIM(NiceWrite_R8(fact*Coul_rec % Tot))
-  str0=TRIM(str0)//cbond//TRIM(NiceWrite_R8(fact*Bond % Tot))
-  str0=TRIM(str0)//cstre//TRIM(NiceWrite_R8(fact*stretch % Tot))
-  str0=TRIM(str0)//cangle//TRIM(NiceWrite_R8(fact*Angle % Tot))
-  str0=TRIM(str0)//cdihed//TRIM(NiceWrite_R8(fact*Dihed % Tot))//pipe
-  WRITE(kprint,'(a)') TRIM(str0)
-  str0=' '
-  str0=pipe//cimph//TRIM(NiceWrite_R8(fact*Imph % Tot))
-  str0=TRIM(str0)//c14lj//TRIM(NiceWrite_R8(fact*Int14LJ % Tot))
-  str0=TRIM(str0)//c14coul//TRIM(NiceWrite_R8(fact*Int14Coul % Tot))
-  str0=TRIM(str0)//ctemp//TRIM(NiceWrite_R8(Temp % Tot))
-  str0=TRIM(str0)//blank9//blank12//pipe
-  WRITE(kprint,'(a)') TRIM(str0)
-  WRITE(kprint,'(a)') REPEAT('-',107)
+#include "Erfc_Spline.h"                       
 
-END SUBROUTINE Write_it_
-FUNCTION NiceWrite_R8(number) RESULT(out)
-  CHARACTER(80) :: out
-  CHARACTER(80) :: fmt
-  REAL(8) :: number
-  REAL(8), PARAMETER :: three=10.0D0**(12-1-3)-0.001D0,two=10.0D0**(12-1&
-       &-2)-0.01D0,one=10.0D0**(12-1-1)-0.1D0,min=1.00D0
-  
-  REAL(8), PARAMETER :: threem=10.0D0**(11-1-3)-0.001D0,twom=10.0D0&
-       &**(11-1-2)-0.01D0,onem=10.0D0**(11-1-1)-0.1D0,minm=1.00D0
-  
-  fmt='(e12.5)'
-  IF(Number >= 0.0D0) THEN
-     IF(Number <= three) fmt='(f12.3)'
-     IF(Number > three .AND. Number <= two) fmt='(f12.2)'
-     IF(Number > two .AND. Number <= one) fmt='(f12.1)'
-     IF(Number > one) fmt='(e12.6)'
-     IF(Number <= min) fmt='(e12.6)'
-  ELSE
-     IF(ABS(Number) <= threem) fmt='(f12.3)'
-     IF(ABS(Number) > threem .AND. ABS(Number) <= twom) fmt='(f12.2)'
-     IF(ABS(Number) > twom .AND. ABS(Number) <= onem) fmt='(f12.1)'
-     IF(ABS(Number) > onem) fmt='(e12.5)'
-     IF(ABS(Number) <= minm) fmt='(e12.5)'
-  END IF
-  out=' '
-  WRITE(out(1:12),fmt) Number
-  
-END FUNCTION NiceWrite_R8
+  USE Units
+  IMPLICIT none
+  PRIVATE
+  PUBLIC  Erfc_,c,tau,Erfc_Switch,dx,Xbeg
+  REAL(8), SAVE :: dx=0.01_8,xbeg=1.0_8,xend,tol=2.0_8
+  INTEGER, SAVE :: np
+  REAL(8), ALLOCATABLE, SAVE :: c(:,:),tau(:)
+  LOGICAL, SAVE :: Erfc_Switch=.TRUE.
+CONTAINS
+  SUBROUTINE Erfc_(rcut,alphal)
+    REAL(8) :: rcut,alphal
+    np=INT((rcut+Tol-xbeg)/dx)+1
+    xend=DBLE(np-1)*dx+xbeg
+    ALLOCATE(c(4,np),tau(np))
+    CALL Fill_Tables
+  CONTAINS
+    SUBROUTINE Fill_Tables
+      INTEGER :: n,ibeg,iend
+      REAL(8) :: x 
+
+      ibeg=1; iend=np
+      c(2,1) =(-2*alphal)/(EXP(alphal**2*xbeg**2)*Sqrt(Pi)*xbeg) - MyErfc(alphal*xbeg)/xbeg**2
+      c(2,np)=(-2*alphal)/(EXP(alphal**2*xend**2)*Sqrt(Pi)*xend) - MyErfc(alphal*xend)/xend**2
+      DO n=1,np
+         x=dx*DBLE(n-1)+xbeg
+         tau(n)=x
+         c(1,n)=MyErfc(alphal*x)/x
+      END DO
+      CALL Cubspl(tau,c,np,1,1)
+    END SUBROUTINE Fill_Tables
+  END SUBROUTINE Erfc_
+  SUBROUTINE Test_it(alphal)
+    REAL(8) :: alphal
+    REAL(8) :: bin,offset,rend
+    INTEGER :: length,n,i_c
+    REAL(8) :: x,y,h,New_ERfc,New_Derfc,yy
+    bin=0.011
+    offset=2.0_8
+    rend=8.0_8
+    length=INT((rend-offset)/bin)+1
+    WRITE(*,*) alphal,MyErfc(alphal*2.0_8)/2.0_8
+    DO n=1,length
+       x=DBLE(n-1)*bin+offset
+       y=ERFC(alphal*x)/x
+       
+       yy=(-2*alphal)/(EXP(alphal**2*x**2)*Sqrt(Pi)*x) - MyErfc(alphal*x)/x**2
+
+       i_c=INT((x-xbeg)/dx)+1
+       h=x-tau(i_c)
+
+
+       New_Erfc=_Erfc(i_c,h)
+
+       New_Derfc=_DErfc(i_c,h)
+
+       WRITE(*,'(2i6,5e15.7)') n,i_c,x,y,yy,New_Erfc,New_Derfc
+    END DO
+  END SUBROUTINE Test_it
+END MODULE Erfc_Spline
