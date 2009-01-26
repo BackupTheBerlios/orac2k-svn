@@ -375,6 +375,11 @@ CONTAINS
     Kinetic_a%n0=Kinetic_a%n0+1
 
     CALL Reduce_it_(Temp)
+
+    Temp%tot=Temp%tot/DBLE(PI_Nprocs)
+    Temp%Slt=Temp%Slt/DBLE(PI_Nprocs)
+    Temp%Slv=Temp%Slv/DBLE(PI_Nprocs)
+
     Temp_a%tot=Temp_a%tot+Temp%tot
     Temp_a%Slv=Temp_a%Slv+Temp%Slv
     Temp_a%Slt=Temp_a%Slt+Temp%Slt
