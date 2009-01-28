@@ -47,7 +47,8 @@ MODULE Geometry
   USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC  Point, Plane, Equation_Plane,PointPlane_Dist
+  PUBLIC  Point, Plane, Equation_Plane,PointPlane_Dist,Line,operator(&
+       &+),operator(-),operator(*),operator(==) 
 
   TYPE :: Point
      REAL(8) :: x,y,z
@@ -68,7 +69,10 @@ MODULE Geometry
   interface operator(*)
      module procedure multiply_points
      module procedure multiplyscalar_points
-end interface
+  end interface
+  interface operator(==)
+     module procedure equal_points
+  end interface
 CONTAINS
   FUNCTION Equation_Plane(v1,v2,v3) RESULT(out)
     type(plane) :: out
@@ -152,4 +156,11 @@ CONTAINS
     out%y=a*b%y
     out%z=a*b%z
   end function multiplyscalar_points
+  function equal_points(a,b) result(out)
+    type(point), intent(in) :: a,b
+    LOGICAL :: out
+    real(8), save :: tol_p=1.0D-8
+
+    out=(Abs(a%x-b%x) < tol_p) .And. (Abs(a%y-b%y) < tol_p) .And. (Abs(a%z-b%z) < tol_p) 
+  end function equal_points
 END MODULE Geometry
