@@ -46,7 +46,7 @@ MODULE PI_Cutoffs
 
 
   USE Cell
-  USE Geometry
+  USE Geometry, ONLY: Plane, Point, Equation_Plane, PointPlane_Dist
   USE Forces, ONLY: Force, Radii
   USE PI_
   IMPLICIT none
@@ -62,9 +62,10 @@ CONTAINS
   SUBROUTINE Thickness(i_pa)
     INTEGER :: i_pa
     INTEGER :: i_p
-    REAL(8) :: x1,x2,y1,y2,z1,z2,v1(3),v2(3),v3(3),r1(3),r2(3)&
-           &,r3(3),r0(3),qq(4)
-
+    REAL(8) :: x1,x2,y1,y2,z1,z2
+    type(point) :: p1,p2,p3,v1,v2,v3,r1,r2,r3,r0
+    type(plane) :: qq
+    
     i_p=i_pa-2
     IF(rcuts0(i_pa) % r(1) /= 0.0_8) THEN
        rcut(:)=rcuts0(i_pa) % r(:)
@@ -75,47 +76,54 @@ CONTAINS
     ddy=2.d0/PI_npy
     ddz=2.d0/PI_npz
 
-    r0=0.0D0
-    v1(1)=1.0D0
-    v1(2)=0.0D0
-    v1(3)=0.0D0
+    r0%x=0.0D0; r0%y=0.0D0; r0%z=0.0D0
+
+    v1%x=1.0D0
+    v1%y=0.0D0
+    v1%z=0.0D0
     r1=Convert(v1)
-    v2(1)=0.0D0
-    v2(2)=1.0D0
-    v2(3)=0.0D0
+    v2%x=0.0D0
+    v2%y=1.0D0
+    v2%z=0.0D0
     r2=Convert(v2)
-    v3(1)=0.0D0
-    v3(2)=0.0D0
-    v3(3)=1.0D0
+    v3%x=0.0D0
+    v3%y=0.0D0
+    v3%z=1.0D0
     r3=Convert(v3)
 
 !!$    
 !!$---- Thickness along x
 !!$
+
     qq=Equation_Plane(r0,r2,r3)
-    Thick(1)=1.0D0/ABS(qq(1)*r1(1)+qq(2)*r1(2)+qq(3)*r1(3)-qq(4))
+
+    Thick(1)=1.0D0/ABS(PointPlane_Dist(qq,r1))
+
 !!$    
 !!$---- Thickness along y
 !!$
     qq=Equation_Plane(r0,r1,r3)
-    Thick(2)=1.0D0/ABS(qq(1)*r2(1)+qq(2)*r2(2)+qq(3)*r2(3)-qq(4))
+    Thick(2)=1.0D0/ABS(PointPlane_Dist(qq,r2))
+
 !!$    
 !!$---- Thickness along z
 !!$
     qq=Equation_Plane(r0,r1,r2)
-    Thick(3)=1.0D0/ABS(qq(1)*r3(1)+qq(2)*r3(2)+qq(3)*r3(3)-qq(4))
-    
+    Thick(3)=1.0D0/ABS(PointPlane_Dist(qq,r3))
 !!$    
 !!$---- Thickness along x
 !!$
     rcuts0(i_pa) % r (:)=(Radii(i_p) % out+Radii(i_p)% update)*Thick(:)
     rcut(:)=rcuts0(i_pa) % r (:)
+    WRITE(*,*) 'thickness ',rcut
+    WRITE(*,*) 'two ',Radii(i_p) % out+Radii(i_p)% update,rcut/Thick
   END SUBROUTINE Thickness
   SUBROUTINE Thick_Intra(i_p,MyCutoff)
     REAL(8) :: MyCutoff
     INTEGER :: i_p
-    REAL(8) :: x1,x2,y1,y2,z1,z2,v1(3),v2(3),v3(3),r1(3),r2(3)&
-           &,r3(3),r0(3),qq(4)
+    REAL(8) :: x1,x2,y1,y2,z1,z2
+    type(point) :: p1,p2,p3,v1,v2,v3,r1,r2,r3,r0
+    type(plane) :: qq
     
     IF(rcuts0(i_p) % r(1) /= 0.0_8) THEN
        rcut(:)=0.0_8
@@ -125,35 +133,36 @@ CONTAINS
     ddy=2.d0/PI_npy
     ddz=2.d0/PI_npz
 
-    r0=0.0D0
-    v1(1)=1.0D0
-    v1(2)=0.0D0
-    v1(3)=0.0D0
+    r0%x=0.0D0; r0%y=0.0D0; r0%z=0.0D0
+
+    v1%x=1.0D0
+    v1%y=0.0D0
+    v1%z=0.0D0
     r1=Convert(v1)
-    v2(1)=0.0D0
-    v2(2)=1.0D0
-    v2(3)=0.0D0
+    v2%x=0.0D0
+    v2%y=1.0D0
+    v2%z=0.0D0
     r2=Convert(v2)
-    v3(1)=0.0D0
-    v3(2)=0.0D0
-    v3(3)=1.0D0
+    v3%x=0.0D0
+    v3%y=0.0D0
+    v3%z=1.0D0
     r3=Convert(v3)
 
 !!$    
 !!$---- Thickness along x
 !!$
     qq=Equation_Plane(r0,r2,r3)
-    Thick(1)=1.0D0/ABS(qq(1)*r1(1)+qq(2)*r1(2)+qq(3)*r1(3)-qq(4))
+    Thick(1)=1.0D0/ABS(PointPlane_Dist(qq,r1))
 !!$    
 !!$---- Thickness along y
 !!$
     qq=Equation_Plane(r0,r1,r3)
-    Thick(2)=1.0D0/ABS(qq(1)*r2(1)+qq(2)*r2(2)+qq(3)*r2(3)-qq(4))
+    Thick(2)=1.0D0/ABS(PointPlane_Dist(qq,r2))
 !!$    
 !!$---- Thickness along z
 !!$
     qq=Equation_Plane(r0,r1,r2)
-    Thick(3)=1.0D0/ABS(qq(1)*r3(1)+qq(2)*r3(2)+qq(3)*r3(3)-qq(4))
+    Thick(3)=1.0D0/ABS(PointPlane_Dist(qq,r3))
     
 !!$    
 !!$---- Thickness along x
@@ -162,11 +171,11 @@ CONTAINS
     rcut(:)=rcuts0(i_p) % r (:)
   END SUBROUTINE Thick_Intra
   FUNCTION Convert(v1) RESULT(out)
-    REAL(8) :: v1(3),out(3)
-    REAL(8) :: r1(3)
-    r1(1)=co(1,1)*v1(1)+co(1,2)*v1(2)+co(1,3)*v1(3)
-    r1(2)=co(2,1)*v1(1)+co(2,2)*v1(2)+co(2,3)*v1(3)
-    r1(3)=co(3,1)*v1(1)+co(3,2)*v1(2)+co(3,3)*v1(3)
+    type(point) :: v1,out
+    type(point) :: r1
+    r1%x=co(1,1)*v1%x+co(1,2)*v1%y+co(1,3)*v1%z
+    r1%y=co(2,1)*v1%x+co(2,2)*v1%y+co(2,3)*v1%z
+    r1%z=co(3,1)*v1%x+co(3,2)*v1%y+co(3,3)*v1%z
     out=r1
   END FUNCTION Convert
 

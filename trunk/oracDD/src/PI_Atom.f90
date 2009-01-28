@@ -412,6 +412,7 @@ CONTAINS
        END IF
        counter=counter+count0
     END DO
+    WRITE(*,*) PI_Node_Cart,COUNT(okk),COUNT(Known==2)
     CALL MPI_ALLREDUCE(counter,No_Nei,1,MPI_INTEGER,MPI_SUM,PI_Comm_Cart,ierr)
     IF(PI_Node_Cart == 0) THEN
        WRITE(kprint,*) 'Neighbors (',No_Nei,')'

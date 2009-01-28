@@ -73,7 +73,8 @@ MODULE Direct
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
-  REAL(8), SAVE :: alphal,twrtpi
+  REAL(8), SAVE :: alphal,twrtpi,ewald_cut
+  
 CONTAINS
   SUBROUTINE Compute(i_pa,Initialize)
     INTEGER :: i_pa
@@ -117,11 +118,11 @@ CONTAINS
 !!$
     SUBROUTINE Init
       INTEGER :: n,m,ij,ncutoff
-      REAL(8) :: ecc_R,aux,ene,rcut
+      REAL(8) :: ecc_R,aux,ene,rcut,x,bin
       
       twrtpi=2.0d0/SQRT(pi)
       alphal = Ewald__Param % alpha
-      ecc_R=-5.0D-3/(efact/1000.0D0)
+      ecc_R=-5.0D-1/(efact/1000.0D0)
       n=SIZE(LennardJones__Par % Par_SE)
       ALLOCATE(Id_ij(n,n))
       ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2),eccc(n*(n+1)/2))
@@ -135,19 +136,29 @@ CONTAINS
             ecc12(ij)=LennardJones__Par % c12(ij)
             ene=0.0D0
             IF(ecc6(ij) /= 0.0D0 .AND. ecc12(ij) /= 0.0D0) THEN
-               aux=(SQRT(ecc6(ij)**2+4.0D0*ecc12(ij)*ecc_R)+ecc6(ij))/(-2.0D0*ecc_R)
-               eccc(ij)=aux**(1.0D0/3.0D0)
+               aux=(ecc12(ij)/ecc6(ij))
+               eccc(ij)=3.5_8*aux**(1.0D0/6.0D0)
             ELSE
                eccc(ij)=0.0D0
             END IF
+            eccc(ij)=eccc(ij)**2
          END DO
+
       END DO
+
+      x=1.0_8
+      bin=0.01D0
+      DO 
+         x=x+bin
+         IF(ERFC(alphal*x) < 7.0D-6) EXIT
+      END DO
+      ewald_cut=x*x
+
       IF(Erfc_Switch) THEN
          ncutoff=SIZE(Radii)
          rcut=Radii(ncutoff) % out + Radii(ncutoff) % update
          CALL Erfc_(rcut,Ewald__Param % alpha)
       END IF
-
     END SUBROUTINE Init
 !!$
 !!$--- Get Memory

@@ -70,8 +70,8 @@ MODULE PME
 !!$--- PME Data
 !!$
   REAL(8), ALLOCATABLE, SAVE :: Cq(:,:,:)
-  REAL(8), POINTER :: Cq_s(:,:,:),Cq_r(:,:,:)
-  REAL(8), POINTER :: Cq_sb(:,:,:)
+  REAL(8), ALLOCATABLE :: Cq_s(:,:,:),Cq_r(:,:,:)
+  REAL(8), ALLOCATABLE :: Cq_sb(:,:,:)
   INTEGER, SAVE :: nx,ny,nz
   INTEGER, SAVE :: nfft1,nfft2,nfft3
   INTEGER, SAVE :: ndim_fftw1,ndim_fftw2,ndim_fftw3
@@ -85,16 +85,17 @@ MODULE PME
   INTEGER, SAVE :: mx,my,mz,mzz
   INTEGER, SAVE :: rk_x,rk_y,rk_z
   REAL(8), ALLOCATABLE, SAVE :: bsp_mod1(:),bsp_mod2(:),bsp_mod3(:)
-  REAL(8), POINTER :: theta1(:,:),theta2(:,:),theta3(:,:)&
+  REAL(8), ALLOCATABLE :: theta1(:,:),theta2(:,:),theta3(:,:)&
        &,dtheta1(:,:),dtheta2(:,:),dtheta3(:,:)
 !!$
 !!$--- System Data
 !!$
-  REAL(8), POINTER :: fx(:),fy(:),fz(:),chg(:),fr1(:),fr2(:),fr3(:)&
+  REAL(8), ALLOCATABLE :: fx(:),fy(:),fz(:),chg(:),fr1(:),fr2(:),fr3(:)&
        &,phi(:)
   INTEGER, SAVE :: natom,alltoall_dim,ntot_atom
   INTEGER, POINTER, SAVE :: order
   REAL(8), SAVE :: recip(3,3),vir(3,3),eer,energy,eer_i,energy_i
+  REAL(8), SAVE :: Tol_q=1.0D-5
   
 CONTAINS
   SUBROUTINE PME_(i_pa)
@@ -115,13 +116,14 @@ CONTAINS
     IF(No_Calls == 0) THEN       
        IF(.NOT. Initialize_()) CALL Print_Errors()
        No_Calls=No_Calls+1
+       ALLOCATE(Cq_r(ndim_fftw1,ndim_fftw2,ndim_fftw3))
+       ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
+       ALLOCATE(Cq_sb(myfft1,myfft2,myfft3))
        RETURN
     END IF
 
     startime=MPI_WTIME()
-    ALLOCATE(Cq_r(ndim_fftw1,ndim_fftw2,ndim_fftw3))
-    ALLOCATE(Cq_s(myfft1,myfft2,myfft3))
-    ALLOCATE(Cq_sb(myfft1,myfft2,myfft3))
+    
 
 !!$    
 !!$--- Copy coordinates and charges to local arrays
@@ -129,8 +131,16 @@ CONTAINS
 
     IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
          & AtEn)) CALL Print_Errors() 
-
+    
     natom=SIZE(IndBoxP_a_t)
+    WRITE(*,*) PI_Node_FFTW,natom
+    IF(ALLOCATED(theta1)) THEN
+       DEALLOCATE(theta1,theta2,theta3)
+       DEALLOCATE(dtheta1,dtheta2,dtheta3)
+       DEALLOCATE(chg,fr1,fr2,fr3)
+       DEALLOCATE(fx,fy,fz,phi)
+    END IF
+       
     ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
     ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
     ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
@@ -195,6 +205,7 @@ CONTAINS
 !!$       END DO
 !!$    END IF
 
+    WRITE(*,*) PI_Node_FFTW,eer,Energy
     eer_i=eer
     CALL EN_Coul_Rec_(eer)
     Energy_i=Energy
@@ -319,5 +330,5 @@ CONTAINS
 
   END SUBROUTINE Transpose_FFTW2Cart
 
-  INCLUDE 'PME__Sources.f90'
+#include "PME__Sources.f90"
 END MODULE PME

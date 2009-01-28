@@ -63,7 +63,9 @@ SUBROUTINE Forces
   INTEGER :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
        &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,nbti,p_mapa,p_j,lij,i_pb&
        &,count_b,count_c,p_mapb,nol,natom1,i_c
-  LOGICAL :: lskip_ewald
+  REAL(8), SAVE :: Tol_q=1.0D-5
+
+  LOGICAL :: lskip_ewald,ok_LJ,ok_Co
   LOGICAL, ALLOCATABLE :: ol(:)
   TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
 
@@ -139,9 +141,8 @@ SUBROUTINE Forces
   qt=1.0d0/(1.0d0+qp*alphal*rinn)
   expcst=DEXP(-alphal*rinn*alphal*rinn)
   erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
-  lskip_ewald = erfcst.lt.10.d-4
-!!$  lskip_ewald = .FALSE.
-
+  lskip_ewald = erfcst.lt.1.0d-4
+  IF(Ewald__Param % NoSkip) lskip_ewald = .FALSE.
   fppx=0.0_8
   fppy=0.0_8
   fppz=0.0_8
@@ -255,7 +256,7 @@ SUBROUTINE Forces
               END IF
            END DO
         END DO
-        IF(Erfc_Switch) THEN
+        IF(Erfc_Switch .AND. (.NOT. lskip_ewald)) THEN
            DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
@@ -285,35 +286,39 @@ SUBROUTINE Forces
               yc=           co(2,2)*yg+co(2,3)*zg
               zc=                      co(3,3)*zg
               rsq=xc*xc+yc*yc+zc*zc
-              rsqi=1.0d0/rsq
-              qforce=0.0D0; emvir=0.0D0
-              IF(rsq < eccc(lij)) THEN
+              qforce=0.0D0; emvir=0.0D0; aux1=0.0D0
+              furpar=chrgei*chg(j)
+
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+              
+
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+
+              IF(ok_LJ) THEN
+                 rsqi=1.0d0/rsq
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
                  qforce=ssvir*rsqi
-                 emvir = ssvir*rsqi
-                 
+                 emvir = ssvir*rsqi                 
                  conf=ecc12(lij)*r12-ecc6(lij)*r6
                  uconfa=uconfa+conf
               END IF
               
-              IF(.NOT. lskip_ewald) THEN
-                 furpar=chrgei*chg(j)
+              IF(ok_Co) THEN
                  rsp=SQRT(rsq)
                  rspi=1.0_8/rsp
                  i_c=INT((rsp-E_xbeg)/E_dx)+1
                  h=rsp-DBLE(i_c-1)*E_dx-E_xbeg
-
                  MyErfc_=_Erfc(i_c,h)
-                 MyDErfc_=_DErfc(i_c,h)
-
+                 MyDErfc_=_DErfc(i_c,h)                 
                  ucoula=ucoula+furpar*MyErfc_
                  aux1  = -rspi*furpar*MyDErfc_
                  qforce=qforce+aux1
-                 emvir = emvir + aux1
               END IF
-              
+
+              emvir = emvir + aux1
               aux1=qforce*xc
               fppx(i1)=fppx(i1)+aux1
               fppx(j)=fppx(j)-aux1
@@ -344,7 +349,7 @@ SUBROUTINE Forces
               ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
               uconf(Slv_ij)=uconf(Slv_ij)+uconfa
            END DO
-        ELSE
+        ELSE IF((.NOT. Erfc_switch) .AND. (.NOT. lskip_ewald)) THEN
            DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
@@ -374,9 +379,15 @@ SUBROUTINE Forces
               yc=           co(2,2)*yg+co(2,3)*zg
               zc=                      co(3,3)*zg
               rsq=xc*xc+yc*yc+zc*zc
+              qforce=0.0D0; emvir=0.0D0; aux1=0.0D0
               rsqi=1.0d0/rsq
-              qforce=0.0D0; emvir=0.0D0
-              IF(rsq < eccc(lij)) THEN
+              furpar=chrgei*chg(j)
+
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+              IF(ok_LJ) THEN
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -387,8 +398,7 @@ SUBROUTINE Forces
                  uconfa=uconfa+conf
               END IF
               
-              IF(.NOT. lskip_ewald) THEN
-                 furpar=chrgei*chg(j)
+              IF(ok_Co) THEN
                  rsp=SQRT(rsq)
                  rspi=1.0D0/rsp
                  rspqi=rsqi*rspi
@@ -397,14 +407,12 @@ SUBROUTINE Forces
                  qt=1.0d0/(1.0d0+qp*alphar)
                  expcst=EXP(-alphar*alphar)
                  erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
-                 ucoula=ucoula+furpar*erfcst*rspi
-
+                 ucoula=ucoula+furpar*erfcst*rspi                 
                  aux1  = furpar*(erfcst+twrtpi*alphar*expcst)*rspqi
                  qforce=qforce+aux1
-                 emvir = emvir + aux1
-
               END IF
-              
+
+              emvir = emvir + aux1
               aux1=qforce*xc
               fppx(i1)=fppx(i1)+aux1
               fppx(j)=fppx(j)-aux1
@@ -435,6 +443,81 @@ SUBROUTINE Forces
               ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
               uconf(Slv_ij)=uconf(Slv_ij)+uconfa
            END DO
+        ELSE IF(lskip_ewald) THEN
+           DO p_j=1,p_mapa
+              jj=p_index_jj(p_j)
+              j=p_index_j(p_j)
+              j1=indGrp(jj)
+              
+              
+              xd=Xg_PBC(jj)
+              yd=Yg_PBC(jj)
+              zd=Zg_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+              uconfa=0.0D0
+              ucoula=0.0D0
+!!$
+!!$--- Possible Include
+!!$           
+              xg=xd1-xp0(j)
+              yg=yd1-yp0(j)
+              zg=zd1-zp0(j)
+              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
+              yc=           co(2,2)*yg+co(2,3)*zg
+              zc=                      co(3,3)*zg
+              rsq=xc*xc+yc*yc+zc*zc
+              Id_j=Id(j)
+              lij=Id_ij(Id_i,Id_j)
+              IF(rsq > eccc(lij)) CYCLE
+
+              Slv_j=Slv(j)
+              Slv_ij=Slv_j+Slv_i-1
+              
+
+              rsqi=1.0d0/rsq
+              qforce=0.0D0; emvir=0.0D0
+              r6=rsqi*rsqi*rsqi
+              r12=r6*r6
+              ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
+              qforce=ssvir*rsqi
+              emvir = ssvir*rsqi
+              
+              conf=ecc12(lij)*r12-ecc6(lij)*r6
+              uconfa=uconfa+conf
+
+              aux1=qforce*xc
+              fppx(i1)=fppx(i1)+aux1
+              fppx(j)=fppx(j)-aux1
+              
+              aux1=qforce*yc
+              fppy(i1)=fppy(i1)+aux1
+              fppy(j)=fppy(j)-aux1
+              
+              aux1=qforce*zc
+              fppz(i1)=fppz(i1)+aux1
+              fppz(j)=fppz(j)-aux1
+              
+              qfx=emvir*xc
+              st1 = st1+qfx*xg
+              st2 = st2+qfx*yg
+              st3 = st3+qfx*zg
+              qfy=emvir*yc
+              st4 = st4+qfy*xg
+              st5 = st5+qfy*yg
+              st6 = st6+qfy*zg
+              qfz=emvir*zc
+              st7 = st7+qfz*xg
+              st8 = st8+qfz*yg
+              st9 = st9+qfz*zg
+!!$
+!!$--- Possible Include
+!!$
+              ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
+              uconf(Slv_ij)=uconf(Slv_ij)+uconfa
+           END DO
+
         END IF
         p_mapa=0        
         DO jj=1,ngrp_js
@@ -449,7 +532,7 @@ SUBROUTINE Forces
               END IF
            END DO
         END DO
-        IF(Erfc_Switch) THEN
+        IF(Erfc_Switch .AND. (.NOT. lskip_ewald)) THEN
            DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
@@ -484,7 +567,13 @@ SUBROUTINE Forces
               rsqi=1.0d0/rsq
               
               qforce=0.0D0
-              IF(rsq < eccc(lij)) THEN
+              furpar=chrgei*chg(j)
+
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+
+              IF(ok_LJ) THEN
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -494,21 +583,100 @@ SUBROUTINE Forces
                  uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
               END IF
               
-              IF(.NOT. lskip_ewald) THEN
+              IF(ok_Co) THEN
                  rsp=SQRT(rsq)
                  rspi=1.0_8/rsp
                  i_c=INT((rsp-E_xbeg)/E_dx)+1
                  h=rsp-tau(i_c)
-
+                 
                  MyErfc_=_Erfc(i_c,h)
                  MyDErfc_=_DErfc(i_c,h)
-                 furpar=chrgei*chg(j)
-
+                 
                  ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*MyErfc_
                  cmap2(jj)=cmap2(jj)+furpar*MyErfc_
                  aux1  = -swrs(jj)*rspi*furpar*MyDErfc_
                  qforce=qforce+aux1
               END IF
+              emvir=qforce
+
+              fppx(i1)=fppx(i1)+qforce*xc
+              fppy(i1)=fppy(i1)+qforce*yc
+              fppz(i1)=fppz(i1)+qforce*zc
+              fppx(j)=fppx(j)-qforce*xc
+              fppy(j)=fppy(j)-qforce*yc
+              fppz(j)=fppz(j)-qforce*zc
+              st1 = st1+emvir*xc*xg
+              st2 = st2+emvir*xc*yg
+              st3 = st3+emvir*xc*zg
+              st4 = st4+emvir*yc*xg
+              st5 = st5+emvir*yc*yg
+              st6 = st6+emvir*yc*zg
+              st7 = st7+emvir*zc*xg
+              st8 = st8+emvir*zc*yg
+              st9 = st9+emvir*zc*zg
+           END DO
+        ELSE IF((.NOT. Erfc_switch) .AND. (.NOT. lskip_ewald)) THEN
+           DO p_j=1,p_mapa
+              jj=p_index_jj(p_j)
+              j=p_index_j(p_j)
+              j1=indGrps(jj)
+              
+              Slv_j=Slv(j)
+              Slv_ij=Slv_j+Slv_i-1
+              
+              Id_j=Id(j)
+              
+              
+              xd=Xgs_PBC(jj)
+              yd=Ygs_PBC(jj)
+              zd=Zgs_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+              uconfa=0.0D0
+              ucoula=0.0D0
+!!$
+!!$--- Possible Include
+!!$           
+              lij=Id_ij(Id_i,Id_j)
+              xg=xd1-xp0(j)
+              yg=yd1-yp0(j)
+              zg=zd1-zp0(j)
+              
+              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
+              yc=           co(2,2)*yg+co(2,3)*zg
+              zc=                      co(3,3)*zg
+              rsq=xc*xc+yc*yc+zc*zc
+              rsqi=1.0d0/rsq
+              
+              qforce=0.0D0;furpar=chrgei*chg(j)
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+              IF(ok_LJ) THEN
+                 r6=rsqi*rsqi*rsqi
+                 r12=r6*r6
+                 ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
+                 qforce=ssvir*rsqi*swrs(jj)
+                 conf=ecc12(lij)*r12-ecc6(lij)*r6
+                 cmap2(jj)=cmap2(jj)+conf
+                 uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
+              END IF
+              
+              IF(ok_Co) THEN
+                 rsp=DSQRT(rsq)
+                 rspi=1.0_8/rsp
+                 rspqi=rsqi/rsp
+                 alphar=alphal*rsp
+                 qt=1.0d0/(1.0d0+qp*alphar)
+                 expcst=EXP(-alphar*alphar)
+                 erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
+                 ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*erfcst/rsp
+                 cmap2(jj)=cmap2(jj)+furpar*erfcst/rsp
+                 aux1=furpar*(erfcst+twrtpi*alphar*expcst)*rspqi*swrs(jj)
+                 qforce=qforce+aux1
+              END IF
+
               emvir=qforce
               
               fppx(i1)=fppx(i1)+qforce*xc
@@ -562,30 +730,15 @@ SUBROUTINE Forces
               rsqi=1.0d0/rsq
               
               qforce=0.0D0
-              IF(rsq < eccc(lij)) THEN
-                 r6=rsqi*rsqi*rsqi
-                 r12=r6*r6
-                 ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
-                 qforce=ssvir*rsqi*swrs(jj)
-                 conf=ecc12(lij)*r12-ecc6(lij)*r6
-                 cmap2(jj)=cmap2(jj)+conf
-                 uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
-              END IF
+              IF(rsq > eccc(lij)) CYCLE
+              r6=rsqi*rsqi*rsqi
+              r12=r6*r6
+              ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
+              qforce=ssvir*rsqi*swrs(jj)
+              conf=ecc12(lij)*r12-ecc6(lij)*r6
+              cmap2(jj)=cmap2(jj)+conf
+              uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
               
-              IF(.NOT. lskip_ewald) THEN
-                 rsp=DSQRT(rsq)
-                 rspi=1.0_8/rsp
-                 rspqi=rsqi/rsp
-                 alphar=alphal*rsp
-                 qt=1.0d0/(1.0d0+qp*alphar)
-                 expcst=EXP(-alphar*alphar)
-                 erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
-                 furpar=chrgei*chg(j)
-                 ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*erfcst/rsp
-                 cmap2(jj)=cmap2(jj)+furpar*erfcst/rsp
-                 aux1=furpar*(erfcst+twrtpi*alphar*expcst)*rspqi*swrs(jj)
-                 qforce=qforce+aux1
-              END IF
               emvir=qforce
               
               fppx(i1)=fppx(i1)+qforce*xc
@@ -604,6 +757,7 @@ SUBROUTINE Forces
               st8 = st8+emvir*zc*yg
               st9 = st9+emvir*zc*zg
            END DO
+              
         END IF
         maplg(i1)=.TRUE.
         IF(ALLOCATED(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.TRUE.

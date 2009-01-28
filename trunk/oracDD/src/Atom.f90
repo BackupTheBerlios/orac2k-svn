@@ -493,11 +493,10 @@ SUBROUTINE ATOM__KinCompute
 
   ek_Slv=0.5*ek_Slv
   ek_Slv=0.5*ek_Slv
-  nato_Slv=COUNT(Atoms(_IN_) % Id_Slv == 2)
-  nato_Slt=COUNT(Atoms(_IN_) % Id_Slv == 1)
-  T_Slv=2.0D0*(ek_slv*efact/DBLE(3*nato_Slv))/gascon
-  T_Slt=2.0D0*(ek_slt*efact/DBLE(3*nato_Slt))/gascon
-  T_tot=2.0D0*((ek_slt+ek_Slv)*efact)/(DBLE(3*(nato_Slt+nato_Slv-3))*gascon)
+  T_Slv=0.0_8; T_Slt=0.0_8; T_tot=0.0_8
+  IF(natom_Slv /= 0) T_Slv=2.0D0*(ek_slv*efact/DBLE(3*natom_Slv))/gascon
+  IF(natom_Slt /= 0) T_Slt=2.0D0*(ek_slt*efact/DBLE(3*natom_Slt))/gascon
+  T_tot=2.0D0*((ek_slt+ek_Slv)*efact)/(DBLE(3*(natom_Slt+natom_Slv-3))*gascon)
 
   CALL EN_Kinetic_(ek_Slv,ek_Slt)
   CALL EN_Temp_(T_tot,T_slv,T_Slt)

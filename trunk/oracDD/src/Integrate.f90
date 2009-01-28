@@ -160,8 +160,8 @@ CONTAINS
 
 !!$--- Reset secondary cell. Need it before shifting
 
-    CALL PI__Shift(NShell,_INIT_)
-    CALL PI__Shift(NShell,_EXCHANGE_)
+    CALL PI__Shift(NShell,_INIT_,.FALSE.)
+    CALL PI__Shift(NShell,_EXCHANGE_,.FALSE.)
 
 !!$--- Setup the primary and secondary atom cells: IndBox_?_? arrays
 !!$--- are created
@@ -273,6 +273,7 @@ CONTAINS
       IF(do_pme) THEN
          IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
               & AtEn)) CALL Print_Errors() 
+         WRITE(*,*) PI_Node_Cart,COUNT(Groupa(:) % Knwn /= 0),COUNT(Atoms(:) % Knwn /= 0)
       END IF
       CALL PI__Fold_F(fp,i_pa,_INIT_)
       IF(do_pme) CALL PI__ResetSecondaryP

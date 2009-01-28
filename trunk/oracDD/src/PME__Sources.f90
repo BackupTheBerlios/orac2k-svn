@@ -51,10 +51,11 @@ END SUBROUTINE Get_Bsplines
 SUBROUTINE Charges_onGrid(Cq)
   INTEGER :: nmaps,m,n,ith1,ith2,ith3,i,j,k,ka,ia,ja,k0,j0,i0
   REAL(8) :: aux,prod,chg0
-  REAL(8), POINTER :: Cq(:,:,:)
+  REAL(8)  :: Cq(:,:,:)
   Cq=0.0D0
   DO n=1,natom
      chg0=chg(n)
+     IF(ABS(chg0) < Tol_q) CYCLE
      k0 = int(fr3(n)) - order
      DO ith3 = 1,order
         k0 = k0 + 1
@@ -109,7 +110,7 @@ SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
 !!$*                                                                      *
 !!$************************************************************************
 
-  REAL(8), POINTER :: Cq(:,:,:)
+  REAL(8) :: Cq(:,:,:)
   INTEGER :: nb1,nb2,nb3
 
   INTEGER nfft1,nfft2,nfft3,naz
@@ -226,7 +227,7 @@ SUBROUTINE Grad_Sum(Cq,Energy)
   REAL(8) :: Energy
   INTEGER :: nmaps,m,n,ith1,ith2,ith3,i,j,k,ka,ia,ja,k0,j0,i0
   REAL(8) :: f1,f2,f3,phid,chg0,t3,t2,dt3,dt2,term
-  REAL(8), POINTER :: Cq(:,:,:)
+  REAL(8) :: Cq(:,:,:)
 
   energy=0.0D0
   DO n=1,natom
@@ -234,6 +235,7 @@ SUBROUTINE Grad_Sum(Cq,Energy)
      f2 = 0.d0
      f3 = 0.d0
      chg0=chg(n)
+     IF(ABS(chg0) < Tol_q) CYCLE
      phid=0.0D0
      k0 = int(fr3(n)) - order
      DO ith3 = 1,order

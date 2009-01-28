@@ -131,7 +131,6 @@ CONTAINS
     Total_a % Slt=Total_a % Slt+Total % Slt
     Total_a % Mix=Total_a % Mix+Total % Mix
     Total_a % n0=Total_a % n0+1
-
   END SUBROUTINE Total_
   SUBROUTINE TotPot_
     Bond % Slv = Stretch % Slv + Angle % Slv + Imph % Slv + Int14LJ % Slv&
@@ -376,14 +375,31 @@ CONTAINS
 
     CALL Reduce_it_(Temp)
 
-    Temp%tot=Temp%tot/DBLE(PI_Nprocs)
-    Temp%Slt=Temp%Slt/DBLE(PI_Nprocs)
-    Temp%Slv=Temp%Slv/DBLE(PI_Nprocs)
-
     Temp_a%tot=Temp_a%tot+Temp%tot
     Temp_a%Slv=Temp_a%Slv+Temp%Slv
     Temp_a%Slt=Temp_a%Slt+Temp%Slt
     Temp_a%n0=Temp_a%n0+1
+
+    CALL Reduce_it_(Bond)
+    Bond_a%Tot=Bond_a%Tot+Bond % Tot
+    Bond_a%Slv=Bond_a%Slv+Bond % Slv
+    Bond_a%Slt=Bond_a%Slt+Bond % Slt
+    Bond_a%Mix=Bond_a%Mix+Bond % Mix
+    Bond_a%n0=Bond_a%n0+1
+
+    CALL Reduce_it_(TotPot)
+    TotPot_a%Tot=TotPot_a%Tot+TotPot % Tot
+    TotPot_a%Slv=TotPot_a%Slv+TotPot % Slv
+    TotPot_a%Slt=TotPot_a%Slt+TotPot % Slt
+    TotPot_a%Mix=TotPot_a%Mix+TotPot % Mix
+    TotPot_a%n0=TotPot_a%n0+1
+
+    CALL Reduce_it_(Total)
+    Total_a%Tot=Total_a%Tot+Total % Tot
+    Total_a%Slv=Total_a%Slv+Total % Slv
+    Total_a%Slt=Total_a%Slt+Total % Slt
+    Total_a%Mix=Total_a%Mix+Total % Mix
+    Total_a%n0=Total_a%n0+1
 
   END SUBROUTINE Get_Energies_
 #include "ENERGIES__Write.f90"

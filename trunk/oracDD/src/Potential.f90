@@ -79,6 +79,7 @@ MODULE Potential
      INTEGER :: order=5
      REAL(8) :: rkcut=1.0D9
      LOGICAL :: Switch=.FALSE.
+     LOGICAL :: NoSkip=.FALSE.
   END TYPE Ewald__Input
   TYPE(Ewald__Input), SAVE, TARGET :: Ewald__Param
   TYPE :: Direct__Input
@@ -140,6 +141,10 @@ CONTAINS
        of=2
     END IF
     SELECT CASE(nword-of)
+    CASE(1)
+       IF(MY_Fxm('NOSKIP',strngs(of+1))) THEN
+          Ewald__Param % Noskip =.TRUE.
+       END IF
     CASE(2)
        CALL SP_Getnum(strngs(of+1),Ewald__Param % alpha,iflags)
        CALL SP_Getnum(strngs(of+2),Ewald__Param % Density,iflags)
@@ -184,7 +189,7 @@ CONTAINS
           CALL Add_Errors(-1,errmsg_f)
        END IF
     CASE DEFAULT 
-       errmsg_f=error_args % g (4)//' 2 or 4'
+       errmsg_f=error_args % g (4)//' 1, 2 or 4'
        CALL Add_Errors(-1,errmsg_f)
     END SELECT
     CALL Print_Errors()    

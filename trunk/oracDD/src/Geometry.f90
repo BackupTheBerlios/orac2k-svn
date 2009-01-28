@@ -43,29 +43,113 @@ MODULE Geometry
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-
+#include "Geometry.h"
   USE PI_
   IMPLICIT none
   PRIVATE
-  PUBLIC Equation_Plane
+  PUBLIC  Point, Plane, Equation_Plane,PointPlane_Dist
+
+  TYPE :: Point
+     REAL(8) :: x,y,z
+  END type Point
+  type :: Plane
+     type(point) :: p
+     REAL(8) :: d
+  end type Plane
+  type :: line
+     type(point) :: a,b
+  END type line
+  interface operator(+)
+     module procedure add_points
+  end interface
+  interface operator(-)
+     module procedure subtract_points
+  end interface
+  interface operator(*)
+     module procedure multiply_points
+     module procedure multiplyscalar_points
+end interface
 CONTAINS
   FUNCTION Equation_Plane(v1,v2,v3) RESULT(out)
-    REAL(8), DIMENSION(:) :: v1,v2,v3
-    REAL(8) :: out(4)
-    REAL(8) :: q(4)
+    type(plane) :: out
+    type(point) :: v1,v2,v3
+    TYPE(Point) :: p1,p2,p3,p4
+    type(plane) :: q
     
-    REAL(8) :: x1,y1,z1,x2,y2,z2,x3,y3,z3,Norm
+    REAL(8) :: Norm,dist
 
-    x1=v1(1) ; y1=v1(2) ; z1=v1(3)
-    x2=v2(1) ; y2=v2(2) ; z2=v2(3)
-    x3=v3(1) ; y3=v3(2) ; z3=v3(3)
+    p1=v1 ; p2=v2; p3=v3
 
-    q(1)=y1*(z2 - z3) + y2*(z3 - z1) + y3*(z1 - z2) 
-    q(2)=z1*(x2 - x3) + z2*(x3 - x1) + z3*(x1 - x2)
-    q(3)=x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2)
-    q(4)=(x1*(y2*z3 - y3*z2) + x2*(y3*z1 - y1*z3) + x3*(y1*z2 - y2*z1))
-    Norm=SQRT(q(1)**2+q(2)**2+q(3)**2)
-    q=q/Norm
+    __subtract_v(p2, p1, p2)
+    __subtract_v(p3, p1, p3)
+    __crossprod(p2,p3,p4)
+    __normalize_v(p4,Norm)
+    __dotprod(p4,p1,Dist)
+    
+    q % p = p4
+    q % d = Dist
     out=q
   END FUNCTION Equation_Plane
+  FUNCTION Equation_Line(v1,v2) RESULT(out)
+    type(point) :: v1,v2
+    type(point) :: p1,p2
+    type(line) :: out
+    
+    
+    p1=v1 ; p2=v2; __subtract_v(p2, p1, p2)
+    out % a=p1; out % b=p2
+    
+  END FUNCTION Equation_Line
+  FUNCTION  Foot(v1,l1) RESULT(out)
+    type(line) :: l1
+    type(point) :: v1,out
+    type(point) :: p1,p2
+    real(8) :: t0,dist1,dist2
+    
+    p1=v1
+
+    p2=p1-l1%a
+
+    __dotprod(p2,l1%b,Dist1)
+    __dotprod(l1%b,l1%b,Dist2)
+
+    t0=Dist1/Dist2
+
+    out=l1%a+t0*l1%b
+
+  END FUNCTION Foot
+  FUNCTION PointPlane_Dist(pl,p) RESULT(out)
+    REAL(8) :: out
+    REAL(8) :: Dist
+    Type(Point) :: p
+    Type(Plane) :: pL
+
+    __dotprod(pL % p, p, Dist)
+    out=Dist-pL % d
+  END FUNCTION PointPlane_Dist
+  function add_points(a,b) result(out)
+    type(point), intent(in) :: a,b
+    type(point) :: out
+    __add_v(a,b,out)
+  end function add_points
+  function subtract_points(a,b) result(out)
+    type(point), intent(in) :: a,b
+    type(point) :: out
+    __subtract_v(a,b,out)
+  end function subtract_points
+  function multiply_points(a,b) result(out)
+    type(point), intent(in) :: a,b
+    type(point) :: out
+    out%x=a%x*b%x
+    out%y=a%y*b%y
+    out%z=a%z*b%z
+  end function multiply_points
+  function multiplyscalar_points(a,b) result(out)
+    type(point), intent(in) :: b
+    real(8), intent(in) :: a
+    type(point) :: out
+    out%x=a*b%x
+    out%y=a*b%y
+    out%z=a*b%z
+  end function multiplyscalar_points
 END MODULE Geometry

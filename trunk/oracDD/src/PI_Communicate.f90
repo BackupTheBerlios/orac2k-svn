@@ -83,7 +83,8 @@ MODULE PI_Communicate
   LOGICAL, SAVE :: do_pme
   REAL(8), SAVE :: startime,endtime,startime0,endtime0
 CONTAINS
-  SUBROUTINE PI__Shift(i_pa,init)
+  SUBROUTINE PI__Shift(i_pa,init,Force_pme)
+    LOGICAL, OPTIONAL :: Force_pme
     INTEGER :: init,i_pa
     INTEGER, SAVE :: ShiftTime,source, dest
     INTEGER :: ox,oy,oz,numcell,mpe,mp,m,n
@@ -96,7 +97,8 @@ CONTAINS
     do_pme=(i_p == Integrator_ % Ewald_Shell) .AND. Ewald__Param %&
          & Switch .AND. ( Ewald__Param % nx /= 0 .AND.&
          & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0)
-
+    IF(PRESENT(Force_pme)) do_pme=Force_pme
+    
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
