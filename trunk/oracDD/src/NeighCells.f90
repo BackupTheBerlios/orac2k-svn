@@ -54,7 +54,7 @@ MODULE NeighCells
   PRIVATE
   PUBLIC NeighCells_, NeighCells__, NeighCells__Map,&
        & NeighCells__MapLarge, NeighCells__Neigh,Ind_Large, Ind_Small&
-       &, Neighc_, Neighc_pme_, NeighCells__Param
+       &, Neighc_, NeighCells__Param, NeiMaps, ncx,ncy,ncz
 
   INTEGER, PARAMETER :: CellMax_=3
 
@@ -101,7 +101,7 @@ MODULE NeighCells
 !!$
 
   TYPE(NeighCells__), TARGET, SAVE :: Neighc_(CellMax_)
-  TYPE(NeighCells__), TARGET, SAVE :: Neighc_pme_(CellMax_)
+  Integer, Allocatable, Save :: NeiMaps(:)
   INTEGER, SAVE :: ncx,ncy,ncz
 CONTAINS
 !!$
@@ -119,8 +119,7 @@ CONTAINS
     INTEGER :: vec0(3)
     INTEGER, POINTER :: vec(:)=>NULL()
     INTEGER, SAVE :: count0=0, iter_max=20
-    INTEGER :: npx,npy,npz,i_n,nvalues(3),iter_inst,k1,k2,k3,p0&
-         &,il_Max,jl_Max,kl_Max,il_Min,jl_Min,kl_Min,mp,m,ox,oy,oz
+    INTEGER :: npx,npy,npz,i_n,nvalues(3),iter_inst,k1,k2,k3,p0
     LOGICAL :: okkk
 
     out=.TRUE.
@@ -174,12 +173,9 @@ CONTAINS
        NULLIFY(new_node % next)
        new_node % rcut = 0.0D0
        okkk=.FALSE.
-!!$       nx=NINT(a/rcut0)
-!!$       ny=NINT(b/rcut0)
-!!$       nz=NINT(c/rcut0)
-       nx=24
-       ny=24
-       nz=24
+       nx=NINT(a/rcut0)
+       ny=NINT(b/rcut0)
+       nz=NINT(c/rcut0)
        iter_inst=0
        DO WHILE(.NOT. okkk)
           iter_inst=iter_inst+1
@@ -236,6 +232,10 @@ CONTAINS
 !!$
           IF(iter_inst > iter_Max) okkk=.TRUE.
        END DO
+       If(.Not. Allocated(NeiMaps)) Then
+          Allocate(NeiMaps(ncx*ncy*ncz))
+          NeiMaps=0
+       End If
 
 
        ALLOCATE(new_node % Ind_L(npx,npy,npz))
@@ -338,43 +338,27 @@ CONTAINS
        END DO
     END IF
        
-    ALLOCATE(Neighc_(i_cut) % Nei(nprocs)); ALLOCATE(Neighc_pme_(i_cut) % Nei(nprocs))
-    ALLOCATE(mask(ncx,ncy,ncz))
+    IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()
+     
+    ALLOCATE(Neighc_(i_cut) % Nei(nprocs)); ALLOCATE(mask(ncx,ncy,ncz))
 
-    IF(.NOT. Neighbors_S_(i_n,rcut,ncx,ncy,ncz)) CALL Print_Errors()     
-    IF(i_n /= i_cut) THEN
-       errmsg_f=' Terrible error'
-       CALL Add_Errors(-1,errmsg_f)
-       CALL Print_Errors()
-    END IF
-    
     DO mx=1,npx
        DO my=1,npy
           DO mz=1,npz
-             IF(.NOT. Node_()) STOP
              np=SIZE(Ind_Large(mx,my,mz) % pt)
              count0=(mx-1)*npy*npz+(my-1)*npz+mz
              mask=.TRUE.
-             il_Max=-100
-             jl_Max=-100
-             kl_Max=-100
-             il_Min=100
-             jl_Min=100
-             kl_Min=100
              DO n=1,np
                 i=Ind_Large(mx,my,mz) % pt (n) % nx
                 j=Ind_Large(mx,my,mz) % pt (n) % ny
                 k=Ind_Large(mx,my,mz) % pt (n) % nz
-                IF(il_Max < i-1) il_Max=i-1
-                IF(jl_Min > j-1) jl_Min=j-1
-                IF(kl_Min > k-1) kl_Min=k-1
                 mask(i,j,k)=.FALSE.
              END DO
+             IF(.NOT. Node_()) STOP
              DO n=1,np
                 i=Ind_Large(mx,my,mz) % pt (n) % nx-1
                 j=Ind_Large(mx,my,mz) % pt (n) % ny-1
                 k=Ind_Large(mx,my,mz) % pt (n) % nz-1
-                IF((i /= il_Max .AND. j /= jl_Min .AND. k /= kl_Min)) CYCLE
                 DO o=1,SIZE(clst(i_n) % Ind_xyz)
                    iv=clst(i_n) % Ind_xyz(o) % i
                    jv=clst(i_n) % Ind_xyz(o) % j
@@ -394,67 +378,35 @@ CONTAINS
              DO WHILE(Node__Pop(vec))
                 count1=count1+1
                 Neighc_(i_cut) % Nei(count0) % c(:,count1) = vec
+                nx=vec(1);ny=vec(2); nz=vec(3)
+                NeiMaps((nx-1)*ncy*ncz+(ny-1)*ncz+nz)=i_cut
              END DO
           END DO
        END DO
     END DO
-
-    DO mx=1,npx
-       DO my=1,npy
-          DO mz=1,npz
-             IF(.NOT. Node_()) STOP
-             np=SIZE(Ind_Large(mx,my,mz) % pt)
-             count0=(mx-1)*npy*npz+(my-1)*npz+mz
-             mask=.TRUE.
-             il_Max=-100
-             jl_Max=-100
-             kl_Max=-100
-             il_Min=100
-             jl_Min=100
-             kl_Min=100
-             DO n=1,np
-                i=Ind_Large(mx,my,mz) % pt (n) % nx
-                j=Ind_Large(mx,my,mz) % pt (n) % ny
-                k=Ind_Large(mx,my,mz) % pt (n) % nz
-                IF(il_Max < i-1) il_Max=i-1
-                IF(jl_Max < j-1) jl_Max=j-1
-                IF(kl_Max < k-1) kl_Max=k-1
-                IF(il_Min > i-1) il_Min=i-1
-                IF(jl_Min > j-1) jl_Min=j-1
-                IF(kl_Min > k-1) kl_Min=k-1
-                mask(i,j,k)=.FALSE.
-             END DO
-             DO n=1,np
-                i=Ind_Large(mx,my,mz) % pt (n) % nx-1
-                j=Ind_Large(mx,my,mz) % pt (n) % ny-1
-                k=Ind_Large(mx,my,mz) % pt (n) % nz-1
-                IF((i /= il_Max .AND. j /= jl_Max .AND. k /= kl_Max) .AND. &
-                     &(i /= il_Min .AND. j /= jl_Min .AND. k /= kl_Min)) CYCLE
-                DO o=1,SIZE(clst_pme(i_n) % Ind_xyz)
-                   iv=clst_pme(i_n) % Ind_xyz(o) % i
-                   jv=clst_pme(i_n) % Ind_xyz(o) % j
-                   kv=clst_pme(i_n) % Ind_xyz(o) % k
-                   nx=mod(mod(i+iv,ncx)+ncx,ncx)+1
-                   ny=mod(mod(j+jv,ncy)+ncy,ncy)+1
-                   nz=mod(mod(k+kv,ncz)+ncz,ncz)+1
-                   IF(.NOT. mask(nx,ny,nz)) CYCLE
-                   mask(nx,ny,nz)=.FALSE.
-                   vec0(1)=nx; vec0(2)=ny; vec0(3)=nz
-                   CALL Node__Push(vec0)
-                END DO
-             END DO
-             count1=Node__Size()
-             ALLOCATE(Neighc_pme_(i_cut) % Nei(count0) % c (3,count1))
-             count1=0
-             DO WHILE(Node__Pop(vec))
-                count1=count1+1
-                Neighc_pme_(i_cut) % Nei(count0) % c(:,count1) = vec
-             END DO
-          END DO
-       END DO
-    END DO
-
-
+!!$    Do nx=1,ncx
+!!$       Do ny=1,ncy
+!!$          Do nz=1,ncz
+!!$             If(NeiMaps((nx-1)*ncy*ncz+(ny-1)*ncz+nz) == 0) Write(*,*) nx,ny,nz
+!!$          End Do
+!!$       End Do
+!!$    End Do
+!!$    DO mx=1,1
+!!$       DO my=1,1
+!!$          DO mz=1,1
+    mx= PI__Ranks (Pi_node_cart+1) % nx +1
+    my= PI__Ranks (Pi_node_cart+1) % ny +1
+    mz= PI__Ranks (Pi_node_cart+1) % nz +1
+    count0=(mx-1)*npy*npz+(my-1)*npz+mz
+    count1=Size(Neighc_(i_cut) % Nei(count0) % c,2)
+    Do np=1,count1
+       nx=Neighc_(i_cut) % Nei(count0) % c(1,np)
+       ny=Neighc_(i_cut) % Nei(count0) % c(2,np)
+       nz=Neighc_(i_cut) % Nei(count0) % c(3,np)
+       Write(Pi_node_cart+700,*) 2.0D0*Dble(nx)/Dble(ncx),2.0D0*Dble(ny)/Dble(ncy),2.0D0*Dble(nz)/Dble(ncz)
+    End Do
+    Write(*,*) 'Pipola = ',Count(NeiMaps == i_cut),Size(neiMaps)
+    Stop
   END FUNCTION NeighCells_
   SUBROUTINE NeighCells__Param(np,ncxa,ncya,ncza)
     INTEGER :: np,ncxa,ncya,ncza

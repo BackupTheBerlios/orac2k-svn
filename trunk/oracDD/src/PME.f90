@@ -87,6 +87,7 @@ MODULE PME
   REAL(8), ALLOCATABLE, SAVE :: bsp_mod1(:),bsp_mod2(:),bsp_mod3(:)
   REAL(8), ALLOCATABLE :: theta1(:,:),theta2(:,:),theta3(:,:)&
        &,dtheta1(:,:),dtheta2(:,:),dtheta3(:,:)
+  Integer, Allocatable :: MyIndBox(:)
 !!$
 !!$--- System Data
 !!$
@@ -132,21 +133,6 @@ CONTAINS
     IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
          & AtEn)) CALL Print_Errors() 
     
-    natom=SIZE(IndBoxP_a_t)
-    WRITE(*,*) PI_Node_FFTW,natom
-    IF(ALLOCATED(theta1)) THEN
-       DEALLOCATE(theta1,theta2,theta3)
-       DEALLOCATE(dtheta1,dtheta2,dtheta3)
-       DEALLOCATE(chg,fr1,fr2,fr3)
-       DEALLOCATE(fx,fy,fz,phi)
-    END IF
-       
-    ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
-    ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
-    ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
-    ALLOCATE(fx(natom),fy(natom),fz(natom),phi(natom))
-
-    fx=0.0D0; fy=0.0D0; fz=0.0D0
 
     DO i=1,3
        DO j=1,3
@@ -154,7 +140,25 @@ CONTAINS
        END DO
     END DO
 
-    CALL Fractionals
+    natom=SIZE(IndBoxP_a_t)
+
+    IF(ALLOCATED(theta1)) THEN
+       DEALLOCATE(theta1,theta2,theta3)
+       DEALLOCATE(dtheta1,dtheta2,dtheta3)
+       DEALLOCATE(chg,fr1,fr2,fr3,MyIndBox)
+       DEALLOCATE(fx,fy,fz,phi)
+    END IF
+
+    Call PurgeOutsideAtoms(natom)
+       
+    ALLOCATE(theta1(order, natom),theta2(order, natom),theta3(order, natom))
+    ALLOCATE(dtheta1(order, natom),dtheta2(order, natom),dtheta3(order, natom))
+    ALLOCATE(fx(natom),fy(natom),fz(natom),phi(natom))
+
+    fx=0.0D0; fy=0.0D0; fz=0.0D0
+
+
+!!$    CALL Fractionals
     CALL Get_Bsplines
 
     CALL Charges_onGrid(Cq_s)
@@ -182,9 +186,9 @@ CONTAINS
 
     fp=>FORCE_Pick(i_pa)
 
-    fp(IndBoxP_a_t(:)) % x = fp(IndBoxP_a_t(:)) % x + fx(:)
-    fp(IndBoxP_a_t(:)) % y = fp(IndBoxP_a_t(:)) % y + fy(:)
-    fp(IndBoxP_a_t(:)) % z = fp(IndBoxP_a_t(:)) % z + fz(:)
+    fp(MyIndBox(:)) % x = fp(MyIndBox(:)) % x + fx(:)
+    fp(MyIndBox(:)) % y = fp(MyIndBox(:)) % y + fy(:)
+    fp(MyIndBox(:)) % z = fp(MyIndBox(:)) % z + fz(:)
 
 !!$
 !!$--- Fold forces contributions to atoms inside the cell
@@ -205,7 +209,6 @@ CONTAINS
 !!$       END DO
 !!$    END IF
 
-    WRITE(*,*) PI_Node_FFTW,eer,Energy
     eer_i=eer
     CALL EN_Coul_Rec_(eer)
     Energy_i=Energy
@@ -213,6 +216,77 @@ CONTAINS
     timea=endtime-startime
     WRITE(kprint,*) 'timeo ',timea
   CONTAINS
+    Subroutine PurgeOutsideAtoms(natom)
+      Integer :: natom
+      Logical :: ok_i,ok_j,ok_k
+      Integer :: nn
+      Integer, Allocatable :: ind(:)
+      Real(8), Allocatable :: tr1(:),tr2(:),tr3(:),tchg(:)
+      
+      Real(8) :: gfr1,gfr2,gfr3
+      REAL(8) :: w1,w2,w3,x,y,z,v1,v2,v3,chg0
+      Integer :: ith1,ith2,ith3
+
+      Allocate(ind(natom),tr1(natom),tr2(natom),tr3(natom),tchg(natom))
+      nn=0
+      Do n=1,natom
+         m=IndBoxP_a_t(n)
+         chg0=Atoms(m) % chg
+         x=Atoms(m) % x
+         y=Atoms(m) % y
+         z=Atoms(m) % z
+         w1 = x*recip(1,1)+y*recip(2,1)+z*recip(3,1)
+         w2 = x*recip(1,2)+y*recip(2,2)+z*recip(3,2)
+         w3 = x*recip(1,3)+y*recip(2,3)+z*recip(3,3)
+         gfr1 = nfft1*(w1-Anint(w1)+(0.5D0-Sign(0.5D0,w1-Anint(w1))))
+         gfr2 = nfft2*(w2-Anint(w2)+(0.5D0-Sign(0.5D0,w2-Anint(w2))))
+         gfr3 = nfft3*(w3-Anint(w3)+(0.5D0-Sign(0.5D0,w3-Anint(w3))))
+
+         ok_k=.False.
+         k0 = int(gfr3) - order
+         Do ith3 = 1,order
+            k0 = k0 + 1
+            k = k0 + 1 + (nfft3 - isign(nfft3,k0))/2
+            If(k < kstart .Or. k > kend) Cycle
+            ok_k=.True.
+         End Do
+         IF(.Not. ok_k) Cycle
+         ok_j=.False.
+         j0 = int(gfr2) - order
+         Do ith2 = 1,order
+            j0 = j0 + 1
+            j = j0 + 1 + (nfft2 - isign(nfft2,j0))/2
+            If(j < jstart .Or. j > jend) Cycle
+            ok_j=.True.
+         End Do
+         IF(.Not. ok_j) Cycle
+         ok_i=.False.
+         i0 = int(gfr1) - order
+         Do ith1 = 1,order
+            i0 = i0 + 1
+            i = i0 + 1 + (nfft1 - isign(nfft1,i0))/2
+            If(i < istart .Or. i > iend) Cycle
+            ok_i=.True.
+         End Do
+         If(ok_i) Then
+            nn=nn+1
+            ind(nn)=m
+            tr1(nn)=gfr1
+            tr2(nn)=gfr2
+            tr3(nn)=gfr3
+            tchg(nn)=chg0
+         End If
+      End Do
+      natom=nn
+      Allocate(MyIndBox(natom))
+      ALLOCATE(chg(natom),fr1(natom),fr2(natom),fr3(natom))
+      MyIndBox=ind(1:natom)
+      chg=tchg(1:natom)
+      fr1=tr1(1:natom)
+      fr2=tr2(1:natom)
+      fr3=tr3(1:natom)
+
+    End Subroutine PurgeOutsideAtoms
     SUBROUTINE Fractionals
       INTEGER :: n,m,mm,count0,AtSt,AtEn
       REAL(8) :: w1,w2,w3,x,y,z,v1,v2,v3

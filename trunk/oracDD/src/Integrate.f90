@@ -45,12 +45,13 @@ MODULE Integrate
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
-
 #ifdef HAVE_MPI
   USE mpi
 #endif
+  USE Cell, ONLY: co,oc
   USE PI_
   USE Pi_Decompose 
+  USE BoxGeometry
   USE PI_Statistics, ONLY: STAT_Write_it=>Write_it
   USE Print_Defs
   USE PI_Atom, PI_Atom_Update_=>Update_
@@ -64,8 +65,10 @@ MODULE Integrate
   USE PME
   USE PI_Communicate
   USE PI_Collectives
+  USE PI_Cutoffs, ONLY: ddx,ddy,ddz
   USE IndBox
   USE Energies, ONLY: EN_Write_it_=>Write_it_,EN_Banner_=>Banner_,EN_Total_=>Total_
+!!$  USE NeighCells
 
   USE IntraAtoms, ONLY: IntraAtoms_,PI__ShiftIntra
 
@@ -126,6 +129,7 @@ CONTAINS
   SUBROUTINE Integrate_
     INTEGER :: iter,n,Iter_End
     REAL(8) :: startime,endtime,timea,starta,enda
+    Real(8) :: rcut
     TYPE(Force), POINTER :: fp_d(:)
 
     
@@ -157,6 +161,11 @@ CONTAINS
 !!$--- Define the Intramolecular environment
 
     IF(.NOT. IntraAtoms_()) CALL Print_Errors()
+
+!!$    rcut=Radii(1) % out+Radii(1)% update
+!!$    IF(.NOT. NeighCells_(3.0D0,5.0D0,Pi_nprocs,PI_npx,PI_npy,PI_npz,1)) CALL Print_Errors()
+    
+    CALL BoxGeometry_(co,oc)
 
 !!$--- Reset secondary cell. Need it before shifting
 
@@ -273,7 +282,6 @@ CONTAINS
       IF(do_pme) THEN
          IF(.NOT. IndBoxP_(Groupa(:) % knwn,Groupa(:) % AtSt,Groupa(:) %&
               & AtEn)) CALL Print_Errors() 
-         WRITE(*,*) PI_Node_Cart,COUNT(Groupa(:) % Knwn /= 0),COUNT(Atoms(:) % Knwn /= 0)
       END IF
       CALL PI__Fold_F(fp,i_pa,_INIT_)
       IF(do_pme) CALL PI__ResetSecondaryP

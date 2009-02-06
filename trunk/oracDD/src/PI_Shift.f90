@@ -47,8 +47,10 @@ MODULE PI_Shift
 #ifdef HAVE_MPI
   USE mpi
 #endif
+  USE BoxGeometry
   USE PI_
-  USE PI_Cutoffs
+  USE Forces, ONLY: Radii
+  USE PI_Cutoffs, ONLY: Thickness, ddx,ddy,ddz, rcut
   USE PI_Statistics, ONLY: PI__Write_Stats=>Write_It, PI__Time_It&
        &=>Time_It, PI__Sample_Exchange=>Sample_Exchange, PI__Add_Calls&
        &=>Add_Calls
@@ -91,7 +93,7 @@ CONTAINS
          &,np,nind_o,NoGrp_s,NoGrp_r,nmax
     INTEGER :: source,dest
     REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
-    REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
+    REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2,aux3
     REAL(8) :: point(3)
     REAL(8) :: vc(3),tx,ty,tz
     INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
@@ -104,7 +106,10 @@ CONTAINS
     INTEGER, SAVE :: MyCalls=0
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
-    INTEGER :: iv_s(2),iv_r(2)
+    INTEGER :: iv_s(2),iv_r(2),iv1(3),ActualFace
+    Real(8) :: MyCut
+
+    MyCut=Radii(i_p) % out+Radii(i_p)% update
 
     Calls=Calls+1
     IF(Calls > SIZE(iShift)) THEN
@@ -123,12 +128,17 @@ CONTAINS
     MyCalls=MyCalls+1
 
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
+
+    If(Distance_(v1(1),v1(2),v1(3),n,Dir,Axis,dest)  < 0.0D0) Call &
+         & Print_Errors()
     
     aux1=0.5D0*(1.0D0+DBLE(Dir))
 
-    ox=PI__Ranks(PI_Node_Cart+1) % nx+aux1
-    oy=PI__Ranks(PI_Node_Cart+1) % ny+aux1
-    oz=PI__Ranks(PI_Node_Cart+1) % nz+aux1
+    iv1=(/PI__Ranks(PI_Node_Cart+1) % nx,PI__Ranks(PI_Node_Cart+1) &
+         &% ny,PI__Ranks(PI_Node_Cart+1) % nz/)
+    iv1(Axis)=iv1(Axis)+aux1
+
+    ox=iv1(1) ; oy=iv1(2) ; oz=iv1(3) 
 
     Margin(1)=DBLE(ox)*ddx
     Margin(2)=DBLE(oy)*ddy
@@ -160,11 +170,13 @@ CONTAINS
           aux2=v1(1)-X_R
           aux2=aux2-Two*ANINT(Half*aux2)
           IF(aux1 > 0.0D0 .AND. aux2 < 0.0D0) THEN
-             AtSt=Groupa(n) % AtSt
-             AtEn=Groupa(n) % AtEn
-             count1=count1+1
-             ind_o(count1)=n
-             count0=count0+(AtEn-AtSt+1)
+             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
+                AtSt=Groupa(n) % AtSt
+                AtEn=Groupa(n) % AtEn
+                count1=count1+1
+                ind_o(count1)=n
+                count0=count0+(AtEn-AtSt+1)
+             End If
           END IF
           CYCLE
        END IF
@@ -177,14 +189,15 @@ CONTAINS
        aux2=v1(Axis)-Axis_R
        aux2=aux2-Two*ANINT(Half*aux2)
        IF(Dir*aux1 > 0.0D0 .AND. Dir*aux2 < 0.0D0 ) THEN
-          AtSt=Groupa(n) % AtSt
-          AtEn=Groupa(n) % AtEn
-          count1=count1+1
-          ind_o(count1)=n
-          count0=count0+(AtEn-AtSt+1)
-       END IF
-    END DO
-
+          If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
+             AtSt=Groupa(n) % AtSt
+             AtEn=Groupa(n) % AtEn
+             count1=count1+1
+             ind_o(count1)=n
+             count0=count0+(AtEn-AtSt+1)
+          End If
+       End IF
+    End DO
     NoAtm_s=count0
     nind_o=count1
     NoGrp_s=count1

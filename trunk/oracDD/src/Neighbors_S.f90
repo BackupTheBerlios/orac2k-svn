@@ -96,8 +96,9 @@ CONTAINS
     INTEGER :: vect0(3)
     INTEGER, POINTER :: vect(:)=>NULL()
     REAL(8) :: sqcut,dx,dy,dz,rmin
-    INTEGER :: imax,jmax,kmax,i,j,k,istart,jstart,kstart,warnx,warny, warnz&
+    INTEGER :: imax,jmax,kmax,i,j,k,istart,warnx,warny, warnz&
          &,nxmax, nymax,nzmax,nind,ncount0,kend,jend
+    Integer :: iend,jstart,kstart,iv(3)
 
     calls=calls+1
     i_n=calls
@@ -126,15 +127,29 @@ CONTAINS
 
     IF(.NOT. Node_()) STOP
     CALL Node__Push(vect0)   
+
+    iend=ncx-1
+    jstart=1-ncy
+    kstart=1-ncz
+
+    iv(1)=PI_npx
+    iv(2)=PI_npy
+    iv(3)=PI_npz
+    IF(iv(1) == 1 .AND. iv(2) /= 1) THEN
+       iend=0
+    ELSE IF(iv(1) == 1 .AND. iv(2) == 1) THEN
+       iend=0; jstart=0;
+    END IF
+
     istart=0
     ncount0=0
-    DO i=istart,ncx-1
+    DO i=istart,iend
        jend=ncy-1
        IF(i == 0) jend=0
-       DO j=1-ncy,jend
+       DO j=jstart,jend
           kend=ncz-1
           IF(i == 0 .AND. j == 0) kend=0
-          DO k=1-ncz,kend
+          DO k=kstart,kend
              ncount0=ncount0+1
              rmin=dist_ijk(i,j,k,dx,dy,dz)
              IF(rmin < sqcut) then
@@ -159,6 +174,9 @@ CONTAINS
        clst(calls) % ind_xyz(nind) % i=vect(1)
        clst(calls) % ind_xyz(nind) % j=vect(2)
        clst(calls) % ind_xyz(nind) % k=vect(3)
+       If(Pi_node_cart == 0) Write(65,*) 2.0D0*Dble(vect(1))&
+            &/Dble(ncx),2.0D0*Dble(vect(2))/Dble(ncy),2.0D0&
+            &*Dble(vect(3))/Dble(ncz) 
     END DO
 
     imax=0

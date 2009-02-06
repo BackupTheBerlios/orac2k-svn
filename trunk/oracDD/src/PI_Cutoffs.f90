@@ -115,8 +115,6 @@ CONTAINS
 !!$
     rcuts0(i_pa) % r (:)=(Radii(i_p) % out+Radii(i_p)% update)*Thick(:)
     rcut(:)=rcuts0(i_pa) % r (:)
-    WRITE(*,*) 'thickness ',rcut
-    WRITE(*,*) 'two ',Radii(i_p) % out+Radii(i_p)% update,rcut/Thick
   END SUBROUTINE Thickness
   SUBROUTINE Thick_Intra(i_p,MyCutoff)
     REAL(8) :: MyCutoff

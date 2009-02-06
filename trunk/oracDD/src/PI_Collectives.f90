@@ -201,7 +201,8 @@ CONTAINS
     LOGICAL, ALLOCATABLE :: couts(:)
     CHARACTER(len=max_data), ALLOCATABLE :: errmsg(:)
     CHARACTER(len=max_data) :: string
-    INTEGER :: cout,n
+    INTEGER :: n
+    Logical :: cout
 
 #ifdef HAVE_MPI
     IF(PI_Nprocs == 1) RETURN
