@@ -23,7 +23,10 @@
   vout%z=v1%x*v2%y-v1%y*v2%x;
 
 #define __dotprod(v1,v2,vout)			\
-  vout=v1%x*v2%x+v1%y*v2%y+v1%z*v2%z;
+  vout=v1%x*v2%x+v1%y*v2%y+v1%z*v2%z
+
+#define __dotprod_v(v1,v2)			\
+  v1%x*v2%x+v1%y*v2%y+v1%z*v2%z
 
 #define __norm_v(v1)      			\
   SQRT(v1%x**2+v1%y**2+v1%z**2)
@@ -38,5 +41,11 @@
   vout%x=m*v1%x;					\
   vout%y=m*v1%y;					\
   vout%z=m*v1%z;
- 
+
+#define __dist_v(v1,v2)      			\
+  SQRT((v1%x-v2%x)**2+(v1%y-v2%y)**2+(v1%z-v2%z)**2)
+
+#define __dist2_v(v1,v2)      			\
+  (v1%x-v2%x)**2+(v1%y-v2%y)**2+(v1%z-v2%z)**2
+
 #endif
