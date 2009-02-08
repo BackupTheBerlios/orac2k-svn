@@ -163,6 +163,7 @@ CONTAINS
     ALLOCATE(knwn(SIZE(Atoms)))
     knwn=Atoms(:) % knwn
 
+
 !!$--- Shift to half of the ghost cell count all interaction only once
 
     CALL PI__ResetSecondary
@@ -222,7 +223,6 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        RETURN
     END IF
-
 !!$    IF(Reordering) CALL Labelling
 
 !!$--- Intra_Conv gathers atoms to the simulation cell from Atoms(:) 

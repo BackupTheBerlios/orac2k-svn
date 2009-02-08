@@ -230,7 +230,10 @@ CONTAINS
     END IF
     
   
+    startime=MPI_WTIME()
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
+    endtime=MPI_WTIME()
+    CALL PI__Time_It(startime,endtime) 
     NoGrp_s=iFold(Calls) % sh(i_p) % NoGrp_s
     NoGrp_r=iFold(Calls) % sh(i_p) % NoGrp_r
     NoAtm_s=iFold(Calls) % sh(i_p) % NoAtm_s

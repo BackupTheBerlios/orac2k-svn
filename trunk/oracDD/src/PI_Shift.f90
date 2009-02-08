@@ -170,7 +170,8 @@ CONTAINS
           aux2=v1(1)-X_R
           aux2=aux2-Two*ANINT(Half*aux2)
           IF(aux1 > 0.0D0 .AND. aux2 < 0.0D0) THEN
-             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
+             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za&
+                  &,n) <= MyCut) Then 
                 AtSt=Groupa(n) % AtSt
                 AtEn=Groupa(n) % AtEn
                 count1=count1+1
@@ -288,6 +289,7 @@ CONTAINS
     INTEGER, SAVE :: MyCalls=0
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
+    Logical, Allocatable :: Mask(:)
 
     Calls=Calls+1
     IF(Calls > SIZE(iShift)) THEN
@@ -297,17 +299,22 @@ CONTAINS
        CALL Add_Errors(-1,errmsg_f)
        CALL Print_Errors()
     END IF
-
+    If(MyCalls == 0) Then
+       Allocate(Mask(Size(Groupa)))
+       Mask=.False.
+    End If
+    
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
 
     NoGrp_s=iShift(Calls) % sh(i_p) % NoGrp_s
     NoGrp_r=iShift(Calls) % sh(i_p) % NoGrp_r
     NoAtm_s=iShift(Calls) % sh(i_p) % NoAtm_s
     NoAtm_r=iShift(Calls) % sh(i_p) % NoAtm_r
+    Call jBuff(iShift(Calls) % sh,i_p,iBuff_r,iBuff_s,NoGrp_s,NoGrp_r&
+         &,NoAtm_S,NoAtm_r) 
 
-    iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_s
-    iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_r
-
+!!$    iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_s
+!!$    iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_r
 
     ALLOCATE(Buff_s(3,NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
@@ -330,7 +337,6 @@ CONTAINS
 
     CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
          &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
-
     nn=0
     DO m=1,NoGrp_r
        l=iBuff_r(m)
@@ -360,7 +366,6 @@ CONTAINS
           xpg = xpg + xmass*Atoms(n) % x
           ypg = ypg + xmass*Atoms(n) % y
           zpg = zpg + xmass*Atoms(n) % z
-          Atoms(n) % knwn = 2
        END DO
        Groupa(l) % xa = xpga 
        Groupa(l) % ya = ypga
@@ -368,8 +373,88 @@ CONTAINS
        Groupa(l) % x = xpg
        Groupa(l) % y = ypg
        Groupa(l) % z = zpg
-       groupa(l) % Knwn = 2
     END DO
+    DO m=1,iShift(Calls) % sh(i_p) % NoGrp_r
+       l=iShift(Calls) % sh(i_p) % iBuff_r(m)
+       groupa(l) % Knwn = 2
+       AtSt=Groupa(l) % AtSt
+       AtEn=Groupa(l) % AtEn
+       DO n=AtSt,AtEn
+          Atoms(n) % knwn = 2
+       End DO
+    End DO
+  Contains
+    Subroutine jBuff(sh,i_p,iBuff_r,iBuff_s,NoGrp_s,NoGrp_r,NoAtm_S&
+         &,NoAtm_r)
+      Type(Indx), Target :: sh(:)
+      Integer :: i_p,NoGrp_s,NoGrp_r,NoAtm_S,NoAtm_r
+      Integer, Pointer :: iBuff_s(:),iBuff_r(:)
+      Integer, Pointer :: jBuff_s(:),jBuff_r(:)
+      Integer, Pointer :: kBuff_s(:),kBuff_r(:)
+      Integer, Allocatable, Save, Target :: MyBuff_s(:),MyBuff_r(:)
+      Integer :: i_pm
+
+      
+      If(i_p == 1) Then
+         iBuff_s=>sh(i_p) % iBuff_s
+         iBuff_r=>sh(i_p) % iBuff_r
+         NoGrp_s=sh(i_p) % NoGrp_s
+         NoGrp_r=sh(i_p) % NoGrp_r
+         NoAtm_s=sh(i_p) % NoAtm_s
+         NoAtm_r=sh(i_p) % NoAtm_r
+         Return
+      End If
+
+      i_pm=i_p-1
+      If(.Not. Allocated(sh(i_pm) % iBuff_s)) Then
+         iBuff_s=>sh(i_p) % iBuff_s
+         iBuff_r=>sh(i_p) % iBuff_r
+         NoGrp_s=sh(i_p) % NoGrp_s
+         NoGrp_r=sh(i_p) % NoGrp_r
+         NoAtm_s=sh(i_p) % NoAtm_s
+         NoAtm_r=sh(i_p) % NoAtm_r
+         Return
+      End If
+      If(Allocated(MyBuff_s)) Then
+         Deallocate(Mybuff_s,Mybuff_r)
+      End If
+      jBuff_s=>sh(i_p) % iBuff_s
+      jBuff_r=>sh(i_p) % iBuff_r
+
+      Mask(jBuff_s(:))=.True.
+      i_pm=i_p-1
+      Do While (i_pm /=0)
+         kBuff_s=>sh(i_pm) % iBuff_s
+         Mask(kBuff_s(:))=.False.
+         i_pm=i_pm-1
+      End Do
+      NoGrp_s=Count(Mask)
+      Allocate(MyBuff_s(NoGrp_s))
+      MyBuff_s=Pack(jBuff_s(:),Mask(jBuff_s(:)))
+      iBuff_s=>MyBuff_s
+
+
+      Mask(jBuff_s(:))=.False. !$-- ReSet to .False. 
+
+      Mask(jBuff_r(:))=.True.
+      i_pm=i_p-1
+      Do While (i_pm /=0)
+         kBuff_r=>sh(i_pm) % iBuff_r
+         Mask(kBuff_r(:))=.False.
+         i_pm=i_pm-1
+      End Do
+      NoGrp_r=Count(Mask)
+      Allocate(MyBuff_r(NoGrp_r))
+      MyBuff_r=Pack(jBuff_r(:),Mask(jBuff_r(:)))
+      iBuff_r=>MyBuff_r
+
+      Mask(jBuff_r(:))=.False. !$-- ReSet to .False. 
+
+      NoAtm_s=SUM(Groupa(MyBuff_s(:)) % AtEn-Groupa(MyBuff_s(:)) % AtSt+1)
+      NoAtm_r=SUM(Groupa(MyBuff_r(:)) % AtEn-Groupa(MyBuff_r(:)) % AtSt+1)
+
+    End Subroutine jBuff
+
 
   END SUBROUTINE Buff_Shift
 

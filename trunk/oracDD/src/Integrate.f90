@@ -169,6 +169,7 @@ CONTAINS
 
 !!$--- Reset secondary cell. Need it before shifting
 
+
     CALL PI__Shift(NShell,_INIT_,.FALSE.)
     CALL PI__Shift(NShell,_EXCHANGE_,.FALSE.)
 

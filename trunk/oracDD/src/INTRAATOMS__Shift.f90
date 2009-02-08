@@ -227,9 +227,12 @@
     END DO
 
     NoGrp_s=count1
-    Nstruct_s=SUM(MyMaps(Ind_g(1:count1)) % g0)+2*count1
+    Nstruct_s=0
+
+    If(NoGrp_s /= 0) Nstruct_s=SUM(MyMaps(Ind_g(1:count1)) % g0)+2*count1
     
-    ALLOCATE(Struct_s(Nstruct_s))
+    Allocate(Struct_s(Nstruct_s))
+
     count0=0
     count1=0
     DO nn=1,NoGrp_s
@@ -245,7 +248,6 @@
        count1=count1+MyMaps(n) % g0
        count0=count0+MyMaps(n) % g0
     END DO
-    
     NoAtm_s=count0
     nstruct_r=0
     NoAtm_r=0
@@ -260,10 +262,10 @@
          &,3,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
 
     NoGrp_r=iv_r(1);NoAtm_r=iv_r(2);Nstruct_r=iv_r(3)
-
 !!$
 !!$--- Set ishifts
 !!$
+
 
     iShift(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
     IF(ALLOCATED(iShift(Calls) % sh(i_p) % iBuff_S))&
@@ -280,7 +282,6 @@
     ALLOCATE(Struct_r(Nstruct_r))
     ALLOCATE(Buff_s(3,NoGrp_s))
     ALLOCATE(Buff_r(3,NoGrp_r))
-
     n=0
     m=0
     DO WHILE(n < Nstruct_s)
@@ -292,7 +293,6 @@
        g0=Struct_s(n+2)
        n=n+2+g0
     END DO
-
 
     NoGrp_s3=NoGrp_s*3
     NoGrp_r3=NoGrp_r*3
@@ -306,7 +306,7 @@
     n=0
     m=0
     count1=0
-    DO WHILE(n < Nstruct_r)
+    Do While(n < Nstruct_r)
        m=m+1
        l =Struct_r(n+1)
        g0=Struct_r(n+2)
@@ -318,32 +318,34 @@
        nMyMaps=nMyMaps+1
        MyMaps(nMyMaps) % Grp_no=l
        MyMaps(nMyMaps) % g0=g0
-       ALLOCATE(MyMaps(nMyMaps) % idx(g0))
-       DO q=1,g0
+       If(g0 /= 0) Allocate(MyMaps(nMyMaps) % idx(g0))
+       Do q=1,g0
           MyMaps(nMyMaps) % idx(q)=Struct_r(n+2+q)
           iShift(Calls) % sh(i_p) % iBuff_r(count1+q)=Struct_r(n+2+q)
           Atoms(Struct_r(n+2+q)) % knwn = 2
-       END DO
+       End Do
        n=n+2+g0
        count1=count1+g0
-    END DO
-  CONTAINS
+    End Do
+  Contains
     SUBROUTINE Copy_Maps(Map_n)
       TYPE(MyMAps_) :: Map_n(:)
-      INTEGER :: n,g0
+      INTEGER :: n,g0,m
       
       nMyMaps=SIZE(Map_n)
       DO n=1,nMyMaps
+         MyMaps(n) % Grp_no=Map_n(n) % Grp_no
          g0=Map_n(n) % g0
-         IF(ALLOCATED(MyMaps(n) % idx)) DEALLOCATE(MyMaps(n) % idx)
-         ALLOCATE(MyMaps(n) % idx(g0))
+         MyMaps(n) % g0=g0
+         If(g0 /= 0) Then
+            Allocate(MyMaps(n) % idx(g0))
+            MyMaps(n)%idx=Map_n(n) % idx
+         End If
       END DO
-      MyMaps(1:nMyMaps)=Map_n
     END SUBROUTINE Copy_Maps
     SUBROUTINE Delete_Maps
       INTEGER :: n,g0
       DO n=1,nMyMaps
-         g0=MyMaps(n) % g0
          IF(ALLOCATED(MyMaps(n) % idx)) DEALLOCATE(MyMaps(n) % idx)
          MyMaps(n) % g0=0
          MyMaps(n) % Grp_No=0
@@ -374,6 +376,7 @@
     REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
     CHARACTER(len=max_char) :: lab0
 
+    
     Calls=Calls+1
     IF(Calls > SIZE(iShift)) THEN
        WRITE(lab0,'(i1)') Calls
@@ -393,7 +396,6 @@
 
     ALLOCATE(Buff_s(3,NoAtm_s))
     ALLOCATE(Buff_r(3,NoAtm_r))
-    count0=0
     DO n=1,NoAtm_s
        q=iBuff_s(n)
        Buff_s(1,n)=Atoms(q) % x

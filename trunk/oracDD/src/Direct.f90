@@ -80,12 +80,12 @@ CONTAINS
     INTEGER :: i_pa
     INTEGER, OPTIONAL :: Initialize
     INTEGER :: ierr,nnn,nn,n,m
-    REAL(8), DIMENSION(:), ALLOCATABLE :: fppx,fppy,fppz,Xg_PBC&
+    REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: fppx,fppy,fppz,Xg_PBC&
          &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
          &,dswrs,cmap2,xmap3,ymap3,zmap3
-    INTEGER, ALLOCATABLE :: IndGrp(:),IndGrps(:)&
+    INTEGER, ALLOCATABLE, SAVE :: IndGrp(:),IndGrps(:)&
          &,p_index_j(:),p_index_jj(:)
-    INTEGER, ALLOCATABLE :: neib(:),neic(:)
+    INTEGER, ALLOCATABLE, SAVE :: neib(:),neic(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
     INTEGER, SAVE :: Times_of_Call=0
     INTEGER :: i_p
@@ -164,6 +164,16 @@ CONTAINS
 !!$--- Get Memory
 !!$
     SUBROUTINE Memory
+      IF(ALLOCATED(Xg_PBC)) THEN
+         DEALLOCATE(Xg_PBC,Yg_PBC,Zg_PBC,Xgs_PBC&
+              &,Ygs_PBC,Zgs_PBC,IndGrp&
+              &,IndGrps,neib,xcs,ycs&
+              &,zcs,swrs,dswrs,cmap2&
+              &,xmap3,ymap3,zmap3,neic)
+         DEALLOCATE(fppx,fppy,fppz,p_index_j&
+              &,p_index_jj) 
+      END IF
+
       ALLOCATE(Xg_PBC(ngroup),Yg_PBC(ngroup),Zg_PBC(ngroup),Xgs_PBC(ngroup)&
            &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
            &,IndGrps(ngroup),neib(ngroup),xcs(ngroup),ycs(ngroup)&
