@@ -1,9 +1,13 @@
 # Parallel 
 PARA_DEFS = -DHAVE_MPI
 
+#COMMS = -D__Blocked
+COMMS = -D__NonBlocked
+
 # Compilers
 
 COMPILER = INTEL
+
 
 #COMPILER = PGI
 #COMPILER = G95
@@ -34,9 +38,9 @@ COMPILER_DEFS = -DHAVE_F2003_EXT
 endif
 
 ifeq ($(COMPILER), gfortran)
-FFLAGS = -x f95-cpp-input $(PARA_DEFS) $(COMPILER_DEFS)
+FFLAGS = -x f95-cpp-input $(PARA_DEFS) $(COMPILER_DEFS) $(COMMS)
 else
-FFLAGS = $(PARA_DEFS) $(COMPILER_DEFS)
+FFLAGS = $(PARA_DEFS) $(COMPILER_DEFS) $(COMMS)
 endif
  F77FLAGS = -O3
 # F77FLAGS = -g -traceback -fpe0 -check all
@@ -89,6 +93,6 @@ endif
 
 #FFLAGS = -O3
 #FFLAGS = -g -C
-#include Make.Lx_ifc_breizh
+include Make.Lx_ifc_breizh
 #include Make.MAC_GF
-include Make.MAC
+#include Make.MAC
