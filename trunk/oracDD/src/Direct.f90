@@ -69,7 +69,7 @@ MODULE Direct
   
   TYPE(Force), POINTER :: fp(:)
   INTEGER, SAVE :: No_Calls=0
-  REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:),eccc(:)
+  REAL(8), ALLOCATABLE, SAVE :: ecc6(:),ecc12(:),eccc(:),sig0_i(:),eps0(:),esig0(:)
   INTEGER, ALLOCATABLE, SAVE :: Id_ij(:,:)
   REAL(8), PARAMETER :: a1=0.2548296D0,a2=-0.28449674D0,a3&
        &=1.4214137D0,a4=-1.453152D0,a5=1.0614054D0,qp=0.3275911D0
@@ -82,7 +82,8 @@ CONTAINS
     INTEGER :: ierr,nnn,nn,n,m
     REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: fppx,fppy,fppz,Xg_PBC&
          &,Yg_PBC,Zg_PBC,Xgs_PBC,Ygs_PBC,Zgs_PBC,xcs,ycs,zcs,swrs&
-         &,dswrs,cmap2,xmap3,ymap3,zmap3
+         &,dswrs,cmap2,xmap3,ymap3,zmap3,Xc_PBC&
+         &,Yc_PBC,Zc_PBC,Xcs_PBC,Ycs_PBC,Zcs_PBC
     INTEGER, ALLOCATABLE, SAVE :: IndGrp(:),IndGrps(:)&
          &,p_index_j(:),p_index_jj(:)
     INTEGER, ALLOCATABLE, SAVE :: neib(:),neic(:)
@@ -126,6 +127,7 @@ CONTAINS
       n=SIZE(LennardJones__Par % Par_SE)
       ALLOCATE(Id_ij(n,n))
       ALLOCATE(ecc6(n*(n+1)/2),ecc12(n*(n+1)/2),eccc(n*(n+1)/2))
+      ALLOCATE(sig0_i(n*(n+1)/2),eps0(n*(n+1)/2),esig0(n*(n+1)/2))
       DO n=1,SIZE(LennardJones__Par % Par_SE)
          DO m=n,SIZE(LennardJones__Par % Par_SE)
             ij=m*(m-1)/2+n
@@ -138,6 +140,9 @@ CONTAINS
             IF(ecc6(ij) /= 0.0D0 .AND. ecc12(ij) /= 0.0D0) THEN
                aux=(ecc12(ij)/ecc6(ij))
                eccc(ij)=3.5_8*aux**(1.0D0/6.0D0)
+               sig0_i(ij)=1.0D0/aux**(1.0D0/6.0D0)
+               eps0(ij)=ecc6(ij)/aux
+               esig0(ij)=sig0_i(ij)*eps0(ij)
             ELSE
                eccc(ij)=0.0D0
             END IF
@@ -169,7 +174,8 @@ CONTAINS
               &,Ygs_PBC,Zgs_PBC,IndGrp&
               &,IndGrps,neib,xcs,ycs&
               &,zcs,swrs,dswrs,cmap2&
-              &,xmap3,ymap3,zmap3,neic)
+              &,xmap3,ymap3,zmap3,neic,Xc_PBC&
+              &,Yc_PBC,Zc_PBC,Xcs_PBC,Ycs_PBC,Zcs_PBC)
          DEALLOCATE(fppx,fppy,fppz,p_index_j&
               &,p_index_jj) 
       END IF
@@ -178,7 +184,9 @@ CONTAINS
            &,Ygs_PBC(ngroup),Zgs_PBC(ngroup),IndGrp(ngroup)&
            &,IndGrps(ngroup),neib(ngroup),xcs(ngroup),ycs(ngroup)&
            &,zcs(ngroup),swrs(ngroup),dswrs(ngroup),cmap2(ngroup)&
-           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup),neic(ngroup))
+           &,xmap3(ngroup),ymap3(ngroup),zmap3(ngroup),neic(ngroup)&
+           &,Xc_PBC(ngroup),Yc_PBC(ngroup),Zc_PBC(ngroup)&
+           &,Xcs_PBC(ngroup),Ycs_PBC(ngroup),Zcs_PBC(ngroup))
       
       ALLOCATE(fppx(natom),fppy(natom),fppz(natom),p_index_j(natom)&
            &,p_index_jj(natom)) 

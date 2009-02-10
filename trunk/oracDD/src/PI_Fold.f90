@@ -260,8 +260,8 @@ CONTAINS
 
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,5,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,5,PI_Comm_Cart,STATUS,ierr)
+
+    ierr=PointToPoint(buff_s,NoAtm_s3,buff_r,NoAtm_r3,source,dest,Pi_comm_cart)
 
     nn=0
     DO q=1,NoGrp_r
@@ -278,5 +278,27 @@ CONTAINS
 
     CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
   END SUBROUTINE Buff_Fold
+  Function PointToPoint(buff_s,n_s,buff_r,n_r,source,dest,comm) Result(out)
+    Integer :: out,n_s,n_r,source,dest,comm
+    Real(8) :: buff_s(:,:),buff_r(:,:)
+
+    Integer :: Myreq_s,Myreq_r
+
+    out=0
+#ifdef __NonBlocked
+    Call Mpi_isend(buff_s,n_s,Mpi_real8,dest,5,comm,MyReq_s,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_irecv(buff_r,n_r,Mpi_real8,source,5,comm,MyReq_r,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_wait(MyReq_r,Status,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_wait(MyReq_s,Status,ierr)
+    If(ierr /= 0) out=ierr
+#else
+    Call Mpi_sendrecv(Buff_s,n_s,Mpi_real8,dest,5,Buff_r&
+         &,n_r,Mpi_real8,source,5,comm,Status,ierr)
+    If(ierr /= 0) out=ierr    
+#endif
+  End Function PointToPoint
 
 END MODULE PI_Fold

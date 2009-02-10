@@ -32,7 +32,7 @@
 !!$----------------------------------------------------------------------/
 #include "forces.h"
 #include "Erfc_Spline.h"
-Subroutine Forces
+SUBROUTINE Forces
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -47,30 +47,40 @@ Subroutine Forces
 !!$---- This routine is part of the program  oracDD ----*
 !!$---- This routine is contained in the Module Direct ----*
 
-  Integer :: ii,n,p,q,r,o,iv,jv,kv,nx,ny,nz,numcell,count_g&
+  INTEGER :: ii,n,p,q,r,o,iv,jv,kv,nx,ny,nz,numcell,count_g&
          &,count_gs,ngrp_j,ngrp_js,count0,i
-  Real(8) :: rcut1,rcut2,rcuts1,rcuts2
-  Real(8) :: xg,yg,zg,xd1,yd1,zd1,xd,yd,zd,xc,yc,zc,rsq,rsqi,r6,r12&
+  REAL(8) :: rcut1,rcut2,rcuts1,rcuts2
+  REAL(8) :: xd1,yd1,zd1,xd,yd,zd,xc,yc,zc,rsq,rsqi,r6,r12&
        &,furpar,qforce,conf,uconfa,st1,st2,st3,st4,st5,st6,st7,st8,st9&
        &,emvir,qfx,qfy,qfz,uconf(3),ucoul(3),xpi,ypi,zpi,rsp,xpgi&
-       &,ypgi,zpgi,xgg,ygg,zgg,drj,massi,massj,xpgj,ypgj,zpgj,xa,ya&
-       &,za,X_Pbc,Y_Pbc,Z_Pbc,chrgei,ucoula,ssvir,rspi,rspqi,alphar&
+       &,ypgi,zpgi,xgg,ygg,zgg,drj,massi,massj,xpgci,ypgci,zpgci,xa,ya&
+       &,za,X_PBC,Y_PBC,Z_PBC,chrgei,ucoula,ssvir,rspi,rspqi,alphar&
        &,qt,erfcst,aux1,expcst,ucoul_o(3),uconf_o(3),rcutb,rcutb2
-  Real(8) ::  r2neigh,r2inn,r2out,rinn0,r2inn0,rout0,r2out0,arsout1&
+  REAL(8) ::  r2neigh,r2inn,r2out,rinn0,r2inn0,rout0,r2out0,arsout1&
        &,arsout2,arsinn1,arsinn2,rinn,rout,rtolout,rtolinn,auxa,auxb&
-       &,h,MyErfc_,MyDerfc_
+       &,h,MyErfc_,MyDErfc_,fpix,fpiy,fpiz
 
-  Integer :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
+  INTEGER :: AtSt,AtEn,AtSt_i,AtEn_i,AtSt_j,AtEn_j,ig,j,k,l,i1,jj,j1&
        &,Slv_i,Slv_j,Slv_ij,Id_i,Id_j,nbti,p_mapa,p_j,lij,i_pb&
        &,count_b,count_c,p_mapb,nol,natom1,i_c
-  Real(8), Save :: Tol_q=1.0D-5
+  REAL(8), SAVE :: Tol_q=1.0D-5
 
-  Logical :: lskip_ewald,ok_Lj,ok_Co
-  Logical, Allocatable :: ol(:)
-  Type(Neigha__), Dimension(:), Pointer :: Neigha,Neighb
+  LOGICAL :: lskip_ewald,ok_LJ,ok_Co
+  LOGICAL, ALLOCATABLE :: ol(:)
+  TYPE(Neigha__), DIMENSION(:), POINTER :: Neigha,Neighb
+  Real(8), Allocatable :: xpc(:),ypc(:),zpc(:),xpgc(:),ypgc(:),zpgc(:)
 
-  If(i_p > Size(Radii)) Return
+  IF(i_p > SIZE(Radii)) RETURN
 
+  Allocate(xpc(natom),ypc(natom),zpc(natom))
+  Allocate(xpgc(ngroup),ypgc(ngroup),zpgc(ngroup))
+  xpc=co(1,1)*xp0+co(1,2)*yp0+co(1,3)*zp0
+  ypc=            co(2,2)*yp0+co(2,3)*zp0
+  zpc=                        co(3,3)*zp0
+
+  xpgc=co(1,1)*xpg+co(1,2)*ypg+co(1,3)*zpg
+  ypgc=            co(2,2)*ypg+co(2,3)*zpg
+  zpgc=                        co(3,3)*zpg
   
   Neigha=>List(i_p) % Neigh
   i_pb=i_p-1
@@ -105,7 +115,7 @@ Subroutine Forces
   rout0=Radii(i_p) % out
   rtolout=Radii(i_p) % shell
 
-  If(i_pb /= 0) Then
+  IF(i_pb /= 0) THEN
      Neighb=>List(i_pb) % Neigh
      rcutb=Radii(i_pb) % out + Radii(i_pb) % update 
      rcutb2=rcutb**2
@@ -113,7 +123,7 @@ Subroutine Forces
      rinn=Radii(i_pb) % inn
      rinn0=Radii(i_pb) % out
      rtolinn=Radii(i_pb) % shell
-  End If
+  END IF
 
   r2out=rout**2
   r2out0=rout0**2
@@ -127,7 +137,7 @@ Subroutine Forces
   ucoul=0.0D0
   uconf=0.0D0
 
-  maplg=.True.
+  maplg=.TRUE.
   count_c=0
   st1=0.0D0
   st2=0.0D0
@@ -139,125 +149,138 @@ Subroutine Forces
   st8=0.0D0
   st9=0.0D0
   qt=1.0d0/(1.0d0+qp*alphal*rinn)
-  expcst=Dexp(-alphal*rinn*alphal*rinn)
+  expcst=DEXP(-alphal*rinn*alphal*rinn)
   erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
   lskip_ewald = erfcst.lt.1.0d-4
-  If(Ewald__Param % NoSkip) lskip_ewald = .False.
+  IF(Ewald__Param % NoSkip) lskip_ewald = .FALSE.
   fppx=0.0_8
   fppy=0.0_8
   fppz=0.0_8
-  Do ig=1,ngroup
+  DO ig=1,ngroup
      xpgi=xpg(ig)
      ypgi=ypg(ig)
      zpgi=zpg(ig)
+
+     xpgci=xpgc(ig)
+     ypgci=ypgc(ig)
+     zpgci=zpgc(ig)
+
      AtSt_i=grppt(1,ig)
      AtEn_i=grppt(2,ig)
      count_g=0
      count_gs=0
-     If(i_pb /= 0) Then
-        If(Allocated(Neighb(ig) % nb)) Deallocate(Neighb(ig) % nb)
+     IF(i_pb /= 0) THEN
+        IF(ALLOCATED(Neighb(ig) % nb)) DEALLOCATE(Neighb(ig) % nb)
         Neighb(ig) % no = 0 
-     End If
+     END IF
      count_b=0
-     Do o=1,Neigha(ig) % no
+     DO o=1,Neigha(ig) % no
         l=Neigha(ig) % nb(o)
-        xpgj=xpg(l)
-        ypgj=ypg(l)
-        zpgj=zpg(l)
-        xa=xpgi-xpgj
-        ya=ypgi-ypgj
-        za=zpgi-zpgj
-        X_Pbc=_PBC(xa)
-        Y_Pbc=_PBC(ya)
-        Z_Pbc=_PBC(za)
-        xa=xa+X_Pbc
-        ya=ya+Y_Pbc
-        za=za+Z_Pbc
-        xc=co(1,1)*xa+co(1,2)*ya+co(1,3)*za
-        yc=           co(2,2)*ya+co(2,3)*za
-        zc=                      co(3,3)*za
-        rsq=xc*xc+yc*yc+zc*zc
-        If(rsq >= r2inn0 .And. rsq <= r2out) Then
+
+        xa=xpgi-xpg(l)
+        xa=_PBC(xa)
+
+        ya=ypgi-ypg(l)
+        ya=_PBC(ya)
+
+        za=zpgi-zpg(l)
+        za=_PBC(za)
+
+        xd=co(1,1)*xa+co(1,2)*ya+co(1,3)*za
+        xc=xpgci-xpgc(l)+xd
+        rsq=xc*xc
+
+        yd=           co(2,2)*ya+co(2,3)*za
+        yc=ypgci-ypgc(l)+yd
+        rsq=rsq+yc*yc
+
+        zd=                      co(3,3)*za
+        zc=zpgci-zpgc(l)+zd
+        rsq=rsq+zc*zc
+        
+        IF(rsq >= r2inn0 .AND. rsq <= r2out) THEN
            count_g=count_g+1
            indGrp(count_g)=l
-           Xg_Pbc(count_g)=X_Pbc
-           Yg_Pbc(count_g)=Y_Pbc
-           Zg_Pbc(count_g)=Z_Pbc
-        Else If(rsq > r2out .And. rsq <= r2out0) Then
+           Xg_PBC(count_g)=xd
+           Yg_PBC(count_g)=yd
+           Zg_PBC(count_g)=zd
+        ELSE IF(rsq > r2out .AND. rsq <= r2out0) THEN
            count_gs=count_gs+1
            indGrps(count_gs)=l
-           Xgs_Pbc(count_gs)=X_Pbc
-           Ygs_Pbc(count_gs)=Y_Pbc
-           Zgs_Pbc(count_gs)=Z_Pbc
+           Xgs_PBC(count_gs)=xd
+           Ygs_PBC(count_gs)=yd
+           Zgs_PBC(count_gs)=zd
+
            xcs(count_gs)=xc
            ycs(count_gs)=yc
            zcs(count_gs)=zc
-           rsp=Dsqrt(rsq)
+           rsp=DSQRT(rsq)
            auxa=(arsout1+2.0d0*rsp)/arsout2
            auxb=rout0-rsp
            swrs(count_gs)=auxa*auxb**2
            dswrs(count_gs)=-2.0d0*auxa*auxb+2.0d0*auxb**2/arsout2
            dswrs(count_gs)=dswrs(count_gs)/rsp
-        Else If(rsq > r2inn .And. rsq <= r2inn0) Then
+        ELSE IF(rsq > r2inn .AND. rsq <= r2inn0) THEN
            count_gs=count_gs+1
            indGrps(count_gs)=l
-           Xgs_Pbc(count_gs)=X_Pbc
-           Ygs_Pbc(count_gs)=Y_Pbc
-           Zgs_Pbc(count_gs)=Z_Pbc
+           Xgs_PBC(count_gs)=xd
+           Ygs_PBC(count_gs)=yd
+           Zgs_PBC(count_gs)=zd
            xcs(count_gs)=xc
            ycs(count_gs)=yc
            zcs(count_gs)=zc
-           rsp=Dsqrt(rsq)
+           rsp=DSQRT(rsq)
            auxa=(arsinn1+2.0d0*rsp)/arsinn2
            auxb=rinn0-rsp
            swrs(count_gs)=1.d0-auxa*auxb**2
            dswrs(count_gs)=2.0d0*auxa*auxb-2.0d0*auxb**2/arsinn2
            dswrs(count_gs)=dswrs(count_gs)/rsp
-        End If
-        If(i_pb /= 0) Then
-           If(rsq <= rcutb2) Then
+        END IF
+        IF(i_pb /= 0) THEN
+           IF(rsq <= rcutb2) THEN
               count_b=count_b+1
               neib(count_b)=l
-           End If
-        End If
-     End Do
-     If(count_b /= 0) Then
+           END IF
+        END IF
+     END DO
+     IF(count_b /= 0) THEN
         Neighb(ig) % no=count_b
-        Allocate(Neighb(ig) % nb(count_b))
+        ALLOCATE(Neighb(ig) % nb(count_b))
         Neighb(ig) % nb=neib(1:count_b)
-     End If
+     END IF
 
      ngrp_j=count_g
      ngrp_js=count_gs
      cmap2(1:ngrp_js)=0.d0
      count_c=count_c+count_gs+count_g
-     Do i1=AtSt_i,AtEn_i
-        xpi=xp0(i1)
-        ypi=yp0(i1)
-        zpi=zp0(i1)
+     DO i1=AtSt_i,AtEn_i
+        xpi=xpc(i1)
+        ypi=ypc(i1)
+        zpi=zpc(i1)
         nbti=Id(i1)
         chrgei=chg(i1)
         Slv_i=Slv(i1)
         Id_i=Id(i1)
-        maplg(i1)=.False.
-        If(Allocated(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.False.
+        maplg(i1)=.FALSE.
+        IF(ALLOCATED(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.FALSE.
         p_mapa=0        
         p_mapb=0        
-        Do jj=1,ngrp_j
+        DO jj=1,ngrp_j
            j1=indGrp(jj)
            AtSt_j=grppt(1,j1)
            AtEn_j=grppt(2,j1)
-           If(ig == j1) AtSt_j=i1+1
-           Do j=AtSt_j,AtEn_j
-              If(maplg(j)) Then
+           IF(ig == j1) AtSt_j=i1+1
+           DO j=AtSt_j,AtEn_j
+              IF(maplg(j)) THEN
                  p_mapa=p_mapa+1 
                  p_index_jj(p_mapa)=jj
                  p_index_j(p_mapa)=j
-              End If
-           End Do
-        End Do
-        If(Erfc_Switch .And. (.Not. lskip_ewald)) Then
-           Do p_j=1,p_mapa
+              END IF
+           END DO
+        END DO
+        fpix=0.0_8; fpiy=0.0_8; fpiz=0.0_8
+        IF(Erfc_Switch .AND. (.NOT. lskip_ewald)) THEN
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrp(jj)
@@ -267,35 +290,38 @@ Subroutine Forces
               
               Id_j=Id(j)
               
-              xd=Xg_Pbc(jj)
-              yd=Yg_Pbc(jj)
-              zd=Zg_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
               lij=Id_ij(Id_i,Id_j)
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
-              rsq=xc*xc+yc*yc+zc*zc
+
+              xd=Xg_PBC(jj)
+              xd1=xpi+xd
+              xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Yg_PBC(jj)
+              yd1=ypi+yd
+              yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zg_PBC(jj)
+              zd1=zpi+zd
+              zc=zd1-zpc(j)
+              rsq=rsq+zc*zc
+
               qforce=0.0D0; emvir=0.0D0; aux1=0.0D0
               furpar=chrgei*chg(j)
 
-              ok_Lj=rsq < eccc(lij)
-              ok_Co=(rsq < Ewald_cut .And. Abs(furpar) > Tol_q) .Or. Ewald__Param % noskip 
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
               
 
-              If((.Not. ok_Lj) .And. (.Not. ok_Co)) Cycle
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
 
-              If(ok_Lj) Then
+              IF(ok_LJ) THEN
                  rsqi=1.0d0/rsq
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
@@ -304,53 +330,53 @@ Subroutine Forces
                  emvir = ssvir*rsqi                 
                  conf=ecc12(lij)*r12-ecc6(lij)*r6
                  uconfa=uconfa+conf
-              End If
+              END IF
               
-              If(ok_Co) Then
-                 rsp=Sqrt(rsq)
+              IF(ok_Co) THEN
+                 rsp=SQRT(rsq)
                  rspi=1.0_8/rsp
-                 i_c=Int((rsp-E_xbeg)/E_dx)+1
-                 h=rsp-Dble(i_c-1)*E_dx-E_xbeg
+                 i_c=INT((rsp-E_xbeg)/E_dx)+1
+                 h=rsp-DBLE(i_c-1)*E_dx-E_xbeg
                  MyErfc_=_Erfc(i_c,h)
-                 MyDerfc_=_DErfc(i_c,h)                 
+                 MyDErfc_=_DErfc(i_c,h)                 
                  ucoula=ucoula+furpar*MyErfc_
-                 aux1  = -rspi*furpar*MyDerfc_
+                 aux1  = -rspi*furpar*MyDErfc_
                  qforce=qforce+aux1
-              End If
+              END IF
 
               emvir = emvir + aux1
               aux1=qforce*xc
-              fppx(i1)=fppx(i1)+aux1
+              fpix=fpix+aux1
               fppx(j)=fppx(j)-aux1
               
               aux1=qforce*yc
-              fppy(i1)=fppy(i1)+aux1
+              fpiy=fpiy+aux1
               fppy(j)=fppy(j)-aux1
               
               aux1=qforce*zc
-              fppz(i1)=fppz(i1)+aux1
+              fpiz=fpiz+aux1
               fppz(j)=fppz(j)-aux1
               
               qfx=emvir*xc
-              st1 = st1+qfx*xg
-              st2 = st2+qfx*yg
-              st3 = st3+qfx*zg
+              st1 = st1+qfx*xc
+              st2 = st2+qfx*yc
+              st3 = st3+qfx*zc
               qfy=emvir*yc
-              st4 = st4+qfy*xg
-              st5 = st5+qfy*yg
-              st6 = st6+qfy*zg
+              st4 = st4+qfy*xc
+              st5 = st5+qfy*yc
+              st6 = st6+qfy*zc
               qfz=emvir*zc
-              st7 = st7+qfz*xg
-              st8 = st8+qfz*yg
-              st9 = st9+qfz*zg
+              st7 = st7+qfz*xc
+              st8 = st8+qfz*yc
+              st9 = st9+qfz*zc
 !!$
 !!$--- Possible Include
 !!$
               ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
               uconf(Slv_ij)=uconf(Slv_ij)+uconfa
-           End Do
-        Else If((.Not. Erfc_switch) .And. (.Not. lskip_ewald)) Then
-           Do p_j=1,p_mapa
+           END DO
+        ELSE IF((.NOT. Erfc_switch) .AND. (.NOT. lskip_ewald)) THEN
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrp(jj)
@@ -360,34 +386,38 @@ Subroutine Forces
               
               Id_j=Id(j)
               
-              xd=Xg_Pbc(jj)
-              yd=Yg_Pbc(jj)
-              zd=Zg_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
               lij=Id_ij(Id_i,Id_j)
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
-              rsq=xc*xc+yc*yc+zc*zc
+
+              xd=Xg_PBC(jj)
+              xd1=xpi+xd
+              xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Yg_PBC(jj)
+              yd1=ypi+yd
+              yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zg_PBC(jj)
+              zd1=zpi+zd
+              zc=zd1-zpc(j)
+              rsq=rsq+zc*zc
+
+
               qforce=0.0D0; emvir=0.0D0; aux1=0.0D0
               rsqi=1.0d0/rsq
               furpar=chrgei*chg(j)
 
-              ok_Lj=rsq < eccc(lij)
-              ok_Co=(rsq < Ewald_cut .And. Abs(furpar) > Tol_q) .Or. Ewald__Param % noskip 
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
 
-              If((.Not. ok_Lj) .And. (.Not. ok_Co)) Cycle
-              If(ok_Lj) Then
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+              IF(ok_LJ) THEN
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -396,81 +426,78 @@ Subroutine Forces
                  
                  conf=ecc12(lij)*r12-ecc6(lij)*r6
                  uconfa=uconfa+conf
-              End If
+              END IF
               
-              If(ok_Co) Then
-                 rsp=Sqrt(rsq)
+              IF(ok_Co) THEN
+                 rsp=SQRT(rsq)
                  rspi=1.0D0/rsp
                  rspqi=rsqi*rspi
                  alphar=alphal*rsp
                  
                  qt=1.0d0/(1.0d0+qp*alphar)
-                 expcst=Exp(-alphar*alphar)
+                 expcst=EXP(-alphar*alphar)
                  erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
                  ucoula=ucoula+furpar*erfcst*rspi                 
                  aux1  = furpar*(erfcst+twrtpi*alphar*expcst)*rspqi
                  qforce=qforce+aux1
-              End If
+              END IF
 
               emvir = emvir + aux1
               aux1=qforce*xc
-              fppx(i1)=fppx(i1)+aux1
+              fpix=fpix+aux1
               fppx(j)=fppx(j)-aux1
               
               aux1=qforce*yc
-              fppy(i1)=fppy(i1)+aux1
+              fpiy=fpiy+aux1
               fppy(j)=fppy(j)-aux1
               
               aux1=qforce*zc
-              fppz(i1)=fppz(i1)+aux1
+              fpiz=fpiz+aux1
               fppz(j)=fppz(j)-aux1
               
               qfx=emvir*xc
-              st1 = st1+qfx*xg
-              st2 = st2+qfx*yg
-              st3 = st3+qfx*zg
+              st1 = st1+qfx*xc
+              st2 = st2+qfx*yc
+              st3 = st3+qfx*zc
               qfy=emvir*yc
-              st4 = st4+qfy*xg
-              st5 = st5+qfy*yg
-              st6 = st6+qfy*zg
+              st4 = st4+qfy*xc
+              st5 = st5+qfy*yc
+              st6 = st6+qfy*zc
               qfz=emvir*zc
-              st7 = st7+qfz*xg
-              st8 = st8+qfz*yg
-              st9 = st9+qfz*zg
+              st7 = st7+qfz*xc
+              st8 = st8+qfz*yc
+              st9 = st9+qfz*zc
 !!$
 !!$--- Possible Include
 !!$
               ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
               uconf(Slv_ij)=uconf(Slv_ij)+uconfa
-           End Do
-        Else If(lskip_ewald) Then
-           Do p_j=1,p_mapa
+           END DO
+        ELSE IF(lskip_ewald) THEN
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrp(jj)
               
               
-              xd=Xg_Pbc(jj)
-              yd=Yg_Pbc(jj)
-              zd=Zg_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
+              xd=Xg_PBC(jj)
+              yd=Yg_PBC(jj)
+              zd=Zg_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+              xc=xd1-xpc(j)
+              yc=yd1-ypc(j)
+              zc=zd1-zpc(j)
               rsq=xc*xc+yc*yc+zc*zc
               Id_j=Id(j)
               lij=Id_ij(Id_i,Id_j)
-              If(rsq > eccc(lij)) Cycle
+              IF(rsq > eccc(lij)) CYCLE
 
               Slv_j=Slv(j)
               Slv_ij=Slv_j+Slv_i-1
@@ -488,52 +515,52 @@ Subroutine Forces
               uconfa=uconfa+conf
 
               aux1=qforce*xc
-              fppx(i1)=fppx(i1)+aux1
+              fpix=fpix+aux1
               fppx(j)=fppx(j)-aux1
               
               aux1=qforce*yc
-              fppy(i1)=fppy(i1)+aux1
+              fpiy=fpiy+aux1
               fppy(j)=fppy(j)-aux1
               
               aux1=qforce*zc
-              fppz(i1)=fppz(i1)+aux1
+              fpiz=fpiz+aux1
               fppz(j)=fppz(j)-aux1
               
               qfx=emvir*xc
-              st1 = st1+qfx*xg
-              st2 = st2+qfx*yg
-              st3 = st3+qfx*zg
+              st1 = st1+qfx*xc
+              st2 = st2+qfx*yc
+              st3 = st3+qfx*zc
               qfy=emvir*yc
-              st4 = st4+qfy*xg
-              st5 = st5+qfy*yg
-              st6 = st6+qfy*zg
+              st4 = st4+qfy*xc
+              st5 = st5+qfy*yc
+              st6 = st6+qfy*zc
               qfz=emvir*zc
-              st7 = st7+qfz*xg
-              st8 = st8+qfz*yg
-              st9 = st9+qfz*zg
+              st7 = st7+qfz*xc
+              st8 = st8+qfz*yc
+              st9 = st9+qfz*zc
 !!$
 !!$--- Possible Include
 !!$
               ucoul(Slv_ij)=ucoul(Slv_ij)+ucoula
               uconf(Slv_ij)=uconf(Slv_ij)+uconfa
-           End Do
+           END DO
 
-        End If
+        END IF
         p_mapa=0        
-        Do jj=1,ngrp_js
+        DO jj=1,ngrp_js
            j1=indGrps(jj)
            AtSt_j=grppt(1,j1)
            AtEn_j=grppt(2,j1)
-           Do j=AtSt_j,AtEn_j
-              If(maplg(j)) Then
+           DO j=AtSt_j,AtEn_j
+              IF(maplg(j)) THEN
                  p_mapa=p_mapa+1 
                  p_index_jj(p_mapa)=jj
                  p_index_j(p_mapa)=j
-              End If
-           End Do
-        End Do
-        If(Erfc_Switch .And. (.Not. lskip_ewald)) Then
-           Do p_j=1,p_mapa
+              END IF
+           END DO
+        END DO
+        IF(Erfc_Switch .AND. (.NOT. lskip_ewald)) THEN
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrps(jj)
@@ -544,36 +571,35 @@ Subroutine Forces
               Id_j=Id(j)
               
               
-              xd=Xgs_Pbc(jj)
-              yd=Ygs_Pbc(jj)
-              zd=Zgs_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
               lij=Id_ij(Id_i,Id_j)
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
+
+              xd=Xgs_PBC(jj)
+              yd=Ygs_PBC(jj)
+              zd=Zgs_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+
+              xc=xd1-xpc(j)
+              yc=yd1-ypc(j)
+              zc=zd1-zpc(j)
               
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
               rsq=xc*xc+yc*yc+zc*zc
               rsqi=1.0d0/rsq
               
               qforce=0.0D0
               furpar=chrgei*chg(j)
 
-              ok_Lj=rsq < eccc(lij)
-              ok_Co=(rsq < Ewald_cut .And. Abs(furpar) > Tol_q) .Or. Ewald__Param % noskip 
-              If((.Not. ok_Lj) .And. (.Not. ok_Co)) Cycle
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
 
-              If(ok_Lj) Then
+              IF(ok_LJ) THEN
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -581,42 +607,42 @@ Subroutine Forces
                  conf=ecc12(lij)*r12-ecc6(lij)*r6
                  cmap2(jj)=cmap2(jj)+conf
                  uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
-              End If
+              END IF
               
-              If(ok_Co) Then
-                 rsp=Sqrt(rsq)
+              IF(ok_Co) THEN
+                 rsp=SQRT(rsq)
                  rspi=1.0_8/rsp
-                 i_c=Int((rsp-E_xbeg)/E_dx)+1
+                 i_c=INT((rsp-E_xbeg)/E_dx)+1
                  h=rsp-tau(i_c)
                  
                  MyErfc_=_Erfc(i_c,h)
-                 MyDerfc_=_DErfc(i_c,h)
+                 MyDErfc_=_DErfc(i_c,h)
                  
                  ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*MyErfc_
                  cmap2(jj)=cmap2(jj)+furpar*MyErfc_
-                 aux1  = -swrs(jj)*rspi*furpar*MyDerfc_
+                 aux1  = -swrs(jj)*rspi*furpar*MyDErfc_
                  qforce=qforce+aux1
-              End If
+              END IF
               emvir=qforce
 
-              fppx(i1)=fppx(i1)+qforce*xc
-              fppy(i1)=fppy(i1)+qforce*yc
-              fppz(i1)=fppz(i1)+qforce*zc
+              fpix=fpix+qforce*xc
+              fpiy=fpiy+qforce*yc
+              fpiz=fpiz+qforce*zc
               fppx(j)=fppx(j)-qforce*xc
               fppy(j)=fppy(j)-qforce*yc
               fppz(j)=fppz(j)-qforce*zc
-              st1 = st1+emvir*xc*xg
-              st2 = st2+emvir*xc*yg
-              st3 = st3+emvir*xc*zg
-              st4 = st4+emvir*yc*xg
-              st5 = st5+emvir*yc*yg
-              st6 = st6+emvir*yc*zg
-              st7 = st7+emvir*zc*xg
-              st8 = st8+emvir*zc*yg
-              st9 = st9+emvir*zc*zg
-           End Do
-        Else If((.Not. Erfc_switch) .And. (.Not. lskip_ewald)) Then
-           Do p_j=1,p_mapa
+              st1 = st1+emvir*xc*xc
+              st2 = st2+emvir*xc*yc
+              st3 = st3+emvir*xc*zc
+              st4 = st4+emvir*yc*xc
+              st5 = st5+emvir*yc*yc
+              st6 = st6+emvir*yc*zc
+              st7 = st7+emvir*zc*xc
+              st8 = st8+emvir*zc*yc
+              st9 = st9+emvir*zc*zc
+           END DO
+        ELSE IF((.NOT. Erfc_switch) .AND. (.NOT. lskip_ewald)) THEN
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrps(jj)
@@ -627,33 +653,31 @@ Subroutine Forces
               Id_j=Id(j)
               
               
-              xd=Xgs_Pbc(jj)
-              yd=Ygs_Pbc(jj)
-              zd=Zgs_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
               lij=Id_ij(Id_i,Id_j)
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
+
+              xd=Xgs_PBC(jj)
+              yd=Ygs_PBC(jj)
+              zd=Zgs_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+              xc=xd1-xpc(j)
+              yc=yd1-ypc(j)
+              zc=zd1-zpc(j)
               
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
               rsq=xc*xc+yc*yc+zc*zc
               rsqi=1.0d0/rsq
               
               qforce=0.0D0;furpar=chrgei*chg(j)
-              ok_Lj=rsq < eccc(lij)
-              ok_Co=(rsq < Ewald_cut .And. Abs(furpar) > Tol_q) .Or. Ewald__Param % noskip 
-              If((.Not. ok_Lj) .And. (.Not. ok_Co)) Cycle
-              If(ok_Lj) Then
+              ok_LJ=rsq < eccc(lij)
+              ok_Co=(rsq < Ewald_cut .AND. ABS(furpar) > Tol_q) .OR. Ewald__Param % noskip 
+              IF((.NOT. ok_LJ) .AND. (.NOT. ok_Co)) CYCLE
+              IF(ok_LJ) THEN
                  r6=rsqi*rsqi*rsqi
                  r12=r6*r6
                  ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -661,42 +685,42 @@ Subroutine Forces
                  conf=ecc12(lij)*r12-ecc6(lij)*r6
                  cmap2(jj)=cmap2(jj)+conf
                  uconf(Slv_ij)=uconf(Slv_ij)+swrs(jj)*conf
-              End If
+              END IF
               
-              If(ok_Co) Then
-                 rsp=Dsqrt(rsq)
+              IF(ok_Co) THEN
+                 rsp=DSQRT(rsq)
                  rspi=1.0_8/rsp
                  rspqi=rsqi/rsp
                  alphar=alphal*rsp
                  qt=1.0d0/(1.0d0+qp*alphar)
-                 expcst=Exp(-alphar*alphar)
+                 expcst=EXP(-alphar*alphar)
                  erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)*qt+a1)*qt*expcst
                  ucoul(Slv_ij)=ucoul(Slv_ij)+swrs(jj)*furpar*erfcst/rsp
                  cmap2(jj)=cmap2(jj)+furpar*erfcst/rsp
                  aux1=furpar*(erfcst+twrtpi*alphar*expcst)*rspqi*swrs(jj)
                  qforce=qforce+aux1
-              End If
+              END IF
 
               emvir=qforce
               
-              fppx(i1)=fppx(i1)+qforce*xc
-              fppy(i1)=fppy(i1)+qforce*yc
-              fppz(i1)=fppz(i1)+qforce*zc
+              fpix=fpix+qforce*xc
+              fpiy=fpiy+qforce*yc
+              fpiz=fpiz+qforce*zc
               fppx(j)=fppx(j)-qforce*xc
               fppy(j)=fppy(j)-qforce*yc
               fppz(j)=fppz(j)-qforce*zc
-              st1 = st1+emvir*xc*xg
-              st2 = st2+emvir*xc*yg
-              st3 = st3+emvir*xc*zg
-              st4 = st4+emvir*yc*xg
-              st5 = st5+emvir*yc*yg
-              st6 = st6+emvir*yc*zg
-              st7 = st7+emvir*zc*xg
-              st8 = st8+emvir*zc*yg
-              st9 = st9+emvir*zc*zg
-           End Do
-        Else
-           Do p_j=1,p_mapa
+              st1 = st1+emvir*xc*xc
+              st2 = st2+emvir*xc*yc
+              st3 = st3+emvir*xc*zc
+              st4 = st4+emvir*yc*xc
+              st5 = st5+emvir*yc*yc
+              st6 = st6+emvir*yc*zc
+              st7 = st7+emvir*zc*xc
+              st8 = st8+emvir*zc*yc
+              st9 = st9+emvir*zc*zc
+           END DO
+        ELSE
+           DO p_j=1,p_mapa
               jj=p_index_jj(p_j)
               j=p_index_j(p_j)
               j1=indGrps(jj)
@@ -707,30 +731,28 @@ Subroutine Forces
               Id_j=Id(j)
               
               
-              xd=Xgs_Pbc(jj)
-              yd=Ygs_Pbc(jj)
-              zd=Zgs_Pbc(jj)
-              xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               uconfa=0.0D0
               ucoula=0.0D0
 !!$
 !!$--- Possible Include
 !!$           
               lij=Id_ij(Id_i,Id_j)
-              xg=xd1-xp0(j)
-              yg=yd1-yp0(j)
-              zg=zd1-zp0(j)
+
+              xd=Xgs_PBC(jj)
+              yd=Ygs_PBC(jj)
+              zd=Zgs_PBC(jj)
+              xd1=xpi+xd
+              yd1=ypi+yd
+              zd1=zpi+zd
+              xc=xd1-xpc(j)
+              yc=yd1-ypc(j)
+              zc=zd1-zpc(j)
               
-              xc=co(1,1)*xg+co(1,2)*yg+co(1,3)*zg
-              yc=           co(2,2)*yg+co(2,3)*zg
-              zc=                      co(3,3)*zg
               rsq=xc*xc+yc*yc+zc*zc
               rsqi=1.0d0/rsq
               
               qforce=0.0D0
-              If(rsq > eccc(lij)) Cycle
+              IF(rsq > eccc(lij)) CYCLE
               r6=rsqi*rsqi*rsqi
               r12=r6*r6
               ssvir=12.0d0*ecc12(lij)*r12-6.0d0*ecc6(lij)*r6
@@ -741,44 +763,47 @@ Subroutine Forces
               
               emvir=qforce
               
-              fppx(i1)=fppx(i1)+qforce*xc
-              fppy(i1)=fppy(i1)+qforce*yc
-              fppz(i1)=fppz(i1)+qforce*zc
+              fpix=fpix+qforce*xc
+              fpiy=fpiy+qforce*yc
+              fpiz=fpiz+qforce*zc
               fppx(j)=fppx(j)-qforce*xc
               fppy(j)=fppy(j)-qforce*yc
               fppz(j)=fppz(j)-qforce*zc
-              st1 = st1+emvir*xc*xg
-              st2 = st2+emvir*xc*yg
-              st3 = st3+emvir*xc*zg
-              st4 = st4+emvir*yc*xg
-              st5 = st5+emvir*yc*yg
-              st6 = st6+emvir*yc*zg
-              st7 = st7+emvir*zc*xg
-              st8 = st8+emvir*zc*yg
-              st9 = st9+emvir*zc*zg
-           End Do
+              st1 = st1+emvir*xc*xc
+              st2 = st2+emvir*xc*yc
+              st3 = st3+emvir*xc*zc
+              st4 = st4+emvir*yc*xc
+              st5 = st5+emvir*yc*yc
+              st6 = st6+emvir*yc*zc
+              st7 = st7+emvir*zc*xc
+              st8 = st8+emvir*zc*yc
+              st9 = st9+emvir*zc*zc
+           END DO
               
-        End If
-        maplg(i1)=.True.
-        If(Allocated(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.True.
-     End Do
+        END IF
+        maplg(i1)=.TRUE.
+        IF(ALLOCATED(Maps(i1) % ex)) maplg(Maps(i1) % ex(:))=.TRUE.
+        fppx(i1)=fppx(i1)+fpix
+        fppy(i1)=fppy(i1)+fpiy
+        fppz(i1)=fppz(i1)+fpiz
+     END DO
 !!$
 !!$===     add the S*V term to the atomic forces
 !!$
-     Do jj=1,ngrp_js
+     DO jj=1,ngrp_js
         xmap3(jj)=-dswrs(jj)*cmap2(jj)*xcs(jj)
         ymap3(jj)=-dswrs(jj)*cmap2(jj)*ycs(jj)
         zmap3(jj)=-dswrs(jj)*cmap2(jj)*zcs(jj)
-     End Do
+     END DO
      
-     If(ngrp_js /= 0) Then
-        Do i1=grppt(1,ig),grppt(2,ig)
+     IF(ngrp_js /= 0) THEN
+        DO i1=grppt(1,ig),grppt(2,ig)
            massi=gmass(i1)
-           xpi=xp0(i1)
-           ypi=yp0(i1)
-           zpi=zp0(i1)
-!Dec$ Ivdep
-           Do jj=1,ngrp_js
+           xpi=xpc(i1)
+           ypi=ypc(i1)
+           zpi=zpc(i1)
+!DEC$ IVDEP
+           DO jj=1,ngrp_js
               fppx(i1)=fppx(i1)+massi*xmap3(jj)
               fppy(i1)=fppy(i1)+massi*ymap3(jj)
               fppz(i1)=fppz(i1)+massi*zmap3(jj)
@@ -791,22 +816,22 @@ Subroutine Forces
               st7=st7+massi*zmap3(jj)*xpi
               st8=st8+massi*zmap3(jj)*ypi
               st9=st9+massi*zmap3(jj)*zpi
-           End Do
-        End Do
-        Do jj=1,ngrp_js
+           END DO
+        END DO
+        DO jj=1,ngrp_js
            j=Indgrps(jj)
-           xg=-Xgs_Pbc(jj)
-           yg=-Ygs_Pbc(jj)
-           zg=-Zgs_Pbc(jj)
-!Dec$ Ivdep
-           Do j1=grppt(1,j),grppt(2,j)
+           xc=-Xgs_PBC(jj)
+           yc=-Ygs_PBC(jj)
+           zc=-Zgs_PBC(jj)
+!DEC$ IVDEP
+           DO j1=grppt(1,j),grppt(2,j)
               massj=gmass(j1)
               fppx(j1)=fppx(j1)-massj*xmap3(jj)
               fppy(j1)=fppy(j1)-massj*ymap3(jj)
               fppz(j1)=fppz(j1)-massj*zmap3(jj)
-              xpi=-(xp0(j1)+xg)*massj
-              ypi=-(yp0(j1)+yg)*massj
-              zpi=-(zp0(j1)+zg)*massj
+              xpi=-(xpc(j1)+xc)*massj
+              ypi=-(ypc(j1)+yc)*massj
+              zpi=-(zpc(j1)+zc)*massj
               st1=st1+xmap3(jj)*xpi
               st2=st2+xmap3(jj)*ypi
               st3=st3+xmap3(jj)*zpi
@@ -816,16 +841,16 @@ Subroutine Forces
               st7=st7+zmap3(jj)*xpi
               st8=st8+zmap3(jj)*ypi
               st9=st9+zmap3(jj)*zpi
-           End Do
-        End Do
-     End If
-  End Do
+           END DO
+        END DO
+     END IF
+  END DO
 
   fp(IndBox_a_t(:)) % x = fp(IndBox_a_t(:)) % x + fppx(:)
   fp(IndBox_a_t(:)) % y = fp(IndBox_a_t(:)) % y + fppy(:)
   fp(IndBox_a_t(:)) % z = fp(IndBox_a_t(:)) % z + fppz(:)
 
-  Call En_lj_(i_p,uconf(3),uconf(1),uconf(2))
-  Call En_coul_dir_(i_p,ucoul(3),ucoul(1),ucoul(2))
+  CALL EN_LJ_(i_p,uconf(3),uconf(1),uconf(2))
+  CALL EN_Coul_Dir_(i_p,ucoul(3),ucoul(1),ucoul(2))
 
-End Subroutine Forces
+END SUBROUTINE Forces
