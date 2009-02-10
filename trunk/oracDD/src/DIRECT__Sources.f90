@@ -50,11 +50,12 @@ SUBROUTINE Forces
   INTEGER :: ii,n,p,q,r,o,iv,jv,kv,nx,ny,nz,numcell,count_g&
          &,count_gs,ngrp_j,ngrp_js,count0,i
   REAL(8) :: rcut1,rcut2,rcuts1,rcuts2
-  REAL(8) :: xd1,yd1,zd1,xd,yd,zd,xc,yc,zc,rsq,rsqi,r6,r12&
+  Real(8), Save :: xa,xd1,xd,xc,ya,yd1,yd,yc,za,zd1,zd,zc
+  REAL(8) :: rsq,rsqi,r6,r12&
        &,furpar,qforce,conf,uconfa,st1,st2,st3,st4,st5,st6,st7,st8,st9&
        &,emvir,qfx,qfy,qfz,uconf(3),ucoul(3),xpi,ypi,zpi,rsp,xpgi&
-       &,ypgi,zpgi,xgg,ygg,zgg,drj,massi,massj,xpgci,ypgci,zpgci,xa,ya&
-       &,za,X_PBC,Y_PBC,Z_PBC,chrgei,ucoula,ssvir,rspi,rspqi,alphar&
+       &,ypgi,zpgi,xgg,ygg,zgg,drj,massi,massj,xpgci,ypgci,zpgci&
+       &,X_PBC,Y_PBC,Z_PBC,chrgei,ucoula,ssvir,rspi,rspqi,alphar& 
        &,qt,erfcst,aux1,expcst,ucoul_o(3),uconf_o(3),rcutb,rcutb2
   REAL(8) ::  r2neigh,r2inn,r2out,rinn0,r2inn0,rout0,r2out0,arsout1&
        &,arsout2,arsinn1,arsinn2,rinn,rout,rtolout,rtolinn,auxa,auxb&
@@ -82,6 +83,7 @@ SUBROUTINE Forces
   ypgc=            co(2,2)*ypg+co(2,3)*zpg
   zpgc=                        co(3,3)*zpg
   
+
   Neigha=>List(i_p) % Neigh
   i_pb=i_p-1
   rcutb=0.0D0
@@ -486,15 +488,20 @@ SUBROUTINE Forces
 !!$--- Possible Include
 !!$           
               xd=Xg_PBC(jj)
-              yd=Yg_PBC(jj)
-              zd=Zg_PBC(jj)
               xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Yg_PBC(jj)
+              yd1=ypi+yd
               yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zg_PBC(jj)
+              zd1=zpi+zd
               zc=zd1-zpc(j)
-              rsq=xc*xc+yc*yc+zc*zc
+              rsq=rsq+zc*zc
+
               Id_j=Id(j)
               lij=Id_ij(Id_i,Id_j)
               IF(rsq > eccc(lij)) CYCLE
@@ -579,17 +586,20 @@ SUBROUTINE Forces
               lij=Id_ij(Id_i,Id_j)
 
               xd=Xgs_PBC(jj)
-              yd=Ygs_PBC(jj)
-              zd=Zgs_PBC(jj)
               xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
-
               xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Ygs_PBC(jj)
+              yd1=ypi+yd
               yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zgs_PBC(jj)
+              zd1=zpi+zd
               zc=zd1-zpc(j)
-              
-              rsq=xc*xc+yc*yc+zc*zc
+              rsq=rsq+zc*zc
+
               rsqi=1.0d0/rsq
               
               qforce=0.0D0
@@ -661,16 +671,20 @@ SUBROUTINE Forces
               lij=Id_ij(Id_i,Id_j)
 
               xd=Xgs_PBC(jj)
-              yd=Ygs_PBC(jj)
-              zd=Zgs_PBC(jj)
               xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Ygs_PBC(jj)
+              yd1=ypi+yd
               yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zgs_PBC(jj)
+              zd1=zpi+zd
               zc=zd1-zpc(j)
-              
-              rsq=xc*xc+yc*yc+zc*zc
+              rsq=rsq+zc*zc
+
               rsqi=1.0d0/rsq
               
               qforce=0.0D0;furpar=chrgei*chg(j)
@@ -739,16 +753,20 @@ SUBROUTINE Forces
               lij=Id_ij(Id_i,Id_j)
 
               xd=Xgs_PBC(jj)
-              yd=Ygs_PBC(jj)
-              zd=Zgs_PBC(jj)
               xd1=xpi+xd
-              yd1=ypi+yd
-              zd1=zpi+zd
               xc=xd1-xpc(j)
+              rsq=xc*xc
+
+              yd=Ygs_PBC(jj)
+              yd1=ypi+yd
               yc=yd1-ypc(j)
+              rsq=rsq+yc*yc
+
+              zd=Zgs_PBC(jj)
+              zd1=zpi+zd
               zc=zd1-zpc(j)
-              
-              rsq=xc*xc+yc*yc+zc*zc
+              rsq=rsq+zc*zc
+
               rsqi=1.0d0/rsq
               
               qforce=0.0D0

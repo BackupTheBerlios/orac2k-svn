@@ -89,6 +89,7 @@ CONTAINS
     INTEGER, ALLOCATABLE, SAVE :: neib(:),neic(:)
     REAL(8) :: startime,endtime,timea,ts1,te1,ts2,te2
     INTEGER, SAVE :: Times_of_Call=0
+    Integer, Save :: NoCalls(3)=(/0.0_8,0.0_8,0.0_8/)
     INTEGER :: i_p
 
 
@@ -113,6 +114,7 @@ CONTAINS
     CALL Memory
     CALL Forces
     No_Calls=No_Calls+1
+    NoCalls(i_p)=NoCalls(i_p)+1
   CONTAINS
 !!$
 !!$--- Initialize things once for all

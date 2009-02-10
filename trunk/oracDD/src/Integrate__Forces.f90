@@ -44,12 +44,25 @@
 SUBROUTINE Forces_(n)
   INTEGER :: n
   INTEGER, PARAMETER :: Flag=1
-
+  Real(8), Save :: Startts,Endtts
+  Real(8), Save :: timets(5)=(/0.0_8,0.0_8,0.0_8,0.0_8,0.0_8/)
+  Integer, Save :: NoCalls(5)=(/0,0,0,0,0/)
+  Integer :: m
+  
+  startts=MPI_WTIME()
   IF(n >= 3) THEN
      CALL InterForces_
   ELSE 
      CALL IntraForces_
   END IF
+  endtts=MPI_WTIME()
+  timets(n)=Timets(n)+endtts-startts
+  NoCalls(n)=NoCalls(n)+1
+  If(n == NShell) Then
+     DO m=1,NShell
+        Write(kprint,'('' Shell No. '',i2,'' CPU Time '',e14.6)') m,timets(m)/Dble(NoCalls(m))
+     End DO
+  End If
 CONTAINS
   SUBROUTINE IntraForces_
     REAL(8) :: startime0,endtime0,startime1,endtime1,startime2&

@@ -67,9 +67,9 @@ MODULE Integrator
   PRIVATE
   PUBLIC Integrator__Scan, Integrator__Input, Integrator_
   TYPE :: Integrator__Input
-     REAL(8) :: t=12.0_8
-     INTEGER :: Mult_Intra(2)=(/2,2/)
-     INTEGER :: Mult_Inter(3)=(/2,3,1/)
+     REAL(8) :: t=1.0_8
+     INTEGER :: Mult_Intra(2)=(/1,1/)
+     INTEGER :: Mult_Inter(3)=(/1,1,1/)
      INTEGER :: Ewald_shell
   END type Integrator__Input
   TYPE(Integrator__Input), SAVE :: Integrator_

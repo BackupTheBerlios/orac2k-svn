@@ -44,9 +44,13 @@
 !!$---- This module is part of the program oracDD ----*
 
 SUBROUTINE Integrate_h
-  INTEGER, SAVE :: counter=0
+  INTEGER, SAVE :: counter=0,MyCalls=0
   INTEGER, PARAMETER :: Init=1
+  Real(8), Save :: Startts,Endtts,timets
+
   DO ha=1,h_
+     startts=MPI_WTIME()
+     
      IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_h,RATTLE__Correct_)) CALL Print_Errors()
      
@@ -61,5 +65,9 @@ SUBROUTINE Integrate_h
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF
+     MyCalls=MyCalls+1
+     endtts=MPI_WTIME()
+     Timets=Timets+endtts-startts
+     Write(kprint,'('' H Mycalls '',i5,'' CPU Time '',2e14.6)') MyCalls,timets/Dble(MyCalls),endtts-startts
   END DO
 END SUBROUTINE Integrate_h

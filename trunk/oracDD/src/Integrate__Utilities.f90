@@ -119,21 +119,28 @@ FUNCTION  Get_RunLength() RESULT(out)
   
   SELECT CASE(NShell)
   CASE(_N0_)
-     out % nstep=INT(Run_ % Time/dt_N0)
-     out % Time=out % nstep*dt_n0
+     out % nstep=INT(Run_ % Time/dt_N0)/n0_
+     out % Time=out % nstep*dt_n0*n0_
   CASE(_N1_)
-     out % nstep=INT(Run_ % Time/dt_n1)
-     out % Time=out % nstep*dt_n1
+     out % nstep=INT(Run_ % Time/dt_n1)/n1_
+     out % Time=out % nstep*dt_n1*n1_
   CASE(_M_)
-     out % nstep=INT(Run_ % Time/dt_m)
-     out % Time=out % nstep*dt_m
+     out % nstep=INT(Run_ % Time/dt_m)/m_
+     out % Time=out % nstep*dt_m*m_
   CASE(_L_)
-     out % nstep=INT(Run_ % Time/dt_l)
-     out % Time=out % nstep*dt_l
+     out % nstep=INT(Run_ % Time/dt_l)/l_
+     out % Time=out % nstep*dt_l*l_
   CASE(_H_)
-     out % nstep=INT(Run_ % Time/dt_h)
-     out % Time=out % nstep*dt_h
+     out % nstep=INT(Run_ % Time/dt_h)/h_
+     out % Time=out % nstep*dt_h*h_
   END SELECT
+  Write(*,*) out % nstep, out % time
+  Write(*,*) dt_n0
+  Write(*,*) dt_n1
+  Write(*,*) dt_m
+  Write(*,*) dt_l
+  Write(*,*) dt_h
+  Write(*,*) out % nstep, out % time
 END FUNCTION Get_RunLength
 FUNCTION  Get_PrintFrequency() RESULT(out)
   TYPE(Length) :: out

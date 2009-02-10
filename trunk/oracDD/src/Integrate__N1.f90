@@ -46,8 +46,11 @@
 SUBROUTINE Integrate_n1
   INTEGER, SAVE :: counter=0
   INTEGER, PARAMETER :: Init=1
+  INTEGER :: MyCalls=0,n1
+  Real(8), Save :: Startts,Endtts,timets
   
   DO n1=1,n1_
+     startts=MPI_WTIME()
      IF(.NOT. Atom__Correct_(dt_n1,_N1_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_n1,RATTLE__Correct_)) CALL Print_Errors()
      
@@ -62,5 +65,9 @@ SUBROUTINE Integrate_n1
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF
+     MyCalls=MyCalls+1
+     endtts=MPI_WTIME()
+     Timets=Timets+endtts-startts
+     Write(kprint,'('' N1 Mycalls '',i5,'' CPU Time '',2e14.6)') MyCalls,timets/Dble(MyCalls),endtts-startts
   END DO
 END SUBROUTINE Integrate_n1

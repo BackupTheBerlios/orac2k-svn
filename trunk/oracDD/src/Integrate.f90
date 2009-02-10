@@ -110,13 +110,25 @@ CONTAINS
     l_ =Integrator_ % Mult_Inter(2)
     h_ =Integrator_ % Mult_Inter(3)
 
-    dt_h=Integrator_ % t
-    dt_l=dt_h/l_
-    dt_m=dt_l/m_
-    dt_n1=dt_m/n1_
-    dt_n0=dt_n1/n0_
     NShell0=SIZE(Radii)
     NShell=Nshell0+2
+    dt_h=0.0D0
+    dt_l=0.0D0
+    dt_m=0.0D0
+    Select Case(Nshell)
+    Case(_M_)
+       dt_m=Integrator_ % t/m_
+    Case(_L_)
+       dt_l=Integrator_ % t/l_
+       dt_m=dt_l/m_
+    Case(_H_)
+       dt_h=Integrator_ % t/h_
+       dt_l=dt_h/l_
+       dt_m=dt_l/m_
+    End Select
+
+    dt_n1=dt_m/n1_
+    dt_n0=dt_n1/n0_
 
 !!$--- Find out primary and secondary atoms arrays
 
@@ -131,6 +143,7 @@ CONTAINS
     REAL(8) :: startime,endtime,timea,starta,enda
     Real(8) :: rcut
     TYPE(Force), POINTER :: fp_d(:)
+    Real(8) :: Startts,Endtts,timets(5)
 
     
 !!$--- Lennard Jones Arrays. _M_ is not used here it could be zero
@@ -196,10 +209,15 @@ CONTAINS
     startime=MPI_WTIME()
 
     DO n=1,NShell
+       startts=MPI_WTIME()
        CALL FORCES_Zero(n)
        CALL Forces_(n)
+       endtts=MPI_WTIME()
+       timets(n)=endtts-startts
     END DO
-
+    DO n=1,NShell
+       Write(kprint,'('' Shell No. '',i2,'' CPU Time '',e14.6)') n,timets(n)
+    End DO
     IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) % knwn))&
          & CALL Print_Errors()
 
@@ -217,6 +235,7 @@ CONTAINS
     startime=MPI_WTIME()
 
     CALL EN_Banner_
+    Write(*,*) 'First ',Iteration % nstep
     DO Iter=1,Iteration % nstep
        CALL Integrate_Shell(NShell)
     END DO
