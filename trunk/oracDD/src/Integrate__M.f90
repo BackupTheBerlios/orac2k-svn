@@ -51,7 +51,7 @@ SUBROUTINE Integrate_m
   Real(8), Save :: Startts,Endtts,timets
 
   DO ma=1,m_
-     startts=MPI_WTIME()
+
      IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
      IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
      
@@ -83,10 +83,5 @@ SUBROUTINE Integrate_m
      IF(Inout__PDB % Unit /= 0 .AND. Print_Now(_M_,Inout__PDB % Freq)) THEN
         CALL Atom__PDB(Inout__PDB % Unit)
      END IF
-     endtts=MPI_WTIME()
-     Timets=Timets+endtts-startts
-
-     MyCalls=MyCalls+1
-     Write(kprint,'(i5,'' Mycalls '',i5,'' CPU Time '',2e14.6)')_M_, MyCalls,timets/Dble(MyCalls),endtts-startts
   END DO
 END SUBROUTINE Integrate_m

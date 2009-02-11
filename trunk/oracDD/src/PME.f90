@@ -190,27 +190,9 @@ CONTAINS
     fp(MyIndBox(:)) % y = fp(MyIndBox(:)) % y + fy(:)
     fp(MyIndBox(:)) % z = fp(MyIndBox(:)) % z + fz(:)
 
-!!$
-!!$--- Fold forces contributions to atoms inside the cell
-!!$
-    
-!!$    CALL PI__Fold_F(fp,i_p,_INIT_)
-!!$    CALL PI__Fold_F(fp,i_p,_FOLD_)
-
-!!$    IF(PI_Nprocs == 1) THEN
-!!$       WRITE(60,'(i7,3e17.9)') (n,fp(n) % x, fp(n) % y, fp(n) % z, n=1,natom)
-!!$    ELSE
-!!$       DO m=1,natom
-!!$          n=IndBoxP_t(m)
-!!$          IF(groupa(Atoms(n) % Grp_No) % Knwn == 1) THEN
-!!$             WRITE(60+PI_Node_Cart,'(i7,3e17.9)') n,fp(m) % x, fp(m) % y&
-!!$                  &, fp(m) % z
-!!$          END IF
-!!$       END DO
-!!$    END IF
-
     eer_i=eer
     CALL EN_Coul_Rec_(eer)
+    
     Energy_i=Energy
     endtime=MPI_WTIME()
     timea=endtime-startime

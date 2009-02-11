@@ -30,7 +30,7 @@
 !!$    "http://www.cecill.info/licences/Licence_CeCILL_V2-fr.html"       |
 !!$                                                                      |
 !!$----------------------------------------------------------------------/
-Module PI_Shift
+MODULE PI_Shift
 !!$***********************************************************************
 !!$   Time-stamp: <2007-01-24 10:48:13 marchi>                           *
 !!$======================================================================*
@@ -45,108 +45,108 @@ Module PI_Shift
 !!$---- This module is part of the program oracDD ----*
 
 #ifdef HAVE_MPI
-  Use mpi
+  USE mpi
 #endif
-  Use BoxGeometry
-  Use Pi_
-  Use Forces, Only: Radii
-  Use Pi_cutoffs, Only: Thickness, ddx,ddy,ddz, rcut
-  Use Pi_statistics, Only: Pi__write_stats=>Write_It, Pi__time_it&
-       &=>Time_It, Pi__sample_exchange=>Sample_Exchange, Pi__add_calls&
+  USE BoxGeometry
+  USE PI_
+  USE Forces, ONLY: Radii
+  USE PI_Cutoffs, ONLY: Thickness, ddx,ddy,ddz, rcut
+  USE PI_Statistics, ONLY: PI__Write_Stats=>Write_It, PI__Time_It&
+       &=>Time_It, PI__Sample_Exchange=>Sample_Exchange, PI__Add_Calls&
        &=>Add_Calls
-  Use Groups
-  Use Atom
-  Use Cell
-  Use Constants, Only: max_pars,max_data,max_char
-  Use Errors, Only: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
-  Implicit none
-  Private
-  Public Setup,iShift_init, Buff_Shift, iShift, Indx, iBuffer
-  Integer, Parameter :: Nshell_max=3
-  Type :: Indx
-     Integer :: NoAtm_s,NoAtm_r
-     Integer :: NoGrp_s,NoGrp_r
-     Integer, Allocatable :: ibuff_r(:)
-     Integer, Allocatable :: ibuff_s(:)
-  End type Indx
-  Type :: iBuffer
-     Type(Indx) :: sh(Nshell_max)
-  End type iBuffer
-  Type(iBuffer), Save, Target :: iShift(6)
-  Integer, Save :: Calls=0
-  Real(8), Parameter :: one=1.0D0,two=2.0D0,half=0.5D0
-  Real(8), Save :: startime,endtime,startime0,endtime0
-  Logical, Save :: ok_pme
-Contains
-  Subroutine Setup(ok_pmea)
-    Logical :: ok_pmea
+  USE Groups
+  USE Atom
+  USE Cell
+  USE Constants, ONLY: max_pars,max_data,max_char
+  USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
+  IMPLICIT none
+  PRIVATE
+  PUBLIC Setup,iShift_init, Buff_Shift, iShift, Indx, iBuffer
+  INTEGER, PARAMETER :: NSHell_Max=3
+  TYPE :: Indx
+     INTEGER :: NoAtm_s,NoAtm_r
+     INTEGER :: NoGrp_s,NoGrp_r
+     INTEGER, ALLOCATABLE :: ibuff_r(:)
+     INTEGER, ALLOCATABLE :: ibuff_s(:)
+  END type Indx
+  TYPE :: iBuffer
+     TYPE(Indx) :: sh(NShell_Max)
+  END type iBuffer
+  TYPE(iBuffer), SAVE, TARGET :: iShift(6)
+  INTEGER, SAVE :: Calls=0
+  REAL(8), PARAMETER :: one=1.0D0,two=2.0D0,half=0.5D0
+  REAL(8), SAVE :: startime,endtime,startime0,endtime0
+  LOGICAL, SAVE :: ok_pme
+CONTAINS
+  SUBROUTINE Setup(ok_pmea)
+    LOGICAL :: ok_pmea
     Calls=0
     ok_pme=ok_pmea
-  End Subroutine Setup
+  END SUBROUTINE Setup
 
-  Subroutine iShift_init(i_p,Axis,Dir,scnd_half)
-    Integer, Optional :: scnd_half
-    Integer :: Axis,Dir,i_p
-    Integer :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
+  SUBROUTINE iShift_init(i_p,Axis,Dir,scnd_half)
+    INTEGER, OPTIONAL :: scnd_half
+    INTEGER :: Axis,Dir,i_p
+    INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
-    Integer :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoGrp_s3,NoGrp_r3,q,grp_no&
+    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoGrp_s3,NoGrp_r3,q,grp_no&
          &,np,nind_o,NoGrp_s,NoGrp_r,nmax
-    Integer :: source,dest
-    Real(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
-    Real(8) :: v1(3),v0,v2(3),rsq,aux1,aux2,aux3
-    Real(8) :: point(3)
-    Real(8) :: vc(3),tx,ty,tz
-    Integer, Pointer :: iBuff_s(:),iBuff_r(:)
-    Real(8), Allocatable :: Buff_s(:,:),Buff_r(:,:)
-    Integer, Allocatable, Save :: ind_o(:)
-    Logical :: oks
-    Real(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
-    Real(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    Logical :: ok_X,ok_Y,ok_Z,Change_Nmax
-    Integer, Save :: MyCalls=0
-    Real(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
-    Character(len=max_char) :: lab0
-    Integer :: iv_s(2),iv_r(2),iv1(3),ActualFace
+    INTEGER :: source,dest
+    REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
+    REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2,aux3
+    REAL(8) :: point(3)
+    REAL(8) :: vc(3),tx,ty,tz
+    INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
+    REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
+    INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
+    LOGICAL :: oks
+    REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
+    REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
+    LOGICAL :: ok_X,ok_Y,ok_Z,Change_Nmax
+    INTEGER, SAVE :: MyCalls=0
+    REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
+    CHARACTER(len=max_char) :: lab0
+    INTEGER :: iv_s(2),iv_r(2),iv1(3),ActualFace
     Real(8) :: MyCut
 
     MyCut=Radii(i_p) % out+Radii(i_p)% update
 
     Calls=Calls+1
-    If(Calls > Size(iShift)) Then
-       Write(lab0,'(i1)') Calls
+    IF(Calls > SIZE(iShift)) THEN
+       WRITE(lab0,'(i1)') Calls
        errmsg_f='Exchanges are set to 6 per box, but they were '&
-            &//Trim(lab0)
-       Call Add_Errors(-1,errmsg_f)
-       Call Print_Errors()
-    End If
+            &//TRIM(lab0)
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
     
-    If(MyCalls == 0) Then
-       Allocate(ind_o(Size(Groupa)))
-    End If
+    IF(MyCalls == 0) THEN
+       ALLOCATE(ind_o(SIZE(Groupa)))
+    END IF
 
-    oks=Present(scnd_half) .And. (.Not. ok_Pme)
+    oks=PRESENT(scnd_half) .AND. (.NOT. ok_PME)
     MyCalls=MyCalls+1
 
-    Call Mpi_cart_shift(Pi_comm_cart,Axis-1,Dir,source,dest,ierr)
+    CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
 
-    If(Distance_(v1(1),v1(2),v1(3),MyCut,n,Dir,Axis,dest)) Call &
-         & Print_Errors()
+!!$    If(Distance_(v1(1),v1(2),v1(3),n,Dir,Axis,dest)  < 0.0D0) Call &
+!!$         & Print_Errors()
     
-    aux1=0.5D0*(1.0D0+Dble(Dir))
+    aux1=0.5D0*(1.0D0+DBLE(Dir))
 
-    iv1=(/Pi__ranks(Pi_node_cart+1) % nx,Pi__ranks(Pi_node_cart+1) &
-         &% ny,Pi__ranks(Pi_node_cart+1) % nz/)
+    iv1=(/PI__Ranks(PI_Node_Cart+1) % nx,PI__Ranks(PI_Node_Cart+1) &
+         &% ny,PI__Ranks(PI_Node_Cart+1) % nz/)
     iv1(Axis)=iv1(Axis)+aux1
 
     ox=iv1(1) ; oy=iv1(2) ; oz=iv1(3) 
 
-    Margin(1)=Dble(ox)*ddx
-    Margin(2)=Dble(oy)*ddy
-    Margin(3)=Dble(oz)*ddz
+    Margin(1)=DBLE(ox)*ddx
+    Margin(2)=DBLE(oy)*ddy
+    Margin(3)=DBLE(oz)*ddz
 
-    Margin2_1=Dble(Pi__ranks(Pi_node_cart+1) % nx+1.0D0)*ddx
-    Margin2_2=Dble(Pi__ranks(Pi_node_cart+1) % ny)*ddy
-    Margin2_3=Dble(Pi__ranks(Pi_node_cart+1) % nz)*ddz
+    Margin2_1=DBLE(PI__Ranks(PI_Node_Cart+1) % nx+1.0D0)*ddx
+    Margin2_2=DBLE(PI__Ranks(PI_Node_Cart+1) % ny)*ddy
+    Margin2_3=DBLE(PI__Ranks(PI_Node_Cart+1) % nz)*ddz
 
 
     count0=0
@@ -157,48 +157,47 @@ Contains
     X_L=Margin2_1
     X_R=Margin2_1+rcut(1)
 
-    nmax=Size(Groupa)
-    Do n=1,nmax
-       If(Groupa(n) % knwn == 0) Cycle
-       If(Groupa(n) % knwn == 1 .And. oks) Cycle
-       If(oks .And. Axis == 2) Then
+    nmax=SIZE(Groupa)
+    DO n=1,nmax
+       IF(Groupa(n) % knwn == 0) CYCLE
+       IF(Groupa(n) % knwn == 1 .AND. oks) CYCLE
+       IF(oks .AND. Axis == 2) THEN
           v1(1)=Groupa(n) % xa
-          v1(1)=v1(1)-Two*Anint(Half*(v1(1)-1.0D0))
+          v1(1)=v1(1)-Two*ANINT(Half*(v1(1)-1.0D0))
           
           aux1=v1(1)-X_L
-          aux1=aux1-Two*Anint(Half*aux1)
+          aux1=aux1-Two*ANINT(Half*aux1)
           aux2=v1(1)-X_R
-          aux2=aux2-Two*Anint(Half*aux2)
-          If(aux1 > 0.0D0 .And. aux2 < 0.0D0) Then
-             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za&
-                  &,MyCut,n)) Then 
+          aux2=aux2-Two*ANINT(Half*aux2)
+          IF(aux1 > 0.0D0 .AND. aux2 < 0.0D0) THEN
+!!$             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
                 AtSt=Groupa(n) % AtSt
                 AtEn=Groupa(n) % AtEn
                 count1=count1+1
                 ind_o(count1)=n
                 count0=count0+(AtEn-AtSt+1)
-             End If
-          End If
-          Cycle
-       End If
+!!$             End If
+          END IF
+          CYCLE
+       END IF
        v1(1)=Groupa(n) % xa
        v1(2)=Groupa(n) % ya
        v1(3)=Groupa(n) % za
-       v1(Axis)=v1(Axis)-Two*Anint(Half*(v1(Axis)-1.0D0))
+       v1(Axis)=v1(Axis)-Two*ANINT(Half*(v1(Axis)-1.0D0))
        aux1=v1(Axis)-Axis_L
-       aux1=aux1-Two*Anint(Half*aux1)
+       aux1=aux1-Two*ANINT(Half*aux1)
        aux2=v1(Axis)-Axis_R
-       aux2=aux2-Two*Anint(Half*aux2)
-       If(Dir*aux1 > 0.0D0 .And. Dir*aux2 < 0.0D0 ) Then
-          If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,MyCut,n)) Then
+       aux2=aux2-Two*ANINT(Half*aux2)
+       IF(Dir*aux1 > 0.0D0 .AND. Dir*aux2 < 0.0D0 ) THEN
+!!$          If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
              AtSt=Groupa(n) % AtSt
              AtEn=Groupa(n) % AtEn
              count1=count1+1
              ind_o(count1)=n
              count0=count0+(AtEn-AtSt+1)
-          End If
-       End If
-    End Do
+!!$          End If
+       End IF
+    End DO
     NoAtm_s=count0
     nind_o=count1
     NoGrp_s=count1
@@ -211,21 +210,21 @@ Contains
 
     iv_s(1)=NoGrp_s;iv_s(2)=NoAtm_s
 
-    Call Mpi_sendrecv(iv_s,2,Mpi_integer4,dest,0,iv_r&
-         &,2,Mpi_integer4,source,0,Pi_comm_cart,Status,ierr)
+    CALL MPI_SENDRECV(iv_s,2,MPI_INTEGER4,dest,0,iv_r&
+         &,2,MPI_INTEGER4,source,0,PI_Comm_Cart,STATUS,ierr)
 
     NoGrp_r=iv_r(1);NoAtm_r=iv_r(2)
 
     iShift(Calls) % sh(i_p) % NoGrp_r=NoGrp_r
     iShift(Calls) % sh(i_p) % NoAtm_r=NoAtm_r
 
-    If(Allocated(iShift(Calls) % sh(i_p) % iBuff_S))&
-         & Deallocate(iShift(Calls) % sh(i_p) % iBuff_S)
-    If(Allocated(iShift(Calls) % sh(i_p) % iBuff_R))&
-         & Deallocate(iShift(Calls) % sh(i_p) % iBuff_R)
+    IF(ALLOCATED(iShift(Calls) % sh(i_p) % iBuff_S))&
+         & DEALLOCATE(iShift(Calls) % sh(i_p) % iBuff_S)
+    IF(ALLOCATED(iShift(Calls) % sh(i_p) % iBuff_R))&
+         & DEALLOCATE(iShift(Calls) % sh(i_p) % iBuff_R)
 
-    Allocate(iShift(Calls) % sh(i_p) % iBuff_S(NoGrp_S))
-    Allocate(iShift(Calls) % sh(i_p) % iBuff_R(NoGrp_R))
+    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_S(NoGrp_S))
+    ALLOCATE(iShift(Calls) % sh(i_p) % iBuff_R(NoGrp_R))
 
     iShift(Calls) % sh(i_p) % iBuff_S(1:NoGrp_S)=ind_o(1:NoGrp_S)
 
@@ -235,26 +234,26 @@ Contains
     iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_R
 
 
-    Allocate(Buff_s(3,NoGrp_s))
-    Allocate(Buff_r(3,NoGrp_r))
+    ALLOCATE(Buff_s(3,NoGrp_s))
+    ALLOCATE(Buff_r(3,NoGrp_r))
 
-    Do m=1,NoGrp_s
+    DO m=1,NoGrp_s
        l=iBuff_s(m)
        Buff_s(1,m)=Groupa(l) % xa
        Buff_s(2,m)=Groupa(l) % ya
        Buff_s(3,m)=Groupa(l) % za
-    End Do
+    END DO
 
 
     NoGrp_s3=NoGrp_s*3
     NoGrp_r3=NoGrp_r*3
 
-    Call Mpi_sendrecv(iBuff_s,NoGrp_s,Mpi_integer4,dest,2,iBuff_r&
-         &,NoGrp_r,Mpi_integer4,source,2,Pi_comm_cart,Status,ierr)
-    Call Mpi_sendrecv(Buff_s,NoGrp_s3,Mpi_real8,dest,4,Buff_r&
-         &,NoGrp_r3,Mpi_real8,source,4,Pi_comm_cart,Status,ierr)
+    CALL MPI_SENDRECV(iBuff_s,NoGrp_s,MPI_INTEGER4,dest,2,iBuff_r&
+         &,NoGrp_r,MPI_INTEGER4,source,2,PI_Comm_Cart,STATUS,ierr)
+    CALL MPI_SENDRECV(Buff_s,NoGrp_s3,MPI_REAL8,dest,4,Buff_r&
+         &,NoGrp_r3,MPI_REAL8,source,4,PI_Comm_Cart,STATUS,ierr)
 
-    Do m=1,NoGrp_r
+    DO m=1,NoGrp_r
        l=iBuff_r(m)
        Groupa(l) % xa = Buff_r(1,m)
        Groupa(l) % ya = Buff_r(2,m)
@@ -262,84 +261,78 @@ Contains
        groupa(l) % Knwn = 2
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Do n=AtSt,AtEn
+       DO n=AtSt,AtEn
           Atoms(n) % knwn = 2
-       End Do
-    End Do
- End Subroutine Ishift_init
-  Subroutine Buff_Shift(i_p,Axis,Dir,scnd_half)
-    Integer, Optional :: scnd_half
-    Integer :: Axis,Dir,i_p
-    Integer :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
+       END DO
+    END DO
+ END SUBROUTINE IShift_init
+  SUBROUTINE Buff_Shift(i_p,Axis,Dir,scnd_half)
+    INTEGER, OPTIONAL :: scnd_half
+    INTEGER :: Axis,Dir,i_p
+    INTEGER :: nn,n,m,l,count0,mx,my,mz,numcell,ox,oy,oz,mpe,mp&
          &,nmin,i,j,k,MyCell,count1,nind_f,nx,ny,nz
-    Integer :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
+    INTEGER :: NoAtm_s,NoAtm_r,AtSt,AtEn,NoAtm_s3,NoAtm_r3,q,grp_no&
          &,np,nind_o,NoGrp_s,NoGrp_r
-    Integer :: source,dest
-    Real(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
-    Real(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
-    Real(8) :: point(3)
-    Real(8) :: vc(3),tx,ty,tz
-    Integer, Pointer :: iBuff_s(:),iBuff_r(:)
-    Real(8), Allocatable :: Buff_s(:,:),Buff_r(:,:)
-    Integer, Allocatable, Save :: ind_o(:)
-    Logical :: oks
-    Real(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
-    Real(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
-    Logical :: ok_X,ok_Y,ok_Z
-    Integer, Save :: MyCalls=0
-    Real(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
-    Character(len=max_char) :: lab0
-    Logical, Allocatable :: Mask(:)
-    Integer :: Myreq_s,MyReq_r
+    INTEGER :: source,dest
+    REAL(8) :: x,y,z,qq(4),out,xc,yc,zc,xa,ya,za,xd,yd,zd
+    REAL(8) :: v1(3),v0,v2(3),rsq,aux1,aux2
+    REAL(8) :: point(3)
+    REAL(8) :: vc(3),tx,ty,tz
+    INTEGER, POINTER :: iBuff_s(:),iBuff_r(:)
+    REAL(8), ALLOCATABLE :: Buff_s(:,:),Buff_r(:,:)
+    INTEGER, ALLOCATABLE, SAVE :: ind_o(:)
+    LOGICAL :: oks
+    REAL(8) :: Margin(3),Margin2_1,Margin2_3,Margin2_2
+    REAL(8) :: Margin1(3),Margin2(3),Xmin,Xmax,Ymin,Ymax,Zmin,zmax
+    LOGICAL :: ok_X,ok_Y,ok_Z
+    INTEGER, SAVE :: MyCalls=0
+    REAL(8) :: Axis_L,Axis_R,X_L,X_R,tmass,xmass,xpga,ypga,zpga,xpg,ypg,zpg
+    CHARACTER(len=max_char) :: lab0
 
     Calls=Calls+1
-    If(Calls > Size(iShift)) Then
-       Write(lab0,'(i1)') Calls
+    IF(Calls > SIZE(iShift)) THEN
+       WRITE(lab0,'(i1)') Calls
        errmsg_f='Exchanges are set to 6 per box, but they were '&
-            &//Trim(lab0)
-       Call Add_Errors(-1,errmsg_f)
-       Call Print_Errors()
-    End If
-    If(MyCalls == 0) Then
-       Allocate(Mask(Size(Groupa)))
-       Mask=.False.
-    End If
-    
-    Call Mpi_cart_shift(Pi_comm_cart,Axis-1,Dir,source,dest,ierr)
+            &//TRIM(lab0)
+       CALL Add_Errors(-1,errmsg_f)
+       CALL Print_Errors()
+    END IF
+
+    CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
 
     NoGrp_s=iShift(Calls) % sh(i_p) % NoGrp_s
     NoGrp_r=iShift(Calls) % sh(i_p) % NoGrp_r
     NoAtm_s=iShift(Calls) % sh(i_p) % NoAtm_s
     NoAtm_r=iShift(Calls) % sh(i_p) % NoAtm_r
-    Call jBuff(iShift(Calls) % sh,i_p,iBuff_r,iBuff_s,NoGrp_s,NoGrp_r&
-         &,NoAtm_S,NoAtm_r) 
 
-!!$    iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_s
-!!$    iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_r
+    iBuff_s=>iShift(Calls) % sh(i_p) % iBuff_s
+    iBuff_r=>iShift(Calls) % sh(i_p) % iBuff_r
 
-    Allocate(Buff_s(3,NoAtm_s))
-    Allocate(Buff_r(3,NoAtm_r))
+
+    ALLOCATE(Buff_s(3,NoAtm_s))
+    ALLOCATE(Buff_r(3,NoAtm_r))
     count0=0
-    Do m=1,NoGrp_s
+    DO m=1,NoGrp_s
        l=iBuff_s(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
-       Do q=AtSt,AtEn
+       DO q=AtSt,AtEn
           count0=count0+1
           Buff_s(1,count0)=Atoms(q) % x
           Buff_s(2,count0)=Atoms(q) % y
           Buff_s(3,count0)=Atoms(q) % z
-       End Do
-    End Do
+       END DO
+    END DO
 
 
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
 
-    ierr=PointToPoint(buff_s,NoAtm_s3,buff_r,NoAtm_r3,source,dest,Pi_comm_cart)
+    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
+         &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
 
     nn=0
-    Do m=1,NoGrp_r
+    DO m=1,NoGrp_r
        l=iBuff_r(m)
        AtSt=Groupa(l) % AtSt
        AtEn=Groupa(l) % AtEn
@@ -349,7 +342,7 @@ Contains
        xpg=0.0D0
        ypg=0.0D0
        zpg=0.0D0
-       Do n=AtSt,AtEn
+       DO n=AtSt,AtEn
           xmass=Atoms(n) % pmass
           nn=nn+1
           xc=Buff_r(1,nn)
@@ -367,119 +360,17 @@ Contains
           xpg = xpg + xmass*Atoms(n) % x
           ypg = ypg + xmass*Atoms(n) % y
           zpg = zpg + xmass*Atoms(n) % z
-       End Do
+          Atoms(n) % knwn = 2
+       END DO
        Groupa(l) % xa = xpga 
        Groupa(l) % ya = ypga
        Groupa(l) % za = zpga
        Groupa(l) % x = xpg
        Groupa(l) % y = ypg
        Groupa(l) % z = zpg
-    End Do
-    Do m=1,iShift(Calls) % sh(i_p) % NoGrp_r
-       l=iShift(Calls) % sh(i_p) % iBuff_r(m)
        groupa(l) % Knwn = 2
-       AtSt=Groupa(l) % AtSt
-       AtEn=Groupa(l) % AtEn
-       Do n=AtSt,AtEn
-          Atoms(n) % knwn = 2
-       End Do
-    End Do
+    END DO
 
-  Contains
-    Subroutine jBuff(sh,i_p,iBuff_r,iBuff_s,NoGrp_s,NoGrp_r,NoAtm_S&
-         &,NoAtm_r)
-      Type(Indx), Target :: sh(:)
-      Integer :: i_p,NoGrp_s,NoGrp_r,NoAtm_S,NoAtm_r
-      Integer, Pointer :: iBuff_s(:),iBuff_r(:)
-      Integer, Pointer :: jBuff_s(:),jBuff_r(:)
-      Integer, Pointer :: kBuff_s(:),kBuff_r(:)
-      Integer, Allocatable, Save, Target :: MyBuff_s(:),MyBuff_r(:)
-      Integer :: i_pm
+  END SUBROUTINE Buff_Shift
 
-      
-      If(i_p == 1) Then
-         iBuff_s=>sh(i_p) % iBuff_s
-         iBuff_r=>sh(i_p) % iBuff_r
-         NoGrp_s=sh(i_p) % NoGrp_s
-         NoGrp_r=sh(i_p) % NoGrp_r
-         NoAtm_s=sh(i_p) % NoAtm_s
-         NoAtm_r=sh(i_p) % NoAtm_r
-         Return
-      End If
-
-      i_pm=i_p-1
-      If(.Not. Allocated(sh(i_pm) % iBuff_s)) Then
-         iBuff_s=>sh(i_p) % iBuff_s
-         iBuff_r=>sh(i_p) % iBuff_r
-         NoGrp_s=sh(i_p) % NoGrp_s
-         NoGrp_r=sh(i_p) % NoGrp_r
-         NoAtm_s=sh(i_p) % NoAtm_s
-         NoAtm_r=sh(i_p) % NoAtm_r
-         Return
-      End If
-      If(Allocated(MyBuff_s)) Then
-         Deallocate(Mybuff_s,Mybuff_r)
-      End If
-      jBuff_s=>sh(i_p) % iBuff_s
-      jBuff_r=>sh(i_p) % iBuff_r
-
-      Mask(jBuff_s(:))=.True.
-      i_pm=i_p-1
-      Do While (i_pm /=0)
-         kBuff_s=>sh(i_pm) % iBuff_s
-         Mask(kBuff_s(:))=.False.
-         i_pm=i_pm-1
-      End Do
-      NoGrp_s=Count(Mask)
-      Allocate(MyBuff_s(NoGrp_s))
-      MyBuff_s=Pack(jBuff_s(:),Mask(jBuff_s(:)))
-      iBuff_s=>MyBuff_s
-
-
-      Mask(jBuff_s(:))=.False. !$-- ReSet to .False. 
-
-      Mask(jBuff_r(:))=.True.
-      i_pm=i_p-1
-      Do While (i_pm /=0)
-         kBuff_r=>sh(i_pm) % iBuff_r
-         Mask(kBuff_r(:))=.False.
-         i_pm=i_pm-1
-      End Do
-      NoGrp_r=Count(Mask)
-      Allocate(MyBuff_r(NoGrp_r))
-      MyBuff_r=Pack(jBuff_r(:),Mask(jBuff_r(:)))
-      iBuff_r=>MyBuff_r
-
-      Mask(jBuff_r(:))=.False. !$-- ReSet to .False. 
-
-      NoAtm_s=Sum(Groupa(MyBuff_s(:)) % AtEn-Groupa(MyBuff_s(:)) % AtSt+1)
-      NoAtm_r=Sum(Groupa(MyBuff_r(:)) % AtEn-Groupa(MyBuff_r(:)) % AtSt+1)
-
-    End Subroutine jBuff
-
-
-  End Subroutine Buff_Shift
-
-  Function PointToPoint(buff_s,n_s,buff_r,n_r,source,dest,comm) Result(out)
-    Integer :: out,n_s,n_r,source,dest,comm
-    Real(8) :: buff_s(:,:),buff_r(:,:)
-
-    Integer :: Myreq_s,Myreq_r
-
-    out=0
-#ifdef __NonBlocked
-    Call Mpi_isend(buff_s,n_s,Mpi_real8,dest,3,comm,MyReq_s,ierr)
-    If(ierr /= 0) out=ierr
-    Call Mpi_irecv(buff_r,n_r,Mpi_real8,source,3,comm,MyReq_r,ierr)
-    If(ierr /= 0) out=ierr
-    Call Mpi_wait(MyReq_r,Status,ierr)
-    If(ierr /= 0) out=ierr
-    Call Mpi_wait(MyReq_s,Status,ierr)
-    If(ierr /= 0) out=ierr
-#else
-    Call Mpi_sendrecv(Buff_s,n_s,Mpi_real8,dest,3,Buff_r&
-         &,n_r,Mpi_real8,source,3,comm,Status,ierr)
-    If(ierr /= 0) out=ierr    
-#endif
-  End Function PointToPoint
-End Module Pi_shift
+END MODULE PI_Shift

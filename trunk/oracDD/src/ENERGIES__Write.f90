@@ -54,23 +54,23 @@ SUBROUTINE Write_it_(Time)
   WRITE(kprint,'(a)') REPEAT('-',107)
   str0=' '
   str0=pipe//ctime//TRIM(NiceWrite_R8(Time))
-  str0=TRIM(str0)//ctot//TRIM(NiceWrite_R8(fact*Total % Tot))
-  str0=TRIM(str0)//ctpot//TRIM(NiceWrite_R8(fact*TotPot % Tot))
-  str0=TRIM(str0)//ccdir//TRIM(NiceWrite_R8(fact*SUM(Coul_Dir % Tot)))
-  str0=TRIM(str0)//clj//TRIM(NiceWrite_R8(fact*SUM(Lj % Tot)))//pipe
+  str0=TRIM(str0)//ctot//TRIM(NiceWrite_R8(_fact*fact*Total % Tot))
+  str0=TRIM(str0)//ctpot//TRIM(NiceWrite_R8(_fact*fact*TotPot % Tot))
+  str0=TRIM(str0)//ccdir//TRIM(NiceWrite_R8(_fact*fact*SUM(Coul_Dir % Tot)))
+  str0=TRIM(str0)//clj//TRIM(NiceWrite_R8(_fact*fact*SUM(Lj % Tot)))//pipe
   WRITE(kprint,'(a)') TRIM(str0)
   str0=' '
-  str0=pipe//ccrec//TRIM(NiceWrite_R8(fact*Coul_rec % Tot))
-  str0=TRIM(str0)//cbond//TRIM(NiceWrite_R8(fact*Bond % Tot))
-  str0=TRIM(str0)//cstre//TRIM(NiceWrite_R8(fact*stretch % Tot))
-  str0=TRIM(str0)//cangle//TRIM(NiceWrite_R8(fact*Angle % Tot))
-  str0=TRIM(str0)//cdihed//TRIM(NiceWrite_R8(fact*Dihed % Tot))//pipe
+  str0=pipe//ccrec//TRIM(NiceWrite_R8(_fact*fact*Coul_rec % Tot))
+  str0=TRIM(str0)//cbond//TRIM(NiceWrite_R8(_fact*fact*Bond % Tot))
+  str0=TRIM(str0)//cstre//TRIM(NiceWrite_R8(_fact*fact*stretch % Tot))
+  str0=TRIM(str0)//cangle//TRIM(NiceWrite_R8(_fact*fact*Angle % Tot))
+  str0=TRIM(str0)//cdihed//TRIM(NiceWrite_R8(_fact*fact*Dihed % Tot))//pipe
   WRITE(kprint,'(a)') TRIM(str0)
   str0=' '
-  str0=pipe//cimph//TRIM(NiceWrite_R8(fact*Imph % Tot))
-  str0=TRIM(str0)//c14lj//TRIM(NiceWrite_R8(fact*Int14LJ % Tot))
-  str0=TRIM(str0)//c14coul//TRIM(NiceWrite_R8(fact*Int14Coul % Tot))
-  str0=TRIM(str0)//ctemp//TRIM(NiceWrite_R8(Temp % Tot))
+  str0=pipe//cimph//TRIM(NiceWrite_R8(_fact*fact*Imph % Tot))
+  str0=TRIM(str0)//c14lj//TRIM(NiceWrite_R8(_fact*fact*Int14LJ % Tot))
+  str0=TRIM(str0)//c14coul//TRIM(NiceWrite_R8(_fact*fact*Int14Coul % Tot))
+  str0=TRIM(str0)//ctemp//TRIM(NiceWrite_R8(_fact*Temp % Tot))
   str0=TRIM(str0)//blank9//blank12//pipe
   WRITE(kprint,'(a)') TRIM(str0)
   WRITE(kprint,'(a)') REPEAT('-',107)

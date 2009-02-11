@@ -45,6 +45,7 @@ MODULE Integrate
 !!$---- This module is part of the program oracDD ----*
 
 #include "config.h"
+#include "Integrate.h"
 #ifdef HAVE_MPI
   USE mpi
 #endif

@@ -89,10 +89,10 @@ CONTAINS
 #endif
 
     DO n=1,nsize
-       Energy(n) % Tot=eny(4*(n-1)+1)
-       Energy(n) % Slv=eny(4*(n-1)+2)
-       Energy(n) % Slt=eny(4*(n-1)+3)
-       Energy(n) % Mix=eny(4*(n-1)+4)
+       Energy(n) % Tot=eny(4*(n-1)+1)/Dble(PI_Nprocs)
+       Energy(n) % Slv=eny(4*(n-1)+2)/Dble(PI_Nprocs)
+       Energy(n) % Slt=eny(4*(n-1)+3)/Dble(PI_Nprocs)
+       Energy(n) % Mix=eny(4*(n-1)+4)/Dble(PI_Nprocs)
     END DO
 
   END SUBROUTINE Reduce_A_it_
@@ -113,10 +113,10 @@ CONTAINS
     CALL MPI_ALLREDUCE(MPI_IN_PLACE,eny,msize,MPI_REAL8,MPI_SUM,PI_Comm,ierr)
 #endif
 
-    Energy % Tot=eny(1)
-    Energy % Slv=eny(2)
-    Energy % Slt=eny(3)
-    Energy % Mix=eny(4)
+    Energy % Tot=eny(1)/Dble(PI_Nprocs)
+    Energy % Slv=eny(2)/Dble(PI_Nprocs)
+    Energy % Slt=eny(3)/Dble(PI_Nprocs)
+    Energy % Mix=eny(4)/Dble(PI_Nprocs)
   END SUBROUTINE Reduce_S_it_
   SUBROUTINE Total_
     CALL TotPot_
@@ -306,100 +306,47 @@ CONTAINS
   END SUBROUTINE Banner_
   SUBROUTINE Get_Energies_
     CALL Reduce_it_(Stretch)
-    Stretch_a%Tot=Stretch_a%Tot+Stretch % Tot
-    Stretch_a%Slv=Stretch_a%Slv+Stretch % Slv
-    Stretch_a%Slt=Stretch_a%Slt+Stretch % Slt
-    Stretch_a%Mix=Stretch_a%Mix+Stretch % Mix
-    Stretch_a%n0=Stretch_a%n0+1
+    __avg(Stretch_a,Stretch)
 
     CALL Reduce_it_(Angle)
-    Angle_a%Tot=Angle_a%Tot+Angle % Tot
-    Angle_a%Slv=Angle_a%Slv+Angle % Slv
-    Angle_a%Slt=Angle_a%Slt+Angle % Slt
-    Angle_a%Mix=Angle_a%Mix+Angle % Mix
-    Angle_a%n0=Angle_a%n0+1
+    __avg(Angle_a,Angle)
 
     CALL Reduce_it_(Dihed)
-    Dihed_a%Tot=Dihed_a%Tot+Dihed % Tot
-    Dihed_a%Slv=Dihed_a%Slv+Dihed % Slv
-    Dihed_a%Slt=Dihed_a%Slt+Dihed % Slt
-    Dihed_a%Mix=Dihed_a%Mix+Dihed % Mix
-    Dihed_a%n0=Dihed_a%n0+1
+    __avg(Dihed_a,Dihed)
+
 
     CALL Reduce_it_(Imph)
-    Imph_a%Tot=Imph_a%Tot+Imph % Tot
-    Imph_a%Slv=Imph_a%Slv+Imph % Slv
-    Imph_a%Slt=Imph_a%Slt+Imph % Slt
-    Imph_a%Mix=Imph_a%Mix+Imph % Mix
-    Imph_a%n0=Imph_a%n0+1
+    __avg(Imph_a,Imph)
 
     CALL Reduce_it_(Int14LJ)
-    Int14LJ_a%Tot=Int14LJ_a%Tot+Int14LJ % Tot
-    Int14LJ_a%Slv=Int14LJ_a%Slv+Int14LJ % Slv
-    Int14LJ_a%Slt=Int14LJ_a%Slt+Int14LJ % Slt
-    Int14LJ_a%Mix=Int14LJ_a%Mix+Int14LJ % Mix
-    Int14LJ_a%n0=Int14LJ_a%n0+1
+    __avg(Int14LJ_a,Int14LJ)
 
     CALL Reduce_it_(Int14Coul)
-    Int14Coul_a%Tot=Int14Coul_a%Tot+Int14Coul % Tot
-    Int14Coul_a%Slv=Int14Coul_a%Slv+Int14Coul % Slv
-    Int14Coul_a%Slt=Int14Coul_a%Slt+Int14Coul % Slt
-    Int14Coul_a%Mix=Int14Coul_a%Mix+Int14Coul % Mix
-    Int14Coul_a%n0=Int14Coul_a%n0+1
+    __avg(Int14Coul_a,Int14Coul)
 
     CALL Reduce_it_(Lj)
-    Lj_a%Tot=Lj_a%Tot+Lj % Tot
-    Lj_a%Slv=Lj_a%Slv+Lj % Slv
-    Lj_a%Slt=Lj_a%Slt+Lj % Slt
-    Lj_a%Mix=Lj_a%Mix+Lj % Mix
-    Lj_a%n0=Lj_a%n0+1
+    __avg(Lj_a,Lj)
     CALL Reduce_it_(Coul_Dir)
-    Coul_Dir_a%Tot=Coul_Dir_a%Tot+Coul_Dir % Tot
-    Coul_Dir_a%Slv=Coul_Dir_a%Slv+Coul_Dir % Slv
-    Coul_Dir_a%Slt=Coul_Dir_a%Slt+Coul_Dir % Slt
-    Coul_Dir_a%Mix=Coul_Dir_a%Mix+Coul_Dir % Mix
-    Coul_Dir_a%n0=Coul_Dir_a%n0+1
+    __avg(Coul_Dir_a,Coul_Dir)
 
     CALL Reduce_it_(Coul_Rec)
-    Coul_Rec_a%Tot=Coul_Rec_a%Tot+Coul_Rec % Tot
-    Coul_Rec_a%Slv=Coul_Rec_a%Slv+Coul_Rec % Slv
-    Coul_Rec_a%Slt=Coul_Rec_a%Slt+Coul_Rec % Slt
-    Coul_Rec_a%Mix=Coul_Rec_a%Mix+Coul_Rec % Mix
-    Coul_Rec_a%n0=Coul_Rec_a%n0+1
+    __avg(Coul_Rec_a,Coul_Rec)
 
     CALL Reduce_it_(Kinetic)
-    Kinetic_a%tot=Kinetic_a%tot+Kinetic%tot
-    Kinetic_a%Slv=Kinetic_a%Slv+Kinetic%Slv
-    Kinetic_a%Slt=Kinetic_a%Slt+Kinetic%Slt
-    Kinetic_a%n0=Kinetic_a%n0+1
+    __avg(Kinetic_a,Kinetic)
 
     CALL Reduce_it_(Temp)
 
-    Temp_a%tot=Temp_a%tot+Temp%tot
-    Temp_a%Slv=Temp_a%Slv+Temp%Slv
-    Temp_a%Slt=Temp_a%Slt+Temp%Slt
-    Temp_a%n0=Temp_a%n0+1
+    __avg(Temp_a,Temp)
 
     CALL Reduce_it_(Bond)
-    Bond_a%Tot=Bond_a%Tot+Bond % Tot
-    Bond_a%Slv=Bond_a%Slv+Bond % Slv
-    Bond_a%Slt=Bond_a%Slt+Bond % Slt
-    Bond_a%Mix=Bond_a%Mix+Bond % Mix
-    Bond_a%n0=Bond_a%n0+1
+    __avg(Bond_a,Bond)
 
     CALL Reduce_it_(TotPot)
-    TotPot_a%Tot=TotPot_a%Tot+TotPot % Tot
-    TotPot_a%Slv=TotPot_a%Slv+TotPot % Slv
-    TotPot_a%Slt=TotPot_a%Slt+TotPot % Slt
-    TotPot_a%Mix=TotPot_a%Mix+TotPot % Mix
-    TotPot_a%n0=TotPot_a%n0+1
+    __avg(TotPot_a,TotPot)
 
     CALL Reduce_it_(Total)
-    Total_a%Tot=Total_a%Tot+Total % Tot
-    Total_a%Slv=Total_a%Slv+Total % Slv
-    Total_a%Slt=Total_a%Slt+Total % Slt
-    Total_a%Mix=Total_a%Mix+Total % Mix
-    Total_a%n0=Total_a%n0+1
+    __avg(Total_a,Total)
 
   END SUBROUTINE Get_Energies_
 #include "ENERGIES__Write.f90"

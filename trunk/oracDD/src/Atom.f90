@@ -73,7 +73,7 @@ MODULE Atom
   PUBLIC Atom_,Atom__Tpg_, Atom__PDB, Atom__InitCoords,Atom__,&
        & Atom__Tpg,Atoms_Tpg, Atoms,Atom__vInit_, Atom__Verlet_,&
        & Atom__Correct_,Atom__Write_, Atom__Convert,natom_Slt&
-       &,natom_Slv,Atom__KinCompute,Atom__verletb_,atom__correctb_
+       &,natom_Slv,Atom__KinCompute
   TYPE :: Atom__
      REAL(8) :: x,y,z      ! Coordinates orthogonal frame
      REAL(8) :: xa,ya,za   ! Coordinates reduced frame
@@ -412,49 +412,30 @@ CONTAINS
     LOGICAL :: out
     TYPE(Force), POINTER :: fp(:)
     INTEGER :: n,nn,m
-    REAL(8) :: ts2,tfact,mass
+    REAL(8) :: tfact,mass
 
 
-    ts2=dt*dt
 
     out=.TRUE.
     fp=>Forces__Pick(level)
 
     DO nn=1,SIZE(IndBox_a_p)
        m=IndBox_a_p(nn)
-       mass=Atoms(m) % mass
-       tfact=0.5_8*ts2/mass
 
-       Atoms(m) % x=Atoms(m) % x+tfact*fp(m) % x+dt*Atoms(m) % vx
-       Atoms(m) % y=Atoms(m) % y+tfact*fp(m) % y+dt*Atoms(m) % vy
-       Atoms(m) % z=Atoms(m) % z+tfact*fp(m) % z+dt*Atoms(m) % vz
+       mass=Atoms(m) % mass
+       tfact=0.5_8*dt/mass
+
+       Atoms(m) % vx=Atoms(m) % vx+tfact*fp(m) % x
+       Atoms(m) % x=Atoms(m) % x+dt*Atoms(m) % vx
+
+       Atoms(m) % vy=Atoms(m) % vy+tfact*fp(m) % y
+       Atoms(m) % y=Atoms(m) % y+dt*Atoms(m) % vy
+
+       Atoms(m) % vz=Atoms(m) % vz+tfact*fp(m) % z
+       Atoms(m) % z=Atoms(m) % z+dt*Atoms(m) % vz
     END DO
+
   END FUNCTION Atom__Verlet_
-  Subroutine Atom__Verletb_(dt,level)
-    INTEGER :: level
-    REAL(8) :: dt
-    LOGICAL :: out
-    TYPE(Force), POINTER :: fp(:)
-    INTEGER :: n,nn,m
-    REAL(8) :: ts2,tfact,mass
-
-
-    ts2=dt*dt
-
-    out=.TRUE.
-    fp=>Forces__Pick(level)
-
-!!$    DO nn=1,SIZE(IndBox_a_p)
-!!$       m=IndBox_a_p(nn)
-    DO m=1,SIZE(Atoms)
-       mass=Atoms(m) % mass
-       tfact=0.5_8*ts2/mass
-
-       Atoms(m) % x=Atoms(m) % x+tfact*fp(m) % x+dt*Atoms(m) % vx
-       Atoms(m) % y=Atoms(m) % y+tfact*fp(m) % y+dt*Atoms(m) % vy
-       Atoms(m) % z=Atoms(m) % z+tfact*fp(m) % z+dt*Atoms(m) % vz
-    END DO
-  END Subroutine Atom__Verletb_
   FUNCTION Atom__Correct_(dt,level) RESULT(out)
     INTEGER :: level
     REAL(8) :: dt
@@ -476,28 +457,6 @@ CONTAINS
        Atoms(m) % vz=Atoms(m) % vz+tfact*fp(m) % z
     END DO
   END FUNCTION Atom__Correct_
-  Subroutine  Atom__Correctb_(dt,level)
-    INTEGER :: level
-    REAL(8) :: dt
-    LOGICAL :: out
-    TYPE(Force), POINTER :: fp(:)
-    INTEGER :: n,nn,m
-    REAL(8) :: tfact,mass
-
-    out=.TRUE.
-    fp=>Forces__Pick(level)    
-
-!!$    DO nn=1,SIZE(IndBox_a_p)
-!!$       m=IndBox_a_p(nn)
-    DO m=1,SIZE(Atoms)
-       mass=Atoms(m) % mass
-       tfact=0.5_8*dt/mass
-
-       Atoms(m) % vx=Atoms(m) % vx+tfact*fp(m) % x
-       Atoms(m) % vy=Atoms(m) % vy+tfact*fp(m) % y
-       Atoms(m) % vz=Atoms(m) % vz+tfact*fp(m) % z
-    END DO
-  END Subroutine Atom__Correctb_
   FUNCTION Atom__Write_(Unit,Mode) RESULT(out)
     LOGICAL :: out
     INTEGER :: Mode,Unit
