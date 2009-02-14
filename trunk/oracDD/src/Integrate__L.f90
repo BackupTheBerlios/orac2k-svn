@@ -46,9 +46,13 @@
 SUBROUTINE Integrate_l
   INTEGER, SAVE :: counter=0
   INTEGER, PARAMETER :: Init=1
+  Integer :: la,n
+  Real(8) :: tfact
 
   DO la=1,l_
-     IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
+
+     __correct_vp(dt_l,fpp_l)
+
      IF(.NOT. Rattle_it(dt_l,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_m
@@ -60,7 +64,9 @@ SUBROUTINE Integrate_l
      CALL FORCES_Zero(_L_)
      CALL Forces_(_L_)
 
-     IF(.NOT. Atom__Correct_(dt_l,_L_)) CALL Print_Errors()
+     Call GatherLocals(fpp_l,fp_l(:)%x,fp_l(:)%y,fp_l(:)%z,IndBox_a_p)
+     __correct_vp(dt_l,fpp_l)
+
      IF(NShell == _L_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()

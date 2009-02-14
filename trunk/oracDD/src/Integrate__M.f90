@@ -49,10 +49,13 @@ SUBROUTINE Integrate_m
   INTEGER, PARAMETER :: init=1
   INTEGER :: MyCalls=0
   Real(8), Save :: Startts,Endtts,timets
+  Integer :: n
+  Real(8) :: tfact
 
   DO ma=1,m_
 
-     IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+     __correct_vp(dt_m,fpp_m)
+
      IF(.NOT. Rattle_it(dt_m,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_n1
@@ -70,12 +73,14 @@ SUBROUTINE Integrate_m
      CALL FORCES_Zero(_M_)
      CALL Forces_(_M_)
 
-     IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
+     Call GatherLocals(fpp_m,fp_m(:)%x,fp_m(:)%y,fp_m(:)%z,IndBox_a_p)
+     __correct_vp(dt_m,fpp_m)
 
      IF(NShell == _M_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
      END IF
+     Call GatherGlobal(atoms(:)%vx,atoms(:)%vy,atoms(:)%vz,v0,IndBox_a_p)
      IF(MOD(counter,Time_of_Print % nstep) == 0) THEN
         CALL ATOM__KinCompute
         CALL EN_Total_

@@ -29,4 +29,24 @@
   Atoms(m)%z=Atoms(m)%z+dt*Atoms(m)%vz;		                        \
   End Do;
 
+#define __correct_vp(dt,fp)				\
+  Do n=1,natom_P;							\
+     tfact=_Half*dt*xmass(n);						\
+     v0(n)%x=v0(n)%x+tfact*fp(n) % x;					\
+     v0(n)%y=v0(n)%y+tfact*fp(n) % y;					\
+     v0(n)%z=v0(n)%z+tfact*fp(n) % z;					\
+  End Do;
+
+#define __verlet_vp(dt,fp)						\
+  Do n=1,natom_P;								\
+     tfact=_Half*dt*xmass(n);						\
+     v0(n)%x=v0(n)%x+tfact*fp(n)%x;		                        \
+     p0(n)%x=p0(n)%x+dt*v0(n)%x;			                \
+     v0(n)%y=v0(n)%y+tfact*fp(n)%y;		                        \
+     p0(n)%y=p0(n)%y+dt*v0(n)%y;		                        \
+     v0(n)%z=v0(n)%z+tfact*fp(n)%z;		                        \
+     p0(n)%z=p0(n)%z+dt*v0(n)%z;		                        \
+  End Do;
+
+
 #endif

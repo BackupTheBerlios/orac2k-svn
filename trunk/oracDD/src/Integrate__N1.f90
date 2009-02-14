@@ -48,18 +48,24 @@ SUBROUTINE Integrate_n1
   INTEGER, PARAMETER :: Init=1
   INTEGER :: MyCalls=0,n1,nn,m
   Real(8), Save :: Startts,Endtts,timets
+  Integer :: n
   Real(8) :: tfact
+
   
   DO n1=1,n1_
-     __correct(dt_n1,fp_n1)
+
+     __correct_vp(dt_n1,fpp_n1)
+
      IF(.NOT. Rattle_it(dt_n1,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_n0
 
      CALL FORCES_Zero(_N1_)
      CALL Forces_(_N1_)
-     __correct(dt_n1,fp_n1)
 
+     Call GatherLocals(fpp_n1,fp_n1(:)%x,fp_n1(:)%y,fp_n1(:)%z,IndBox_a_p)
+
+     __correct_vp(dt_n1,fpp_n1)
      counter=counter+1
 
      IF(NShell == _N1_ ) THEN

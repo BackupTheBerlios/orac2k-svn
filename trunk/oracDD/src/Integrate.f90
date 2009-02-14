@@ -97,6 +97,14 @@ MODULE Integrate
      REAL(8) :: Time=0.0_8
   END TYPE Length
   TYPE(Length) :: Iteration,Time_of_Print
+  Type :: Point
+     Real(8) :: x,y,z
+  End type Point
+  Type(Point), Allocatable, Save :: p0(:),v0(:)
+  Type(Point), Allocatable, Save :: pa(:),va(:)
+  TYPE(Point), Allocatable, Save :: fpP_n0(:),fpP_n1(:),fpP_m(:),fpP_l(:),fpP_h(:)
+  Real(8), Allocatable, Save :: xmass(:)
+  Integer, Save :: natom_P
 CONTAINS
   FUNCTION Time_Step() RESULT(out)
     REAL(8) :: out
@@ -198,6 +206,14 @@ CONTAINS
 
     IF(.NOT. PI_Atom__Neigh_()) CALL Print_Errors()
 
+    natom_P=Size(Indbox_a_p)
+    Allocate(xmass(natom_P))
+    Allocate(p0(natom_P),pa(natom_P))
+    Allocate(v0(natom_P),va(natom_P))
+    Allocate(fpp_n0(natom_P),fpp_n1(natom_P),fpp_m(natom_P)&
+         &,fpp_l(natom_P),fpp_h(natom_P))
+    xmass=1.0D0/Atoms(Indbox_a_p(:)) % mass
+
     CALL DIR_Lists(Nshell)
     IF(Ewald__Param % Switch .AND. Ewald__Param % nx /= 0 .AND.&
          & Ewald__Param % ny  /= 0 .AND. Ewald__Param % nz /= 0) THEN
@@ -209,6 +225,7 @@ CONTAINS
     CALL MPI_BARRIER(PI_Comm_cart,ierr)
     startime=MPI_WTIME()
 
+    
     DO n=1,NShell
        startts=MPI_WTIME()
        CALL FORCES_Zero(n)
@@ -216,9 +233,12 @@ CONTAINS
        endtts=MPI_WTIME()
        timets(n)=endtts-startts
     END DO
+
     DO n=1,NShell
        Write(kprint,'('' Shell No. '',i2,'' CPU Time '',e14.6)') n,timets(n)
     End DO
+
+
     IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) % knwn))&
          & CALL Print_Errors()
 
@@ -234,9 +254,24 @@ CONTAINS
     Iteration=Get_RunLength()
     Time_of_Print=Get_PrintFrequency()
     startime=MPI_WTIME()
-
     CALL EN_Banner_
     Write(*,*) 'First ',Iteration % nstep
+
+    Call GatherLocals(p0,Atoms(:) % x,Atoms(:) % y,Atoms(:) % z,indBox_a_p)
+    Call GatherLocals(pa,Atoms(:) % xa,Atoms(:) % ya,Atoms(:) % za,indBox_a_p)
+    Call GatherLocals(v0,Atoms(:) % vx,Atoms(:) % vy,Atoms(:) % vz,indBox_a_p)
+    Call GatherLocals(va,Atoms(:) % vxa,Atoms(:) % vya,Atoms(:) % vza,indBox_a_p)
+    Call GatherLocals(fpp_n0,fp_n0(:)%x,fp_n0(:)%y,fp_n0(:)%z,IndBox_a_p)
+    Call GatherLocals(fpp_n1,fp_n1(:)%x,fp_n1(:)%y,fp_n1(:)%z,IndBox_a_p)
+    Call GatherLocals(fpp_m,fp_m(:)%x,fp_m(:)%y,fp_m(:)%z,IndBox_a_p)
+    Call GatherLocals(fpp_l,fp_l(:)%x,fp_l(:)%y,fp_l(:)%z,IndBox_a_p)
+    Call GatherLocals(fpp_h,fp_h(:)%x,fp_h(:)%y,fp_h(:)%z,IndBox_a_p)
+
+
+!!$
+!!$--- MD Iterations 
+!!$
+
     DO Iter=1,Iteration % nstep
        CALL Integrate_Shell(NShell)
     END DO

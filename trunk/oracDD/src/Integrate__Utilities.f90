@@ -188,3 +188,21 @@ Function ReadCounter(Shell) Result(out)
   End Select
      
 End Function ReadCounter
+Subroutine GatherLocals(p,x,y,z,ind)
+  Type(Point) :: p(:)
+  Real(8) :: x(:),y(:),z(:)
+  Integer :: Ind(:)
+
+  p(:)%x=x(Ind(:))
+  p(:)%y=y(Ind(:))
+  p(:)%z=z(Ind(:))
+End Subroutine GatherLocals
+Subroutine GatherGlobal(x,y,z,p,ind)
+  Type(Point) :: p(:)
+  Real(8) :: x(:),y(:),z(:)
+  Integer :: Ind(:)
+
+  x(Ind(:))=p(:)%x
+  y(Ind(:))=p(:)%y
+  z(Ind(:))=p(:)%z
+End Subroutine GatherGlobal

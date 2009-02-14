@@ -45,6 +45,7 @@
 SUBROUTINE Integrate_n0
   INTEGER, SAVE :: counter=0
   INTEGER :: Init,q,n0,nn,m
+  Integer :: n
   Real(8) :: tfact
 
   DO n0=1,n0_
@@ -53,14 +54,15 @@ SUBROUTINE Integrate_n0
 !!$--- Verlet position step
 !!$
 
-     __verlet(dt_n0,fp_n0)
+     __verlet_vp(dt_n0,fpp_n0)
 
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
      
      Init=Pick_Init(_N0_,counter,NShell)
 
      IF(Init == _INIT_) THEN
-        IF(.NOT.  Atom__Convert(_X_TO_XA_,IndBox_g_p)) CALL Print_Errors()
+        Call GatherGlobal(atoms(:)%x,atoms(:)%y,atoms(:)%z,p0,IndBox_a_p)
+        IF(.NOT.  Atom__Convert(_X_TO_XA_,IndBox_a_p)) CALL Print_Errors()
         IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
 
         CALL PI__ResetSecondary
@@ -78,9 +80,13 @@ SUBROUTINE Integrate_n0
         CALL Init_TotalShells(NShell)
      END IF
 
+
+     Call GatherGlobal(atoms(:)%x,atoms(:)%y,atoms(:)%z,p0,IndBox_a_p)
      CALL FORCES_Zero(_N0_)
      CALL Forces_(_N0_)
-     __correct(dt_n0,fp_n0)
+     Call GatherLocals(fpp_n0,fp_n0(:)%x,fp_n0(:)%y,fp_n0(:)%z,IndBox_a_p)
+
+     __correct_vp(dt_n0,fpp_n0)
 
      counter=counter+1
      IF(NShell == _N0_ .AND. Init == 0) THEN

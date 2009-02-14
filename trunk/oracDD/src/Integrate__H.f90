@@ -47,11 +47,14 @@ SUBROUTINE Integrate_h
   INTEGER, SAVE :: counter=0,MyCalls=0
   INTEGER, PARAMETER :: Init=1
   Real(8), Save :: Startts,Endtts,timets
+  Integer :: ha,n
+  Real(8) :: tfact
 
   DO ha=1,h_
      startts=MPI_WTIME()
-     
-     IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
+
+     __correct_vp(dt_h,fpp_h)
+
      IF(.NOT. Rattle_it(dt_h,RATTLE__Correct_)) CALL Print_Errors()
      
      CALL Integrate_l
@@ -62,7 +65,10 @@ SUBROUTINE Integrate_h
      CALL FORCES_Zero(_H_)
      CALL Forces_(_H_)
 
-     IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
+     Call GatherLocals(fpp_h,fp_h(:)%x,fp_h(:)%y,fp_h(:)%z,IndBox_a_p)
+
+     __correct_vp(dt_h,fpp_h)
+
      IF(NShell == _H_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
