@@ -20,7 +20,7 @@ CPP = /lib/cpp -traditional
 CC = cc
 LIB = nolib
 CURDIR = `pwd`
-DIST_DIR = tmp_dir/orac2k/src
+DIST_DIR = tmp_dir/oracDD/src
 LIBRARIES = NONE
 
 
