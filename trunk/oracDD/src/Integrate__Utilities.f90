@@ -42,29 +42,31 @@
 !!$***********************************************************************
 
 !!$---- This module is part of the program oracDD ----*
-FUNCTION Pick_Init(na,c) RESULT(out)
-  INTEGER :: na,c,out
-  
+FUNCTION Pick_Init(na,c,MyNshell_a) RESULT(out)
+  INTEGER :: na,c,out,MyNshell_a
   INTEGER, SAVE :: First_Call=0
   INTEGER, ALLOCATABLE, SAVE :: Mult_Shell(:)
-  INTEGER :: n
+  INTEGER :: n,MyNshell
+
+  MyNshell=MyNshell_a
   IF(First_Call == 0) THEN
      ALLOCATE(Mult_Shell(NShell))
-     DO n=1,NShell
-        Mult_shell(n)=Get_Mult(n)
-     END DO
      First_Call=First_Call+1
   END IF
+  If(MyNShell > Nshell) MyNShell=NShell
+  DO n=1,MyNShell
+     Mult_shell(n)=Get_Mult(n)
+  END DO
   IF(MOD(c,Mult_shell(na)) == 0) THEN
      out=0
   ELSE
      out=1
   END IF
-  IF(c == 0 .AND. na /= Nshell) out=1
+  IF(c == 0 .AND. na /= MyNshell) out=1
 CONTAINS
   RECURSIVE FUNCTION Get_Mult(n) RESULT(out)
     INTEGER :: n,out
-    IF(n > NShell) THEN
+    IF(n > MyNShell) THEN
        out=1
        RETURN
     END IF
@@ -152,3 +154,37 @@ FUNCTION  Get_PrintFrequency() RESULT(out)
   IF(out % nstep == 0) out % nstep = 1 
   out % Time=out % nstep*dt_m
 END FUNCTION Get_PrintFrequency
+Subroutine SaveCounter(Shell,counter)
+  Integer :: Shell, Counter
+
+  Select Case(Shell)
+  Case(_N0_)
+     counter_N0=counter
+  Case(_N1_)
+     counter_N1=counter
+  Case(_M_)
+     counter_M=counter
+  Case(_L_)
+     counter_L=counter
+  Case(_H_)
+     counter_H=counter
+  End Select
+     
+End Subroutine SaveCounter
+Function ReadCounter(Shell) Result(out)
+  Integer :: Shell, out
+
+  Select Case(Shell)
+  Case(_N0_)
+     out=counter_N0
+  Case(_N1_)
+     out=counter_N1
+  Case(_M_)
+     out=counter_M
+  Case(_L_)
+     out=counter_L
+  Case(_H_)
+     out=counter_H
+  End Select
+     
+End Function ReadCounter

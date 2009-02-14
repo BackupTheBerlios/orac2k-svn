@@ -49,8 +49,6 @@ SUBROUTINE Integrate_n0
 
   DO n0=1,n0_
 
-!!$     IF(.NOT. Atom__Correct_(dt_n0,_N0_)) CALL Print_Errors()
-!!$     IF(.NOT. Rattle_it(dt_n0,RATTLE__Correct_)) CALL Print_Errors()
 !!$
 !!$--- Verlet position step
 !!$
@@ -59,7 +57,7 @@ SUBROUTINE Integrate_n0
 
      IF(.NOT. Rattle_it(dt_n0,RATTLE__Verlet_)) CALL Print_Errors()
      
-     Init=Pick_Init(_N0_,counter)
+     Init=Pick_Init(_N0_,counter,NShell)
 
      IF(Init == _INIT_) THEN
         IF(.NOT.  Atom__Convert(_X_TO_XA_,IndBox_g_p)) CALL Print_Errors()

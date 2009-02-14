@@ -95,11 +95,39 @@ CONTAINS
     REAL(8) :: startime0,endtime0,startime1,endtime1,startime2&
          &,endtime2,startime3,endtime3,total,tcalc,tcomm 
     REAL(8), ALLOCATABLE :: totals(:),tcomms(:)
+    Integer :: counter,Call_H,Call_L
 
     CALL PI__ResetSecondary
+    If(n == _M_) Then
+       Select Case(Nshell)
+       Case(5)
 
-    CALL PI__Shift(n,Flag)
-    
+          counter=ReadCounter(_M_)
+          Call_H=Pick_Init(_M_,counter,Nshell-1)
+          Call_L=Pick_Init(_M_,counter,Nshell-2)
+          If(Call_H == 0 .And. Call_L == 0) Then
+             CALL PI__Shift(_H_,Flag)
+          Else If(Call_H == 0 .And. Call_l /= 0) Then
+             CALL PI__Shift(_H_,Flag)
+          Else If(Call_L == 0 .And. Call_h /= 0) Then
+             CALL PI__Shift(_L_,Flag)
+          Else If(Call_L /= 0 .And. Call_h /= 0) Then
+             CALL PI__Shift(_M_,Flag)
+          End If
+       Case(4)
+          counter=ReadCounter(_M_)
+          Call_L=Pick_Init(_M_,counter,Nshell-1)
+          If(Call_L == 0) Then
+             CALL PI__Shift(_L_,Flag)
+          Else
+             CALL PI__Shift(_M_,Flag)
+          End If
+       Case(3)
+          CALL PI__Shift(_M_,Flag)
+       End Select
+
+    End If
+
     IF(.NOT. PI_Atom_Update_()) CALL Print_Errors()
 
     CALL DIR_Forces(n)

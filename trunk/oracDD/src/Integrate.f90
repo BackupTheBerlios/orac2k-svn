@@ -91,7 +91,7 @@ MODULE Integrate
   REAL(8), SAVE :: Time_at_Step=0.0_8
   INTEGER, SAVE :: n0,n1,ma,la,ha
   INTEGER, SAVE :: Nstep_N0=0 !!-- How many N0 steps have been run
-
+  Integer, Save :: counter_N0,counter_N1,counter_M,counter_L,counter_H
   TYPE :: Length
      INTEGER :: Nstep=0
      REAL(8) :: Time=0.0_8

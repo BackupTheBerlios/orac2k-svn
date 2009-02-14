@@ -61,6 +61,9 @@ SUBROUTINE Integrate_m
 !!$--- From Cartesian get reduced coordinate then recompute group coords
 !!$
 
+     counter=counter+1
+     Call SaveCounter(_M_,counter)
+
      IF(.NOT. Atom__Convert(_X_TO_XA_,IndBox_a_p(:))) CALL Print_Errors()
      IF(.NOT. Groups__Update(IndBox_g_p)) CALL Print_Errors()
      
@@ -68,7 +71,6 @@ SUBROUTINE Integrate_m
      CALL Forces_(_M_)
 
      IF(.NOT. Atom__Correct_(dt_m,_M_)) CALL Print_Errors()
-     counter=counter+1
 
      IF(NShell == _M_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&

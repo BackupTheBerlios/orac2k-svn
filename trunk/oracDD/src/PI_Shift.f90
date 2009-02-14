@@ -370,6 +370,7 @@ CONTAINS
        Groupa(l) % z = zpg
        groupa(l) % Knwn = 2
     END DO
+    CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
 
   END SUBROUTINE Buff_Shift
 

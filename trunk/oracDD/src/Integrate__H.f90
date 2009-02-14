@@ -56,11 +56,13 @@ SUBROUTINE Integrate_h
      
      CALL Integrate_l
      
+     counter=counter+1
+     Call SaveCounter(_H_,counter)
+
      CALL FORCES_Zero(_H_)
      CALL Forces_(_H_)
 
      IF(.NOT. Atom__Correct_(dt_h,_H_)) CALL Print_Errors()
-     counter=counter+1
      IF(NShell == _H_) THEN
         IF(.NOT. RATTLE__Parameters_(Atoms(:) % mass,Atoms(:) %&
              & knwn)) CALL Print_Errors()
