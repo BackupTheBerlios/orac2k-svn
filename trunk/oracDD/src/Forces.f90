@@ -44,7 +44,7 @@ MODULE Forces
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
 
   USE Constants, ONLY: max_pars,max_data, max_char
   USE Errors, ONLY: Add_Errors=>Add, error_other, error_unr, error_args&

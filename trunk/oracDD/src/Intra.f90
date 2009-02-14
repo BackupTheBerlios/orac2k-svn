@@ -44,7 +44,7 @@ MODULE Intra
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
   USE Print_Defs
   USE Units, ONLY: efact
   USE PI_

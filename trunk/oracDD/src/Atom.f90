@@ -44,7 +44,7 @@ MODULE Atom
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
 #define _IND  IndBox_a_p(:)
 #include 'forces.h'
 

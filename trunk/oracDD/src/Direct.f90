@@ -44,7 +44,7 @@ MODULE Direct
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
   USE Erfc_Spline, ONLY: Erfc_,tau,c,E_dx=>dx,E_Xbeg=>Xbeg,Erfc_Switch
   USE Print_Defs
   USE PI_ATOM

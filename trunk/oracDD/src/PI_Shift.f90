@@ -44,6 +44,7 @@ MODULE PI_Shift
 
 !!$---- This module is part of the program oracDD ----*
 
+#include "config.h"
 #ifdef HAVE_MPI
   USE mpi
 #endif
@@ -129,8 +130,8 @@ CONTAINS
 
     CALL MPI_CART_SHIFT(PI_Comm_Cart,Axis-1,Dir,source,dest,ierr)
 
-!!$    If(Distance_(v1(1),v1(2),v1(3),n,Dir,Axis,dest)  < 0.0D0) Call &
-!!$         & Print_Errors()
+    If(Distance_(v1(1),v1(2),v1(3),Mycut,n,Dir,Axis,dest)) Call &
+         & Print_Errors()
     
     aux1=0.5D0*(1.0D0+DBLE(Dir))
 
@@ -170,13 +171,13 @@ CONTAINS
           aux2=v1(1)-X_R
           aux2=aux2-Two*ANINT(Half*aux2)
           IF(aux1 > 0.0D0 .AND. aux2 < 0.0D0) THEN
-!!$             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
+             If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,MyCut,n)) Then
                 AtSt=Groupa(n) % AtSt
                 AtEn=Groupa(n) % AtEn
                 count1=count1+1
                 ind_o(count1)=n
                 count0=count0+(AtEn-AtSt+1)
-!!$             End If
+             End If
           END IF
           CYCLE
        END IF
@@ -189,13 +190,13 @@ CONTAINS
        aux2=v1(Axis)-Axis_R
        aux2=aux2-Two*ANINT(Half*aux2)
        IF(Dir*aux1 > 0.0D0 .AND. Dir*aux2 < 0.0D0 ) THEN
-!!$          If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,n) <= MyCut) Then
+          If(Distance_(Groupa(n) %xa, Groupa(n) %ya, Groupa(n) %za,MyCut,n)) Then
              AtSt=Groupa(n) % AtSt
              AtEn=Groupa(n) % AtEn
              count1=count1+1
              ind_o(count1)=n
              count0=count0+(AtEn-AtSt+1)
-!!$          End If
+          End If
        End IF
     End DO
     NoAtm_s=count0
@@ -328,8 +329,7 @@ CONTAINS
     NoAtm_s3=NoAtm_s*3
     NoAtm_r3=NoAtm_r*3
 
-    CALL MPI_SENDRECV(Buff_s,NoAtm_s3,MPI_REAL8,dest,3,Buff_r&
-         &,NoAtm_r3,MPI_REAL8,source,3,PI_Comm_Cart,STATUS,ierr)
+    ierr=PointToPoint(buff_s,NoAtm_s3,buff_r,NoAtm_r3,source,dest,Pi_comm_cart)
 
     nn=0
     DO m=1,NoGrp_r
@@ -373,5 +373,29 @@ CONTAINS
     CALL PI__Sample_Exchange(NoAtm_S,NoAtm_R)
 
   END SUBROUTINE Buff_Shift
+  Function PointToPoint(buff_s,n_s,buff_r,n_r,source,dest,comm) Result(out)
+    Integer :: out,n_s,n_r,source,dest,comm
+    Real(8) :: buff_s(:,:),buff_r(:,:)
+
+    Integer :: Myreq_s,Myreq_r
+
+    out=0
+#ifdef __NonBlocking
+#warning "Using nonblocking communications "    
+    Call Mpi_isend(buff_s,n_s,Mpi_real8,dest,5,comm,MyReq_s,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_irecv(buff_r,n_r,Mpi_real8,source,5,comm,MyReq_r,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_wait(MyReq_r,Status,ierr)
+    If(ierr /= 0) out=ierr
+    Call Mpi_wait(MyReq_s,Status,ierr)
+    If(ierr /= 0) out=ierr
+#else
+#warning "Using blocking communications "    
+    Call Mpi_sendrecv(Buff_s,n_s,Mpi_real8,dest,5,Buff_r&
+         &,n_r,Mpi_real8,source,5,comm,Status,ierr)
+    If(ierr /= 0) out=ierr    
+#endif
+  End Function PointToPoint
 
 END MODULE PI_Shift

@@ -44,7 +44,7 @@ MODULE IntraAtoms
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
 #ifdef HAVE_MPI
   USE mpi
 #endif

@@ -44,7 +44,7 @@ MODULE MDRun
 
 !!$---- This module is part of the program oracDD ----*
 
-#include "config.h"
+#include "parameters.h"
 
   USE PI_Atom
 #ifdef HAVE_MPI

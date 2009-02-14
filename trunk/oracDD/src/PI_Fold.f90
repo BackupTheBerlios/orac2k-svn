@@ -44,6 +44,7 @@ MODULE PI_Fold
 
 !!$---- This module is part of the program oracDD ----*
 
+#include "config.h"
 #ifdef HAVE_MPI
   USE mpi
 #endif
@@ -285,7 +286,8 @@ CONTAINS
     Integer :: Myreq_s,Myreq_r
 
     out=0
-#ifdef __NonBlocked
+#ifdef __NonBlocking
+#warning "Using nonblocking communications "    
     Call Mpi_isend(buff_s,n_s,Mpi_real8,dest,5,comm,MyReq_s,ierr)
     If(ierr /= 0) out=ierr
     Call Mpi_irecv(buff_r,n_r,Mpi_real8,source,5,comm,MyReq_r,ierr)
@@ -295,6 +297,7 @@ CONTAINS
     Call Mpi_wait(MyReq_s,Status,ierr)
     If(ierr /= 0) out=ierr
 #else
+#warning "Using blocking communications "    
     Call Mpi_sendrecv(Buff_s,n_s,Mpi_real8,dest,5,Buff_r&
          &,n_r,Mpi_real8,source,5,comm,Status,ierr)
     If(ierr /= 0) out=ierr    
