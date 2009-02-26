@@ -49,7 +49,7 @@ INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
 # Object modules
 #==========================================================================
 
-OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o\
+OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
 	EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o PDB_utils.o PDB.o\
 	Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o POLAR_Mod.o \
