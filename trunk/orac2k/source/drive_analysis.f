@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2008-03-20 14:10:49 marchi>                           *
+*   Time-stamp: <2009-02-24 18:58:16 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -285,8 +285,9 @@ c$$$====================================================================
          CALL HYDD_Initialize_Array(grppt,mres,resg,chrge,mass,ntap)
       END IF
       IF(Density_Calc) THEN
+         nato_slt=ntap-nmol*nato_slv
          CALL DEN_Initialize(node,prsymb,beta,nres(1,1),nres(1,2),mass
-     &        ,ntap)
+     &        ,ntap,nato_slt,co,oc,volume)
          CALL DEN_Initialize_Ar
       END IF
       IF(Polar__) THEN
@@ -1520,7 +1521,7 @@ c--------------------------
                      IF(nnstep == 1) THEN
                         CALL ELE_Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma
      &                       ,ypcma,zpcma,co,oc,node,nprocs,prsymb,beta
-     &                       ,nres(1,1),nres(1,2),mass,ntap)
+     &                       ,nres(1,1),nres(1,2),mass,ntap,nato_slt)
                      END IF
                      CALL ELE_Compute(xp0,yp0,zp0,xpa,ypa,zpa,xpga,ypga
      &                    ,zpga,xpcma,ypcma,zpcma,co,oc,volume,fstep)
@@ -1528,7 +1529,7 @@ c--------------------------
 
                   IF(node .EQ. 0) THEN
                      IF(Density_Calc) THEN                     
-                        CALL DEN_Compute(xp0,yp0,zp0,volume)
+                        CALL DEN_Compute(xp0,yp0,zp0,co,oc,volume)
                         IF(MOD(nstep,DEN_write) == 0) THEN
                            CALL DEN_write_it(fstep)
                         END IF
