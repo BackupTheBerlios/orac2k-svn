@@ -1,7 +1,7 @@
 MODULE FIELD_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2008-03-14 12:01:39 marchi>                           *
+!!$   Time-stamp: <2009-02-24 18:55:22 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -78,7 +78,7 @@ CONTAINS
     CALL Direct
     IF(noeds == 0) THEN
        IF(do_Pr) CALL P_of_r
-       CALL DEN_Compute(xp0,yp0,zp0,volume,phi)
+       CALL DEN_Compute(xp0,yp0,zp0,co,oc,volume,phi)
        IF(MOD(No_of_Calls,DEN_write) == 0) THEN
           CALL DEN_write_it(fstep)
           IF(do_Pr) CALL Pr_Write(fstep)
@@ -260,12 +260,12 @@ CONTAINS
 !!$-------- Initialize 
 !!$
   SUBROUTINE Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma,zpcma,co,oc&
-       &,nodea,nprocsa,prsymb,beta,res1,res2,mass,natom0)
+       &,nodea,nprocsa,prsymb,beta,res1,res2,mass,natom0,natom1)
 
     IMPLICIT NONE
     CHARACTER(8) :: prsymb(*)
     CHARACTER(7) :: beta(*)
-    INTEGER :: res1(*),res2(*),natom0
+    INTEGER :: res1(*),res2(*),natom0,natom1
     REAL(8) :: mass(*)
 
     INTEGER :: nodea,nprocsa,ntapa,ngrpa
@@ -300,7 +300,7 @@ CONTAINS
        CALL DEN_Initialize_Par(a,b,c,nccx,nccy,nccz,n_write&
             &,file_format,atoms,nats,natoms_Tot,filename_ele&
             &,filename_ele2,filename_pdb,Target_Res)
-       CALL DEN_Initialize(noeds,prsymb,beta,res1,res2,mass,natom0)
+       CALL DEN_Initialize(noeds,prsymb,beta,res1,res2,mass,natom0,natom1,co,oc,volume)
        CALL DEN_Initialize_Ar
     END IF
    CONTAINS

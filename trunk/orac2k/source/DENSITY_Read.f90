@@ -50,6 +50,13 @@
              CALL Read_String(strngs(4),c)
           END IF
 
+       CASE('histo')
+          Dens_histo=.True.
+          IF(nword .Eq. 3) THEN
+             CALL Read_String(strngs(2),Dens_Histo_rmax)
+             CALL Read_String(strngs(3),Dens_Histo_size)
+          END IF
+
        CASE('grid')
           IF(nword .LT. 4) THEN
              errmsg=err_args(1)//'3'
@@ -165,7 +172,16 @@
           CALL openf(kpdb,filename_pdb,'FORMATTED','NEW',0)
        END IF
     END IF
-    RETURN
+    If(Dens_Histo) Then
+       filename_histo='DENS_HISTO.dat'
+       Inquire(FILE=filename_histo,EXIST=exist)
+       If(exist) Then
+          Call openf(kdenhisto,filename_histo,'FORMATTED','OLD',0)
+       Else
+          Call openf(kdenhisto,filename_histo,'FORMATTED','NEW',0)
+       End If
+    End If
+    Return
 
 600 read_err=1
     RETURN
