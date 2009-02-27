@@ -1,7 +1,7 @@
 PROGRAM CompImpey
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-09-19 15:58:47 marchi>                           *
+!!$   Time-stamp: <2008-03-20 16:13:01 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -33,16 +33,18 @@ PROGRAM CompImpey
   INTEGER, ALLOCATABLE, DIMENSION(:) :: index1,index_sv
   LOGICAL, ALLOCATABLE, DIMENSION(:,:) :: Mask
 
-  TYPE Dyna
-     REAL(8) :: x,y,z
-     REAL(8) :: dip_x,dip_y,dip_z
-  END TYPE Dyna
+  REAL(4) :: x,y,z
+  REAL(4) :: dip_x,dip_y,dip_z
+  TYPE Traj
+     INTEGER :: n0
+     INTEGER, ALLOCATABLE :: Ind(:)
+  END type Traj
+  TYPE(Traj), ALLOCATABLE, SAVE :: Tr(:)
 
-  TYPE(Dyna), DIMENSION(:,:), ALLOCATABLE, SAVE :: Coord
   REAL(8) :: dipn_x,dipn_y,dipn_z,dipo_x,dipo_y,dipo_z,corra
-  INTEGER :: pp,oo,ia,counter
+  INTEGER :: pp,oo,ia,counter,n0,counter_ia
   REAL(8), DIMENSION(:), ALLOCATABLE, SAVE :: corr_1
-  REAL(8) :: fstep,fstep_o,dfstep,norma,normb,x0,y0,z0,x1,y1,z1,dist
+  REAL(8) :: fstep,fstep_o,dfstep,norma,normb,x0,y0,z0,x1,y1,z1,dist,ratio
   LOGICAL :: ok,stdout
   CHARACTER(80), SAVE :: file_out = 'IMPEY.dat'
 
@@ -56,7 +58,7 @@ PROGRAM CompImpey
 
   READ(kbin) m,n
 
-  ALLOCATE(Coord(n,m))
+  ALLOCATE(Tr(n))
   ALLOCATE(Mask(n,m))
   ALLOCATE(index_sv(m+1))
   ALLOCATE(corr_1(0:n-1))
@@ -65,24 +67,35 @@ PROGRAM CompImpey
   index_sv(1)=m
   READ(kbin) (index_sv(1+ii),ii=1,m)
 
-
   fstep=0.0D0
   nn=1
   DO WHILE(nn <= n)
      fstep_o=fstep
-     READ(kbin) fstep
-     READ(kbin) (Coord(nn,i) % x, Coord(nn,i) % y, Coord(nn,i) % z,&
-          & Coord(nn,i) % dip_x, Coord(nn,i) % dip_y, Coord(nn,i) % dip_z,&
-          & i=1,m)
-     READ(kbin) (mask(nn,mm),mm=1,m)
-     IF(MOD(nn,1000) == 0) WRITE(*,*) nn
+
+     READ(kbin) fstep,n0
+     Tr(nn) % n0=n0
+     ALLOCATE(tr(nn) % Ind(n0))
+     READ(kbin) (tr(nn) % Ind(i),i=1,n0)     
+     READ(kbin) (x, y, z, dip_x, dip_y, dip_z,i=1,n0)
      nn=nn+1
   END DO
   dfstep=fstep-fstep_o
 
+!!$
+!!$ --- Make Mask
+!!$
+
+  mask=.FALSE.
+  DO nn=1,n
+     DO ii=1,Tr(nn) % n0
+        i=tr(nn) % Ind(ii)
+        mask(nn,i)=.TRUE.
+     END DO
+  END DO
+
   DO i=1,m
      ia=index_sv(1+i)
-     WRITE(*,'(''----> Molecule  '',i4,'' to follow'')') ia
+     IF(MOD(i,1000) == 0) WRITE(*,'(''----> Molecule  '',i4,'' to follow'')') ia
      nn=1
      nn_old=1
      DO WHILE(nn < n)
@@ -111,14 +124,32 @@ PROGRAM CompImpey
         WRITE(*,'(''Attached Molecules No.'',i6,'' Seq. No. '',i6)') counter,ia
      END IF
   END DO
+  counter=0
+  DO i=1,m
+     ia=index_sv(1+i)
+     counter_ia=0
+     DO nn=1,n
+        IF(Mask(nn,i)) THEN
+           counter_ia=counter_ia+1
+        END IF
+     END DO
+     ratio=DBLE(counter_ia)/DBLE(n)
+     IF( ratio > 0.5D0 .AND. ratio < 0.6D0) THEN
+        counter=counter+1
+        WRITE(*,'(''Att. more than 80 %, Molecules No.'',i6,'' Seq. No. '',i6)') counter,ia
+     END IF
+  END DO
+
+
   WRITE(*,'(''----> N(t) '')') 
+  WRITE(*,*) n
   DO i=0,n-1
      IF(stdout) THEN
-        IF(corr_1(i) /= 0.0D0) WRITE(*,'(f12.3,3f25.18)') DBLE(i)*dfstep&
+        IF(corr_1(i) /= 0.0D0) WRITE(*,'(f12.3,3f25.18)') DBLE(i)*dfstep/1000.0D0&
              &,corr_1(i)
      ELSE
         IF(corr_1(i) /= 0.0D0) WRITE(kout,'(f12.3,3f25.18)') DBLE(i)&
-             &*dfstep,corr_1(i)
+             &*dfstep/1000.0D0,corr_1(i)
      END IF
   END DO
 
