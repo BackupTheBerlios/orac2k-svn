@@ -1,7 +1,7 @@
 PROGRAM main
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-02-04 14:19:25 marchi>                           *
+!!$   Time-stamp: <2009-02-27 12:05:58 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -19,7 +19,6 @@ PROGRAM main
 
 !!$======================== DECLARATIONS ================================*
 
-  USE Neighbors_Mod
   IMPLICIT none
 
 !!$----------------------------- ARGUMENTS ------------------------------*
@@ -28,31 +27,22 @@ PROGRAM main
 
 !!$------------------------- LOCAL VARIABLES ----------------------------*
 
+  Type :: My
+     Integer :: i,j,k
+  End type My
 
-  INTEGER :: o,n,m,count,i,j
-  INTEGER, DIMENSION (120000) :: nnlpp
-  REAL(8) :: duni
-  TYPE(Neighbors), DIMENSION (:), POINTER :: nn_Pol
+  Type(My) :: hg
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
+
+  hg % i = 1;hg % j = 2;hg % k = 3;
+  Call Sub(hg % i, hg % j, hg % k)
   
-  o=100
-  n=20
-  count=0
-  DO i=1,n
-     m=INT(DFLOAT(o)*duni())
-     nnlpp(count+1)=m
-     DO j=1,m
-        nnlpp(count+1+j)=INT(DFLOAT(o)*duni())
-     END DO
-     IF(i==5) WRITE(*,*) (nnlpp(count+1+j),j=1,4)
-     count=count+1+m
-  END DO
-  CALL Neighbors_init(nnlpp,1,n)
-  nn_Pol=>nn
-
-  WRITE(*,*) nn(5)%Neigh(1:4)
-
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
+Contains
+  Subroutine sub(g % i, g % j, g % k)
+    Type(My) :: g
+    Write(*,*) g % i
+  End Subroutine sub
 
 END PROGRAM main

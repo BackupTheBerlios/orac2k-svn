@@ -174,11 +174,18 @@
     END IF
     If(Dens_Histo) Then
        filename_histo='DENS_HISTO.dat'
+       filename_histo_cos='DENS_HISTO_COS.dat'
        Inquire(FILE=filename_histo,EXIST=exist)
        If(exist) Then
           Call openf(kdenhisto,filename_histo,'FORMATTED','OLD',0)
        Else
           Call openf(kdenhisto,filename_histo,'FORMATTED','NEW',0)
+       End If
+       Inquire(FILE=filename_histo_cos,EXIST=exist)
+       If(exist) Then
+          Call openf(kdenhisto_cos,filename_histo_cos,'FORMATTED','OLD',0)
+       Else
+          Call openf(kdenhisto_cos,filename_histo_cos,'FORMATTED','NEW',0)
        End If
     End If
     Return

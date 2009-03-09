@@ -4,7 +4,7 @@ SUBROUTINE P_Comm_Intra(nstart,nend,node,nprocs,x,y,z,xc,yc,zc,nato&
      &,int13_x,ingrp,ingrpp,ingrp_x)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-01-29 13:08:16 marchi>                           *
+!!$   Time-stamp: <2009-03-09 12:45:06 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *

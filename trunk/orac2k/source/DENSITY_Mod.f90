@@ -1,7 +1,7 @@
 MODULE DENSITY_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-02-25 16:16:19 marchi>                           *
+!!$   Time-stamp: <2009-03-09 13:06:36 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -19,6 +19,7 @@ MODULE DENSITY_Mod
   USE INPUT_Mod, ONLY: Read_String, Parser, err_open,err_end,err_unr&
        &,err_fnf,err_args
   USE PDB, ONLY: PDB_out=>Write_it, PDB_
+  Use Tetrahedra
   Use Neighbors
   IMPLICIT None
 
@@ -51,12 +52,15 @@ MODULE DENSITY_Mod
   TYPE(PDB_t), DIMENSION(:), ALLOCATABLE, SAVE :: coords
   LOGICAL, SAVE :: Other_Density=.FALSE.,Dens_Histo=.False.
   Real(8), Save :: ddx,ddy,ddz,dx,dy,dz
-  Real(8), Allocatable :: xpa(:),ypa(:),zpa(:),Dens_Histo_svol(:,:),Dens_Histo_gofr(:)
+  Real(8), Allocatable :: xpa(:),ypa(:),zpa(:),Dens_Histo_svol(:,:)&
+       &,Dens_Histo_gofr(:)
   Integer, Allocatable :: Dens_Histo_numb(:),idx(:)
-  Character(120), Save :: Filename_histo=' '
-  Integer, Save :: kdenhisto=0,dens_histo_size=400,mx,my,mz
-  Real(8), Save :: dens_histo_rmax=10.0_8,dens_histo_bin 
-  Real(8), Allocatable :: Dens_Histo_gofr_ac(:,:)
+  Character(120), Save :: Filename_histo=' ',Filename_histo_cos=' '
+  Integer, Save :: kdenhisto=0,kdenhisto_cos=0,dens_histo_size=400,mx,my,mz&
+       &,Dens_histo_Size_cos=50
+  Real(8), Save :: dens_histo_rmax=10.0_8,dens_histo_bin,Dens_histo_Bin_cos
+  Real(8), Allocatable :: Dens_Histo_gofr_ac(:,:)&
+       &,Dens_Histo_gofr_cos(:,:,:)
   Integer, Allocatable :: iac(:)
   Type :: Amino
      Character(len=3), Allocatable :: res(:)
@@ -126,11 +130,16 @@ CONTAINS
        ddy=boxl/Dble(ncy)
        ddz=boxl/Dble(ncz)
        Dens_histo_bin=Dens_histo_rmax/Dble(Dens_histo_size)
+       Dens_histo_Bin_cos=2.0D0/Dble(Dens_histo_size_cos)
+       
        Allocate(xpa(natom),ypa(natom),zpa(natom),idx(natom))
        Allocate(Dens_Histo_gofr(Dens_histo_size+1))
        Allocate(Dens_Histo_svol(Dens_histo_size+1,3))
        Allocate(Dens_Histo_numb(Dens_histo_size+1))
        allocate(iac(natom),Dens_Histo_gofr_ac(Dens_histo_size+1,2))
+
+       allocate(Dens_Histo_gofr_cos(Dens_histo_size_cos+1,Dens_histo_size+1,2))
+
        iac=polar%type
        Do n=1,natom_slt
           char1=Trim(prsymb(res2(n)))
@@ -197,9 +206,9 @@ CONTAINS
           END DO
           na=na+1+m
        END DO
+       ALLOCATE(beta(SIZE(Coords)))
+       beta=ADJUSTL(Coords(:) % beta)
     END IF
-    ALLOCATE(beta(SIZE(Coords)))
-    beta=ADJUSTL(Coords(:) % beta)
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   END SUBROUTINE Initialize
@@ -407,6 +416,10 @@ CONTAINS
       Integer :: p,q,r,iv,jv,kv,l,numcell,numcell1
       Integer :: nhisto,o,nnx,nny,nnz,n,mycount,u
       Real(8) :: xa,ya,za,xc0,yc0,zc0,rsq,rsq_Min,rsp,rsq_max,xpi,ypi,zpi
+      Real(8) :: vhb(3,4),xf(3),yf(3),zf(3),MyC(3)
+      Integer :: nang
+      Real(8) :: Norm,cos1,cos2,cos3,cos4
+
 
       
       mycount=0
@@ -416,6 +429,16 @@ CONTAINS
          xpi=xpa(n)
          ypi=ypa(n)
          zpi=zpa(n)
+         Do m=n,n+2
+            xa=xpa(m)
+            ya=ypa(m)
+            za=zpa(m)
+            xf(m-n+1)=co(1,1)*xa+co(1,2)*ya+co(1,3)*za
+            yf(m-n+1)=co(2,1)*xa+co(2,2)*ya+co(2,3)*za
+            zf(m-n+1)=co(3,1)*xa+co(3,2)*ya+co(3,3)*za
+         End Do
+         Call Tetrahedra_(xf(1),yf(1),zf(1),xf(2),yf(2),zf(2),xf(3),yf(3),zf(3),vhb)
+
          p=Chain_xyz(n) % i
          q=Chain_xyz(n) % j
          r=Chain_xyz(n) % k
@@ -452,6 +475,7 @@ CONTAINS
                If(rsq < rsq_Min) Then
                   Rsq_Min=rsq
                   u=iac(l)
+                  MyC=-(/xc0,yc0,zc0/)
                End If
                l=Chain_xyz(l) % p
             End Do
@@ -459,6 +483,21 @@ CONTAINS
          Rsp=sqrt(Rsq_Min)
          nhisto=Int(Rsp/Dens_Histo_bin)+1
          If(nhisto <= Dens_histo_Size) Then
+            Norm=Sqrt(Sum(MyC**2))
+            MyC=MyC/Norm
+            cos1=Sum(MyC*vhb(:,1))+1.0D0
+            nang=Int(cos1/Dens_histo_Bin_cos)+1
+            Dens_Histo_gofr_cos(nang,nhisto,u)=Dens_Histo_gofr_cos(nang,nhisto,u)+1.0D0
+            cos2=Sum(MyC*vhb(:,2))+1.0D0
+            nang=Int(cos2/Dens_histo_Bin_cos)+1
+            Dens_Histo_gofr_cos(nang,nhisto,u)=Dens_Histo_gofr_cos(nang,nhisto,u)+1.0D0
+            cos3=Sum(MyC*vhb(:,3))+1.0D0
+            nang=Int(cos3/Dens_histo_Bin_cos)+1
+            Dens_Histo_gofr_cos(nang,nhisto,u)=Dens_Histo_gofr_cos(nang,nhisto,u)+1.0D0
+            cos4=Sum(MyC*vhb(:,4))+1.0D0
+            nang=Int(cos4/Dens_histo_Bin_cos)+1
+            Dens_Histo_gofr_cos(nang,nhisto,u)=Dens_Histo_gofr_cos(nang,nhisto,u)+1.0D0
+
             Dens_histo_gofr(nhisto)=Dens_histo_gofr(nhisto)+1.0_8
             Dens_Histo_gofr_ac(nhisto,u)=Dens_Histo_gofr_ac(nhisto,u)+1
          End If
@@ -469,7 +508,7 @@ CONTAINS
       Integer :: nhisto,o,nnx,nny,nnz,u
       Real(8) :: xa,ya,za,xc0,yc0,zc0,rsq,rsq_Min,rsp,rsq_max,x2,y2&
            &,z2,dvol
-      
+
 
       dvol=Real_Volume/Dble(ncx*ncy*ncz)
        
@@ -558,6 +597,8 @@ CONTAINS
     INTEGER :: one=1,i,j,k,count,ncx2,ncx_s,ncx_e,ncy2,ncy_s,ncy_e&
          &,ncz2,ncz_s,ncz_e,na,n,m,ii,ntap
     REAL(8), DIMENSION (:,:,:), ALLOCATABLE, SAVE :: Fluct
+    Integer :: u
+    Real(8) :: sum,rc
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -705,6 +746,31 @@ CONTAINS
        WRITE(kdens2,'(2(e12.4,1x))') avg,sigma
     END SELECT
     If(dens_histo) Then
+       Rewind(kdenhisto_cos)
+       Do u=1,2
+          Write(kdenhisto_cos,'(''# gofr histogram at step = '',i8,2x,f12.3)')&
+               & u,fstep
+          Do n=1,Dens_histo_size
+             r=Dens_histo_bin*Dble(n-1)
+             
+             sum=0.0D0
+             Do k=1,Dens_histo_size_cos
+                sum=sum+Dens_Histo_gofr_cos(k,n,u)
+             End Do
+             sum=sum*Dens_histo_bin_cos
+
+             Do k=1,Dens_histo_size_cos
+                rc=Dens_histo_bin_cos*Dble(k-1)-1.0D0
+                If(sum /= 0.0D0) Then
+                   y=Dens_Histo_gofr_cos(k,n,u)/sum
+                Else
+                   y=0.0D0
+                End If
+                Write(kdenhisto_cos,'(2f14.4,e15.8)') r,rc,y
+             End Do
+          End Do
+       End Do
+
        Write(kdenhisto,'(''# gofr histogram at step = '',f12.3)') fstep
        Do n=1,Dens_histo_size
           r=Dens_histo_bin*Dble(n-1)
@@ -803,6 +869,7 @@ CONTAINS
         INTEGER :: i,j,k
         REAL(8) :: avg2,aux
         avg=0.0D0
+        avg2=0.0D0
         DO k=1,ncz
            DO j=1,ncy
               DO i=1,ncx

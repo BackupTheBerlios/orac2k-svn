@@ -1,7 +1,7 @@
 MODULE VORONOI_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2006-10-24 16:11:35 marchi>                           *
+!!$   Time-stamp: <2009-03-09 11:31:59 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -16,13 +16,14 @@ MODULE VORONOI_Mod
 
 !!$---- This MODULE is part of the program ORAC ----*
 
-#include "config.h"
 
   USE Xerror_Mod
 
   USE INPUT_Mod, ONLY: Read_String, Parser, err_open,err_end,err_unr&
        &,err_fnf,err_args
 
+#include "config.h"
+  Implicit None 
   INTEGER :: max_neigh,pig_nnl,pnnlpp_vor,maxpla,maxver
   PARAMETER ( &
        & max_neigh=_MAX_NEIGH_, &
