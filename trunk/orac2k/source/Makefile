@@ -1,6 +1,12 @@
 # Makefile for ORAC. Works for sure with the intel compiler ifort, 
 # supposedly with pgf90, gfortran 
 # 
+#
+#   "make" or "make MODE=PARALLEL" for parallel systems
+#   "make MODE=SEQUENTIAL" for single processor runs
+#
+#
+
 
 SHELL = /bin/sh
 DESCRIPTION = Merge version MAX-PIE. Unit of time is fs.
@@ -16,16 +22,16 @@ LIBRARIES = NONE
 MODE=PARALLEL
 MEMORY=DYNAMIC_MEM
 MPI_TYPE = OPENMPI
-
-ifeq ($(MODE), PARALLEL)
 PARA_MODE = MPI
-else
+
+ifneq ($(MODE), PARALLEL)
 PARA_MODE = NOMPI
 endif 
 
 export MODE
 export PARA_MODE
 export MEMORY 
+export MPI_TYPE
 
 ##
 ##  Machine dependent include files
@@ -601,6 +607,7 @@ GFORT :
 	${MAKE} recur_GFT "FFLAGS = -x f95-cpp-input   "
 	${MAKE} orac_GFT
 
+Do_Nothing:
 
 
 #========================================================================
