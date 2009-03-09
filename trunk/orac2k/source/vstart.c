@@ -189,31 +189,8 @@ return(OK);
 *
 ***********************************************************************/
 
-#define AUX
-
-#ifdef G95
 #undef AUX
-#endif
 
-#ifdef IRIX 
-#undef AUX
-#endif
-
-#ifdef PGI
-#undef AUX
-#endif
-
-#ifdef INTEL
-#undef AUX
-#endif
-
-#ifdef Linux
-#undef AUX
-#endif
-
-#ifdef OSF1
-#undef AUX
-#endif
 
 #ifdef AUX
 void  vstart(idata,odata,vertex)

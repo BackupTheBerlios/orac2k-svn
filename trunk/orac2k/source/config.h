@@ -36,7 +36,7 @@
 
 /* Maximum bin dimension of the G(r) */
 
-#define  _MAX_BIN_      200
+#define  _MAX_BIN_      600
 
 /* Maximum bin dimension for Hydrogen bond histogram */
 
@@ -52,12 +52,12 @@ neighbor list. Here, neighbors are counted for molecules and groups */
 
 /* EWALD summation */
 /* 
-*=================== Definition of the sum boundaries =================*
+******************** Definition of the sum boundaries ******************
 *                                                                      *
 *     The sum over the reciprocal space is carried out in the 3        *
 *     dimensions from -LMAX, 0, LMAX  -MMAX, 0, MMAX  -NMAX, 0, NMAX   *
 *                                                                      *
-*=================== Definition of the sum boundaries =================*
+******************** Definition of the sum boundaries ******************
 */
 
 #define  _LMAX_		2
@@ -79,9 +79,9 @@ used.                                                             */
 #define _CONN_	7 
 
 /*
-=================================================================
-==========  Analysis Dimensions Start here ======================
-=================================================================
+*****************************************************************
+**********  Analysis Dimensions Start here **********************
+*****************************************************************
 */
 
 /****************************************************************
