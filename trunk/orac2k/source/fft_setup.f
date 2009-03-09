@@ -2,7 +2,7 @@
      &     ,nfftdim1,nfftdim2,nfftdim3,nfftable,nffwork)
 
 ************************************************************************
-*   Time-stamp: <01/02/24 17:07:41 marchi>                             *
+*   Time-stamp: <2009-03-09 12:44:46 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *

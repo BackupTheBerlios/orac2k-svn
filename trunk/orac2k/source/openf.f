@@ -1,7 +1,7 @@
       SUBROUTINE openf(kunit,file,form1,status1,recl)
 
 ************************************************************************
-*   Time-stamp: <2006-04-11 10:29:44 marchi>                             *
+*   Time-stamp: <2009-03-09 12:45:02 marchi>                             *
 *                                                                      *
 *   Connect a file to a unit                                           *
 *                                                                      *

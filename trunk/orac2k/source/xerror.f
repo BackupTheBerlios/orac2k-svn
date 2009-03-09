@@ -1,7 +1,7 @@
       SUBROUTINE xerror(errmsg,length,idummy,err)
 
 ************************************************************************
-*   Time-stamp: <2006-01-31 14:21:45 marchi>                             *
+*   Time-stamp: <2009-03-09 12:45:17 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *

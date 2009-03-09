@@ -1,7 +1,7 @@
       SUBROUTINE P_whoami(node,nprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <05/01/07 11:39:56 marchi>                             *
+*   Time-stamp: <2009-03-09 13:57:33 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *

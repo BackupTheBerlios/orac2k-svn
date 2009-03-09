@@ -2537,7 +2537,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
 *=======================================================================
 
 
-            INCLUDE 'mtsmd_avg_inc.CPP.f'
+#include "mtsmd_avg_inc.f"
             IF(abmd_native) THEN
                IF(MOD(ninner,nprint) .EQ. 0) THEN
                   fstep=time*DFLOAT(ninner)/dfloat(mrespa*lrespa)
@@ -2691,7 +2691,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
 *----------  Dump restart file and do tests at timestep H --------------
 *=======================================================================
 
-      INCLUDE 'mtsmd_dump_inc.CPP.f'
+#include "mtsmd_dump_inc.f"
 
 *=======================================================================
 *--------         MD LOOP ENDS   !!                    -----------------

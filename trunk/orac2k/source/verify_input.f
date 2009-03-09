@@ -1,4 +1,3 @@
-#include "pressure.h"
       SUBROUTINE verify_input(fmaxstp,fscale,fprint,fsave,fplot,fascii
      &     ,fprop,fplot_fragm,fplot_center,frject,fconf,fmaxrun,fupdte
      &     ,fxrms,fvi,favg,favg_xrms,fcavities,ftop_print
@@ -185,7 +184,6 @@ c$$$            nsevere = nsevere + 1
          nsevere=nsevere+1
       END IF
 
-#ifndef PRESSURE
       IF(cpress .OR. pressure .OR. isostress) THEN
          errmsg=
      & 'In &SIMULATION(STRESS) should recompile with pressure option.'
@@ -193,7 +191,6 @@ c$$$            nsevere = nsevere + 1
             call xerror(errmsg,80,1,20)
          nsevere=nsevere+1
       END IF
-#endif
 
 *=======================================================================
 *--- Validate steps                                                  ---

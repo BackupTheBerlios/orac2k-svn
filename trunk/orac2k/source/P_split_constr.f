@@ -2,7 +2,7 @@
      &     ,iret,errmsg)
 
 ************************************************************************
-*   Time-stamp: <2005-01-29 12:34:53 marchi>                             *
+*   Time-stamp: <2009-03-09 12:45:08 marchi>                             *
 *                                                                      *
 *   Divide intramolecular interaction according to atom decomposition  *
 *   Each processor might do a little more work than necessary.         *

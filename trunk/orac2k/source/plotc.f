@@ -54,7 +54,7 @@
 
       CALL rotb(a,b,c,alf,bett,gamm,co)
       WRITE(kout,2) fstep
-# Les lignes suivantes sont commentees expres pour faire le film
+c Les lignes suivantes sont commentees expres pour faire le film
 c      WRITE(kout,4) a,b,c,alf,bett,gamm
       WRITE(kout,5) a,b,c,alf,bett,gamm
 c      IF(abmd) WRITE(kout,3) gr,gra

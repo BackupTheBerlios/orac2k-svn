@@ -2,7 +2,7 @@
      &     ,end_time,length_run,atom_record,length_tot,length_fft)
 
 ************************************************************************
-*   Time-stamp: <2005-01-27 16:57:17 marchi>                             *
+*   Time-stamp: <2009-03-09 12:05:30 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -21,7 +21,7 @@
 *======================== DECLARATIONS ================================*
 
       IMPLICIT none
-      INCLUDE 'iobuffer.h'
+#include  "iobuffer.h"
 *----------------------------- ARGUMENTS ------------------------------*
 
       

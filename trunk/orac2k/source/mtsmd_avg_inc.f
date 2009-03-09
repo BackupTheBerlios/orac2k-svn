@@ -1,5 +1,5 @@
 ************************************************************************
-*   Time-stamp: <2006-04-03 12:05:32 marchi>                             *
+*   Time-stamp: <2009-03-09 12:44:59 marchi>                             *
 *                                                                      *
 *   Compute averages and do some analysis at time step M               *
 *                                                                      *

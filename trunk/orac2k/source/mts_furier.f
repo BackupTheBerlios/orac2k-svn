@@ -1,4 +1,3 @@
-
       SUBROUTINE mts_furier(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
      &     ,nprocs,ncube,nstart,nend,nlocal,nstart_2,nend_2,nlocal_2,xpb
      &     ,ypb,zpb,xp0,yp0,zp0,xpcm,ypcm,zpcm,urcsp,urcs,urcp,virsp
