@@ -71,7 +71,7 @@ CONTAINS
     IMPLICIT NONE 
     REAL(8) :: xp0(*),yp0(*),zp0(*),fstep
     INTEGER :: ind1(:),ind2(:),mres(:,:),grppt(:,:)
-    CHARACTER(4) :: bet,bet2
+    CHARACTER(5) :: bet,bet2
     CHARACTER(3) :: ResName
     CHARACTER(1) :: Chain
     INTEGER :: n,nn,i1,i2,i,l,k
