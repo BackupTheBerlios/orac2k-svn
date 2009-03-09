@@ -184,14 +184,6 @@ c$$$            nsevere = nsevere + 1
          nsevere=nsevere+1
       END IF
 
-      IF(cpress .OR. pressure .OR. isostress) THEN
-         errmsg=
-     & 'In &SIMULATION(STRESS) should recompile with pressure option.'
-     & / /' Change pressure.h'
-            call xerror(errmsg,80,1,20)
-         nsevere=nsevere+1
-      END IF
-
 *=======================================================================
 *--- Validate steps                                                  ---
 *=======================================================================
