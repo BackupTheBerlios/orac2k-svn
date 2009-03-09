@@ -1,6 +1,5 @@
-# Makefile for ORAC. Works with ULTRIX, OSF, HPUX, AIX, 
-# IRIX and IRIX64 machines
-# 
+# Makefile for ORAC. Works for sure with the intel compiler ifort, 
+# supposedly with pgf90, gfortran 
 # 
 
 SHELL = /bin/sh
@@ -14,42 +13,189 @@ CURDIR = `pwd`
 DIST_DIR = tmp_dir/orac2k/source
 LIBRARIES = NONE
 
+MODE=PARALLEL
+MEMORY=DYNAMIC_MEM
+MPI_TYPE = OPENMPI
+
+ifeq ($(MODE), PARALLEL)
+PARA_MODE = MPI
+else
+PARA_MODE = NOMPI
+endif 
+
+export MODE
+export PARA_MODE
+export MEMORY 
+
+##
+##  Machine dependent include files
+##  change fftw and lapack/blas library to suit
+##  your system
+##
+
+#include Make.Mac_g95_dbg
+#include Make.Mac_g95
+#include Make.Mac_xlf
+#include Make.Mac_intel
+#include Make.Lx_pgi_64
+#include Make.Lx_ifc_argent
+#include Make.Lx_ifc_intel
+#include Make.Lx_ifc_intel.err
+
+include Make.Lx_ifc_64_breizh
+
+#include Make.Lx_ifc_64
+#include Make.Lx_ifc_platine
+#include Make.Lx_ifc_64_dbg
+#include Make.OSF_f90
+
+
 #==========================================================================
 # Define default rules
 #==========================================================================
 
 .f.o :
-	$(FC) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -c $<
+	$(FC) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -c $<
 .SUFFIXES: .o .f90
 .f90.o :
-	$(F90) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -c $<
-
-#==========================================================================
-# Define include files
-#==========================================================================
-
-
-include Make.what
-
-INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
-	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
-	mts_vacf.inc pme.inc parallel.inc parameters.inc\
-	lc_list.inc voronoi.inc polar.h mpi_size.inc\
-	pressure.h mtsmd_avg_inc.f \
-	mtsmd_dump_inc.f dipole_interaction.f\
-	force_ele_spline.f force_ele_nospline.f force_noele.f\
-	force_ele_spline_sw.f force_ele_nospline_sw.f force_noele_sw.f\
-	DENSITY_Read.f90 FOURIER_Read.f90 GEOM_groups_Readit.f90 GROUPS_Readit.f90\
-	PDBs_Read.f90 RMS_General_Read.f90 RMS_Subtract_Read.f90 fftw_f77.i
-
-
-INCPRE = $(patsubst %.inc, %.h, $(INCLUDE)) 
+	$(F90) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -c $<
 
 #==========================================================================
 # Object modules
 #==========================================================================
+OBJ_F90 = CalcDistConf.o \
+	CENTER_SOL_Mod.o Class_Bending.o Class_Connect.o Class_Gauss_Param.o	\
+	Class_Gcharges.o COMM_Mod.o CompElecPotentialOnGrid.o Correct_Ewald.o	\
+	DCopy_V3.o DENSITY_Mod.o DENSITY_Read.o Do_Electric_Fields.o		\
+	DOMAINS_Mod.o do_pfft3d.o do_rfft3d.o ElecPotential_Mod.o EUL_Mod.o	\
+	Extra_Forces.o FIELD_Mod.o FIELD__Read.o FOURIER_Mod.o FOURIER_Read.o	\
+	Gauss_Overlap_Mod.o GEOM_groups_Mod.o GEOM_groups_Readit.o		\
+	GetHardSphere.o GetKineticTest.o Get_vp_without_vc.o Get_vp_with_vc.o	\
+	GROUPS_Mod.o GROUPS_Readit.o HEATING_Mod.o HYDRATION_Mod.o		\
+	HYDYNAMICS_Mod.o Init_Fixed_Molecule.o INPUT_Mod.o IOBUFFER_Mod.o	\
+	LinkedCellIndex.o LoadBspModuli.o Make_Pol_Models.o MD_Mod.o		\
+	Mod_Fourier.o Module_Extra_Forces.o Module_Fourier.o			\
+	Module_Neighbors.o Module_Node.o			\
+	Module_Orthogonal_Stress.o Module_Stress.o Module_Thole.o		\
+	Neighbors.o Neighbors_Mod.o Open_Input.o		\
+	ORAC_Finalize.o PBC_Mod.o P_Buffer.o P_Buffer_Mod.o			\
+	P_Change_Decomposition.o P_Comm_Intra.o PDB.o PDB_FRAGM_Mod.o		\
+	PDB_FRAGM__Read.o PDB__Read.o PDBs_Mod.o PDBs_Read.o PDB_utils.o	\
+	P_expand_i.o P_expand_r8.o P_expand_r8x3b.o P_expand_r8x3.o P_fold_i.o	\
+	P_fold_r8.o P_fold_r8x3.o P_isend.o P_isend_i.o Pme_init.o P_merge_i.o	\
+	P_merge_r8.o P_merge_veci.o P_merge_vecr8.o Poisson_Boltzmann.o		\
+	Polarization_Forces.o POLAR_Mod.o POLAR__Read.o P_pme_init.o		\
+	P_recv_i.o P_Reduce_Forces.o P_Write_neighbors.o REDUCE_Mod.o		\
+	ResetCofM.o reset_nbond.o RIGID_Mod.o RMS_General.o RMS_General_Read.o	\
+	RMS_Matrix_Mod.o RMS_Subtract_Mod.o RMS_Subtract_Read.o scalar_sum.o	\
+	ScalarSum.o SCALARSUM_Mod.o self_dipole.o Setup_fake_decompa.o		\
+	Setup_fake_decomp.o test.o Tetrahedra.o VORONOI_Mod.o	\
+	VORONOI_Read.o write_mol_dipole.o WSC_Mod.o WSC__Read.o xerror_mod.o
 
-OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
+OBJ_F = add1h.o add2h.o add3h.o add_char1.o add_concta.o		\
+	add_energies.o addh2o.o addh.o add_int1.o add_int2.o addlnk.o		\
+	add_mapnl.o add_real1.o add_real2.o add_solvent_coord.o			\
+	add_solvent_tpg.o add_str.o addtor.o addtpg.o adjust_bonds.o		\
+	analyse_voronoi.o anneal.o appatm.o appbkn.o appbou.o appct.o appgrp.o	\
+	asng_xrmsw.o asstpe.o atoms.o atthd.o bcnstp.o bend.o bldbox.o		\
+	blkdta.o bond.o brent.o brent_total.o brot.o calc_avg2_str.o		\
+	calc_avg_str.o calc_avg_xrms.o calc_cofm.o calc_gofr.o calc_hyd.o	\
+	calc_inst_fit.o calc_lda_avg.o calc_lda.o calc_lda_flu.o		\
+	calc_lda_hyd.o calc_lda_rest.o calc_RotMat.o calc_sk_eet.o calc_sk.o	\
+	calc_xrms.o CalcXrmsSecStruct.o calc_xslt.o caldr.o cc.o		\
+	change_coord_ex.o change_coord_inner.o change_frame.o change_origin.o	\
+	change_step_sim.o change_tors.o change_virtual_potential.o chder_dyn.o	\
+	chebev_dyn.o chebft_dyn.o check_length_sim.o check_read_columns.o	\
+	check_topology.o check_zero_coord.o chk14.o chkewl.o chlab.o chmass.o	\
+	chnpr.o close_files.o clpcm.o clt14.o collision.o comd0.o		\
+	comp_abmd_fcryst.o comp_abmd_fdiss.o comp_abmd_fnative.o		\
+	comp_abmd_tors.o comp_ang_vel.o comp_cavities_vor.o comp_cell_center.o	\
+	comp_concth.o comp_contacts.o comp_dip.o comp_dynamic_mat.o comp_fcm.o	\
+	comp_forcep.o comp_gmgp.o comp_molmass.o comp_native.o			\
+	comp_neigh_vor.o comp_nmol.o comp_noneq_free.o comp_rmsq.o		\
+	comp_stress_bnd.o comp_stress_conf.o comp_stress_kinetic.o		\
+	comp_thermos_energy.o comp_thermos_forces_cm.o comp_thermos_forces.o	\
+	comp_total_energy.o comp_vcm.o comp_vel_labframe.o comp_voronoi.o	\
+	coordinate_spline.o coordinate_spline_init.o copy_protl.o correc3x3.o	\
+	correc_etap.o correc_exp_scale.o correc.o correc_gmgp.o correc_matr.o	\
+	correc_scale_2.o correc_scale_co.o correc_scale.o correc_stress.o	\
+	correc_stress_n0.o covbd.o covchg.o covfod.o covnb.o covpr.o		\
+	cov_thermos.o covuen.o crdrtf.o cself_dipole.o cself.o cself_phi.o	\
+	csort.o dblas.o dcopy3.o delrfg.o dipole_interaction.o dist_ijk.o	\
+	dlineq.o do_pmesh_kspace2.o do_pmesh_kspace_dipole.o do_pmesh_kspace.o	\
+	drive_analysis.o dspat.o dumprs.o dumptp.o duni.o dupl_char1.o		\
+	dupl_concta.o dupl_int1.o dupl_int2.o dupl_mapnl.o dupl_real1.o		\
+	dupl_real2.o dupl_reali2.o eigrs.o equi_bend.o equi_bond.o		\
+	equi_impro.o equi_tors.o erf_corr_cutoff.o erfc_spline.o		\
+	erfc_spline_init.o f1dim_adjust_bonds.o f1dim_der.o f1dim_total.o	\
+	ferrf.o ferrf_tag.o ffct4.o fft3-public.o fft4rc.o fft_back.o		\
+	fft_default.o fft_forward.o fftpack.o fft_pme2.o fft_pme_dipole.o	\
+	fft_pme.o fft_pme_init.o fft_setup.o fill_charge_grid.o			\
+	fill_dipole_grid.o find_diss_mol.o find_igint_vor.o find_length_run.o	\
+	find_thermos.o fit.o fitors.o fix_molecules.o fnb14_2.o fnb14.o		\
+	fnbgrp2.o fnbgrp.o fndfmt.o fndgrp.o force_ele_nospline.o		\
+	force_ele_nospline_sw.o force_ele_spline.o force_ele_spline_sw.o	\
+	force_noele.o force_noele_sw.o fpbend.o fpbond_adjust_bonds.o fpbond.o	\
+	fptors.o free_mem.o furippa.o gauss.o gen_abmd_kvect.o			\
+	generate_rnd_rot.o generate_slv.o gen_stress_tag_bnd.o get_atres.o	\
+	get_bspline_coeffs2.o get_bspline_coeffs.o getchr.o			\
+	get_electric_field.o get_memory_iobuffer.o get_native.o			\
+	get_pointer_protl.o get_prot_cnstr.o get_sgr.o GetSimpleCO.o		\
+	get_spectra_vacf.o get_total_energy.o get_type_slv.o GetVariableUnit.o	\
+	get_velocities.o get_virtual_energy.o gpfft.o grad_sum2.o		\
+	grad_sum_dipole.o grad_sum.o hapacp.o hapdon.o iceil.o icopy.o igmap.o	\
+	iindexx.o indexx.o inicmp.o initialize_cavities.o insert_solute.o	\
+	int_corr_erf_spline.o interpol_dyna.o join.o kinetic.o latt_func.o	\
+	L-BFGS-B.o lc_index.o lc_list2.o lc_list3.o lc_list.o link.o		\
+	linmin_adjust_bonds.o linmin_total.o low_up.o lsqqtn.o mapnl_divide.o	\
+	mappa.o matinv.o M_cavities.o memory.o M_free.o M_free_s.o		\
+	M_get_length.o min_pack.o minv.o M_memory.o M_memory_s.o mnbrakf.o	\
+	mnbrakf_total.o M_newlen.o mts_forces2.o mts_forces.o mts_forpp2.o	\
+	mts_forpp.o mts_furier2.o mts_furier.o mts_intra_n0.o mts_intra_n1.o	\
+	mtsmd_avg_inc.o mtsmd_dump_inc.o mtsmd.o mts_plot_fragm.o mts_plotp.o	\
+	mts_test.o mts_umbrl.o M_voronoi.o near0.o normal.o openf.o		\
+	open_file_dump.o orac.o P_adjust_decomp.o parse.o parse_numbers.o	\
+	P_atoms_split_inter.o P_atoms_split_intra.o P_barrier.o pbend.o		\
+	pbond.o P_broadcast_i.o P_Buffer_attach.o P_Buffer_detach.o		\
+	P_check_decomp.o pckben.o pckfrg.o pckitor.o pcktor.o P_cm_split.o	\
+	perc_bondh.o P_get_errmsg.o P_get_gofr.o P_get_intra.o P_get_iret.o	\
+	P_get_neighbors.o P_get_prot.o phapp.o pitors.o plgndr.o		\
+	P_load_balance.o plot_center.o plotc.o plotd.o plot_fragm.o		\
+	plot_fragm_pdb.o pme_code.o P_npread.o P_nread.o pntres.o P_nwrite.o	\
+	P_omit_intra.o P_open_input.o P_pme_assign_node.o pptors.o		\
+	print_title_analysis.o prtacc.o prtat.o prtba.o prtbnd.o prtcn.o	\
+	prtfrc.o prtite.o prtite_min.o prtit.o prtpt.o prtsq.o prttors.o	\
+	P_setup_decompa.o P_setup_decomp.o P_split_constr.o P_split_intra.o	\
+	P_split_scalar0.o P_split_scalar.o P_whoami.o ranf.o ranvel.o		\
+	rattle_correc_co.o rattle_correc.o rattle_verlet_co.o rattle_verlet.o	\
+	rdaprm.o rdatpg.o rdcmac.o rdrgd.o read_analysis.o readco.o		\
+	read_confc_columns.o read_confc_rows.o read_inout.o read_input.o	\
+	read_integrator.o read_parallel.o read_parameters.o read_potential.o	\
+	read_properties.o readrs.o readrs_old.o read_run.o read_setup.o		\
+	read_simulation.o read_solute.o read_solvent.o read_space_group.o	\
+	readtp.o recpr.o redefine_slv.o redmss.o remove_mv.o repl_coord.o	\
+	repl_tpg.o restim.o rigfit.o rmbend.o rmpbond.o rotb.o			\
+	RotCoordColumn.o RotCoordRow.o run_minimize.o sbend.o sbond.o		\
+	scalar_sum.o scalar_sum_normal.o scalar_sum_transp.o scale_charges.o	\
+	sctab.o search_clsth.o serchd.o set_const_co.o set_hbonds_masks.o	\
+	set_hhisto.o set_ss_array.o set_tempp.o set_tempt.o setuns.o		\
+	setup_box.o setup_fake_map.o setup_skin_shell.o spec14.o start.o	\
+	starting_verlet.o strblk.o test.o \
+	time_correlation.o timer.o tors.o trans_center.o tr_inbox.o tr_wsc.o	\
+	tr_wsc_new.o twofft.o update.o up_low.o uscrpl.o usort.o		\
+	verify_input.o verify_variables.o verlet.o verlet_free_eta.o		\
+	verlet_free.o virtual_extract.o windows.o wrenc.o write_bends.o		\
+	write_bonds.o write_cavities_vor.o write_confc.o write_contacts.o	\
+	write_diffusion.o write_electric_field.o write_fragm_dist.o		\
+	write_gofrp.o write_gofrw.o write_gyr.o write_hbonds.o			\
+	write_hbonds_vor.o write_hhisto.o write_pot_bond.o write_pot_nbond.o	\
+	write_rms.o write_sk.o write_tors.o write_vacf_phi.o			\
+	write_voronoi_header.o write_xrms_atm.o write_xrms.o xerror.o xfit.o	\
+	zero0.o zero3.o zero3x3.o zeroa.o zero.o zero_gofr.o zeroi.o		\
+	zero_voronoi.o
+
+
+OBJ_NP = Tetrahedra.o xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
 	EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o PDB_utils.o PDB.o\
 	Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
 	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o POLAR_Mod.o \
@@ -100,7 +246,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
 	dupl_int1.o dupl_int2.o dupl_mapnl.o dupl_real1.o dupl_real2.o\
 	dupl_reali2.o erf_corr_cutoff.o erfc_spline.o erfc_spline_init.o\
 	equi_bond.o equi_bend.o equi_tors.o equi_impro.o\
-	f1dim_adjust_bonds.o \
+	f1dim_adjust_bonds.o f1dim_der.o f1dim_total.o\
 	ferrf.o fit.o ferrf_tag.o fftpack.o fft3-public.o fft_default.o\
 	fft_pme_init.o fill_charge_grid.o fill_dipole_grid.o\
 	find_diss_mol.o find_igint_vor.o find_length_run.o\
@@ -149,7 +295,7 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
 	set_tempt.o setuns.o setup_fake_map.o Setup_fake_decompa.o\
 	setup_skin_shell.o\
 	spec14.o starting_verlet.o strblk.o\
-	time_correlation.o timcor.o timcor0.o tors.o\
+	time_correlation.o tors.o\
 	tr_inbox.o tr_wsc.o trans_center.o twofft.o up_low.o update.o\
 	uscrpl.o usort.o\
 	verify_variables.o verlet.o verlet_free.o verlet_free_eta.o windows.o\
@@ -163,7 +309,32 @@ OBJ_NP = xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
 	zero0.o zero.o zero3.o zero3x3.o zero_gofr.o zero_voronoi.o\
 	zeroa.o zeroi.o write_mol_dipole.o write_electric_field.o\
 	P_cm_split.o P_get_prot.o P_get_intra.o\
-	Polarization_Forces.o Do_Electric_Fields.o
+	Polarization_Forces.o Do_Electric_Fields.o ORAC_Finalize.o\
+	xerror.o openf.o fft_pme.o VORONOI_Mod.o get_electric_field.o \
+	HYDRATION_Mod.o P_Change_Decomposition.o P_Comm_Intra.o do_rfft3d.o\
+	setup_box.o pme_code.o 	analyse_voronoi.o bldbox.o start.o furippa.o insert_solute.o\
+	mts_forpp.o comp_voronoi.o comp_abmd_fnative.o\
+	write_cavities_vor.o \
+	pme_code.o timer.o verify_input.o open_file_dump.o orac.o\
+	read_input.o free_mem.o M_free.o M_free_s.o\
+	run_minimize.o get_electric_field.o\
+	get_memory_iobuffer.o get_total_energy.o\
+	f1dim_der.o comp_total_energy.o\
+	f1dim_total.o linmin_total.o mnbrakf_total.o brent_total.o\
+	mts_intra_n0.o mts_intra_n1.o  mts_furier.o\
+	mts_furier2.o\
+	do_pmesh_kspace.o do_pmesh_kspace_dipole.o \
+	write_confc.o read_confc_rows.o\
+	read_confc_columns.o setup_box.o M_get_length.o\
+	M_newlen.o M_memory.o memory.o M_memory_s.o fft_pme.o fft_pme_dipole.o\
+	openf.o fft_setup.o fft_forward.o fft_back.o correc_stress.o\
+	correc_stress_n0.o lc_list.o  lc_list2.o lc_list3.o mts_forces.o\
+	mts_forces2.o mts_forpp2.o\
+	read_parallel.o P_setup_decomp.o P_setup_decompa.o\
+	P_atoms_split_intra.o P_split_intra.o P_split_constr.o\
+	P_atoms_split_inter.o xerror.o HYDYNAMICS_Mod.o FIELD_Mod.o\
+	Pme_init.o REDUCE_Mod.o
+
 
 OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o\
 	P_expand_r8.o P_expand_r8x3.o P_expand_i.o\
@@ -172,7 +343,10 @@ OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o\
 	P_load_balance.o P_merge_i.o P_merge_r8.o\
 	P_merge_vecr8.o P_merge_veci.o P_split_scalar0.o P_split_scalar.o\
 	P_get_iret.o P_adjust_decomp.o P_Buffer_attach.o \
-	P_Buffer_detach.o P_get_neighbors.o P_Write_neighbors.o
+	P_Buffer_detach.o P_get_neighbors.o P_Write_neighbors.o\
+	P_whoami.o  P_open_input.o  P_nwrite.o  P_nread.o  P_npread.o  \
+	P_barrier.o  P_pme_assign_node.o  
+
 
 
 ifeq ($(MODE), PARALLEL)
@@ -187,70 +361,6 @@ else
 OBJTIM = vstart.o
 endif
 
-PRECOMP_NP = analyse_voronoi.f bldbox.f start.f furippa.f insert_solute.f\
-	mts_forpp.f comp_voronoi.f comp_abmd_fnative.f\
-	write_cavities_vor.f \
-	pme_code.f timer.f verify_input.f open_file_dump.f orac.f\
-	read_input.f free_mem.f M_free.f M_free_s.f\
-	run_minimize.f get_electric_field.f\
-	get_total_energy.f\
-	f1dim_der.f comp_total_energy.f\
-	f1dim_total.f linmin_total.f mnbrakf_total.f brent_total.f\
-	mts_intra_n0.f mts_intra_n1.f  mts_furier.f\
-	mts_furier2.f\
-	do_pmesh_kspace.f do_pmesh_kspace_dipole.f \
-	write_confc.f read_confc_rows.f\
-	read_confc_columns.f setup_box.f M_get_length.f\
-	M_newlen.f M_memory.f memory.f M_memory_s.f fft_pme.f fft_pme_dipole.f\
-	openf.f fft_setup.f fft_forward.f fft_back.f correc_stress.f\
-	correc_stress_n0.f lc_list.f  lc_list2.f lc_list3.f mts_forces.f\
-	mts_forces2.f mts_forpp2.f\
-	read_parallel.f P_setup_decomp.f P_setup_decompa.f\
-	P_atoms_split_intra.f P_split_intra.f P_split_constr.f\
-	P_atoms_split_inter.f xerror.f
-
-PRECOMP_NKL = mtsmd.f drive_analysis.f 
-
-PRECOMP_PP = P_whoami.f P_open_input.f P_nwrite.f P_nread.f\
-	P_npread.f \
-	P_barrier.f \
-	P_pme_assign_node.f 
-
-PRE_F90 = P_Change_Decomposition.f90 P_Comm_Intra.f90 do_rfft3d.f90\
-	HYDRATION_Mod.f90 FIELD_Mod.f90 ORAC_Finalize.f90 VORONOI_Mod.f90\
-	REDUCE_Mod.f90 Pme_init.f90 HYDYNAMICS_Mod.f90
-
-PRECOMP_F90 = $(PRE_F90) 
-
-ifneq ($(LIBRARIES), SYSTEM_LIB)
-OBJ_NP := $(OBJ_NP) dblas.o
-endif
-
-
-ifeq ($(MODE), PARALLEL)
-PRECOMP = $(PRECOMP_NP) $(PRECOMP_PP)
-else
-PRECOMP = $(PRECOMP_NP)
-endif
-
-
-PRECOMPT = $(patsubst %.f, %.CPP.f, $(PRECOMP))
-
-PRECOMPT_NKL = $(patsubst %.f, %.CPP.f, $(PRECOMP_NKL))
-
-PRECOMPT_F90 = $(patsubst %.f90, %.CPP.f90, $(PRECOMP_F90))
-
-OBJPRE = $(patsubst %.f, %.o, $(PRECOMPT)) 
-
-OBJPRE_NKL = $(patsubst %.f, %.o, $(PRECOMPT_NKL)) 
-
-OBJPRE_F90 = $(patsubst %.f90, %.o, $(PRECOMPT_F90))
-
-LIBCOMP = ffct4.f fft4rc.f
-
-LIBCOMPT = $(patsubst %.f, %.LIB.f, $(LIBCOMP))
-
-OBJLIB = $(patsubst %.f, %.o, $(LIBCOMPT))
 
 ifeq ($(TARGET0), Linux)
 OBJREC = recpr_linux.o perc_bondh_linux.o
@@ -260,7 +370,16 @@ OBJREC = recpr.o perc_bondh.o
 OBJREC1 = recpr_linux.o perc_bondh_linux.o
 endif
 
-EIGRS = eigrs.o
+OBJ_LOWOPT = eigrs.o mtsmd.o drive_analysis.o 
+
+OBJ_C = vstart.c
+
+INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
+	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
+	mts_vacf.inc pme.inc parallel.inc parameters.inc\
+	lc_list.inc voronoi.inc iobuffer.inc mpi_size.inc
+
+INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
 
 #==========================================================================
 # Uncomment the folling if an old restart has to be used
@@ -270,15 +389,15 @@ EIGRS = eigrs.o
 
 DUMP = dumprs.o readrs.o readrs_old.o
 
+SRC = $(patsubst %.o, %.f90, $(OBJ_F90)) $(patsubst %.o, %.f, $(OBJ_F)) \
+	$(patsubst %.o, %.c, $(OBJ_C))
+
 #==========================================================================
 # List of sources 
 #==========================================================================
 
 
-LIST_OS  = $(OBJ_NP) $(OBJ_PP) $(EIGRS)  $(DUMP) recpr.o perc_bondh.o dblas.o
-LIST_FS   = $(PRECOMP_NP) $(PRECOMP_PP) $(PRECOMP_NKL) $(LIBCOMP) $(LIBCOMP)\
-	$(patsubst %.o, %.f*, $(LIST_OS))
-LIST_F90 = $(PRECOMP_F90)
+LIST_FS  = $(SRC)
 LIST_CS  = vstart.c 
 LIST_EXT = Makefile Make.* config.h mtsmd_avg_inc.f mtsmd_dump_inc.f $(INCLUDE)
 
@@ -287,13 +406,26 @@ LIST_EXT = Makefile Make.* config.h mtsmd_avg_inc.f mtsmd_dump_inc.f $(INCLUDE)
 # Make Default 
 #==========================================================================
 
-all: 
-	${MAKE} $(TARGET0)	
+all: makedepf90 $(INCPRE)
+	${MAKE} $(TARGET0)
+
+
+makedepf90:
+	(cd $(PWD)/makedepf90-2.8.8/; ./configure; ${MAKE} ; cp makedepf90 ../)
+
 
 
 #==========================================================================
 # Make include
 #==========================================================================
+
+iobuffer.h: iobuffer.inc
+	$(CPP) -D$(TARGET0) iobuffer.inc | awk '!/^ *$$/ && !/^#/' > temp
+	./python/include_f90.py temp
+	file=iobuffer;\
+	test -f $$file.h && ( cmp -s $$file.h temp || \
+	cp temp $$file.h) || cp temp $$file.h ;\
+	rm -f temp temp2 >/dev/null
 
 parst.h: config.h parst.inc
 	@$(CPP) parst.inc | awk '!/^ *$$/ && !/^#/' > temp
@@ -432,41 +564,6 @@ mpi_size.h: mpi_size.inc
 	cp temp $$file.h) || cp temp $$file.h ;\
 	rm -f temp temp2 >/dev/null
 
-
-#==========================================================================
-# Make precompiled files
-#==========================================================================
-
-%.CPP.f: %.f
-	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(TARGET2) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
-	file=$@; \
-	test -f $$file && ( cmp -s $$file temp || \
-	cp temp $$file) || cp temp $$file ;\
-	rm -f temp temp2 >/dev/null
-
-%.CPP.f90: %.f90
-	@${CPP} -P -D$(TARGET0) -D$(TARGET1) -D$(TARGET2) -D$(MODE) -D$(PARA_MODE) -D$(MEMORY) -D$(FFTS) $< | awk '!/^ *$$/ && !/^#/' > temp;\
-	file=$@; \
-	test -f $$file && ( cmp -s $$file temp || \
-	cp temp $$file) || cp temp $$file ;\
-	rm -f temp temp2 >/dev/null
-
-$(OBJPRE): %.CPP.o: %.f
-
-
-$(OBJPRE_NKL): %.CPP.o: %.f
-
-$(OBJPRE_F90): %.CPP.o: %.f90
-
-%.LIB.f: %.f
-	@${CPP} -P -D$(LIB) $< | awk '!/^ *$$/ && !/^#/' > temp;\
-	file=$@; \
-	test -f $$file && ( cmp -s $$file temp || \
-	cp temp $$file) || cp temp $$file ;\
-	rm -f temp temp2 >/dev/null
-
-$(OBJLIB): %.LIB.o: %.f
-
 #==========================================================================
 # Decide what to make
 #==========================================================================
@@ -474,60 +571,27 @@ $(OBJLIB): %.LIB.o: %.f
 
 PGI :
 	${MAKE} obj_PGI "FFLAGS = -O2 "
-	${MAKE} prepro_PGI "FFLAGS = -O2" 
-	${MAKE} prepronkl_PGI "FFLAGS = -O0 "
-	${MAKE} eigr_PGI "FFLAGS = -O2"
+	${MAKE} lowopt_PGI "FFLAGS = -O0"
 	${MAKE} recur_PGI "FFLAGS =  "
 	${MAKE} orac_PGI
 
 IFC :
-	${MAKE} obj_IFC "FFLAGS = -O3" 
-	${MAKE} prepro_IFC "FFLAGS = -O3 " 
-	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -O0 "
-	${MAKE} eigr_IFC "FFLAGS =  "
-	${MAKE} recur_IFC "FFLAGS =  "
+	${MAKE} obj_IFC "FFLAGS = -fpp -O3" 
+	${MAKE} lowopt_IFC "FFLAGS = -fpp -O0"
+	${MAKE} recur_IFC "FFLAGS = -fpp  "
 	${MAKE} orac_IFC 
 
 IFC_DBG :
-	${MAKE} obj_IFC "FFLAGS = -w95 -g " 
-	${MAKE} prepro_IFC "FFLAGS = -w95 -g" 
-	${MAKE} prepronkl_IFC "FFLAGS = -warn noalignments -g "
-	${MAKE} eigr_IFC "FFLAGS = -w95 -g "
-	${MAKE} recur_IFC "FFLAGS = -w95 -g "
+	${MAKE} obj_IFC "FFLAGS = -fpp -w95 -g -traceback -check all" 
+	${MAKE} lowopt_IFC "FFLAGS = -fpp -w95 -g -traceback -check all"
+	${MAKE} recur_IFC "FFLAGS = -fpp -w95 -g -traceback -check all"
 	${MAKE} orac_IFC 
-
-INTEL :
-	${MAKE} obj_INTEL "FFLAGS = -w95 -O2 " 
-	${MAKE} prepro_INTEL "FFLAGS = -w95 -O3" 
-	${MAKE} prepronkl_INTEL "FFLAGS = -warn noalignments -O0 "
-	${MAKE} eigr_INTEL "FFLAGS = -w95 -O1 "
-	${MAKE} recur_INTEL "FFLAGS = -w95  "
-	${MAKE} orac_INTEL 
-
-OSF1 :
-	${MAKE} obj_OSF "FFLAGS = -fast " 
-	${MAKE} prepro_OSF "FFLAGS = -O5 -fast" 
-	${MAKE} prepronkl_OSF "FFLAGS = -warn noalignments -O0 "
-	${MAKE} eigr_OSF "FFLAGS = -O1 "
-	${MAKE} recur_OSF "FFLAGS = -recursive "
-	${MAKE} orac_OSF 
 
 XLF :
 	${MAKE} obj_XLF "FFLAGS = -O5 -qnosave -qhot -qipa" 
-	${MAKE} prepro_XLF "FFLAGS = -O5 -qnosave -qhot -qipa" 
-	${MAKE} prepronkl_XLF "FFLAGS = -O0 -qsave -qstrict "
-	${MAKE} eigr_XLF "FFLAGS = -O5 -qsave -qipa "
+	${MAKE} lowopt_XLF "FFLAGS = -O2 -qsave -qipa "
 	${MAKE} recur_XLF "FFLAGS = -O4 -qnosave -qipa"
 	${MAKE} orac_XLF 
-
-G95 :
-	${MAKE} obj_G95 
-	${MAKE} prepro_G95
-	${MAKE} prepronkl_G95
-	${MAKE} eigr_G95
-	${MAKE} recur_G95
-	${MAKE} orac_G95 
-
 
 #========================================================================
 
@@ -537,15 +601,16 @@ DISTRIBUTION :
 	mkdir $(CURDIR)/tmp_dir/orac2k ;\
 	mkdir $(CURDIR)/tmp_dir/orac2k/source ;\
 	mkdir $(CURDIR)/tmp_dir/orac2k/source/python ;\
+	mkdir $(CURDIR)/tmp_dir/orac2k/source/makedepf90-2.8.8 ;\
 	for j in $(LIST_FS);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	for j in $(LIST_F90);\
 	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
 	for j in $(LIST_CS);\
 	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
 	for j in $(LIST_EXT);\
 	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
 	cp python/include_f90.py $(CURDIR)/$(DIST_DIR)/python/;
+	cp -r makedepf90-2.8.8 $(CURDIR)/$(DIST_DIR)/;
+	(cd $(CURDIR)/$(DIST_DIR)/makedepf90-2.8.8 ; make clean);
 
 #	for j in $(LIST);\
 #	do cp $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/$$j;done;\
@@ -553,48 +618,21 @@ DISTRIBUTION :
 #	chmod 600 $(CURDIR)/$(DIST_DIR)/* ; cd ../
 
 
-
 #==========================================================================
 # Compile and load ORAC on OSF   
 #==========================================================================
 
 
-obj_OSF : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
-
-recur_OSF: $(OBJREC)
-
-eigr_OSF: $(EIGRS)
-
-prepro_OSF: $(OBJPRE) $(OBJPRE_F90)
-
-prepronkl_OSF: $(OBJPRE_NKL)
-
-orac_OSF : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) \
-	$(OBJPRE_NKL) $(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -o orac_OSF $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) \
-	$(OBJPRE_NKL) $(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L/usr/local/assist/lib -L$(OTHERS_LIB) -L$(FFTW_LIB) $(LLFLAGS) -lmpi
-
-#==========================================================================
-# Compile and load ORAC on OSF   
-#==========================================================================
-
-
-obj_PGI : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+obj_PGI : $(OBJ) $(DUMP) $(OBJTIM)
 
 recur_PGI: $(OBJREC)
 
-eigr_PGI: $(EIGRS)
+lowopt_PGI: $(OBJ_LOWOPT)
 
-prepro_PGI: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_PGI: $(OBJPRE_NKL)
-
-orac_PGI : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -Mvect -Mipa=fast -fastsse  -o orac_PGI $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) -lm
+orac_PGI : $(OBJ) $(OBJREC) $(DUMP) $(OBJ_LOWOPT) $(OBJTIM)
+	$(LD) -Mvect -Mipa=fast -fastsse  -o orac_PGI $(OBJ) $(OBJREC) $(DUMP) \
+	$(OBJ_LOWOPT) $(OBJTIM)\
+	-L$(FFTW_LIB) -L$(OTHER_LIBS) $(LLFLAGS) -lm
 
 
 #==========================================================================
@@ -602,433 +640,63 @@ orac_PGI : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
 #==========================================================================
 
 
-obj_IFC : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+obj_IFC : $(OBJ) $(DUMP) $(OBJTIM)
 
 recur_IFC: $(OBJREC)
 
-eigr_IFC: $(EIGRS)
-
-prepro_IFC: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_IFC: $(OBJPRE_NKL)
-
-orac_IFC : $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -o orac_IFC  $(OBJTIM) $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS)  \
-	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS) 
+lowopt_IFC: $(OBJ_LOWOPT)
 
 
-#==========================================================================
-# Compile and load ORAC on INTEL 
-#==========================================================================
+orac_IFC : $(OBJ) $(OBJREC) $(DUMP) $(OBJ_LOWOPT) $(OBJTIM)
+	$(LD) -o orac_IFC  $(OBJTIM) $(OBJ) $(OBJREC) $(DUMP) $(OBJ_LOWOPT)  \
+	-L$(FFTW_LIB) -L$(OTHER_LIBS) $(LLFLAGS) 
 
-obj_INTEL : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
-
-recur_INTEL: $(OBJREC)
-
-eigr_INTEL: $(EIGRS)
-
-prepro_INTEL: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_INTEL: $(OBJPRE_NKL)
-
-orac_INTEL: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -o orac_INTEL $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) $(LLFLAGS)
 
 #==========================================================================
 # Compile and load ORAC on XLF compiler
 #==========================================================================
 
-obj_XLF : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
+obj_XLF : $(OBJ) $(DUMP) $(OBJTIM)
 
 recur_XLF: $(OBJREC)
 
-eigr_XLF: $(EIGRS)
+lowopt_XLF: $(OBJ_LOWOPT)
 
-prepro_XLF: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_XLF: $(OBJPRE_NKL)
-
-orac_XLF: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
+orac_XLF: $(OBJ) $(OBJREC) $(DUMP) $(OBJ_LOWOPT) $(OBJTIM)
 	$(LD) -O5 -qnosave -qhot -qipa -o orac_XLF $(OBJ) $(OBJREC)\
-	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS)
+	$(DUMP) $(OBJ_LOWOPT) $(OBJTIM)\
+	-L$(FFTW_LIB) -L$(OTHER_LIBS) $(LLFLAGS)
 
-#==========================================================================
-# Compile and load ORAC on G95 compiler
-#==========================================================================
-
-obj_G95 : $(OBJ) $(DUMP) $(OBJLIB) $(OBJTIM)
-
-recur_G95: $(OBJREC)
-
-eigr_G95: $(EIGRS)
-
-prepro_G95: $(OBJPRE) $(OBJPRE_F90) 
-
-prepronkl_G95: $(OBJPRE_NKL)
-
-orac_G95: $(OBJ) $(OBJREC) $(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)
-	$(LD) -O3 -o orac_G95 $(OBJ) $(OBJREC)\
-	$(DUMP) $(OBJPRE) $(OBJPRE_NKL)\
-	$(OBJPRE_F90) $(OBJLIB) $(EIGRS) $(OBJTIM)\
-	-L$(FFTW_LIB) -L$(OTHERS_LIB) $(LLFLAGS)
 #==========================================================================
 # Clean Objects
 #==========================================================================
 
 clean :
-	rm -f *.o *.CPP.f *.CPP.f90 *.LIB.f *.mod
+	rm -f *.o *.mod orac_*
 
 #==========================================================================
 # Clean Objects and executable
 #==========================================================================
 
 extra_clean :
-	rm -f *.o *.CPP.f *.LIB.f orac_*
-	@cp config.h temp ; rm -f *.h ; mv temp config.h > /dev/null
+	rm -f *.o *.mod orac_* makedepf90
+	(cd $(CURDIR)/makedepf90-2.8.8 ; make clean)
 
 #==========================================================================
 # Get all *.f files,  checkin all files, tar 
 #==========================================================================
 
-get_orac :
-	co -l $(LIST)
+tar: DISTRIBUTION
+	(cd $(CURDIR)/tmp_dir; tar zcvf orac.tar.gz orac2k)
 
-checkout :
-	co -l $(LIST)
-
-checkin : 
-	echo $(DESCRIPTION) > release.tmp
-	ci -r$(RELEASE) -f -l -m"$(STATUS)"  -trelease.tmp $(LIST)
-	rm -f release.tmp
-
-tar :   
-	tar zcvf orac.tar.gz $(LIST)
+clean_distribution:
+	rm -r -f tmp_dir;
 
 #==========================================================================
 # Dependencies 
 #==========================================================================
 
-accdif.o: parst.h pbc.h
-add_solvent_tpg.o: parst.h cpropar.h
-adjust_solvent.o: parst.h
-adjust_bonds.o: parst.h
-analyse_voronoi.CPP.o:analyse_voronoi.CPP.f VORONOI_Mod.CPP.o
-analyse_voronoi.CPP.o:parst.h voronoi.h
-bcnstp.o: pbc.h
-bldbox.CPP.o:bldbox.CPP.f cpropar.h parst.h
-setup_box.CPP.o: setup_box.CPP.f cpropar.h parst.h unit.h
-blkdta.o: unit.h cpropar.h parst.h parallel.h
-brot.o: unit.h
-CalcXrmsSecStruct.o: parst.h
-calc_xrms.o: parst.h
-calc_xslt.o: parst.h
-calc_lda.o: parst.h
-calc_hyd.o: pbc.h
-calc_lda_rest.o: pbc.h
-calc_lda_avg.o: parst.h
-calc_lda_hyd.o: pbc.h
-calc_inst_fit.o: parst.h
-calc_RotMat.o: parst.h
-calc_avg_str.o: parst.h
-calc_avg2_str.o: parst.h
-calc_cofm.o: parst.h
-calc_gofr.o: parst.h pbc.h
-calc_sk.o: unit.h parst.h
-calc_sk_eet.o: unit.h parst.h
-cewct.o: unit.h
-change_tors.o: parameters.h parst.h
-chkewl.o: fourier.h unit.h
-claslv.o: parst.h resid.h pbc.h
-close_files.o: unit.h
-collision.o: unit.h parst.h
-comp_abmd_fcryst.o: parst.h
-comp_abmd_fnative.CPP.o: comp_abmd_fnative.CPP.f parst.h
-comp_contacts.o: pbc.h
-comp_native.o: pbc.h
-comp_neigh_vor.o: parst.h pbc.h voronoi.h
-comp_cavities_vor.o: parst.h voronoi.h pbc.h analysis.h VORONOI_Mod.CPP.o
-comp_dip.o: pbc.h
-comp_dynamic_mat.o: parst.h cpropar.h unit.h
-comp_total_energy.CPP.o: parst.h cpropar.h unit.h
-comp_thermos_energy.o: unit.h
-comp_thermos_forces.o: unit.h
-comp_voronoi.CPP.o: comp_voronoi.CPP.f pbc.h parst.h voronoi.h
-correc_stress.CPP.o: unit.h
-correc_stress_n0.CPP.o: unit.h
-cov_thermos.o: unit.h
-covbd.o: unit.h
-covchg.o: unit.h
-covfod.o: unit.h
-covhov.o: unit.h
-covnb.o: unit.h
-covpr.o: unit.h
-covpw.o: unit.h
-covsol.o: unit.h
-covsol_int.o: unit.h
-covuen.o: unit.h
-cpfld.o: unit.h pbc.h
-crdrtf.o: parst.h cpropar.h unit.h
-cself.o: unit.h
-cself_phi.o: unit.h
-cself_dipole.o: unit.h
-delrfg.o: parst.h
-drive_analysis.CPP.o: drive_analysis.CPP.f cpropar.h unit.h fourier.h\
-	parst.h lc_list.h voronoi.h analysis.h HYDRATION_Mod.CPP.o\
-	DENSITY_Mod.o CENTER_SOL_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o\
-	RMS_Matrix_Mod.o GROUPS_Mod.o GEOM_groups_Mod.o WSC_Mod.o FIELD_Mod.CPP.o\
-	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o RIGID_Mod.o PDB_FRAGM_Mod.o
-dspat.o: parst.h pbc.h
-dumptp.o: cpropar.h parst.h
-erf_corr_cutoff.o: unit.h
-errmrk.o: unit.h
-errprt.o: unit.h
-ewself_slv.o: unit.h
-f1dim_adjust_bonds.o: cpropar.h parst.h
-f1dim_der.CPP.o: cpropar.h parst.h
-f1dim_total.CPP.o: cpropar.h parst.h
-ferrf.o: unit.h
-ferrf_tag.o: unit.h
-ffct4.o: DXMLDEF.FOR
-fft4rc.o: fft4rc.LIB.f DXMLDEF.FOR
-fft_pme.CPP.o: fft_pme.CPP.f pme.h
-fft_pme2.CPP.o: fft_pme2.CPP.f pme.h
-fhbondb.o: parst.h pbc.h
-find_igint_vor.o: parst.h voronoi.h
-find_length_run.o: unit.h
-fitors.o: unit.h 
-fnb14.o: unit.h
-fnb14_2.o: unit.h
-fnbgrp.o: unit.h pbc.h
-fnbgrp2.o: unit.h pbc.h polar.h
-furippa.CPP.o: furippa.CPP.f fourier.h parst.h unit.h
-gauss.o: unit.h
-gaussc.o: unit.h
-gausse.o: unit.h
-getchr.o: unit.h
-get_total_energy.CPP.o: get_total_energy.CPP.f parst.h cpropar.h unit.h\
-	parallel.h
-grphpw.o: unit.h
-graphw.o: unit.h
-insert_solute.CPP.o: insert_solute.CPP.f unit.h pbc.h
-join.o: parst.h parameters.h unit.h
-kinetic.o: unit.h parst.h
-lc_list.CPP.o: pbc.h parst.h lc_list.h
-lc_list2.CPP.o: pbc.h parst.h lc_list.h
-lc_list3.CPP.o: pbc.h parst.h lc_list.h
-mappc.o: parst.h
-mts_fnb14.o: unit.h pbc.h
-mts_forces.CPP.o: mts_forces.CPP.f unit.h cpropar.h parst.h mpi_size.h
-mts_forces2.CPP.o: mts_forces2.CPP.f unit.h cpropar.h parst.h
-mts_forpp.CPP.o: mts_forpp.CPP.f mts_forpp.f force_ele_nospline.f \
-	force_ele_spline.f force_noele.f force_ele_nospline_sw.f\
-	force_ele_spline_sw.f force_noele_sw.f pressure.h\
-	mts_forpp.CPP.f parst.h unit.h pbc.h
-mts_forpp2.CPP.f: pressure.h polar.h
-mts_forpp2.CPP.o: mts_forpp2.CPP.f parst.h unit.h pbc.h polar.h
-mts_furier.CPP.o: mts_furier.CPP.f parst.h cpropar.h pme.h
-mts_furier2.CPP.o: mts_furier2.CPP.f parst.h cpropar.h pme.h
-mts_intra_n0.CPP.o: cpropar.h parst.h
-mts_intra_n1.CPP.o: cpropar.h parst.h
-mts_plot_fragm.o: unit.h
-plot_fragm.o: unit.h
-mts_plotp.o: unit.h
-mts_plots.o: unit.h
-mts_spectra.o: mts_spectra.h
-mtsmd.CPP.o: mtsmd.CPP.f cpropar.h unit.h fourier.h \
-	parst.h pme.h lc_list.h parallel.h mtsmd_avg_inc.CPP.f\
-	mtsmd_dump_inc.CPP.f Module_Extra_Forces.o HEATING_Mod.o\
-	Module_Fourier.o Class_Gauss_Param.o Class_Gcharges.o\
-	Poisson_Boltzmann.o Module_Stress.o REDUCE_Mod.CPP.o
-orac.CPP.o: orac.CPP.f parst.h cpropar.h orac.h unit.h parallel.h
-open_file_dump.CPP.o: open_file_dump.CPP.f unit.h
-
-P_get_neighbors.o: pbc.h
-P_split_intra.CPP.o: parst.h cpropar.h
-P_split_constr.CPP.o: parst.h cpropar.h
-P_open_input.CPP.o: P_open_input.CPP.f
-P_pme_assign_node.CPP.o: P_pme_assign_node.CPP.f
-
-pckben.o: parst.h
-pcktor.o: parst.h
-pckitor.o: parst.h
-perc_bondh.o: parst.h cpropar.h
-pitors.o: parst.h
-plot.o: unit.h
-plot_center.o: unit.h
-plotb.o: unit.h
-plotc.o: unit.h
-pltbck.o: unit.h
-pme_code.CPP.o: pme_code.CPP.f
-ifeq ($(shell uname), HP-UX)
-	f77 +OP4 +U77 -c pme_code.CPP.f -o pme_code.CPP.o
-endif
-pothoov.o: unit.h
-pptors.o: parst.h
-prtacc.o: parst.h cpropar.h unit.h
-prtat.o: unit.h 
-prtbnd.o: unit.h
-prtba.o: unit.h 
-prtcn.o: unit.h 
-prtecf.o: unit.h
-prtit.o: unit.h 
-prtite.o: parst.h cpropar.h unit.h
-prtite_min.o: parst.h cpropar.h unit.h
-print_title_analysis.o: parst.h cpropar.h unit.h
-prtpt.o: unit.h pbc.h
-prtrms.o: unit.h
-prtsq.o: unit.h
-prttors.o: unit.h parst.h pbc.h
-pstopm.o: pbc.h
-ranvel.o: unit.h parst.h
-rdcmac.o: parst.h
-rdcnc.o: unit.h
-rdcsol.o: unit.h
-rdunit.o: unit.h
-read_confc_rows.CPP.o: unit.h
-read_confc_columns.CPP.o: unit.h
-readco.o: unit.h
-readtp.o: cpropar.h parst.h
-recpr.o: parst.h cpropar.h
-repl_coord.o: unit.h
-repl_tpg.o: parst.h cpropar.h
-restim.o: resid.h unit.h
-rmbend.o: parst.h
-rotb.o: unit.h
-rattle_verlet.o: parst.h
-rattle_correc.o: parst.h
-read_input.CPP.o: read_input.CPP.f parst.h cpropar.h unit.h
-read_run.o: parst.h cpropar.h unit.h
-read_inout.o: parst.h cpropar.h unit.h
-read_simulation.o: parst.h cpropar.h unit.h Module_Stress.o
-read_potential.o: parst.h cpropar.h unit.h
-read_setup.o: parst.h cpropar.h unit.h
-read_integrator.o: parst.h cpropar.h unit.h
-read_solute.o: parst.h cpropar.h unit.h
-read_properties.o: parst.h cpropar.h unit.h HYDRATION_Mod.CPP.o DENSITY_Mod.o\
-	PDBs_Mod.o RMS_Subtract_Mod.o RMS_Matrix_Mod.o GROUPS_Mod.o\
-	GEOM_groups_Mod.o VORONOI_Mod.CPP.o WSC_Mod.o FIELD_Mod.CPP.o\
-	POLAR_Mod.o HYDYNAMICS_Mod.CPP.o PDB_FRAGM_Mod.o 
-read_solvent.o: parst.h cpropar.h unit.h
-read_analysis.o: parst.h cpropar.h unit.h CENTER_SOL_Mod.o RIGID_Mod.o
-PDBs_Mod.o: PDBs_Read.f90 INPUT_Mod.o 
-DENSITY_Mod.o: DENSITY_Read.f90 INPUT_Mod.o PDB.o PBC_Mod.o unit.h
-POLAR_Mod.o: POLAR__Read.f90 INPUT_Mod.o PDB_utils.o parst.h cpropar.h
-WSC_Mod.o: WSC__Read.f90 INPUT_Mod.o PBC_Mod.o
-RMS_Subtract_Mod.o: RMS_Subtract_Read.f90 INPUT_Mod.o xerror_mod.o 
-read_parameters.o: parst.h parameters.h 
-read_parallel.CPP.o: parst.h cpropar.h unit.h
-rigfit.o: parst.h
-run_minimize.CPP.o: run_minimize.CPP.f cpropar.h unit.h parst.h\
-	pme.h lc_list.h parallel.h
-savech.o: unit.h
-setuns.o: unit.h
-set_tempp.o: unit.h Module_Stress.o
-set_tempt.o: unit.h
-ssitep.o: parst.h
-start.CPP.o: start.CPP.f unit.h cpropar.h parst.h
-strpco.o: pbc.h
-timcor.o: unit.h vacf.h
-timcor0.o: vacf.h
-tmphvr.o: unit.h
-tmppr.o: unit.h
-tmppr_iso.o: unit.h
-tr_inbox.o: pbc.h
-mts_umbrl.o: pbc.h parst.h
-update.o: parst.h unit.h pbc.h
-vstart.o: config.h
-verify_input.CPP.f: pressure.h
-verify_input.CPP.o: parst.h cpropar.h unit.h pme.h
-verify_variables.o: parst.h cpropar.h unit.h
-write_fragm_dist: pbc.h
-write_cavities_vor.CPP.o: write_cavities_vor.CPP.f
-write_cavities_vor.CPP.o: parst.h
-write_gyr.o: parst.h
-write_gofrp.o: unit.h
-write_gofrw.o: unit.h
-write_hbonds.o: parst.h pbc.h
-write_hbonds_vor.o: parst.h voronoi.h
-write_hhisto.o: unit.h
-write_bonds.o: parst.h
-write_bends.o: parst.h
-write_confc.CPP.o: unit.h
-write_pot_bond.o: unit.h parst.h
-write_pot_nbond.o: unit.h parst.h
-write_tors.o: parst.h
-write_diffusion.o: unit.h
-write_electric_field.o: parst.h cpropar.h unit.h
-write_vacf_phi.o: unit.h
-write_xrms.o:parst.h
-xerror.CPP.o: unit.h
-zero_voronoi.o: parst.h voronoi.h
-M_memory.CPP.o: M_memory.CPP.f
-M_memory_s.CPP.o: M_memory_s.CPP.f
-write_confc.CPP.o: write_confc.CPP.f
-read_confc_rows.CPP.o: read_confc_rows.CPP.f
-openf.CPP.o:openf.CPP.f
-timer.CPP.0: timer.CPP.f
-P_atoms_split_intra.CPP.o: P_atoms_split_intra.CPP.f
-P_setup_decomp.CPP.o: P_setup_decomp.CPP.f
-M_get_length.CPP.o: M_get_length.CPP.f
-get_length_iobuffer.CPP.o:get_length_iobuffer.CPP.f
-fft_back.CPP.o: fft_back.CPP.f
-fft_forward.CPP.o: fft_forward.CPP.f
-gpfft.CPP.o: gpfft.CPP.f
-do_pmesh_kspace.CPP.o: do_pmesh_kspace.CPP.f do_rfft3d.CPP.o
-do_pmesh_kspace_dipole.CPP.o: do_pmesh_kspace_dipole.CPP.f do_rfft3d.CPP.o
-do_pmesh_kspace2.CPP.o: do_pmesh_kspace2.CPP.f
-free_mem.CPP.o: free_mem.CPP.f
-memory.CPP.o: memory.CPP.f
-P_Change_Decomposition.CPP.o: P_Change_Decomposition.CPP.f90
-P_Comm_Intra.CPP.o: P_Comm_Intra.CPP.f90 mpi_size.h
-do_rfft3d.o: xerror_mod.o
-P_adjust_decomp.CPP.o: P_adjust_decomp.CPP.f mpi_size.h
-P_expand_i.o: mpi_size.h
-P_expand_r8.o: mpi_size.h
-P_expand_r8x3.o: mpi_size.h
-P_fold_i.o: mpi_size.h
-P_fold_r8.o: mpi_size.h
-P_fold_r8x3.o: mpi_size.h
-P_get_errmsg.o: mpi_size.h
-P_get_iret.o: mpi_size.h
-P_merge_i.o: mpi_size.h
-P_merge_r8.o: mpi_size.h
-P_merge_veci.o: mpi_size.h
-P_merge_vecr8.o: mpi_size.h
-P_open_input.o:  mpi_size.h
-P_Reduce_Forces.o: mpi_size.h
-P_Write_neighbors.o: mpi_size.h
-P_broadcast_i.o: mpi_size.h
-do_rfft3d.CPP.o: do_rfft3d.CPP.f90 
-Pme_init.CPP.o: Pme_init.CPP.f90 do_rfft3d.CPP.o
-P_atoms_split_intra.CPP.o: P_atoms_split_intra.CPP.f
-Gauss_Overlap_Mod.o: Neighbors_Mod.o
-Polarization_Forces.o: Gauss_Overlap_Mod.o
-correc3x3.o: Module_Stress.o
-find_thermos.o: Module_Stress.o
-rattle_verlet_co.o: Module_Stress.o
-rattle_correc_co.o: Module_Stress.o
-kinetic.o: Module_Stress.o
-Module_Extra_Forces.o: unit.h
-HYDRATION_Mod.CPP.o: HYDRATION_Mod.CPP.f90 mpi_size.h
-HYDYNAMICS_Mod.CPP.o: HYDYNAMICS_Mod.CPP.f90 Neighbors_Mod.o RIGID_Mod.o\
-	xerror_mod.o mpi_size.h PDB_FRAGM_Mod.o
-GROUPS_Mod.o: INPUT_Mod.o xerror_mod.o GROUPS_Readit.f90
-INPUT_Mod.o: xerror_mod.o
-GEOM_groups_Mod.o: GROUPS_Mod.o INPUT_Mod.o xerror_mod.o\
-	PBC_Mod.o GEOM_groups_Readit.f90 
-PDB.o: PDB_utils.o PDB__Read.f90 INPUT_Mod.o 
-FIELD_Mod.CPP.o: FIELD_Mod.CPP.f90 FIELD__Read.f90 cpropar.h PDB_utils.o\
-	INPUT_Mod.o PDB.o PBC_Mod.o parst.h unit.h parallel.h pme.h\
-	REDUCE_Mod.CPP.o DENSITY_Mod.o
-
-PDB_FRAGM_Mod.o: PDB_FRAGM__Read.f90 INPUT_Mod.o
-REDUCE_Mod.CPP.o: REDUCE_Mod.CPP.f90 PDB_utils.o
+# Dependencies
+Dependencies.h: $(shell ./makedepf90 $(SRC) > Dependencies.h)
+include Dependencies.h
+##$(shell rm Dependencies.h)

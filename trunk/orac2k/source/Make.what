@@ -1,30 +1,7 @@
 ########################################################################
 #                                                                      #
-# Choose parallel or sequential mode                                   #
-#                                                                      #
-########################################################################
-
-##include Make.parallel
-include Make.sequential
-
-export MODE
-
-########################################################################
-#                                                                      #
 # Choose the machine you like                                          #
 #                                                                      #
 ########################################################################
 
-#include Make.Mac_g95_dbg
-#include Make.Mac_g95
-#include Make.Mac_xlf
-#include Make.Mac_intel
-#include Make.Lx_pgi_64
-#include Make.Lx_ifc_argent
-#include Make.Lx_ifc_intel
-include Make.Lx_ifc_intel.err
-#include Make.Lx_ifc_64
-#include Make.Lx_ifc_platine
-#include Make.Lx_ifc_64_dbg
-#include Make.OSF_f90
 
