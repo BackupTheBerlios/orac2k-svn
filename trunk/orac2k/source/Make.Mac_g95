@@ -5,16 +5,20 @@
 ########################################################################
 
 ifeq ($(MODE), SEQUENTIAL)
-TARGET0 = 'G95'
-TARGET1 = 'MAC'
+TARGET0 = GFORT
+TARGET1 = MAC
+TARGET2 = NOTHING
 FFTS = _GPFFT_
 FFLAGS = -O3
-FC = g95
-LD = g95
-F90 = g95
+FC = gfortran
+LD = gfortran
+F90 = gfortran
 CC = cc
 CPP = /usr/bin/cpp
-CFLAGS = -O3 -DG95
-FFTW_LIB = /sw/lib
-LLFLAGS = -lrfftw -lfftw 
+CFLAGS = -O3 
+FFTW_LIB = /usr/local/fftw.S/lib
+OTHER_LIBS = /usr/lib
+LLFLAGS = -lrfftw -lfftw  -llapack -lblas
+else 
+TARGET0 = Do_Nothing
 endif
