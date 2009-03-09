@@ -1,5 +1,5 @@
-# Makefile for ORAC. Works for sure with the intel compiler ifort, 
-# supposedly with pgf90, gfortran 
+# Makefile for ORAC. Works for sure with the intel compiler ifort and gfortran 
+# supposedly with pgf90 
 # 
 #
 #   "make" or "make MODE=PARALLEL" for parallel systems
