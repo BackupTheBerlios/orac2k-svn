@@ -1,3 +1,4 @@
+#define PRESSURE
                         lij=type(nbti,nbtype(j))
                         xg=xd1-xp0(j)
                         yg=yd1-yp0(j)
@@ -23,6 +24,7 @@
                         fppx(j)=fppx(j)-qforce*xc
                         fppy(j)=fppy(j)-qforce*yc
                         fppz(j)=fppz(j)-qforce*zc
+#ifdef PRESSURE
                         qfx=emvir*xc
                         qfy=emvir*yc
                         qfz=emvir*zc
@@ -35,3 +37,4 @@
                         st7 = st7+qfz*xg
                         st8 = st8+qfz*yg
                         st9 = st9+qfz*zg
+#endif
