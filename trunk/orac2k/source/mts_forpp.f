@@ -3,6 +3,7 @@
 #else
 #define _AXPY_  daxpy
 #endif
+#define PRESSURE
       SUBROUTINE mts_forpp(rshell,ss_index,xp0,yp0,zp0,xpg,ypg,zpg
      &     ,charge,nbtype,type,ma,nato,atomg,xpcm,ypcm,zpcm,groupp,atomp
      &     ,co,ecc12,ecc6,ewald,alphal,erfc_spline,erfc_bin,erfc_arr
@@ -181,7 +182,8 @@ c---- to be used for shorter ranged interactions
       expcst=DEXP(-alphal*rinn*alphal*rinn)
       erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)
      x     *qt+a1)*qt*expcst
-      lskip_ewald = erfcst.lt.10.d-4
+c$$$      lskip_ewald = erfcst.lt.10.d-4
+      lskip_ewald = .FALSE.
       twrtpi=2.0d0/DSQRT(pi)
       arsout1=rout0-3.0d0*rout
       arsout2=rtolout**3
@@ -191,6 +193,7 @@ c---- to be used for shorter ranged interactions
       ncount1=0
       na=0
 
+#ifdef PRESSURE
       st1=0.0D0
       st2=0.0D0
       st3=0.0D0
@@ -200,6 +203,7 @@ c---- to be used for shorter ranged interactions
       st7=0.0D0
       st8=0.0D0
       st9=0.0D0
+#endif
 
       DO i=1,3
          uconf(i)=0.0D0
@@ -538,13 +542,16 @@ c===     add the S*V term to the atomic forces
          if(mapb.ne.0) then
             DO i1=grppt(1,i),grppt(2,i)
                massi=gmass(i1)
+#ifdef PRESSURE
                xpi=xp0(i1)
                ypi=yp0(i1)
                zpi=zp0(i1)
+#endif
                do jj=1,mapb
                   fppx(i1)=fppx(i1)+massi*xmap3(jj)
                   fppy(i1)=fppy(i1)+massi*ymap3(jj)
                   fppz(i1)=fppz(i1)+massi*zmap3(jj)
+#ifdef PRESSURE
                   st1=st1+massi*xmap3(jj)*xpi
                   st2=st2+massi*xmap3(jj)*ypi
                   st3=st3+massi*xmap3(jj)*zpi
@@ -554,18 +561,22 @@ c===     add the S*V term to the atomic forces
                   st7=st7+massi*zmap3(jj)*xpi
                   st8=st8+massi*zmap3(jj)*ypi
                   st9=st9+massi*zmap3(jj)*zpi
+#endif
                end do
             end do
             do jj=1,mapb
                j=index1(jj)
+#ifdef PRESSURE
                xg=xmap1(jj)
                yg=ymap1(jj)
                zg=zmap1(jj)
+#endif
                do j1=grppt(1,j),grppt(2,j)
                   massj=gmass(j1)
                   fppx(j1)=fppx(j1)-massj*xmap3(jj)
                   fppy(j1)=fppy(j1)-massj*ymap3(jj)
                   fppz(j1)=fppz(j1)-massj*zmap3(jj)
+#ifdef PRESSURE
                   xpi=-(xp0(j1)+xg)*massj
                   ypi=-(yp0(j1)+yg)*massj
                   zpi=-(zp0(j1)+zg)*massj
@@ -578,6 +589,7 @@ c===     add the S*V term to the atomic forces
                   st7=st7+zmap3(jj)*xpi
                   st8=st8+zmap3(jj)*ypi
                   st9=st9+zmap3(jj)*zpi
+#endif
                end do   
             end do
          end if
@@ -595,6 +607,7 @@ c===     add the S*V term to the atomic forces
          CALL _AXPY_(nato,1.0D0,fppx,1,fpx,1)
          CALL _AXPY_(nato,1.0D0,fppy,1,fpy,1)
          CALL _AXPY_(nato,1.0D0,fppz,1,fpz,1)
+#ifdef PRESSURE
          DO i=1,nato
             p1=atomp(i)
             xg=xp0(i)-xpcm(p1)
@@ -630,6 +643,7 @@ c===     add the S*V term to the atomic forces
                END DO
             END DO
          END DO
+#endif
       END IF
       DEALLOCATE(xmap0,ymap0,zmap0,xmap1,ymap1,zmap1,xmap2,ymap2,zmap2
      &     ,xmap3,ymap3,zmap3,cmap2,swrs,dswrs,index0,index1,maplg,mapag
@@ -830,6 +844,7 @@ c----       compute NON switched forces
                      fppx(j)=fppx(j)-qforce*xc
                      fppy(j)=fppy(j)-qforce*yc
                      fppz(j)=fppz(j)-qforce*zc
+#ifdef PRESSURE
                      qfx=emvir*xc
                      qfy=emvir*yc
                      qfz=emvir*zc
@@ -842,6 +857,7 @@ c----       compute NON switched forces
                      st7 = st7+qfz*xg
                      st8 = st8+qfz*yg
                      st9 = st9+qfz*zg
+#endif
                   END IF
                END DO
             END DO
@@ -882,6 +898,7 @@ c----       compute switched forces
                      fppx(j)=fppx(j)-qforce*xc
                      fppy(j)=fppy(j)-qforce*yc
                      fppz(j)=fppz(j)-qforce*zc
+#ifdef PRESSURE
                      st1 = st1+emvir*xc*xg
                      st2 = st2+emvir*xc*yg
                      st3 = st3+emvir*xc*zg
@@ -891,6 +908,7 @@ c----       compute switched forces
                      st7 = st7+emvir*zc*xg
                      st8 = st8+emvir*zc*yg
                      st9 = st9+emvir*zc*zg
+#endif
                   END IF
                END DO
             END DO
@@ -914,13 +932,16 @@ c===     add the S*V term to the atomic forces
          if(mapb.ne.0) then
             DO i1=grppt(1,i),grppt(2,i)
                massi=gmass(i1)
+#ifdef PRESSURE
                xpi=xp0(i1)
                ypi=yp0(i1)
                zpi=zp0(i1)
+#endif
                do jj=1,mapb
                   fppx(i1)=fppx(i1)+massi*xmap3(jj)
                   fppy(i1)=fppy(i1)+massi*ymap3(jj)
                   fppz(i1)=fppz(i1)+massi*zmap3(jj)
+#ifdef PRESSURE
                   st1=st1+massi*xmap3(jj)*xpi
                   st2=st2+massi*xmap3(jj)*ypi
                   st3=st3+massi*xmap3(jj)*zpi
@@ -930,18 +951,22 @@ c===     add the S*V term to the atomic forces
                   st7=st7+massi*zmap3(jj)*xpi
                   st8=st8+massi*zmap3(jj)*ypi
                   st9=st9+massi*zmap3(jj)*zpi
+#endif
                end do
             end do
             do jj=1,mapb
                j=index1(jj)
+#ifdef PRESSURE
                xg=xmap1(jj)
                yg=ymap1(jj)
                zg=zmap1(jj)
+#endif
                do j1=grppt(1,j),grppt(2,j)
                   massj=gmass(j1)
                   fppx(j1)=fppx(j1)-massj*xmap3(jj)
                   fppy(j1)=fppy(j1)-massj*ymap3(jj)
                   fppz(j1)=fppz(j1)-massj*zmap3(jj)
+#ifdef PRESSURE
                   xpi=-(xp0(j1)+xg)*massj
                   ypi=-(yp0(j1)+yg)*massj
                   zpi=-(zp0(j1)+zg)*massj
@@ -954,6 +979,7 @@ c===     add the S*V term to the atomic forces
                   st7=st7+zmap3(jj)*xpi
                   st8=st8+zmap3(jj)*ypi
                   st9=st9+zmap3(jj)*zpi
+#endif
                end do   
             end do
          end if
@@ -971,6 +997,7 @@ c===     add the S*V term to the atomic forces
          CALL _AXPY_(nato,1.0D0,fppx,1,fpx,1)
          CALL _AXPY_(nato,1.0D0,fppy,1,fpy,1)
          CALL _AXPY_(nato,1.0D0,fppz,1,fpz,1)
+#ifdef PRESSURE
          DO i=1,nato
             p1=atomp(i)
             xg=xp0(i)-xpcm(p1)
@@ -1006,6 +1033,7 @@ c===     add the S*V term to the atomic forces
                END DO
             END DO
          END DO
+#endif
       END IF
       DEALLOCATE(xmap0,ymap0,zmap0,xmap1,ymap1,zmap1,xmap2,ymap2,zmap2
      &     ,xmap3,ymap3,zmap3,cmap2,swrs,dswrs,index0,index1,maplg,mapag
