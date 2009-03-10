@@ -40,7 +40,7 @@ export MPI_TYPE
 ##
 
 #include Make.Mac_g95_dbg
-include Make.Mac_g95
+#include Make.Mac_g95
 #include Make.Mac_xlf
 #include Make.Mac_intel
 #include Make.Lx_pgi_64
@@ -48,7 +48,7 @@ include Make.Mac_g95
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-#include Make.Lx_ifc_64_breizh
+include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
@@ -203,157 +203,120 @@ OBJ_F = add1h.o add2h.o add3h.o add_char1.o add_concta.o		\
 	zero_voronoi.o
 
 
-OBJ_NP = Tetrahedra.o xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o Neighbors.o\
-	EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o PDB_utils.o PDB.o\
-	Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o Class_Connect.o Class_Bending.o \
-	Class_Gauss_Param.o Module_Fourier.o Class_Gcharges.o POLAR_Mod.o \
-	Module_Extra_Forces.o reset_nbond.o Poisson_Boltzmann.o\
-	Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o RIGID_Mod.o\
-	INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o \
-	GEOM_groups_Mod.o WSC_Mod.o HEATING_Mod.o \
-	IOBUFFER_Mod.o PDB_FRAGM_Mod.o\
-	add_energies.o add_int1.o add_int2.o add_real1.o add_real2.o\
-	add_char1.o\
-	add_concta.o add_mapnl.o add_solvent_tpg.o add_solvent_coord.o\
-	add1h.o add2h.o add3h.o add_str.o addh.o addh2o.o\
-	addlnk.o addtor.o addtpg.o adjust_bonds.o\
-	anneal.o appatm.o appbkn.o appbou.o appct.o appgrp.o\
-	asng_xrmsw.o asstpe.o atoms.o atthd.o\
-	bcnstp.o bend.o blkdta.o bond.o brent.o brot.o CalcDistConf.o\
-	calc_avg_str.o calc_avg2_str.o calc_avg_xrms.o calc_gofr.o\
-	calc_sk.o calc_sk_eet.o calc_xslt.o calc_inst_fit.o \
-	calc_RotMat.o calc_cofm.o\
-	calc_lda.o calc_lda_avg.o calc_lda_flu.o calc_lda_hyd.o calc_hyd.o\
-	calc_xrms.o CalcXrmsSecStruct.o caldr.o cc.o change_coord_ex.o\
-	change_coord_inner.o change_virtual_potential.o virtual_extract.o\
-	calc_lda_rest.o change_frame.o change_origin.o\
-	change_tors.o change_step_sim.o\
-	check_length_sim.o check_read_columns.o check_topology.o\
-	check_zero_coord.o chk14.o chkewl.o\
-	chlab.o chmass.o chnpr.o close_files.o clpcm.o clt14.o\
-	collision.o comd0.o \
-	comp_abmd_fdiss.o comp_abmd_fcryst.o\
-	comp_ang_vel.o comp_cavities_vor.o\
-	comp_abmd_tors.o comp_cell_center.o comp_concth.o\
-	comp_contacts.o comp_dip.o comp_dynamic_mat.o\
-	comp_fcm.o comp_forcep.o comp_gmgp.o comp_molmass.o\
-	comp_native.o comp_neigh_vor.o comp_noneq_free.o comp_nmol.o\
-	comp_stress_conf.o\
-	comp_stress_kinetic.o comp_stress_bnd.o comp_thermos_energy.o\
-	comp_rmsq.o comp_thermos_forces.o\
-	comp_thermos_forces_cm.o comp_vcm.o comp_vel_labframe.o\
-	correc.o correc_etap.o Correct_Ewald.o\
-	coordinate_spline.o coordinate_spline_init.o copy_protl.o\
-	correc3x3.o correc_gmgp.o correc_matr.o correc_exp_scale.o\
-	correc_scale.o correc_scale_2.o correc_scale_co.o cov_thermos.o\
-	covbd.o covchg.o covfod.o covnb.o covpr.o covuen.o crdrtf.o cself.o\
-	cself_dipole.o cself_phi.o \
-	csort.o dcopy3.o delrfg.o dist_ijk.o dlineq.o\
-	DCopy_V3.o \
-	dspat.o dumptp.o duni.o dupl_char1.o dupl_concta.o\
-	dupl_int1.o dupl_int2.o dupl_mapnl.o dupl_real1.o dupl_real2.o\
-	dupl_reali2.o erf_corr_cutoff.o erfc_spline.o erfc_spline_init.o\
-	equi_bond.o equi_bend.o equi_tors.o equi_impro.o\
-	f1dim_adjust_bonds.o f1dim_total.o\
-	ferrf.o fit.o ferrf_tag.o fftpack.o fft3-public.o fft_default.o\
-	fft_pme_init.o fill_charge_grid.o fill_dipole_grid.o\
-	find_diss_mol.o find_igint_vor.o find_length_run.o\
-	find_thermos.o fitors.o fix_molecules.o \
-	fnb14.o fnb14_2.o fnbgrp.o fnbgrp2.o fndfmt.o fndgrp.o fpbend.o fpbond.o\
-	fpbond_adjust_bonds.o fptors.o gauss.o gen_abmd_kvect.o\
-	gen_stress_tag_bnd.o generate_slv.o generate_rnd_rot.o\
-	get_atres.o get_bspline_coeffs.o get_bspline_coeffs2.o GetKineticTest.o\
-	GetHardSphere.o get_virtual_energy.o\
-	Get_vp_with_vc.o Get_vp_without_vc.o \
-	get_pointer_protl.o get_native.o get_prot_cnstr.o get_sgr.o\
-	get_spectra_vacf.o get_type_slv.o iceil.o\
-	get_velocities.o getchr.o GetSimpleCO.o grad_sum.o grad_sum2.o\
-	grad_sum_dipole.o hapacp.o hapdon.o igmap.o\
-	icopy.o \
-	indexx.o iindexx.o inicmp.o initialize_cavities.o\
-	Init_Fixed_Molecule.o\
-	int_corr_erf_spline.o interpol_dyna.o chebft_dyn.o\
-	chder_dyn.o chebev_dyn.o join.o kinetic.o\
-	L-BFGS-B.o latt_func.o lc_index.o link.o LinkedCellIndex.o\
-	linmin_adjust_bonds.o LoadBspModuli.o low_up.o lsqqtn.o mappa.o\
-	mapnl_divide.o matinv.o min_pack.o\
-	minv.o mnbrakf.o Make_Pol_Models.o\
-	mts_plot_fragm.o mts_plotp.o mts_test.o\
-	mts_umbrl.o near0.o normal.o Open_Input.o \
-	parse.o parse_numbers.o\
-	pbend.o pbond.o pckben.o pckfrg.o pckitor.o\
-	pcktor.o phapp.o pitors.o plgndr.o plot_center.o plotc.o plot_fragm.o\
-	plotd.o pntres.o pptors.o prtacc.o prtat.o\
-	prtba.o prtbnd.o prtcn.o prtfrc.o prtit.o prtite.o prtite_min.o\
-	print_title_analysis.o prtpt.o prtsq.o\
-	prttors.o ranf.o ranvel.o rattle_verlet.o rattle_verlet_co.o\
-	rattle_correc.o rattle_correc_co.o rdaprm.o rdatpg.o rdcmac.o\
-	rdrgd.o read_analysis.o \
-	read_inout.o read_integrator.o read_parameters.o\
-	read_potential.o\
-	read_properties.o read_run.o read_setup.o read_simulation.o\
-	read_solute.o read_solvent.o read_space_group.o readco.o readtp.o\
-	redefine_slv.o redmss.o remove_mv.o repl_coord.o repl_tpg.o\
-	ResetCofM.o restim.o rigfit.o\
-	rmbend.o rmpbond.o rotb.o RotCoordColumn.o RotCoordRow.o \
-	sbend.o sbond.o ScalarSum.o scalar_sum_normal.o scalar_sum_transp.o \
-	scalar_sum.o \
-	scale_charges.o sctab.o search_clsth.o serchd.o set_const_co.o\
-	set_hbonds_masks.o set_hhisto.o set_ss_array.o set_tempp.o\
-	set_tempt.o setuns.o setup_fake_map.o Setup_fake_decompa.o\
-	setup_skin_shell.o\
-	spec14.o starting_verlet.o strblk.o\
-	time_correlation.o tors.o\
-	tr_inbox.o tr_wsc.o trans_center.o twofft.o up_low.o update.o\
-	uscrpl.o usort.o\
-	verify_variables.o verlet.o verlet_free.o verlet_free_eta.o windows.o\
-	wrenc.o write_contacts.o write_fragm_dist.o\
-	write_pot_bond.o write_pot_nbond.o write_gyr.o write_gofrp.o\
-	write_gofrw.o write_hbonds.o write_hbonds_vor.o write_hhisto.o\
-	write_bends.o\
-	write_bonds.o write_tors.o write_vacf_phi.o write_diffusion.o\
-	write_voronoi_header.o write_rms.o write_sk.o\
-	write_xrms.o write_xrms_atm.o xfit.o\
-	zero0.o zero.o zero3.o zero3x3.o zero_gofr.o zero_voronoi.o\
-	zeroa.o zeroi.o write_mol_dipole.o write_electric_field.o\
-	P_cm_split.o P_get_prot.o P_get_intra.o\
-	Polarization_Forces.o Do_Electric_Fields.o ORAC_Finalize.o\
-	fft_pme.o VORONOI_Mod.o\
-	HYDRATION_Mod.o P_Change_Decomposition.o P_Comm_Intra.o do_rfft3d.o\
-	setup_box.o pme_code.o 	analyse_voronoi.o bldbox.o start.o furippa.o insert_solute.o\
-	mts_forpp.o comp_voronoi.o comp_abmd_fnative.o\
-	write_cavities_vor.o \
-	timer.o verify_input.o open_file_dump.o orac.o\
-	read_input.o free_mem.o M_free.o M_free_s.o\
-	run_minimize.o get_electric_field.o\
-	get_memory_iobuffer.o get_total_energy.o\
-	f1dim_der.o comp_total_energy.o\
-	linmin_total.o mnbrakf_total.o brent_total.o\
-	mts_intra_n0.o mts_intra_n1.o  mts_furier.o\
-	mts_furier2.o\
-	do_pmesh_kspace.o do_pmesh_kspace_dipole.o \
-	write_confc.o read_confc_rows.o\
-	read_confc_columns.o M_get_length.o\
-	M_newlen.o M_memory.o memory.o M_memory_s.o fft_pme_dipole.o\
-	openf.o fft_setup.o fft_forward.o fft_back.o correc_stress.o\
-	correc_stress_n0.o lc_list.o  lc_list2.o lc_list3.o mts_forces.o\
-	mts_forces2.o mts_forpp2.o\
-	read_parallel.o P_setup_decomp.o P_setup_decompa.o\
-	P_atoms_split_intra.o P_split_intra.o P_split_constr.o\
-	P_atoms_split_inter.o xerror.o HYDYNAMICS_Mod.o FIELD_Mod.o\
-	Pme_init.o REDUCE_Mod.o
+OBJ_NP = Tetrahedra.o xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o	\
+	Neighbors.o EUL_Mod.o ElecPotential_Mod.o Gauss_Overlap_Mod.o		\
+	PDB_utils.o PDB.o Neighbors_Mod.o PBC_Mod.o DENSITY_Mod.o		\
+	Class_Connect.o Class_Bending.o Class_Gauss_Param.o Module_Fourier.o	\
+	Class_Gcharges.o POLAR_Mod.o Module_Extra_Forces.o reset_nbond.o	\
+	Poisson_Boltzmann.o Module_Stress.o Module_Thole.o CENTER_SOL_Mod.o	\
+	RIGID_Mod.o INPUT_Mod.o PDBs_Mod.o RMS_Subtract_Mod.o GROUPS_Mod.o	\
+	GEOM_groups_Mod.o WSC_Mod.o HEATING_Mod.o IOBUFFER_Mod.o		\
+	PDB_FRAGM_Mod.o add_energies.o add_int1.o add_int2.o add_real1.o	\
+	add_real2.o add_char1.o add_concta.o add_mapnl.o add_solvent_tpg.o	\
+	add_solvent_coord.o add1h.o add2h.o add3h.o add_str.o addh.o addh2o.o	\
+	addlnk.o addtor.o addtpg.o adjust_bonds.o anneal.o appatm.o appbkn.o	\
+	appbou.o appct.o appgrp.o asng_xrmsw.o asstpe.o atoms.o atthd.o		\
+	bcnstp.o bend.o blkdta.o bond.o brent.o brot.o CalcDistConf.o		\
+	calc_avg_str.o calc_avg2_str.o calc_avg_xrms.o calc_gofr.o calc_sk.o	\
+	calc_sk_eet.o calc_xslt.o calc_inst_fit.o calc_RotMat.o calc_cofm.o	\
+	calc_lda.o calc_lda_avg.o calc_lda_flu.o calc_lda_hyd.o calc_hyd.o	\
+	calc_xrms.o CalcXrmsSecStruct.o caldr.o cc.o change_coord_ex.o		\
+	change_coord_inner.o change_virtual_potential.o virtual_extract.o	\
+	calc_lda_rest.o change_frame.o change_origin.o change_tors.o		\
+	change_step_sim.o check_length_sim.o check_read_columns.o		\
+	check_topology.o check_zero_coord.o chk14.o chkewl.o chlab.o chmass.o	\
+	chnpr.o close_files.o clpcm.o clt14.o collision.o comd0.o		\
+	comp_abmd_fdiss.o comp_abmd_fcryst.o comp_ang_vel.o			\
+	comp_cavities_vor.o comp_abmd_tors.o comp_cell_center.o comp_concth.o	\
+	comp_contacts.o comp_dip.o comp_dynamic_mat.o comp_fcm.o comp_forcep.o	\
+	comp_gmgp.o comp_molmass.o comp_native.o comp_neigh_vor.o		\
+	comp_noneq_free.o comp_nmol.o comp_stress_conf.o comp_stress_kinetic.o	\
+	comp_stress_bnd.o comp_thermos_energy.o comp_rmsq.o			\
+	comp_thermos_forces.o comp_thermos_forces_cm.o comp_vcm.o		\
+	comp_vel_labframe.o correc.o correc_etap.o Correct_Ewald.o		\
+	coordinate_spline.o coordinate_spline_init.o copy_protl.o correc3x3.o	\
+	correc_gmgp.o correc_matr.o correc_exp_scale.o correc_scale.o		\
+	correc_scale_2.o correc_scale_co.o cov_thermos.o covbd.o covchg.o	\
+	covfod.o covnb.o covpr.o covuen.o crdrtf.o cself.o cself_dipole.o	\
+	cself_phi.o csort.o dcopy3.o delrfg.o dist_ijk.o dlineq.o DCopy_V3.o	\
+	dspat.o dumptp.o duni.o dupl_char1.o dupl_concta.o dupl_int1.o		\
+	dupl_int2.o dupl_mapnl.o dupl_real1.o dupl_real2.o dupl_reali2.o	\
+	erf_corr_cutoff.o erfc_spline.o erfc_spline_init.o equi_bond.o		\
+	equi_bend.o equi_tors.o equi_impro.o f1dim_adjust_bonds.o		\
+	f1dim_total.o ferrf.o fit.o ferrf_tag.o fftpack.o fft3-public.o		\
+	fft_default.o fft_pme_init.o fill_charge_grid.o fill_dipole_grid.o	\
+	find_diss_mol.o find_igint_vor.o find_length_run.o find_thermos.o	\
+	fitors.o fix_molecules.o fnb14.o fnb14_2.o fnbgrp.o fnbgrp2.o fndfmt.o	\
+	fndgrp.o fpbend.o fpbond.o fpbond_adjust_bonds.o fptors.o gauss.o	\
+	gen_abmd_kvect.o gen_stress_tag_bnd.o generate_slv.o			\
+	generate_rnd_rot.o get_atres.o get_bspline_coeffs.o			\
+	get_bspline_coeffs2.o GetKineticTest.o GetHardSphere.o			\
+	get_virtual_energy.o Get_vp_with_vc.o Get_vp_without_vc.o		\
+	get_pointer_protl.o get_native.o get_prot_cnstr.o get_sgr.o		\
+	get_spectra_vacf.o get_type_slv.o iceil.o get_velocities.o getchr.o	\
+	GetSimpleCO.o grad_sum.o grad_sum2.o grad_sum_dipole.o hapacp.o		\
+	hapdon.o igmap.o icopy.o indexx.o iindexx.o inicmp.o			\
+	initialize_cavities.o Init_Fixed_Molecule.o int_corr_erf_spline.o	\
+	interpol_dyna.o chebft_dyn.o chder_dyn.o chebev_dyn.o join.o kinetic.o	\
+	L-BFGS-B.o latt_func.o lc_index.o link.o LinkedCellIndex.o		\
+	linmin_adjust_bonds.o LoadBspModuli.o low_up.o lsqqtn.o mappa.o		\
+	mapnl_divide.o matinv.o min_pack.o minv.o mnbrakf.o Make_Pol_Models.o	\
+	mts_plot_fragm.o mts_plotp.o mts_test.o mts_umbrl.o near0.o normal.o	\
+	Open_Input.o parse.o parse_numbers.o pbend.o pbond.o pckben.o pckfrg.o	\
+	pckitor.o pcktor.o phapp.o pitors.o plgndr.o plot_center.o plotc.o	\
+	plot_fragm.o plotd.o pntres.o pptors.o prtacc.o prtat.o prtba.o		\
+	prtbnd.o prtcn.o prtfrc.o prtit.o prtite.o prtite_min.o			\
+	print_title_analysis.o prtpt.o prtsq.o prttors.o ranf.o ranvel.o	\
+	rattle_verlet.o rattle_verlet_co.o rattle_correc.o rattle_correc_co.o	\
+	rdaprm.o rdatpg.o rdcmac.o rdrgd.o read_analysis.o read_inout.o		\
+	read_integrator.o read_parameters.o read_potential.o read_properties.o	\
+	read_run.o read_setup.o read_simulation.o read_solute.o read_solvent.o	\
+	read_space_group.o readco.o readtp.o redefine_slv.o redmss.o		\
+	remove_mv.o repl_coord.o repl_tpg.o ResetCofM.o restim.o rigfit.o	\
+	rmbend.o rmpbond.o rotb.o RotCoordColumn.o RotCoordRow.o sbend.o	\
+	sbond.o ScalarSum.o scalar_sum_normal.o scalar_sum_transp.o		\
+	scalar_sum.o scale_charges.o sctab.o search_clsth.o serchd.o		\
+	set_const_co.o set_hbonds_masks.o set_hhisto.o set_ss_array.o		\
+	set_tempp.o set_tempt.o setuns.o setup_fake_map.o Setup_fake_decompa.o	\
+	setup_skin_shell.o spec14.o starting_verlet.o strblk.o			\
+	time_correlation.o tors.o tr_inbox.o tr_wsc.o trans_center.o twofft.o	\
+	up_low.o update.o uscrpl.o usort.o verify_variables.o verlet.o		\
+	verlet_free.o verlet_free_eta.o windows.o wrenc.o write_contacts.o	\
+	write_fragm_dist.o write_pot_bond.o write_pot_nbond.o write_gyr.o	\
+	write_gofrp.o write_gofrw.o write_hbonds.o write_hbonds_vor.o		\
+	write_hhisto.o write_bends.o write_bonds.o write_tors.o			\
+	write_vacf_phi.o write_diffusion.o write_voronoi_header.o write_rms.o	\
+	write_sk.o write_xrms.o write_xrms_atm.o xfit.o zero0.o zero.o zero3.o	\
+	zero3x3.o zero_gofr.o zero_voronoi.o zeroa.o zeroi.o			\
+	write_mol_dipole.o write_electric_field.o P_cm_split.o P_get_prot.o	\
+	P_get_intra.o Polarization_Forces.o Do_Electric_Fields.o		\
+	ORAC_Finalize.o fft_pme.o VORONOI_Mod.o HYDRATION_Mod.o			\
+	P_Change_Decomposition.o P_Comm_Intra.o do_rfft3d.o setup_box.o		\
+	pme_code.o analyse_voronoi.o bldbox.o start.o furippa.o			\
+	insert_solute.o mts_forpp.o comp_voronoi.o comp_abmd_fnative.o		\
+	write_cavities_vor.o timer.o verify_input.o open_file_dump.o orac.o	\
+	read_input.o free_mem.o M_free.o M_free_s.o run_minimize.o		\
+	get_electric_field.o get_memory_iobuffer.o get_total_energy.o		\
+	f1dim_der.o comp_total_energy.o linmin_total.o mnbrakf_total.o		\
+	brent_total.o mts_intra_n0.o mts_intra_n1.o mts_furier.o mts_furier2.o	\
+	do_pmesh_kspace.o do_pmesh_kspace_dipole.o write_confc.o		\
+	read_confc_rows.o read_confc_columns.o M_get_length.o M_newlen.o	\
+	M_memory.o memory.o M_memory_s.o fft_pme_dipole.o openf.o fft_setup.o	\
+	fft_forward.o fft_back.o correc_stress.o correc_stress_n0.o lc_list.o	\
+	lc_list2.o lc_list3.o mts_forces.o mts_forces2.o mts_forpp2.o		\
+	read_parallel.o P_setup_decomp.o P_setup_decompa.o			\
+	P_atoms_split_intra.o P_split_intra.o P_split_constr.o			\
+	P_atoms_split_inter.o xerror.o HYDYNAMICS_Mod.o FIELD_Mod.o Pme_init.o	\
+	REDUCE_Mod.o
 
 
-OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o\
-	P_expand_r8.o P_expand_r8x3.o P_expand_i.o\
-	P_fold_r8.o P_fold_r8x3.o P_fold_i.o P_get_errmsg.o \
-	P_get_gofr.o \
-	P_load_balance.o P_merge_i.o P_merge_r8.o\
-	P_merge_vecr8.o P_merge_veci.o P_split_scalar0.o P_split_scalar.o\
-	P_get_iret.o P_adjust_decomp.o P_Buffer_attach.o \
-	P_Buffer_detach.o P_get_neighbors.o P_Write_neighbors.o\
-	P_whoami.o  P_open_input.o  P_nwrite.o  P_nread.o  P_npread.o  \
-	P_barrier.o  P_pme_assign_node.o  
+OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o P_expand_r8.o	\
+	P_expand_r8x3.o P_expand_i.o P_fold_r8.o P_fold_r8x3.o P_fold_i.o	\
+	P_get_errmsg.o P_get_gofr.o P_load_balance.o P_merge_i.o P_merge_r8.o	\
+	P_merge_vecr8.o P_merge_veci.o P_split_scalar0.o P_split_scalar.o	\
+	P_get_iret.o P_adjust_decomp.o P_Buffer_attach.o P_Buffer_detach.o	\
+	P_get_neighbors.o P_Write_neighbors.o P_whoami.o P_open_input.o		\
+	P_nwrite.o P_nread.o P_npread.o P_barrier.o P_pme_assign_node.o
 
 
 
@@ -578,9 +541,9 @@ mpi_size.h: mpi_size.inc
 
 
 PGI :
-	${MAKE} obj_PGI "FFLAGS = -O2 "
-	${MAKE} lowopt_PGI "FFLAGS = -O0"
-	${MAKE} recur_PGI "FFLAGS =  "
+	${MAKE} obj_PGI "FFLAGS = -Mpreprocess -O2 "
+	${MAKE} lowopt_PGI "FFLAGS = -Mpreprocess -O0"
+	${MAKE} recur_PGI "FFLAGS = -Mpreprocess  "
 	${MAKE} orac_PGI
 
 IFC :
@@ -628,12 +591,6 @@ DISTRIBUTION :
 	cp python/include_f90.py $(CURDIR)/$(DIST_DIR)/python/;
 	cp -r makedepf90-2.8.8 $(CURDIR)/$(DIST_DIR)/;
 	(cd $(CURDIR)/$(DIST_DIR)/makedepf90-2.8.8 ; make clean);
-
-#	for j in $(LIST);\
-#	do cp $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/$$j;done;\
-#	cp $(CURDIR)/config.h $(CURDIR)/$(DIST_DIR)/config.h;\
-#	chmod 600 $(CURDIR)/$(DIST_DIR)/* ; cd ../
-
 
 #==========================================================================
 # Compile and load ORAC on OSF   
