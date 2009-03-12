@@ -48,12 +48,12 @@ export MPI_TYPE
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-include Make.Lx_ifc_64_breizh
+#include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
 #include Make.Lx_ifc_64
-#include Make.Lx_ifc_platine
+include Make.Lx_ifc_platine
 #include Make.Lx_ifc_64_dbg
 #include Make.OSF_f90
 

@@ -3,7 +3,7 @@
      &     ,nfftdim2,nfftdim3,eer,vir,rkcut)
 
 ************************************************************************
-*   Time-stamp: <2005-03-07 19:39:04 marchi>                             *
+*   Time-stamp: <2009-03-12 12:28:41 marchi>                             *
 *                                                                      *
 *   Old fashioned scalar. Does work with FFT_NORMAL_ORDER.             *
 *                                                                      *

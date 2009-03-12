@@ -1,7 +1,7 @@
 SUBROUTINE P_fold_r8(n,x,nstart,nend,nlocal,node,nprocs)
 
 !!$************************************************************************
-!!$*   Time-stamp: <2005-01-28 16:33:05 marchi>                             *
+!!$*   Time-stamp: <2009-03-12 15:42:28 marchi>                             *
 !!$*                                                                      *
 !!$*                                                                      *
 !!$*                                                                      *
@@ -30,8 +30,7 @@ SUBROUTINE P_fold_r8(n,x,nstart,nend,nlocal,node,nprocs)
       
 !!$*------------------------- LOCAL VARIABLES ----------------------------*
 
-  INTEGER, PARAMETER :: m_tot=94000
-  REAL(8)  :: fp(m_tot)
+  REAL(8), Allocatable  :: fp(:)
   INTEGER :: nstart_b,nend_b,nlocal_b,i,ierr
 
 !!$*----------------------- EXECUTABLE STATEMENTS ------------------------*
@@ -40,6 +39,7 @@ SUBROUTINE P_fold_r8(n,x,nstart,nend,nlocal,node,nprocs)
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
 
+  Allocate(fp(n))
   CALL MPI_ALLREDUCE(x,fp,n,MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,ierr)
 
 !!$------------------------------------------------------------------------

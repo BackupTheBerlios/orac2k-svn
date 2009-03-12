@@ -2,7 +2,7 @@
      &     ,errmsg)
 
 ************************************************************************
-*   Time-stamp: <05/02/28 11:18:20 gmarchet>                             *
+*   Time-stamp: <2009-03-11 16:35:06 marchi>                             *
 *                                                                      *
 *   Constraint the co matrix to support only isotropic changes         *
 *                                                                      *
@@ -40,11 +40,11 @@
 
 *-------------------- LOCAL VARIABLES ----------------------------------
 
-      INTEGER la,lb,k,degree,iox,iter
+      INTEGER la,lb,k,iox,iter
       INTEGER start,lc
-      REAL*8 tol
+      Real(8), Parameter :: tol=1.0D-9
+      Integer, Parameter :: degree=5
       REAL*8  dpp,gg,dcnst(2,5),cc(5)
-      DATA tol/1.0D-9/degree/5/
 
 *==================== EXECUTABLE STATEMENTS ============================
 

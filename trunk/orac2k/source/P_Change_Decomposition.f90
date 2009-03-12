@@ -2,7 +2,7 @@ SUBROUTINE P_Change_Decomposition(Decmp_name,nato,vpx,vpy,vpz,nstart&
      &,nend,nstart1,nend1,node,nprocs)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-03-09 12:45:05 marchi>                           *
+!!$   Time-stamp: <2009-03-12 15:53:12 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -55,8 +55,8 @@ SUBROUTINE P_Change_Decomposition(Decmp_name,nato,vpx,vpy,vpz,nstart&
 
   TYPE NODES
      INTEGER :: exchg_n,nstart_n,nend_n,nstart1_n,nend1_n
-     INTEGER, DIMENSION (:,:), POINTER :: partner_n
-     INTEGER, DIMENSION (:), POINTER :: sfirst_n,isize_n
+     INTEGER, DIMENSION (:,:), Allocatable :: partner_n
+     INTEGER, DIMENSION (:), Allocatable :: sfirst_n,isize_n
      CHARACTER(80) :: label
      TYPE (NODES), POINTER :: next
   END TYPE NODES

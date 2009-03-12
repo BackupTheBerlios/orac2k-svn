@@ -105,8 +105,6 @@
                
                phi(ia)=phi(ia)-fact*(furpar1*erfst/rsp-corr1*fudge)
                phi(ib)=phi(ib)-fact*(furpar2*erfst/rsp-corr2*fudge)
-               IF(ia == 11157) WRITE(*,*) 'ia ',ia,fact
-               IF(ib == 11157) WRITE(*,*) 'ib ',ib,fact
 
                fpx(ia)=fpx(ia)+qforce*xab 
                fpy(ia)=fpy(ia)+qforce*yab

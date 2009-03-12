@@ -6,7 +6,7 @@
 
 TARGET0 = IFC
 TARGET1 = 'OPTERON'
-TARGET2 = None
+TARGET2 = NOTHING
 LIBRARIES = SYSTEM_LIB
 FFTS = _GPFFT_
 ##FFTS = _PDFFT_
@@ -19,10 +19,10 @@ CC = mpicc
 
 CFLAGS = -O3 -DPGI
 #FFTW_LIB = /home/marchi/fftw.B/lib
-OTHER_LIBS=/applications/intel/cmkl/9.0.018/lib/64
+OTHER_LIBS=/applications/intel/cmkl/10.1.0.015/lib/64
 FFTW_LIB = /usr/lib/fftw/FFTW_mpibull2-2.1.5
-LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_lapack \
-	-lmkl_ipf -lguide -lpthread 
+LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw \
+	-lmkl -lguide -lpthread 
 else
 
 FC = ifort

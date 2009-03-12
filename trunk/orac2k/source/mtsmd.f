@@ -280,7 +280,7 @@
      &     ,fcay_m,fcaz_m,fcax_l,fcay_l,fcaz_l,fcax_h,fcay_h,fcaz_h
      &     ,fcax_n0,fcay_n0,fcaz_n0,fcax_n1,fcay_n1,fcaz_n1,vpx,vpy,vpz
      &     ,vpx1,vpy1,vpz1,etap,vh1,vcax,vcay,vcaz,vcbx,vcby,vcbz,vco
-     &     ,mapdn,tag_bndg,nmapdn
+     &     ,mapdn,tag_bndg,tag_int13,nmapdn
 
 *     Phony forces and energies for neighbor list
 
@@ -298,7 +298,7 @@
       INTEGER igrn,krdf(maxint*g1),worka(m1,m10),type_slv(slvatm)
       INTEGER numatoms,ntype_slv,offset_slv,nbetab_slv,abmd_cryst_nvect
       REAL*8 pol_type(m5),Ext(3)
-      INTEGER tag_bndg(m2)
+      INTEGER tag_bndg(m2),tag_int13(m2)
       PARAMETER(nbetab_slv=90,abmd_cryst_nvect=1)
       INTEGER itype_slv(nbetab_slv)
       CHARACTER*1 betab_slv(nbetab_slv)
@@ -311,12 +311,12 @@
       REAL*8  work(mspline),wca(m1),whe(m1),wbc(m1),errca(npm),errhe(npm
      &     ),errbc(npm),erral(npm),drpca(m1),drpbc(m1),drphe(m1)
      &     ,drpal(m1),xp_avg(m1),yp_avg(m1),zp_avg(m1),tmass(numpr)
-     &     ,tmassb(numpr),masspp(3),dssco(5),cnstco(2,5)
+     &     ,tmassb(numpr),masspp(3),dssco(5)
      &     ,abmd_cryst_vect(3,abmd_cryst_nvect),rtollo,yy1,yy2,yy
      &     ,ffwork(2),fact,temp_heat,dtemp_heat,U_conf,U_ele,Udirect
      &     ,Urecip,Uind,uself_dip,uself,Ugrp,U_Thole,Fixt_Dipoles(3,m1)
      &     ,U_solv
-
+      Integer :: cnstco(2,5)
       REAL*8 dummy1,dummy3,TimeCurrent,virtual_energy,n_plus,n_minus
       INTEGER TimeToGo,TRemain
       INTEGER cnstp(2,mbs),cnstpp,offset,abmd_dir,cnstpp_slv
@@ -460,6 +460,7 @@
          END DO
          IF(isostress .OR. FixedAngles_Stress) CALL set_const_co(co
      &        ,dssco,cnstco)
+
       END IF
       CALL comp_molmass(nprot,protl,mass,tmass)
 
@@ -562,6 +563,8 @@
       WRITE(99,'(2i10)') 1000,0
       kp=0
       kt=-1
+      dhoover=.False.
+      dpress=.False.
       IF(flag.GT.0) THEN
          elflag=electr.AND.(.NOT.elinit)
          WRITE(kprint,70300)
@@ -926,6 +929,7 @@
 *=======================================================================
 
       CALL gen_stress_tag_bnd(lbend,3,lbndg,lbndg_x,atomp,tag_bndg)
+      CALL gen_stress_tag_bnd(int13p,2,int13,int13_x,atomp,tag_int13)
 
 *=======================================================================
 *----- If the system is at constant temperature initialize some --------
@@ -1068,6 +1072,7 @@
          IF(What_To_Do_Pol .EQ. 'Gauss') WRITE(*,87000)
       end if
 
+      ALLOCATE(phi(ntap))
       IF(clewld) THEN
          IF(pme .AND. shell_pme .NE. '0') THEN 
             CALL cself(ss_index,ntap,alphal,rkcut,chrge,self_slt
@@ -1254,7 +1259,6 @@ c$$$
       ALLOCATE(fpx_m(ntap),fpy_m(ntap),fpz_m(ntap))
       ALLOCATE(fpx_l(ntap),fpy_l(ntap),fpz_l(ntap))
       ALLOCATE(fpx_h(ntap),fpy_h(ntap),fpz_h(ntap))
-      ALLOCATE(phi(ntap))
 
       CALL zeroa(fpx_h,fpy_h,fpz_h,ntap,1)
       CALL zeroa(fpx_l,fpy_l,fpz_l,ntap,1)
@@ -1469,7 +1473,7 @@ c$$$
      &        ,pmass,mapnl,fpx_m,fpy_m,fpz_m,worka,cpu_h
      &        ,ncpu_h,nstart_h,nend_h,nlocal_h,nstart_ah,nend_ah
      &        ,nlocal_ah,node,nodex,nodey,nodez,ictxt,npy,npz,descQ
-     &        ,nprocs,ncube,fstep,tag_bndg,ngrp,grppt,ingrpp,ingrp
+     &        ,nprocs,ncube,fstep,tag_int13,ngrp,grppt,ingrpp,ingrp
      &        ,ingrp_x,errmsg,iret,nstep,unitc,efact,pi,alphal,U_conf
      &        ,U_ele,Udirect,Urecip,Uind,uself_dip,uself,Ugrp,U_Thole
      &        ,ucop_m,ucos_m,ucosp_m,ucnp_m,ucns_m,ucnsp_m,U_solv
@@ -1507,7 +1511,7 @@ c$$$
      &     ,yp0,zp0,xpa,ypa,zpa,xpcma,ypcma,zpcma,urcsp_m,urcs_m,urcp_m
      &     ,virsp_m,virs_m,virp_m,fpx_m,fpy_m,fpz_m,phi,fsin14,fsbend
      &     ,fsbond,fscnstr_slt,fscnstr_slv,coul_bnd_slt,coul_bnd_slv
-     &     ,rshell,rshk,eer_m,stressr_m,fudgec,tag_bndg)
+     &     ,rshell,rshk,eer_m,stressr_m,fudgec,tag_int13)
 
       CALL timer(vfcp,tfcp,elapse)
       gcpu=-gcpu + tfcp
@@ -1531,7 +1535,7 @@ c$$$
      &     ,yp0,zp0,xpa,ypa,zpa,xpcma,ypcma,zpcma,urcsp_l,urcs_l,urcp_l
      &     ,virsp_l,virs_l,virp_l,fpx_l,fpy_l,fpz_l,phi,fsin14,fsbend
      &     ,fsbond,fscnstr_slt,fscnstr_slv,coul_bnd_slt,coul_bnd_slv
-     &     ,rshell,rshk,eer_l,stressr_l,fudgec,tag_bndg)
+     &     ,rshell,rshk,eer_l,stressr_l,fudgec,tag_int13)
 
       CALL timer(vfcp,tfcp,elapse)
       gcpu=-gcpu + tfcp
@@ -1556,7 +1560,7 @@ c$$$
      &     ,yp0,zp0,xpa,ypa,zpa,xpcma,ypcma,zpcma,urcsp_h,urcs_h,urcp_h
      &     ,virsp_h,virs_h,virp_h,fpx_h,fpy_h,fpz_h,phi,fsin14,fsbend
      &     ,fsbond,fscnstr_slt,fscnstr_slv,coul_bnd_slt,coul_bnd_slv
-     &     ,rshell,rshk,eer_h,stressr_h,fudgec,tag_bndg)
+     &     ,rshell,rshk,eer_h,stressr_h,fudgec,tag_int13)
 
       CALL timer(vfcp,tfcp,elapse)
 
@@ -1849,7 +1853,6 @@ c$$$      CALL CompElecPotentialOnGrid(co,xp0,yp0,zp0)
      &     ,vcaz,fcax_h,fcay_h,fcaz_h,stressd_h,stressr_h,volume
      &     ,press_h,press_kin,pext,tmass,masspp,time,time2,nstart_cm
      &     ,nend_cm,node,nprocs,ncube,rbyte)
-
       IF(isostress  .OR. FixedAngles_Stress) THEN
          CALL rattle_correc_co(co,dssco,cnstco,vco,masspp,iret,errmsg)
          IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
@@ -1934,6 +1937,7 @@ c----------  Propagate exp(i L_u tm/4) ---------------------------------
      &                 ,errmsg)
                   IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
                END IF
+
                IF(cnstpp .NE. 0) THEN
                   CALL rattle_correc(nstart_2,nend_2,tm,xp0,yp0,zp0
      &                 ,vpx,vpy,vpz,ntap,cnstp,dssp,coeffp,cnstpp,mass
@@ -2388,7 +2392,7 @@ c$$$         STOP
      &              ,fpy_m,fpz_m,worka,cpu_h,ncpu_h
      &              ,nstart_h,nend_h,nlocal_h,nstart_ah,nend_ah
      &              ,nlocal_ah,node,nodex,nodey,nodez,ictxt,npy,npz
-     &              ,descQ,nprocs,ncube,fstep,tag_bndg,ngrp,grppt,ingrpp
+     &              ,descQ,nprocs,ncube,fstep,tag_int13,ngrp,grppt,ingrpp
      &              ,ingrp,ingrp_x,errmsg,iret,nstep,unitc,efact,pi
      &              ,alphal,U_conf,U_ele,Udirect,Urecip,Uind,uself_dip
      &              ,uself,Ugrp,U_Thole,ucop_m,ucos_m,ucosp_m,ucnp_m
@@ -2428,7 +2432,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
      &                 ,virs_m,virp_m,fpx_m,fpy_m,fpz_m,phi,fsin14
      &                 ,fsbend,fsbond,fscnstr_slt,fscnstr_slv
      &                 ,coul_bnd_slt,coul_bnd_slv,rshell,rshk,eer_m
-     &                 ,stressr_m,fudgec,tag_bndg)
+     &                 ,stressr_m,fudgec,tag_int13)
                END IF
             END IF
 
@@ -2588,7 +2592,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
      &              ,virs_l,virp_l,fpx_l,fpy_l,fpz_l,phi,fsin14,fsbend
      &              ,fsbond,fscnstr_slt,fscnstr_slv,coul_bnd_slt
      &              ,coul_bnd_slv,rshell,rshk,eer_l,stressr_l,fudgec
-     &              ,tag_bndg)
+     &              ,tag_int13)
             END IF
          END IF
 
@@ -2650,7 +2654,7 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
      &           ,urcsp_h,urcs_h,urcp_h,virsp_h,virs_h,virp_h,fpx_h
      &           ,fpy_h,fpz_h,phi,fsin14,fsbend,fsbond,fscnstr_slt
      &           ,fscnstr_slv,coul_bnd_slt,coul_bnd_slv,rshell,rshk
-     &           ,eer_h,stressr_h,fudgec,tag_bndg)
+     &           ,eer_h,stressr_h,fudgec,tag_int13)
          END IF
       END IF
       

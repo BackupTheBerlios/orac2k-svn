@@ -17,6 +17,7 @@
 ************************************************************************
 
            IMPLICIT none
+           INCLUDE 'parst.h'
            INTEGER i,j,k,m,n,nprot,ngrp,iret,ndim,j1,j2,count,mg
      &          ,count2,i1
            INTEGER protg(*),protl(*),grppt(2,*),groupp(*),atomp(*)
@@ -45,6 +46,12 @@
                  IF(i1 .EQ. m) THEN
                     protg(1+count2)=mg
                     count2=count2+mg+1
+                    If(count2 > m15) Then
+                       iret=1
+                       errmsg='Protg underdimensioned, increase m15 in '
+     &                      //'parst.h.  Abort '
+                       Return
+                    End If
                  END IF
                  j2=j1
               END DO

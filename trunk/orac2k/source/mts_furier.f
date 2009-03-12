@@ -186,11 +186,15 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
      &     ),nstart,nend,nstart_2,nend_2,node,nprocs)
       CALL P_Change_Decomposition("N1-N2",ntap,fxx(1,2),fyy(1,2),fzz(1,2
      &     ),nstart,nend,nstart_2,nend_2,node,nprocs)
+#ifdef __Phi
       CALL P_fold_r8(ntap,phiw,nstart,nend,nlocal,node,nprocs)
       CALL P_expand_r8(phiw,nstart,nend,nlocal,node,nprocs)
+#endif
 #endif      
       
+#ifdef __Phi
       phi(nstart_2:nend_2)=phi(nstart_2:nend_2)+phiw(nstart_2:nend_2)
+#endif
 
 *=======================================================================
 *---- Add up all contributions from tagged ferrf and then to         ---
@@ -229,9 +233,6 @@ c$$$         CALL remove_mv(fpx,fpy,fpz,mass,ntap)
       coul_bnd_slv=coul_bnd_slv+fscnstr_slv
       CALL timer(dd,time_b,ela)
       ela=(time_b-time_a)
-c$$$      CALL MPI_ALLGATHER(ela,1,MPI_REAL8,cpu_l,1,MPI_REAL8
-c$$$     &     ,MPI_COMM_WORLD,ierr)
-c$$$      WRITE(node+60,'(8(e14.8,x))') (cpu_l(i),i=1,nprocs)
 #if defined PARALLEL
       IF(nprocs .GT. 1) CALL P_merge_r8(ela)
 #endif

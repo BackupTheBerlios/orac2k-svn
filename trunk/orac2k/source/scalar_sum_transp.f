@@ -3,7 +3,7 @@
      &     ,nfftdim2,nfftdim3,eer,vir,rkcut)
 
 ************************************************************************
-*   Time-stamp: <04/12/15 13:02:54 marchi>                             *
+*   Time-stamp: <2009-03-12 12:28:36 marchi>                             *
 *                                                                      *
 *   New scalar_sum. Works with FFTW_TRANSPOSED_ORDER. Dimensions       *
 *   y and z are transposed                                             *

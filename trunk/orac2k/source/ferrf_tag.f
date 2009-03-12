@@ -3,7 +3,7 @@
      &     ,erf_corr,erf_arr_corr,delew,rlew)
 
 ************************************************************************
-*   Time-stamp: <2007-11-27 16:32:11 marchi>                             *
+*   Time-stamp: <2009-03-12 13:09:32 marchi>                             *
 *                                                                      *
 *                                                                      *
 *     Compute the Ewald correction from intramolecular interactions    *

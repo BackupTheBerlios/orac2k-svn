@@ -4,7 +4,7 @@
      &     ,ncube,rbyte)
 
 ************************************************************************
-*   Time-stamp: <2009-03-09 12:43:05 marchi>                             *
+*   Time-stamp: <2009-03-12 14:29:26 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -69,7 +69,6 @@ c-------------- Compute total stress -----------------------------------
          END IF
 
 c-------------- Correct velocities of the cofm by the total stress -----
-         
          CALL correc3x3(vco,prt,masspp,tm)
       END IF
       CALL correc(vcax,vcay,vcaz,fcax,fcay,fcaz,tmass,nstart,nend,tm2)

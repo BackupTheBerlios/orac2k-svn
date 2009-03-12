@@ -1,7 +1,7 @@
       SUBROUTINE P_whoami(node,nprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <2009-03-09 13:57:33 marchi>                             *
+*   Time-stamp: <2009-03-12 10:16:03 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -44,7 +44,6 @@
       call MPI_COMM_RANK( comm, nodea, ierra )
       call MPI_COMM_SIZE( comm, nprocsa, ierra )
       
-      ierr=ierr
       node=nodea
       nprocs=nprocsa
       ncube = 0

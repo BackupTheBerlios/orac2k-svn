@@ -1,7 +1,7 @@
       SUBROUTINE set_tempp(masspr,vco,temppra,t)
 
 ************************************************************************
-*   Time-stamp: <05/02/28 11:02:38 gmarchet>                             *
+*   Time-stamp: <2009-03-12 16:21:45 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -42,6 +42,7 @@
             vco(i,j)=0.0D0
          END DO
       END DO
+      
       DO i=1,3
          DO j=i,3
             tvel=boltz*t/(unite*masspr)
