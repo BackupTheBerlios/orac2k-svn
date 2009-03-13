@@ -34,6 +34,8 @@
 
 *======================== DECLARATIONS ================================*
 
+      Use Pme_Save
+      Use RFFT3D
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -50,22 +52,23 @@
 
 *----------------------- DYNAMIC ALLOCATION ---------------------------*
 
-      REAL(8), DIMENSION (:), ALLOCATABLE :: Q,x,y,z,fx,fy,fz,ffwork
+      REAL(8), DIMENSION (:), ALLOCATABLE :: x,y,z,fx,fy,fz,ffwork
       REAL(8), DIMENSION (:,:), ALLOCATABLE :: theta1,dtheta1,theta2
      &     ,dtheta2,theta3,dtheta3,d2theta1,d2theta2,d2theta3
 
       INTEGER, DIMENSION (:,:), ALLOCATABLE :: indk1,indk2,indj1,indj2
       INTEGER, DIMENSION (:),   ALLOCATABLE :: mk,mj
+      Real(8), Dimension(:,:,:), Allocatable :: Q
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
-      INCLUDE 'pme.h'
 #if defined PARALLEL
       INCLUDE 'mpif.h'
 #endif
       REAL*8  rkcut
       REAL*8 recip(3,3),vir(3,3)
       REAL*8 sx,sy,sz,stc1,stc2,stc3,stc4,stc5,stc6,stc7,stc8,stc9
+      Integer :: k1,k2,k3
       INTEGER n_loc,one
       INTEGER ier
       REAL*8 _DOT_
@@ -73,34 +76,34 @@
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 
-      INTEGER i,j,k,nax,nay,naz,lena,dim_Q,mx,ierr1,M_get_length,len
+      INTEGER i,j,k,lena,dim_Q,mx,ierr1,M_get_length,len
       REAL*8  gcpu_ll,vfcp_ll,tfcp_ll,tdelta_ll,elapse,pi
       INTEGER   iceil,ihplen,npya,npza,nfft2a,nfft3a
       LOGICAL already_allocated
       DATA already_allocated/.FALSE./
+      Integer, save  :: MyFirst=0,nax,nay,naz
+      
 
 *----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+      nax=naax
+      nay=naay
+      naz=naaz
       pi=4.0D0*DATAN(1.0D0)
       n_loc=nlocal_2
       numatoms=ntap
       dim_Q=siz_Q
-      nax=nfft1+1
-      nay=nfft2+1
-      naz=nfft3+1
 
-
-      nax=(nfft1/2+1)*2
       nfft2a=nfft2
       nfft3a=nfft3
       npya=npy
       npza=npz
-      nay=nfft2a
-      naz=nfft3_local
+
       len=nax*nay*naz
+
       dim_Q=len
       
-      ALLOCATE(Q(len))
+      ALLOCATE(Q(nax,nay,nax))
 
 #if defined _FFT_CRAY_
       mx=max(nfft1,nfft2)
@@ -111,6 +114,7 @@
       len=numatoms
       ALLOCATE(ffwork(len))
 #else
+      len=1
       ALLOCATE(ffwork(len))
 #endif
       ALLOCATE(theta1(order,numatoms)

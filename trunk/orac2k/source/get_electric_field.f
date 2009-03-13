@@ -20,6 +20,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      Use Pme_Save
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -44,7 +45,6 @@
 
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
-      INCLUDE 'pme.h'
 
       REAL*8  work(m1),qt(4),fdx(m1),fdy(m1),fdz(m1)
 

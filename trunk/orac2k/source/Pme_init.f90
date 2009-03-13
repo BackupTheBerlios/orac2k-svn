@@ -3,7 +3,7 @@ SUBROUTINE Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt&
      &,nfft2_start,nfft2_local,iret,errmsg)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2007-11-21 09:48:56 marchi>                           *
+!!$   Time-stamp: <2009-03-13 13:33:57 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -22,6 +22,7 @@ SUBROUTINE Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt&
 !!$======================== DECLARATIONS ================================*
 
   USE rfft3d
+  Use Ewald 
   IMPLICIT none
 
 !!$----------------------------- ARGUMENTS ------------------------------*
@@ -45,6 +46,7 @@ SUBROUTINE Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt&
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
+  Call Ewald__validate(nfft1,nfft2,nfft3,nprocs)
 
   IF(node ==0) WRITE(*,100)
   CALL do_rfft3d(0,dummy,nfft1,nfft2,nfft3,nfft3_start,nfft3_local&

@@ -10,7 +10,7 @@
      &     ,mapnl,ngrp,grppt,uconf_slt,uconf_slv,uconf_ss,ucoul_slt
      &     ,ucoul_slv,ucoul_ss,fpx,fpy,fpz,phi,stress,rneigh,rinn,rout
      &     ,rtolinn,rtolout,gmass,iz,worka,nstart,nend,Boltz_Group,flag
-     &     ,iret,errmsg)
+     &     ,npot,iret,errmsg)
 *****MultipleTimeScale Version*****P.Procacci-CECAM*********************
 *                                                                      *
 *     Compute the contribution from non-bonded interaction to          *
@@ -69,7 +69,7 @@ C======================= DECLARATIONS ==================================
 C----------------------- ARGUMENTS -------------------------------------
 
       CHARACTER*1  rshell
-      INTEGER nato,ngrp,ma,nstart,nend
+      INTEGER nato,ngrp,ma,nstart,nend,npot
       INTEGER nbtype(*),type(ma,*),grppt(2,*),ss_index(*),groupp(*)
      &     ,atomp(*),atomg(*),worka(*),iret,Boltz_Group(*)
       CHARACTER*80 errmsg
@@ -99,7 +99,8 @@ C-------------------- LOCAL VARIABLES ----------------------------------
      &     ,arsout2,arsinn1,arsinn2,xmap0j,ymap0j,zmap0j,uconf(3)
      &     ,ucoul(3),st1,st2,st3,st4,st5,st6,st7,st8,st9,emvir,qfx,qfy
      &     ,qfz
-      LOGICAL  lskip_ewald,ok
+      LOGICAL  lskip_ewald,ok,ok_LJ,ok_Co
+
       REAL*8 xx,dxx,aux1,zero,one,two,three,rspi,derfcst,xd,yd,zd,xd1
      &     ,yd1,zd1,ucoula,uconfa,twoi,threei
       PARAMETER(zero=0.0D0,one=1.0D0,two=2.0D0,      
@@ -119,10 +120,13 @@ C------------------ DEFINITION OF A SCRATCH COMMON ---------------------
      &     ,ymap3,zmap3,xmap1,ymap1,zmap1,cmap2,swrs,dswrs
      &     ,xmap2,ymap2,zmap2,fppx,fppy,fppz
       LOGICAL, DIMENSION(:), ALLOCATABLE :: maplg,mapag
-      REAL*8 erftbdns
+      REAL(8) ::  erftbdns,bin
       TYPE(Neighbors), DIMENSION (:), POINTER :: neigh
       TYPE(Neighbors), DIMENSION (:), POINTER :: neigh1
-
+      Integer, Save :: First_Time=0
+      Real(8), Save :: Ewald_cut
+      Real(8), Allocatable, Save :: eccc(:)
+      Real(8), Save :: Tol_q=1.0D-5
       DATA a1,a2,a3/0.2548296d0,-0.28449674d0,1.4214137d0/
       DATA a4,a5/-1.453152d0,1.0614054d0/
       DATA qp/0.3275911d0/
@@ -138,7 +142,31 @@ C==================== EXECUTABLE STATEMENTS ============================
           iret=1
           RETURN
       END IF
-
+#ifdef __Fast
+      If(First_Time == 0) Then
+         First_Time=1
+         Allocate(eccc(npot*(npot+1)/2))
+         Do n=1,npot
+            Do m=n,npot
+               lij=m*(m-1)/2+n
+               IF(ecc6(lij) /= 0.0D0 .AND. ecc12(lij) /= 0.0D0) THEN
+                  aux1=(ecc12(lij)/ecc6(lij))
+                  eccc(lij)=3.5_8*aux1**(1.0D0/6.0D0)
+               ELSE
+                  eccc(lij)=0.0D0
+               END IF
+               eccc(lij)=eccc(lij)**2
+            End Do
+         End Do
+         xc=1.0_8
+         bin=0.01D0
+         Do 
+            xc=xc+bin
+            If(Erfc(alphal*xc) < 7.0D-6) Exit
+         End Do
+         ewald_cut=xc*xc
+      End If
+#endif
 *=======================================================================
 *---- Set up dynamic memory 
 *=======================================================================
@@ -182,8 +210,8 @@ c---- to be used for shorter ranged interactions
       expcst=DEXP(-alphal*rinn*alphal*rinn)
       erfcst=((((a5*qt+a4)*qt+a3)*qt+a2)
      x     *qt+a1)*qt*expcst
-c$$$      lskip_ewald = erfcst.lt.10.d-4
-      lskip_ewald = .FALSE.
+      lskip_ewald = erfcst.lt.10.d-4
+!!$      lskip_ewald = .FALSE.
       twrtpi=2.0d0/DSQRT(pi)
       arsout1=rout0-3.0d0*rout
       arsout2=rtolout**3
@@ -1030,6 +1058,7 @@ c===     add the S*V term to the atomic forces
             DO j=1,3
                DO k=1,3
                   stress(i,j) = stress(i,j)+st(i,k)*co(j,k)
+!!$                  stress(i,j) = stress(i,j)+co(i,k)*st(k,j)
                END DO
             END DO
          END DO

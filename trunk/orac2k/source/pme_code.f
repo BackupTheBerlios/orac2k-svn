@@ -47,7 +47,7 @@ c  see DO_PMESH_KSPACE for explanation of arguments
       integer nfft1,nfft2,nfft3,order,sizfftab,sizffwrk
       double precision bsp_mod1(nfft1),bsp_mod2(nfft2),
      +   bsp_mod3(nfft3)
-      double precision fftable(sizfftab),ffwork(sizffwrk)
+      double precision fftable(*),ffwork(*)
    
       double precision dummy
       integer nfftdim1,nfftdim2,nfftdim3,nfftable,nffwork,sfft,sffw
@@ -505,37 +505,11 @@ C   FFT CALLS
       nfftdim3 = nfft3
       n = nfft3/2
       if ( nfft3 .eq. 2*n )nfftdim3 = nfft3+1
-#ifdef SGIFFT
-      nfftable = 2*(nfftdim1+nfftdim2+nfftdim3+50)
-      nffwork = 0
-      sizfftab = nfftable
-      sizffwrk  = nffwork
-#endif
-#if defined _FFT_CRAY_
-      nfftable = 2*(nfftdim1+nfftdim2+nfftdim3+50)
-      nffwork = 4*nfftdim1*nfftdim2*nfftdim3
-      sizfftab = nfftable
-      sizffwrk  = nffwork
-#elif defined _FFT_T3E_ & defined PARALLEL
-      nfftable = 2*(nfftdim1+nfftdim2+nfftdim3+50)
-      nffwork = 4*nfftdim1*nfftdim2*nfftdim3
-      sizfftab = nfftable
-      sizffwrk  = nffwork
-#elif defined _FFT_T3E_ & !defined  PARALLEL
-      nfftable = 12*2*(nfftdim1+nfftdim2+nfftdim3)
-      nffwork = 2*nfftdim1*nfftdim2*nfftdim3
-      sizfftab = nfftable
-      sizffwrk  = nffwork
-#elif defined _GPFFT_
-      nfftable = 4*1024
-      nffwork = 2*nfftdim1*nfftdim2*nfftdim3
-      sizfftab = nfftable
-      sizffwrk  = nffwork
-#else
+
       nfftable = 4*nfftmax + 15
       nffwork = nfftmax
       sizfftab = 3*nfftable
       sizffwrk  = 2*nfftmax
-#endif
+
       return
       end

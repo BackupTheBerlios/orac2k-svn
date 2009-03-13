@@ -24,6 +24,7 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_Save
       USE REDUCE, ONLY: P_Reduce_Forces=>Reduce_Forces      
       IMPLICIT none
 
@@ -45,7 +46,6 @@ c---  stuff for b-spline interpolation and FFT
 
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
-      INCLUDE 'pme.h'
       REAL*8  fxx(m1,2),fyy(m1,2),fzz(m1,2),Ex(m1),Ey(m1),Ez(m1)
       SAVE fxx,fyy,fzz
 

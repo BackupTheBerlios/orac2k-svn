@@ -1,7 +1,7 @@
 MODULE FIELD_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-03-09 12:44:47 marchi>                           *
+!!$   Time-stamp: <2009-03-13 16:32:29 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -154,10 +154,10 @@ CONTAINS
       REWIND(kpr)
     END SUBROUTINE Pr_Write
     SUBROUTINE Direct
+      Use Pme_Save
       IMPLICIT NONE 
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
-      INCLUDE 'pme.h'
       INCLUDE 'parallel.h'
       INCLUDE 'unit.h'
       CHARACTER(1) :: rshell,rshk
@@ -228,10 +228,10 @@ CONTAINS
 #endif
     END SUBROUTINE Direct
     SUBROUTINE Update
+      Use Pme_Save
       IMPLICIT NONE 
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
-      INCLUDE 'pme.h'
       INCLUDE 'parallel.h'
       INCLUDE 'unit.h'
       REAL(8) :: ucns_p,ucos_p,virs_p,virsp_p,ucnp_p,ucop_p,ucnsp_p&
@@ -413,9 +413,11 @@ CONTAINS
 
      END SUBROUTINE Map
      SUBROUTINE SetUp
+
+       Use Pme_Save
+       Implicit None 
        INCLUDE 'parst.h'
        INCLUDE 'cpropar.h'
-       INCLUDE 'pme.h'
        INCLUDE 'parallel.h'
 
        INTEGER :: offset,abmd_dir,cnstpp,cnst_protp,cnst_protp_1&

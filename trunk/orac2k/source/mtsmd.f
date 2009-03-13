@@ -46,6 +46,7 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_Save
       USE Module_Fourier, ONLY: Fourier_init=>Init
       USE Class_Gauss_Param, ONLY: Param_Init=>Init, Found_Boltz 
       USE Class_Gcharges, ONLY: Gauss_Charges, Gauss_Init=>Init
@@ -102,7 +103,6 @@
 
       INCLUDE 'cpropar.h'
       INCLUDE 'fourier.h'
-      INCLUDE 'pme.h'
       INCLUDE 'lc_list.h'
       INCLUDE 'unit.h'
       INCLUDE 'parallel.h'
@@ -1010,12 +1010,19 @@
       IF(clewld) THEN
          IF(pme) THEN
             numatoms=ntap
+            CALL Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt
+     &           ,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start
+     &           ,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
+            IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
+
+            Allocate(bsp_mod1(nfft1+1),bsp_mod2(nfft2+1),bsp_mod3(nfft3
+     &           +1))
             CALL fft_pme_init(numatoms,nfft1,nfft2,nfft3,pme_order
      &           ,sizfftab,sizffwrk,siztheta,siz_Q,sizheap,sizstack
      &           ,bsp_mod1,bsp_mod2,bsp_mod3,fftable,ffwork)
+
             if ( siz_Q .GT. MAXT ) THEN
                write(kprint,78410)
-               stop
             END IF
             rshk=shell_pme
             IF(erf_corr) THEN
@@ -1023,10 +1030,6 @@
                CALL int_corr_erf_spline(rlew,ruew,nbinew,alphal,rkcut
      &              ,erf_arr_corr,work)
             END IF
-            CALL Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt
-     &           ,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start
-     &           ,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
-            IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
          ELSE
             aux=(rtolh+rcuth)**2
             CALL chkewl(oc,aux,alphal,rkcut,volume)
@@ -2815,8 +2818,8 @@ c$$$     &              /DFLOAT(mrespa*lrespa),fpx(1)
      &     /5x,'     Shell m : ',f9.4/)
 60030 FORMAT(/10x,'==========================================='/)
 78410 FORMAT
-     &     (/ /' *******ERROR: MAXT for PME too small. INCREASE MAXT.'/
-     &     /)
+     &     (/ /' *******WARNING: MAXT for PME too small.',
+     &' This message is silly it must be ignored...'//)
 70500 FORMAT(/ /15x,' <-------- Time Limit Reached  ------->'/ /)
 70700 FORMAT(/ /15x,' Program Stops Smoothly. Restart Dumped'/ /)
 70120 FORMAT('Velocities of the barostat have been rescaled   ---->'/)

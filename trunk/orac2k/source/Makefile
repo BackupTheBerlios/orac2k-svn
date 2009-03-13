@@ -23,6 +23,7 @@ MODE=PARALLEL
 MEMORY=DYNAMIC_MEM
 MPI_TYPE = OPENMPI
 PARA_MODE = MPI
+FORCES = __Fast
 
 ifneq ($(MODE), PARALLEL)
 PARA_MODE = NOMPI
@@ -48,12 +49,12 @@ export MPI_TYPE
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-#include Make.Lx_ifc_64_breizh
+include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
 #include Make.Lx_ifc_64
-include Make.Lx_ifc_platine
+#include Make.Lx_ifc_platine
 #include Make.Lx_ifc_64_dbg
 #include Make.OSF_f90
 
@@ -63,10 +64,10 @@ include Make.Lx_ifc_platine
 #==========================================================================
 
 .f.o :
-	$(FC) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -c $<
+	$(FC) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -D$(FORCES) -c $<
 .SUFFIXES: .o .f90
 .f90.o :
-	$(F90) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -c $<
+	$(F90) $(FFLAGS) -D$(TARGET0) -D$(TARGET2) -D$(MODE) -D$(MEMORY) -D$(PARA_MODE) -D$(FORCES) -c $<
 
 #==========================================================================
 # Object modules
@@ -98,7 +99,8 @@ OBJ_F90 = CalcDistConf.o \
 	RMS_Matrix_Mod.o RMS_Subtract_Mod.o RMS_Subtract_Read.o scalar_sum.o	\
 	ScalarSum.o SCALARSUM_Mod.o self_dipole.o Setup_fake_decompa.o		\
 	Setup_fake_decomp.o test.o Tetrahedra.o VORONOI_Mod.o	\
-	VORONOI_Read.o write_mol_dipole.o WSC_Mod.o WSC__Read.o xerror_mod.o
+	VORONOI_Read.o write_mol_dipole.o WSC_Mod.o WSC__Read.o xerror_mod.o \
+	Ewald.o FactorizeNo.o Pme_Save.o
 
 OBJ_F = add1h.o add2h.o add3h.o add_char1.o add_concta.o		\
 	add_energies.o addh2o.o addh.o add_int1.o add_int2.o addlnk.o		\
@@ -307,7 +309,7 @@ OBJ_NP = Tetrahedra.o xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o	\
 	read_parallel.o P_setup_decomp.o P_setup_decompa.o			\
 	P_atoms_split_intra.o P_split_intra.o P_split_constr.o			\
 	P_atoms_split_inter.o xerror.o HYDYNAMICS_Mod.o FIELD_Mod.o Pme_init.o	\
-	REDUCE_Mod.o
+	REDUCE_Mod.o Ewald.o FactorizeNo.o Pme_Save.o
 
 
 OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o P_expand_r8.o	\
@@ -347,7 +349,7 @@ OBJ_C = vstart.c
 
 INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
 	resid.inc vacf.inc pbc.inc analysis.inc mts_spectra.inc\
-	mts_vacf.inc pme.inc parallel.inc parameters.inc\
+	mts_vacf.inc parallel.inc parameters.inc\
 	lc_list.inc voronoi.inc iobuffer.inc mpi_size.inc
 
 INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
@@ -470,14 +472,6 @@ pbc.h: config.h pbc.inc
 	cp temp $$file.h) || cp temp $$file.h ;\
 	rm -f temp temp2 >/dev/null
 
-pme.h: config.h pme.inc
-	@$(CPP) -D$(TARGET1) -D$(MODE) -D$(FFTS) pme.inc | awk '!/^ *$$/ && !/^#/' > temp
-	./python/include_f90.py temp
-	file=pme;\
-	test -f $$file.h && ( cmp -s $$file.h temp || \
-	cp temp $$file.h) || cp temp $$file.h ;\
-	rm -f temp temp2 >/dev/null
-
 parallel.h: parallel.inc
 	@$(CPP) -D$(TARGET1) -D$(MODE) parallel.inc | awk '!/^ *$$/ && !/^#/' > temp
 	./python/include_f90.py temp
@@ -583,13 +577,13 @@ DISTRIBUTION :
 	mkdir $(CURDIR)/tmp_dir/orac2k/source/python ;\
 	mkdir $(CURDIR)/tmp_dir/orac2k/source/makedepf90-2.8.8 ;\
 	for j in $(LIST_FS);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
+	do rsync -r $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
 	for j in $(LIST_CS);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
+	do rsync -r $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
 	for j in $(LIST_EXT);\
-	do cp -f $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
-	cp python/include_f90.py $(CURDIR)/$(DIST_DIR)/python/;
-	cp -r makedepf90-2.8.8 $(CURDIR)/$(DIST_DIR)/;
+	do rsync -r $(CURDIR)/$$j $(CURDIR)/$(DIST_DIR)/;done;\
+	rsync -r -C python/include_f90.py $(CURDIR)/$(DIST_DIR)/python/;
+	rsync -rv -C makedepf90-2.8.8 $(CURDIR)/$(DIST_DIR)/;
 	(cd $(CURDIR)/$(DIST_DIR)/makedepf90-2.8.8 ; make clean);
 
 #==========================================================================

@@ -26,6 +26,7 @@
 
 *======================== DECLARATIONS ================================*
       
+      Use Pme_Save
       USE VORONOI_Mod, ONLY: voronoi,nvoronoi
       IMPLICIT none
 
@@ -46,7 +47,6 @@
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
       INCLUDE 'unit.h'
-      INCLUDE 'pme.h'
 
 *------------------------- LOCAL VARIABLES ----------------------------*
 

@@ -25,6 +25,7 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_Save
       USE REDUCE, ONLY: P_Reduce_Forces=>Reduce_Forces      
       IMPLICIT none
       INTERFACE
@@ -57,7 +58,6 @@ c---  stuff for b-spline interpolation and FFT
 
       INCLUDE 'parst.h'
       INCLUDE 'cpropar.h'
-      INCLUDE 'pme.h'
 #if defined PARALLEL
       INCLUDE 'mpif.h'
 #endif

@@ -3,7 +3,7 @@
      &     ,nfftdim2,nfftdim3,eer,vir,rkcut)
 
 ************************************************************************
-*   Time-stamp: <2009-03-12 12:28:36 marchi>                             *
+*   Time-stamp: <2009-03-13 16:33:11 marchi>                             *
 *                                                                      *
 *   New scalar_sum. Works with FFTW_TRANSPOSED_ORDER. Dimensions       *
 *   y and z are transposed                                             *
@@ -29,8 +29,8 @@
 
       INTEGER nfft1,nfft2,nfft3,nfftdim1,nfftdim2,nfftdim3,node,naz
       REAL*8  Q(nfftdim1,nfftdim2,nfftdim3)
-      REAL*8  bsp_mod1(nfft1),bsp_mod2(nfft2),bsp_mod3(nfft3),ewaldcof
-     &     ,volume,rkcut
+      REAL*8  bsp_mod1(*),bsp_mod2(*),bsp_mod3(*)
+     &     ,ewaldcof,volume,rkcut
       REAL*8  eer,vir(3,3)
       REAL*8  recip(3,3)
 
@@ -61,6 +61,7 @@
             vir(k1,k2) = 0.0D0
          END DO
       END DO
+
       DO ka3=1,naz
          k3=kstart-1+ka3
          m3 = k3 - 1

@@ -141,7 +141,7 @@
      &     ,co,ecc12,ecc6,clewld,alphal,erfc_spline,erfc_bin,erfc_arr
      &     ,mapnl,ngrp,grppt,ucnp,ucns,ucnsp,ucop,ucos,ucosp,fpx,fpy,fpz
      &     ,phi,stress,rni,ri,ro,rti,rto,pmass,iz1,worka,nstart,nend
-     &     ,Boltz_Group,flag,iret,errmsg)
+     &     ,Boltz_Group,flag,lpnbd,iret,errmsg)
 
       CALL timer(vfcp_ff,tfcp_ff,elapse)
       tdelta_ff=tfcp_ff-tdelta_ff

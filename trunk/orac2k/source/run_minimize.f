@@ -36,6 +36,7 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_Save
       IMPLICIT none
       
       INCLUDE 'parst.h'
@@ -56,7 +57,6 @@
 
       INCLUDE 'cpropar.h'
       INCLUDE 'unit.h'
-      INCLUDE 'pme.h'
       INCLUDE 'lc_list.h'
       INCLUDE 'parallel.h'
 

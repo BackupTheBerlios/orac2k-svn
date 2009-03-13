@@ -30,6 +30,8 @@
 
 *======================== DECLARATIONS ================================*
 
+
+      Use Pme_Save
       IMPLICIT none
 
 *----------------------------- ARGUMENTS ------------------------------*
@@ -54,8 +56,6 @@
       INTEGER, DIMENSION (:),   ALLOCATABLE :: mk,mj
 
 *----------------------- VARIABLES IN COMMON --------------------------*
-
-      INCLUDE 'pme.h'
 
       REAL*8  rkcut
       REAL*8 recip(3,3),vir(3,3)

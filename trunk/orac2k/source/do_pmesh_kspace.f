@@ -86,6 +86,7 @@ c STACK STORAGE: These arrays can be tossed after leaving this routine
       REAL*8  time1_avg,time2_avg,time_avg,time,time1,time2,time3,time4
      &     ,time5,time_oth,time_fft,vfcp
       INTEGER ntime_avg,idir,nb1,nb2,nb3,nc1,nc2,nc3,nb3_local,nb3_start
+     &     ,n
       DATA ntime_avg/0/
       DATA time_avg,time_fft,time_oth/0.0D0,0.0D0,0.0D0/
 
@@ -111,7 +112,6 @@ c  get some integer array dimensions
       sfft=2
       sffw=2
       gp_dim3=nd3
-
 #ifdef _GPFFT_
       gp_dim3 = nfft3
       gp_n = nfft3/2

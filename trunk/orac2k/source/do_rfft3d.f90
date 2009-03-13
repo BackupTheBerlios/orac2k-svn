@@ -8,6 +8,7 @@ MODULE RFFT3D
   INTEGER, SAVE, PRIVATE :: n1,n2,n3,nd1,nd2,nd3,md1,md2,md3,nsize,ncache=-1 &
        ,n_n(3),n3_local,n3_start,n3_end,n2_start,n2_local,total_work
   INTEGER(8), SAVE:: plan_forward,plan_backward
+  INTEGER, Save, Public :: naax,naay,naaz
 !!$  INCLUDE 'fftw_f77.i'
 !!$!     This file contains PARAMETER statements for various constants
 !!$!     that can be passed to FFTW routines.  You should include
@@ -106,6 +107,7 @@ CONTAINS
        na3_local=n3_local
        na2_start=n2_start
        na2_local=n2_local
+       naax=nd1; naay=nd2; naaz=nd3
        RETURN
     END IF
     IF(ncache == -1) THEN

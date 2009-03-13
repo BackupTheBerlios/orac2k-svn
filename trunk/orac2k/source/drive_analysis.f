@@ -3,7 +3,7 @@
      &     ,ypcm,zpcm,node,nodex,nodey,nodez,ictxt,npy,npz,nprocs,ncube)
 
 ************************************************************************
-*   Time-stamp: <2009-03-09 12:44:43 marchi>                           *
+*   Time-stamp: <2009-03-13 16:31:59 marchi>                           *
 *                                                                      *
 *     drive_analysis analize a trajectory file written by mtsmd        *
 *     In addition to that file also a binary topology file must        *
@@ -42,6 +42,7 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_Save
       USE VORONOI_Mod, ONLY: voronoi, VOR_Init=>Init, VOR_cut=>cutoff
      &     ,VOR_Heavy=>heavy, VOR_fluct=>fluct,VOR_access=>access
      &     ,VOR_volume=>volume,VOR_neighbor=>neighbor,maxpla,maxver
@@ -119,7 +120,6 @@
 
       INCLUDE 'cpropar.h'
       include 'fourier.h'
-      include 'pme.h'
       INCLUDE 'lc_list.h'
       INCLUDE 'analysis.h'
       INCLUDE 'unit.h'
