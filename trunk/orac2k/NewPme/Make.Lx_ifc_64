@@ -1,0 +1,33 @@
+########################################################################
+#                                                                      #
+#                    Cluster AMD Opteron "Tantale "                    #
+#                                                                      #
+########################################################################
+
+TARGET0 = IFC
+TARGET1 = 'INTEL'
+TARGET2 = None
+LIBRARIES = SYSTEM_LIB
+FFTS = _GPFFT_
+##FFTS = _PDFFT_
+
+ifeq ($(MODE), PARALLEL)
+FC = mpif90
+LD = mpif90
+F90 =mpif90
+CC = mpicc
+
+else
+
+FC = ifort
+LD = ifort
+F90 =ifort
+CC = icc
+endif
+
+
+CFLAGS = -O3 
+FFTW_LIB = /usr/local/fftw.S/lib
+OTHERS_LIB=/opt/intel/mkl/10.0.1.014/lib/32
+LLFLAGS= -lrfftw -lfftw -lmkl_lapack \
+	-lmkl_intel -lguide -lpthread 

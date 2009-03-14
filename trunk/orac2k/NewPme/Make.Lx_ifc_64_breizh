@@ -1,0 +1,49 @@
+########################################################################
+#                                                                      #
+#                    Cluster AMD Opteron "Tantale "                    #
+#                                                                      #
+########################################################################
+
+TARGET0 = IFC
+TARGET1 = 'INTEL'
+##TARGET2 = 'IFC_error'
+TARGET2 = NOTHING
+LIBRARIES = SYSTEM_LIB
+FFTS = _GPFFT_
+
+ifeq ($(MODE), PARALLEL)
+FC = mpif90
+LD = mpif90
+F90 =mpif90
+CC = mpicc
+
+CFLAGS = -O3 -D$(TARGET0)
+FFTW_LIB =/share/apps/fftw.P/lib64
+OTHER_LIBS=/share/apps/intel/mkl/10.0.1.014/lib/em64t
+
+LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
+	 -lmkl_core -lguide -lpthread\
+	 -lmyriexpress  -i_dynamic 
+
+### -i_dynamic added to avoid intel compiler bug?
+### -lmkl_core needed because of mlk bug!
+ 
+else
+
+FC = ifort
+LD = ifort
+F90 =ifort
+CC = icc
+
+CFLAGS = -O3 -D$(TARGET0)
+FFTW_LIB =/share/apps/fftw.S/lib64
+OTHER_LIBS=/share/apps/intel/cmkl/10.0.1.014/lib/em64t
+LLFLAGS= -lfftw2xf_intel -lmkl_intel_lp64 -lmkl_intel_thread\
+	 -lmkl_core -lguide -lpthread -i_dynamic 
+
+### -i_dynamic added to avoid intel compiler bug?
+### -lmkl_core needed because of mlk bug!
+ 
+endif
+
+
