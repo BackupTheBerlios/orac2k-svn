@@ -28,6 +28,7 @@
       INTEGER n1,n2,n3,n4,n5,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13
      &     ,m14,maxint,g1,g2,f1,f2,f3,ndan1,mex,slv2,slv3,slv4,slv5,slv6
      &     ,slv_cns1,slv_cns2,slvunit,slvsit,slvatm,slv_group,nmap_slv
+     &     ,m15
 
       PARAMETER(n1=sitslv,n2=types*(types+1)/2,n3=10,n4=tsites,
      &          n5=_TOT_RES_,
@@ -41,7 +42,8 @@
      &          m11=tgroup,m12=tgroup*2,
      &          m13=2,m14=2,mfold=10,f1=_F1_,f2=_F2_,
      &          f3=_F3_,ndan1=_SUBUN_, mpp=_NAT_PP_*tgroup,
-     &          mex=20*sitslu)
+     &          mex=20*sitslu,
+     &          m15=2*tgroup+tgroup/2)
 
       PARAMETER(slvsit=_SIT_SOLV_,
      &          slvunit=_MOL_NRES_,

@@ -141,7 +141,7 @@
      &     ,m9),lcnstr(2,m9),concta(m1,m10),concth(m1,m10),lbndg(3,m2)
      &     ,ltor(4,m3),int14(2,m3),type14(m3),litr(4,m4),nhtype(m6,m6)
      &     ,ingrp(2,m12),mres(2,nores),int13(2,m2),atomg(m1),bsitp(m13
-     &     ,m14),asitp(m13,m14),nbsitp(m14),nasitp(m14),protg(2*m11)
+     &     ,m14),asitp(m13,m14),nbsitp(m14),nasitp(m14),protg(m15)
      &     ,groupp(m11),atomp(m1),type_table(m6,m6),lbnd_x(m9)
      &     ,lconstr_x(m9),lbndg_x(m2),ltor_x(m3),litr_x(m4),int14_x(m3)
      &     ,int13_x(m2),ingrp_x(m12),virtual_atoms(m1),Virtual_types
