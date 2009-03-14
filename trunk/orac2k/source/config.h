@@ -2,15 +2,15 @@
 
 /* Effective number of molecules of the solute.  */
 
-#define  _N_PROT_MAX_    30000
+#define  _N_PROT_MAX_    72000
 
 /* Sites of the solvent molecules */
 
-#define  _SIT_SOLV_	100
+#define  _SIT_SOLV_	4
 
 /* Total sites of the solute molecules */
 
-#define  _SIT_SOLU_    100000
+#define  _SIT_SOLU_    200000
 
 /* Number of types of the solvent molecule*/
 
@@ -22,7 +22,7 @@
 
 /* Total Number of residues in the molecule */ 
 
-#define  _NRES_		28700
+#define  _NRES_		80000
 
 /* Total Number of residues in the solvent molecule */ 
 
@@ -30,13 +30,13 @@
 
 /* Total number of groups */
 
-#define  _TGROUP_	34000
+#define  _TGROUP_	70000
 
 #define  _SOLV_GROUP_	100
 
 /* Maximum bin dimension of the G(r) */
 
-#define  _MAX_BIN_      600
+#define  _MAX_BIN_      200
 
 /* Maximum bin dimension for Hydrogen bond histogram */
 
@@ -109,14 +109,14 @@ used.                                                             */
 #define _MAX_NEIGH_	120
 */
 
-#define _MAX_NEIGH_	 590
+#define _MAX_NEIGH_	 2
 
 /*    Maximum of bonded neighbors                               */
 
 /*
                         40
 */
-#define _MAX_IG_NNL_	 40
+#define _MAX_IG_NNL_	 2
 
 /*    Maximum allowed planes in the Voronoi construcion         */
 
@@ -124,7 +124,7 @@ used.                                                             */
 #define   MAXPLA	40
 */
 
-#define   MAXPLA        80
+#define   MAXPLA	2
 
 /*    Maximum allowed verteces in the Voronoi construcion       */
 
@@ -132,7 +132,7 @@ used.                                                             */
 #define   MAXVER	20
 */
 
-#define   MAXVER       120
+#define   MAXVER	2
 
 #define   _CONTACT_VORONOI_	3
 
@@ -248,10 +248,10 @@ number of atoms for each field */
 #define _CHEB_ORDER_       2
 
 /* Grid points for PME */
-#define _MAX_GRID_  144
-#define _FFT1_      144
-#define _FFT2_      144
-#define _FFT3_      144
+#define _MAX_GRID_  30
+#define _FFT1_      30
+#define _FFT2_      30
+#define _FFT3_      30
 
 /* B-spline order for PME */
 #define _MORD_ 7
