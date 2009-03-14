@@ -1,0 +1,31 @@
+########################################################################
+#                                                                      #
+#                    Cluster amd dual processors                       #
+#                                                                      #
+########################################################################
+
+ifeq ($(MODE), SEQUENTIAL)
+TARGET0 = 'INTEL'
+TARGET1 = 'OPTERON'
+FFTS = _GPFFT_
+FC = ifort
+LD = ifort
+F90 = ifort
+CC = cc
+CFLAGS = -O3 -DINTEL
+FFTW_LIB = /usr/local/fftw/lib
+LLFLAGS = -lrfftw -lfftw 
+
+else
+
+TARGET0 = 'INTEL'
+TARGET1 = 'OPTERON'
+FFTS = _GPFFT_
+FC = mpif77
+LD = mpif77
+F90 = mpif77
+CC = cc
+CFLAGS = -O3 -DINTEL
+FFTW_LIB = /usr/local/fftw/lib
+LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lm
+endif

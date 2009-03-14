@@ -1,0 +1,30 @@
+########################################################################
+#                                                                      #
+#                    Cluster COMPAQ                                    #
+#                                                                      #
+########################################################################
+ifeq ($(MODE), SEQUENTIAL)
+TARGET0 = OSF1
+TARGET1 = 'AXP'
+FFTS = _GPFFT_
+FC = f90
+LD = f90
+F90 = f90
+CC = cc
+CFLAGS = -O3 -DOSF1
+FFTW_LIB = /home/marchi/Tantale/fftw/lib 
+LLFLAGS=  -lrfftw -lfftw -lm
+
+else
+
+TARGET0 = OSF1
+TARGET1 = 'AXP'
+FFTS = _GPFFT_
+FC = f90
+LD = f90
+F90 = f90
+CC = cc
+CFLAGS = -O3 -DOSF1
+FFTW_LIB = /home/marchi/Tantale/fftw/lib 
+LLFLAGS= -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lm -lmpi
+endif

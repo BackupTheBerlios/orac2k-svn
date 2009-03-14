@@ -1,0 +1,24 @@
+########################################################################
+#                                                                      #
+#                    Cluster amd dual processors                       #
+#                                                                      #
+########################################################################
+
+ifeq ($(MODE), SEQUENTIAL)
+TARGET0 = GFORT
+TARGET1 = MAC
+TARGET2 = NOTHING
+FFTS = _GPFFT_
+FFLAGS = -O3
+FC = gfortran
+LD = gfortran
+F90 = gfortran
+CC = cc
+CPP = /usr/bin/cpp
+CFLAGS = -O3 
+FFTW_LIB = /usr/local/fftw.S/lib
+OTHER_LIBS = /usr/lib
+LLFLAGS = -lrfftw -lfftw  -llapack -lblas
+else 
+TARGET0 = Do_Nothing
+endif
