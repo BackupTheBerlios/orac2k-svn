@@ -1,7 +1,7 @@
       INTEGER FUNCTION P_nwrite(buf,isize,ipartner,itype,null)
 
 ************************************************************************
-*   Time-stamp: <04/11/11 14:24:19 marchi>                             *
+*   Time-stamp: <2009-03-14 18:32:26 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -29,7 +29,7 @@
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
-#ifdef MPI      
+#ifdef __MPI      
       include 'mpif.h'
 
 *------------------------- LOCAL VARIABLES ----------------------------*

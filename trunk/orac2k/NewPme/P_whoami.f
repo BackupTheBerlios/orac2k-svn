@@ -1,7 +1,7 @@
       SUBROUTINE P_whoami(node,nprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <2009-03-12 10:16:03 marchi>                             *
+*   Time-stamp: <2009-03-14 18:32:51 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -27,7 +27,7 @@
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
-#ifdef MPI
+#ifdef __MPI
       INCLUDE 'mpif.h'
       INTEGER ierr,status(MPI_STATUS_SIZE)
 

@@ -1,7 +1,7 @@
       SUBROUTINE P_open_input(myid,numprocs,ncube,nbyte)
 
 ************************************************************************
-*   Time-stamp: <2006-02-05 16:27:23 marchi>                             *
+*   Time-stamp: <2009-03-14 18:32:40 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -27,7 +27,7 @@
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
-#ifdef MPI      
+#ifdef __MPI      
       INCLUDE 'mpif.h'
       include 'mpi_size.h'
 

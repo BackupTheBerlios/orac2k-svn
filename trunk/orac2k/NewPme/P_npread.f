@@ -1,7 +1,7 @@
       INTEGER FUNCTION P_npread(buf,isize,ipartner,itype,null)
 
 ************************************************************************
-*   Time-stamp: <04/11/03 16:28:51 marchi>                             *
+*   Time-stamp: <2009-03-14 18:32:01 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -28,7 +28,7 @@
 
 *----------------------- VARIABLES IN COMMON --------------------------*
 
-#ifdef MPI      
+#ifdef __MPI      
       include 'mpif.h'
 #if defined _CRAY_ | defined T3E
       INTEGER*8 status(mpi_status_size),size,comm,isizea,ipartnera
