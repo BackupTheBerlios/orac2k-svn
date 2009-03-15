@@ -26,7 +26,7 @@ PARA_MODE = __MPI
 FORCES = __Fast
 
 
-PMEDIR = ./NewPme
+
 
 ifneq ($(MODE), PARALLEL)
 PARA_MODE = NOMPI
@@ -46,13 +46,13 @@ export MPI_TYPE
 #include Make.Mac_g95_dbg
 #include Make.Mac_g95
 #include Make.Mac_xlf
-include Make.Mac_intel
+#include Make.Mac_intel
 #include Make.Lx_pgi_64
 #include Make.Lx_ifc_argent
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-#include Make.Lx_ifc_64_breizh
+include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
@@ -104,6 +104,7 @@ OBJ_F90 = CalcDistConf.o \
 	Setup_fake_decomp.o test.o Tetrahedra.o VORONOI_Mod.o	\
 	VORONOI_Read.o write_mol_dipole.o WSC_Mod.o WSC__Read.o xerror_mod.o \
 	Ewald.o FactorizeNo.o Pme_Save.o PME_.o PI_.o PmeRfft3d.o Decompose.o 	\
+	PME_Routines.o PME__Sources.o
 
 
 OBJ_F = add1h.o add2h.o add3h.o add_char1.o add_concta.o		\
@@ -357,7 +358,7 @@ INCLUDE = cpropar.inc parst.inc orac.inc fourier.inc unit.inc \
 	mts_vacf.inc parallel.inc parameters.inc\
 	lc_list.inc voronoi.inc iobuffer.inc mpi_size.inc
 
-INCPRE = $(patsubst %.inc, %.h, $(INCLUDE))
+INCPRE = $(patsubst %.inc, %.h, $(INCLUDE)) 
 
 #==========================================================================
 # Uncomment the folling if an old restart has to be used
@@ -377,7 +378,8 @@ SRC = $(patsubst %.o, %.f90, $(OBJ_F90)) $(patsubst %.o, %.f, $(OBJ_F)) \
 
 LIST_FS  = $(SRC)
 LIST_CS  = vstart.c 
-LIST_EXT = Makefile Make.* config.h mtsmd_avg_inc.f mtsmd_dump_inc.f $(INCLUDE)
+LIST_EXT = Makefile Make.* config.h mtsmd_avg_inc.f mtsmd_dump_inc.f \
+	$(INCLUDE) PmeParameters.h 
 
 
 #==========================================================================
