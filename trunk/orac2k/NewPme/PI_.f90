@@ -73,8 +73,6 @@ MODULE PI_
 
   INTEGER :: ierr
   INTEGER :: Status(MPI_Status_Size)
-#define _SIZE   100000
-  REAL(8) :: Buffer_a(_SIZE)
 CONTAINS
   SUBROUTINE PI__
     INTEGER :: ierr
@@ -82,7 +80,6 @@ CONTAINS
     PI_comm=MPI_COMM_WORLD
     call MPI_COMM_RANK( PI_comm, PI_node, ierr )
     call MPI_COMM_SIZE( PI_comm, PI_nprocs, ierr )
-    CALL MPI_BUFFER_ATTACH(Buffer_a,_SIZE,ierr)
 #endif
   END SUBROUTINE PI__
   SUBROUTINE PI__Nodes
