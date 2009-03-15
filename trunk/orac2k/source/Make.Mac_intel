@@ -4,19 +4,19 @@
 #                                                                      #
 ########################################################################
 LIBRARIES = SYSTEM_LIB
-TARGET0 = 'MAC_I'
-TARGET1 = 'MAC'
+TARGET0 = IFC
+TARGET1 = MAC
 FFTS = _GPFFT_
 CPP = /usr/bin/cpp
-CFLAGS = -O3 -DINTEL
+CFLAGS = -O3 -m64 -DINTEL
 
 ifeq ($(MODE), SEQUENTIAL)
 FC = ifort
 LD = ifort
 F90 = ifort
 CC = cc
-OTHER_LIBS=/Library/Frameworks/Intel_MKL.framework/Versions/8.1.1/Libraries/32
-FFTW_LIB = /usr/local/lib
+OTHER_LIBS=/Library/Frameworks/Intel_MKL.framework/Versions/Current/Libraries/em64t
+FFTW_LIB = /sw/lib
 LLFLAGS = -lrfftw -lfftw -lmkl_lapack -lmkl_ia32\
 	-lguide -lpthread
 else 
@@ -24,9 +24,9 @@ FC = mpif90
 LD = mpif90
 F90 =mpif90
 CC = mpicc
-OTHER_LIBS=/Library/Frameworks/Intel_MKL.framework/Versions/8.1.1/Libraries/32
+OTHER_LIBS=/Library/Frameworks/Intel_MKL.framework/Versions/Current/Libraries/em64t
 FFTW_LIB = /usr/local/fftw.P/lib
-LLFLAGS = -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_lapack -lmkl_ia32\
-	-lguide -lpthread
+LLFLAGS = -lrfftw_mpi -lrfftw -lfftw_mpi -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
+	 -lguide -lpthread -lmkl_core 
 endif
 
