@@ -92,7 +92,7 @@ SUBROUTINE Charges_onGrid(Cq)
 !!$  END DO
 !!$  STOP
 END SUBROUTINE Charges_onGrid
-SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
+SUBROUTINE ScalarSum_Transposed(Cq,nstart,nlocal,ndim1,ndim2,ndim3,nb1,nb2,nb3)
 
 !!$************************************************************************
 !!$*   Time-stamp: <04/12/15 13:02:54 marchi>                             *
@@ -110,10 +110,11 @@ SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
 !!$*                                                                      *
 !!$************************************************************************
 
-  REAL(8) :: Cq(:,:,:)
-  INTEGER :: nb1,nb2,nb3
+  
+  INTEGER :: nb1,nb2,nb3,ndim1,ndim2,ndim3,nstart,nlocal
+  REAL(8) :: Cq(ndim1,ndim2,ndim3)
 
-  INTEGER nfft1,nfft2,nfft3,naz
+  INTEGER :: nfft1,nfft2,nfft3,naz,kwstart
   
   REAL(8) ::   fac,denom,eterm,vterm,energy,fact
   INTEGER  :: k,k1,k2,k3,m1,m2,m3,nff,ind,jnd,indtop
@@ -123,11 +124,13 @@ SUBROUTINE ScalarSum_Transposed(Cq,nb1,nb2,nb3)
   
       
   ewaldcof=alphal
-  naz=nfftw3_local
+  naz=nlocal
+  kwstart=nstart
+
   nfft1=nb1
-  nfft2=nb3
-  nfft3=nb2
-  
+  nfft2=nb2
+  nfft3=nb3
+
   rkcut2=0.25*rkcut*rkcut/pi**2
   fac = pi**2/ewaldcof**2
   

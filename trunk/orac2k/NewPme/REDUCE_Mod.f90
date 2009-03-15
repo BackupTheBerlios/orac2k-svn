@@ -22,7 +22,6 @@ CONTAINS
     
 #ifdef PARALLEL    
     CALL MPI_ALLREDUCE(nlocal,natom,1,MPI_INTEGER4,MPI_SUM,MPI_COMM_WORLD,ierr)
-    Write(*,*) natom
     n=natom
     ntot=n*3
     ALLOCATE(fp(ntot),fp_out(ntot))

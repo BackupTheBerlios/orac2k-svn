@@ -122,11 +122,12 @@ Contains
          &,oc(3,3),volumea,eer_i
     Integer :: i_pa,i,j,k,n,m,count0,AtSt,AtEn,ia,ja,ka,count1,i0,j0,k0
     Real(8) :: startime,endtime,timea,ts1,te1,ts2,te2
+    Integer :: nc1,nc2,nc3,nb1,nb2,nb3
 
 !!$    
 !!$--- Copy coordinates and charges to local arrays
 !!$
-
+    
     volume=volumea
     Do i=1,3
        Do j=1,3
@@ -143,6 +144,7 @@ Contains
        Deallocate(fx,fy,fz,phi)
     End If
 
+    
     Call PurgeOutsideAtoms(natom)
 
     Allocate(theta1(order, natom),theta2(order, natom),theta3(order, natom))
@@ -161,10 +163,17 @@ Contains
 !!$
 
     Call Transpose_Cart2Fftw
-    
-    If(.Not. do_rfft3d(1,Cq_r)) Return
 
-    Call ScalarSum_Transposed(Cq_r,nfft1,nfft2,nfft3)
+    If(.Not. do_rfft3d(1,Cq_r)) Return
+    
+    nc1=ndim_fftw1
+    nc2=nfft3
+    nc3=nfftw2_local
+    nb1=nfft1
+    nb2=nfft3
+    nb3=nfft2
+    
+    Call ScalarSum_Transposed(Cq_r,nfftw2_start,nfftw2_local,nc1,nc2,nc3,nb1,nb2,nb3)
 
     If(.Not. do_rfft3d(-1,Cq_r)) Return
 
@@ -187,6 +196,7 @@ Contains
     fpy(MyIndbox(:))=fpy(MyIndbox(:))+fy(:)
     fpz(MyIndbox(:))=fpz(MyIndbox(:))+fz(:)
 
+!!$
 !!$    Call En_coul_rec_(eer)
 !!$    
 !!$    Energy_i=Energy
@@ -296,9 +306,6 @@ Contains
     nfftw1=nfft1
     nfftw2=nfft2
     nfftw3=ndim_fftw3
-
-    kwstart=nfftw3_start
-    kwend  =nfftw3_start+nfftw3_local-1
     Call Bsp_moduli
 100 Format(/22x,'Finding optimal parameters for Fftws.'/&
      &     22x,'     This will take a while...'/ /)     
