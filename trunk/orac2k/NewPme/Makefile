@@ -46,13 +46,13 @@ export MPI_TYPE
 #include Make.Mac_g95_dbg
 #include Make.Mac_g95
 #include Make.Mac_xlf
-#include Make.Mac_intel
+include Make.Mac_intel
 #include Make.Lx_pgi_64
 #include Make.Lx_ifc_argent
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-include Make.Lx_ifc_64_breizh
+#include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
@@ -103,7 +103,7 @@ OBJ_F90 = CalcDistConf.o \
 	ScalarSum.o SCALARSUM_Mod.o self_dipole.o Setup_fake_decompa.o		\
 	Setup_fake_decomp.o test.o Tetrahedra.o VORONOI_Mod.o	\
 	VORONOI_Read.o write_mol_dipole.o WSC_Mod.o WSC__Read.o xerror_mod.o \
-	Ewald.o FactorizeNo.o Pme_Save.o PME.o PI_.o PmeRfft3d.o
+	Ewald.o FactorizeNo.o Pme_Save.o PME_.o PI_.o PmeRfft3d.o Decompose.o 	\
 
 
 OBJ_F = add1h.o add2h.o add3h.o add_char1.o add_concta.o		\
@@ -313,7 +313,8 @@ OBJ_NP = Tetrahedra.o xerror_mod.o Module_Neighbors.o RMS_Matrix_Mod.o	\
 	read_parallel.o P_setup_decomp.o P_setup_decompa.o			\
 	P_atoms_split_intra.o P_split_intra.o P_split_constr.o			\
 	P_atoms_split_inter.o xerror.o HYDYNAMICS_Mod.o FIELD_Mod.o Pme_init.o	\
-	REDUCE_Mod.o Ewald.o FactorizeNo.o Pme_Save.o PME.o PI_.o PmeRfft3d.o
+	REDUCE_Mod.o Ewald.o FactorizeNo.o Pme_Save.o PME_.o PI_.o PmeRfft3d.o	\
+	Decompose.o
 
 
 OBJ_PP = P_omit_intra.o P_broadcast_i.o P_check_decomp.o P_expand_r8.o	\

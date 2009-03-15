@@ -46,6 +46,9 @@
 
 *======================= DECLARATIONS ==================================
 
+      Use Pme_
+      Use Decompose
+      Use PI_, Only: Pi__
       Use Pme_Save
       USE Module_Fourier, ONLY: Fourier_init=>Init
       USE Class_Gauss_Param, ONLY: Param_Init=>Init, Found_Boltz 
@@ -265,6 +268,7 @@
       INTEGER mapdn(2,mf),nmapdn(mf)
       REAL(8), DIMENSION (:), POINTER ::  vpx,vpy,vpz,vpx1,vpy1,vpz1
      &     ,vcax,vcay,vcaz,vcbx,vcby,vcbz
+      Real(8) :: a,b,c,alff,bett,gamm
 
       TYPE(Gauss_Charges) :: Boltzmann
 
@@ -1010,20 +1014,11 @@
       IF(clewld) THEN
          IF(pme) THEN
             numatoms=ntap
-            CALL Pme_init(node,nprocs,nodex,nodey,nodez,npy,npz,ictxt
-     &           ,descQ,fftable,nfft1,nfft2,nfft3,nfft3_start
-     &           ,nfft3_local,nfft2_start,nfft2_local,iret,errmsg)
-            IF(iret .EQ. 1) CALL xerror(errmsg,80,1,2)
-
-            Allocate(bsp_mod1(nfft1+1),bsp_mod2(nfft2+1),bsp_mod3(nfft3
-     &           +1))
-            CALL fft_pme_init(numatoms,nfft1,nfft2,nfft3,pme_order
-     &           ,sizfftab,sizffwrk,siztheta,siz_Q,sizheap,sizstack
-     &           ,bsp_mod1,bsp_mod2,bsp_mod3,fftable,ffwork)
-
-            if ( siz_Q .GT. MAXT ) THEN
-               write(kprint,78410)
-            END IF
+            Call PI__
+            Call rotb(a,b,c,alff,bett,gamm,co)
+            Call Decompose_(a,b,c)
+            Call Pme_First(pme_order,alphal,rkcut,chrge,numatoms,nfft1
+     &           ,nfft2,nfft3,nprocs)
             rshk=shell_pme
             IF(erf_corr) THEN
                CALL erf_corr_cutoff(oc,delew,rkcut,nfft1,nfft2,nfft3)

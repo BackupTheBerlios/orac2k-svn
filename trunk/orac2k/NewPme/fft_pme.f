@@ -34,6 +34,7 @@
 
 *======================== DECLARATIONS ================================*
 
+      Use Pme_
       Use Pme_Save
       Use RFFT3D
       IMPLICIT none
@@ -140,13 +141,7 @@ c--   call stand-alone Darden's routines
          END DO
       END DO
 
-      CALL do_pmesh_kspace(node,nodex,nodey,nodez,ictxt,npy,npz,descQ
-     &     ,nprocs,ncube,nbyte,rbyte,numatoms,x,y,z,pmechg,recip,volume
-     &     ,alphal,order,nfft1,nfft2,nfft3,nfft3_start,nfft3_local
-     &     ,nfft2_start,nfft2_local,nax,nay,naz,eer,fx,fy,fz,phi,vir
-     &     ,sizfftab,sizffwrk,siztheta,dim_Q,bsp_mod1,bsp_mod2,bsp_mod3
-     &     ,fftable,Q,isys,ffwork,theta1,theta2,theta3,dtheta1,dtheta2
-     &     ,dtheta3,indk1,indk2,indj1,indj2,mk,mj,rkcut)
+      Call Pme__(x,y,z,fx,fy,fz,vir,oc,volume,eer)
 
 #ifdef PARALLEL
       IF(nprocs .GT. 1) THEN

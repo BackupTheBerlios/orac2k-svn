@@ -82,9 +82,6 @@ CONTAINS
     PI_comm=MPI_COMM_WORLD
     call MPI_COMM_RANK( PI_comm, PI_node, ierr )
     call MPI_COMM_SIZE( PI_comm, PI_nprocs, ierr )
-    IF(PI_node /=0 ) THEN
-       OPEN(unit=kprint,file="/dev/null")
-    END IF
     CALL MPI_BUFFER_ATTACH(Buffer_a,_SIZE,ierr)
 #endif
   END SUBROUTINE PI__
@@ -133,7 +130,6 @@ CONTAINS
     npx=PI_npx
     npy=PI_npy
     npz=PI_npz
-
     DO m=1,PI_nprocs
        n=m-1
        mx=coords(1,m)+1
