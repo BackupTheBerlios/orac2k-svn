@@ -1,7 +1,7 @@
 SUBROUTINE P_expand_i(o,nstart,nend,nlocal,node,nprocs)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-01-28 16:32:31 marchi>                           *
+!!$   Time-stamp: <2009-03-25 22:35:34 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -40,6 +40,7 @@ SUBROUTINE P_expand_i(o,nstart,nend,nlocal,node,nprocs)
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
 
+  If(nprocs == 1) Return
   CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1 &
        ,MPI_INTEGER4,MPI_COMM_WORLD,ierr)
   displ(1)=0

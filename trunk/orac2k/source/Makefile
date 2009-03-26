@@ -12,7 +12,7 @@ SHELL = /bin/sh
 DESCRIPTION = Merge version MAX-PIE. Unit of time is fs.
 STATUS = beta version 
 RELEASE = 1.0
-CPP = /lib/cpp -traditional
+CPP = cpp -traditional
 CC = cc
 LIB = nolib
 CURDIR = `pwd`
@@ -43,13 +43,13 @@ export MPI_TYPE
 #include Make.Mac_g95_dbg
 #include Make.Mac_g95
 #include Make.Mac_xlf
-#include Make.Mac_intel
+include Make.Mac_intel
 #include Make.Lx_pgi_64
 #include Make.Lx_ifc_argent
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-include Make.Lx_ifc_64_breizh
+#include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
@@ -546,6 +546,12 @@ IFC :
 	${MAKE} recur_IFC "FFLAGS = -fpp  "
 	${MAKE} orac_IFC 
 
+MAC_I :
+	${MAKE} obj_IFC "FFLAGS = -fpp -O3" 
+	${MAKE} lowopt_IFC "FFLAGS = -fpp -O0"
+	${MAKE} recur_IFC "FFLAGS = -fpp  "
+	${MAKE} orac_IFC 
+
 IFC_DBG :
 	${MAKE} obj_IFC "FFLAGS = -fpp -w95 -g -traceback -check all" 
 	${MAKE} lowopt_IFC "FFLAGS = -fpp -w95 -g -traceback -check all"
@@ -657,7 +663,7 @@ orac_XLF: $(OBJ) $(OBJREC) $(DUMP) $(OBJ_LOWOPT) $(OBJTIM)
 #==========================================================================
 
 clean :
-	rm -f *.o *.mod orac_*
+	rm -f *.o *.mod orac_* $(INCPRE)
 
 #==========================================================================
 # Clean Objects and executable

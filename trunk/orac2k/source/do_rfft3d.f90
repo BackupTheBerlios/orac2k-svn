@@ -186,6 +186,9 @@ CONTAINS
       n3_local=n3
       n2_start=1
       n2_local=n2
+      nd1=nda1
+      nd2=nda2
+      nd3=nda3
 #endif
       RETURN
     END SUBROUTINE set_fftw

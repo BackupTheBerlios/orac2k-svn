@@ -1,7 +1,7 @@
 SUBROUTINE P_fold_r8(n,x,nstart,nend,nlocal,node,nprocs)
 
 !!$************************************************************************
-!!$*   Time-stamp: <2009-03-12 15:42:28 marchi>                             *
+!!$*   Time-stamp: <2009-03-25 22:34:39 marchi>                             *
 !!$*                                                                      *
 !!$*                                                                      *
 !!$*                                                                      *
@@ -39,6 +39,7 @@ SUBROUTINE P_fold_r8(n,x,nstart,nend,nlocal,node,nprocs)
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
 
+  If(nprocs == 1) Return
   Allocate(fp(n))
   CALL MPI_ALLREDUCE(x,fp,n,MPI_REAL8,MPI_SUM,MPI_COMM_WORLD,ierr)
 

@@ -1,7 +1,7 @@
 SUBROUTINE P_fold_r8x3(n,x,y,z,nstart,nend,nlocal,node,nprocs)
 
 !!$************************************************************************
-!!$*   Time-stamp: <2005-01-28 16:33:11 marchi>                             *
+!!$*   Time-stamp: <2009-03-25 22:34:57 marchi>                             *
 !!$*                                                                      *
 !!$*                                                                      *
 !!$*                                                                      *
@@ -41,6 +41,7 @@ SUBROUTINE P_fold_r8x3(n,x,y,z,nstart,nend,nlocal,node,nprocs)
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
 
+  If(nprocs == 1) Return
   ntot=n*3
   ALLOCATE(fp(ntot),fp_out(ntot))
   DO i=1,n

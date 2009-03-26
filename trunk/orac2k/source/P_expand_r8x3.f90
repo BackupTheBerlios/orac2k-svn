@@ -1,7 +1,7 @@
 SUBROUTINE P_expand_r8x3(x,y,z,nstart,nend,nlocal,node,nprocs,ptr)
 
 !!$***********************************************************************
-!!$   Time-stamp: <2005-01-28 16:29:47 marchi>                           *
+!!$   Time-stamp: <2009-03-25 22:27:53 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -39,6 +39,7 @@ SUBROUTINE P_expand_r8x3(x,y,z,nstart,nend,nlocal,node,nprocs,ptr)
 !!$--- Create a one dimensional array
 !!$------------------------------------------------------------------------
 
+  If(Nprocs == 1) Return
   CALL MPI_ALLGATHER(nlocal,1,MPI_INTEGER4,locals,1 &
        ,MPI_INTEGER4,MPI_COMM_WORLD,ierr)
   displ(1)=ptr-1

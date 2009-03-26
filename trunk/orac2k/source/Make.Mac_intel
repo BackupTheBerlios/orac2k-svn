@@ -16,9 +16,9 @@ LD = ifort
 F90 = ifort
 CC = cc
 OTHER_LIBS=/Library/Frameworks/Intel_MKL.framework/Versions/Current/Libraries/em64t
-FFTW_LIB = /sw/lib
-LLFLAGS = -lrfftw -lfftw -lmkl_lapack -lmkl_ia32\
-	-lguide -lpthread
+FFTW_LIB = /usr/local/fftw.S/lib
+LLFLAGS = -lrfftw -lfftw -lmkl_intel_lp64 -lmkl_intel_thread\
+	-lguide -lpthread -lmkl_core 
 else 
 FC = mpif90
 LD = mpif90

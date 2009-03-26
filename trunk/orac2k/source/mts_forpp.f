@@ -170,8 +170,7 @@ C==================== EXECUTABLE STATEMENTS ============================
 *=======================================================================
 *---- Set up dynamic memory 
 *=======================================================================
-
-
+      
       ALLOCATE(xmap0(ngrp),ymap0(ngrp),zmap0(ngrp),xmap1(ngrp
      &     ),ymap1(ngrp),zmap1(ngrp),xmap2(ngrp),ymap2(ngrp)
      &     ,zmap2(ngrp),xmap3(ngrp),ymap3(ngrp),zmap3(ngrp)
