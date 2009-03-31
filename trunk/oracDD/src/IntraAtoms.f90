@@ -61,11 +61,11 @@ MODULE IntraAtoms
   USE Cell
   USE Constants, ONLY: max_pars,max_data,max_char
   USE Errors, ONLY: Add_Errors=>Add, Print_Errors, error_args, errmsg_f
-  USE PI_Communicate, ONLY: PI__ResetSecondary, PI__ZeroSecondary
+  USE PointToPoint, ONLY: ResetSecondary_, ZeroSecondary_
   USE PI_Atom, ONLY: PI_Atom_Indexes
   USE Potential, ONLY: Reordering
   USE Forces, ONLY: Radii
-  USE Neighbors
+
   USE Print_Defs
   IMPLICIT none
   PRIVATE
@@ -133,7 +133,7 @@ CONTAINS
 
     out=.TRUE.
 
-    CALL PI__ResetSecondary
+    CALL ResetSecondary_
 
 !!$
 !!$--- Atoms of the primary cell
@@ -166,7 +166,7 @@ CONTAINS
 
 !!$--- Shift to half of the ghost cell count all interaction only once
 
-    CALL PI__ResetSecondary
+    CALL ResetSecondary_
     CALL PI__ShiftIntra(_N0_,_INIT_,_COUNT_ONCE_)
     CALL PI__ShiftIntra(_N1_,_INIT_,_COUNT_ONCE_)
 
@@ -178,7 +178,7 @@ CONTAINS
 !!$--- Shift again to recover the full ghost cell. Full ghost contributes 
 !!$--- to primary cell forces. Do not do Fold in this way
 
-    CALL PI__ResetSecondary
+    CALL ResetSecondary_
     CALL PI__ShiftIntra(_N0_,_INIT_)
     CALL PI__ShiftIntra(_N1_,_INIT_)
 
@@ -249,7 +249,7 @@ CONTAINS
 !!$--- Do not do any gathering to local atoms 
 !!$
 
-    CALL PI__ZeroSecondary
+    CALL ZeroSecondary_
     out=.TRUE.
   CONTAINS
 !!$
