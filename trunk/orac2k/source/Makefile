@@ -43,13 +43,13 @@ export MPI_TYPE
 #include Make.Mac_g95_dbg
 #include Make.Mac_g95
 #include Make.Mac_xlf
-include Make.Mac_intel
+#include Make.Mac_intel
 #include Make.Lx_pgi_64
 #include Make.Lx_ifc_argent
 #include Make.Lx_ifc_intel
 #include Make.Lx_ifc_intel.err
 
-#include Make.Lx_ifc_64_breizh
+include Make.Lx_ifc_64_breizh
 
 #include Make.Lx_gfortran_64_breizh
 
