@@ -1,7 +1,7 @@
 MODULE DENSITY_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-03-09 13:06:36 marchi>                           *
+!!$   Time-stamp: <2009-07-21 10:01:48 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -38,7 +38,7 @@ MODULE DENSITY_Mod
   INTEGER, SAVE :: counter=0,node=0
   LOGICAL, SAVE :: Density_Calc=.FALSE.,Density_Avg=.FALSE.
   REAL(8), SAVE :: x_ad=0.0D0,y_ad=0.0D0,z_ad=0.0D0
-  LOGICAL, DIMENSION (:), ALLOCATABLE, SAVE :: mask
+  LOGICAL, DIMENSION (:), ALLOCATABLE, SAVE :: mask,CellMask
   INTEGER, DIMENSION (:), ALLOCATABLE, SAVE :: atoms
   CHARACTER(80), SAVE :: filename_den,filename_den2,filename_pdb
   CHARACTER(8), SAVE :: Target_Res,file_format='cube'
@@ -64,14 +64,15 @@ MODULE DENSITY_Mod
   Integer, Allocatable :: iac(:)
   Type :: Amino
      Character(len=3), Allocatable :: res(:)
+     Character(len=3), Allocatable :: atom(:)
      Integer :: Type
   End type Amino
   Type(Amino), Save :: polar,nonpolar
-
+  Logical, Save :: PerResidue=.True.,NoHydrogen=.FALSE.,fixmolecule=.False.
 CONTAINS
 !!$---- This subroutine is part of the program ORAC ----*
 
-  SUBROUTINE Initialize(nodea,prsymb,betab,res1,res2,mass,ntap&
+  SUBROUTINE Initialize(nodea,prsymb,betab,betac,res1,res2,mass,ntap&
        &,nato_slt,co,oc,volumea)
 
 !!$======================== DECLARATIONS ================================*
@@ -82,7 +83,7 @@ CONTAINS
 !!$----------------------------- ARGUMENTS ------------------------------*
 
     CHARACTER(8) :: prsymb(*)
-    CHARACTER(7) :: betab(*)
+    CHARACTER(7) :: betab(*),betac(*)
     INTEGER :: res1(*),res2(*),ntap,nodea,nato_slt
     REAL(8) :: mass(*),co(3,3),oc(3,3),volumea
 
@@ -91,7 +92,7 @@ CONTAINS
     INTEGER :: i,na,count0,ii,m,n
     LOGICAL :: ok
     REAL(8) :: kT
-    Character(len=3) :: char1,char2
+    Character(len=3) :: char1,char2,reschar1,char0
              
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -99,7 +100,12 @@ CONTAINS
     nonpolar%res=(/'ala','cys','gly','ile','leu','met','phe','pro','trp','val' /)
     nonpolar%type=1
     Allocate(polar%res(10))
+    Allocate(polar%atom(28))
     polar%res=(/'arg','asn','asp','glu','gln','lys','ser','thr','tyr','hid' /)
+    polar%atom=(/'h  ','hc ','ht ','hs ','c  ','cc ','cd '&
+         &,'cm ','n  ','nr1','nr2','nr3','nh1','nh2','nh3','nc2'&
+         &,'nph','ny ','np ','o  ','ob ','oc& 
+         & ','os ','ot ','om ','oh1','s  ','cal'/)
     polar%type=2
 
     node=nodea
@@ -134,24 +140,54 @@ CONTAINS
        
        Allocate(xpa(natom),ypa(natom),zpa(natom),idx(natom))
        Allocate(Dens_Histo_gofr(Dens_histo_size+1))
-       Allocate(Dens_Histo_svol(Dens_histo_size+1,3))
+       Allocate(Dens_Histo_svol(Dens_histo_size+1,0:2))
        Allocate(Dens_Histo_numb(Dens_histo_size+1))
-       allocate(iac(natom),Dens_Histo_gofr_ac(Dens_histo_size+1,2))
+       allocate(iac(natom),Dens_Histo_gofr_ac(Dens_histo_size+1,0:2))
 
-       allocate(Dens_Histo_gofr_cos(Dens_histo_size_cos+1,Dens_histo_size+1,2))
-
-       iac=polar%type
-       Do n=1,natom_slt
-          char1=Trim(prsymb(res2(n)))
-          Do m=1,Size(NonPolar%res)
-             char2=Trim(NonPolar%res(m))
-             If(char1 == char2) Then
-                iac(n)=NonPolar%type
-                Exit
+       allocate(Dens_Histo_gofr_cos(Dens_histo_size_cos+1,Dens_histo_size+1,0:2))
+       
+       If(PerResidue) Then
+          iac=polar%type
+          Do n=1,natom_slt
+             char1=Trim(prsymb(res2(n)))
+             char0=Trim(betac(n))
+             If(char0(1:1) =='h' .And. NoHydrogen) Then
+                iac(n)=0
+                Cycle
              End If
+             Do m=1,Size(NonPolar%res)
+                char2=Trim(NonPolar%res(m))
+                If(char1 == char2) Then
+                   iac(n)=NonPolar%type
+                   Exit
+                End If
+             End Do
           End Do
+       Else
+          iac=nonpolar%type
+          Do n=1,natom_slt
+             reschar1=Trim(prsymb(res2(n)))
+             char1=Trim(betac(n))
+             If(char1(1:1) =='h' .And. NoHydrogen) Then
+                iac(n)=0
+                Cycle
+             End If
+             Do m=1,Size(Polar%atom)
+                char2=Trim(Polar%atom(m))
+                If(char1 == char2) Then
+                   iac(n)=Polar%type
+                   Exit
+                End If
+             End Do
+             If(reschar1 == 'pro' .And. Trim(char1) == 'n') iac(n)=NonPolar%type
+          End Do          
+       End If
+       Do n=1,natom_slt
+          Write(*,'(i6,2x,a6,4x,i6)') n,betac(n),iac(n)
        End Do
-       Write(*,*) 'iacs =',Count(iac == polar%type),Count(iac == nonpolar%type)
+
+       Write(*,*) 'iacs =',Count(iac(1:natom_slt) == polar%type),Count(iac(1:natom_slt) ==&
+            & nonpolar%type),Count(iac(1:natom_slt) == 0)
        idx(natom_slt+1:)=2
        idx(1:natom_slt)=1
        Dens_Histo_gofr_ac=0.0_8
@@ -161,6 +197,8 @@ CONTAINS
 
        mx=10;my=10;mz=10;
        dx=boxl/Dble(mx); dy=boxl/Dble(my); dz=boxl/Dble(mz);
+       Allocate(beta(natom))
+       beta=betac(1:natom)
     End IF
     ALLOCATE(atmass(ntap),mask(ntap))
 
@@ -228,6 +266,7 @@ CONTAINS
     ALLOCATE(Dens2(ncx,ncy,ncz),ndens(ncx,ncy,ncz),loc_dens(ncx,ncy,ncz))
     Density=0.0D0; Dens2=0.0D0
     Dvolume=Volume/DBLE(ncx*ncy*ncz)
+    Allocate(CellMask(ncx*ncy*ncz))
 
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
   END SUBROUTINE Initialize_Ar
@@ -391,8 +430,12 @@ CONTAINS
        If(.Not. Neighbors__Particles(xpa,ypa,zpa)) Call Print_Errors()
        Allocate(Loc_Hist(Dens_histo_size),loc_nhist(Dens_histo_size))
 
-       Call ShellVolume
+!!$
+!!$-- Calls in this and only order
+!!$
+
        Call ShellDensity
+       Call ShellVolume
     End IF
     
     rho=rho+Total_Mass/Real_Volume
@@ -409,6 +452,7 @@ CONTAINS
           na=na+m+1          
        END DO
     END IF
+
 !!$----------------- END OF EXECUTABLE STATEMENTS -----------------------*
 
   Contains
@@ -417,7 +461,7 @@ CONTAINS
       Integer :: nhisto,o,nnx,nny,nnz,n,mycount,u
       Real(8) :: xa,ya,za,xc0,yc0,zc0,rsq,rsq_Min,rsp,rsq_max,xpi,ypi,zpi
       Real(8) :: vhb(3,4),xf(3),yf(3),zf(3),MyC(3)
-      Integer :: nang
+      Integer :: nang,ll
       Real(8) :: Norm,cos1,cos2,cos3,cos4
 
 
@@ -425,6 +469,7 @@ CONTAINS
       mycount=0
       loc_hist=0.0D0
       rsq_max=Dens_Histo_rmax**2
+      CellMask=.False.
       Do n=natom_slt+1,natom,3
          xpi=xpa(n)
          ypi=ypa(n)
@@ -437,12 +482,13 @@ CONTAINS
             yf(m-n+1)=co(2,1)*xa+co(2,2)*ya+co(2,3)*za
             zf(m-n+1)=co(3,1)*xa+co(3,2)*ya+co(3,3)*za
          End Do
-         Call Tetrahedra_(xf(1),yf(1),zf(1),xf(2),yf(2),zf(2),xf(3),yf(3),zf(3),vhb)
-
+         Call Tetrahedra_(xf(1),yf(1),zf(1),xf(2),yf(2),zf(2)&
+              &,xf(3),yf(3),zf(3),vhb)
          p=Chain_xyz(n) % i
          q=Chain_xyz(n) % j
          r=Chain_xyz(n) % k
          numcell1=r+mz*(q+my*p)+1
+         CellMask(numcell1)=.True.
          rsq_Min=1.0D10
          Do o=1,SIZE(Ind_xyz)
             iv=Ind_xyz(o) % i
@@ -476,6 +522,7 @@ CONTAINS
                   Rsq_Min=rsq
                   u=iac(l)
                   MyC=-(/xc0,yc0,zc0/)
+                  ll=l
                End If
                l=Chain_xyz(l) % p
             End Do
@@ -508,19 +555,28 @@ CONTAINS
       Integer :: nhisto,o,nnx,nny,nnz,u
       Real(8) :: xa,ya,za,xc0,yc0,zc0,rsq,rsq_Min,rsp,rsq_max,x2,y2&
            &,z2,dvol
+      Real(8) :: ranf,xcc,ycc,zcc
 
 
       dvol=Real_Volume/Dble(ncx*ncy*ncz)
-       
+      
+      
+ 
       loc_nhist=0
       loc_hist=0.0D0
       rsq_max=Dens_Histo_rmax**2
+      xcc=0.0D0; ycc=0.0D0; zcc=0.0D0; 
+      If(fixmolecule) Then
+         xcc=ddx*(2.0D0*ranf()-1.0D0)
+         ycc=ddy*(2.0D0*ranf()-1.0D0)
+         zcc=ddz*(2.0D0*ranf()-1.0D0)
+      End If
       Do k=1,ncz
-         z1=(Dble(k)-0.5_8)*ddz
+         z1=(Dble(k)-0.5_8)*ddz+xcc
          Do j=1,ncy
-            y1=(Dble(j)-0.5_8)*ddy
+            y1=(Dble(j)-0.5_8)*ddy+ycc
             Do i=1,ncx
-               x1=(Dble(i)-0.5_8)*ddx
+               x1=(Dble(i)-0.5_8)*ddx+zcc
                
                x2=x1/dx
                y2=y1/dy
@@ -532,6 +588,7 @@ CONTAINS
                q=MOD(MOD(q,my)+my,my)
                r=MOD(MOD(r,mz)+mz,mz)
                numcell1=r+mz*(q+my*p)+1
+               If(.Not. CellMask(numcell1)) Cycle
                rsq_Min=1.0D10
                DO o=1,SIZE(Ind_xyz)
                   iv=Ind_xyz(o) % i
@@ -592,7 +649,7 @@ CONTAINS
 
     REAL(8) :: Dvolume,avogad=6.0225d23,unitcm=1.0D-8,fact,cob(3,3)&
          &,dummy=0.0D0,a0=0.529177249D0,a,b,c,alf,bet,gamm,avg,sigma&
-         &,fact2,Mass_Avg,r,y,z
+         &,fact2,Mass_Avg,r,y,z,z0
 
     INTEGER :: one=1,i,j,k,count,ncx2,ncx_s,ncx_e,ncy2,ncy_s,ncy_e&
          &,ncz2,ncz_s,ncz_e,na,n,m,ii,ntap
@@ -771,11 +828,28 @@ CONTAINS
           End Do
        End Do
 
-       Write(kdenhisto,'(''# gofr histogram at step = '',f12.3)') fstep
+       If(NoHydrogen) Then
+          Write(kdenhisto,'(''# No Hydrogens gofr histogram at step = '',f12.3)') fstep
+       Else
+          Write(kdenhisto,'(''# gofr histogram at step = '',f12.3)') fstep
+       End If
        Do n=1,Dens_histo_size
           r=Dens_histo_bin*Dble(n-1)
-          y=(Dens_histo_svol(n,1)+Dens_histo_svol(n,2))/Dble(Counter)
-          z=Dens_histo_gofr(n)/Dble(Counter)
+          y=(Dens_histo_svol(n,0)+Dens_histo_svol(n,1)+Dens_histo_svol(n,2))/Dble(Counter)
+          z0=Dens_histo_gofr(n)/Dble(Counter)
+          z=(Dens_histo_gofr_ac(n,0)+Dens_histo_gofr_ac(n,1)+Dens_histo_gofr_ac(n,2))/Dble(Counter)
+          If(y /= 0.0D0) Then
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,z0,z/y
+          Else
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,0.0D0,0.0D0
+          End If
+       End Do
+       Write(kdenhisto,'(''&'')')
+       Write(kdenhisto,'(''# gofr histogram at step = '',f12.3,''Type 0'')') fstep
+       Do n=1,Dens_histo_size
+          r=Dens_histo_bin*Dble(n-1)
+          y=Dens_histo_svol(n,0)/Dble(Counter)
+          z=Dens_histo_gofr_ac(n,0)/Dble(Counter)
           If(y /= 0.0D0) Then
              Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
           Else
@@ -800,6 +874,18 @@ CONTAINS
           r=Dens_histo_bin*Dble(n-1)
           y=Dens_histo_svol(n,2)/Dble(Counter)
           z=Dens_histo_gofr_ac(n,2)/Dble(Counter)
+          If(y /= 0.0D0) Then
+             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
+          Else
+             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,0.0D0
+          End If
+       End Do
+       Write(kdenhisto,'(''&'')')
+       Write(kdenhisto,'(''# gofr histogram at step = '',f12.3,''Type 1+2'')') fstep
+       Do n=1,Dens_histo_size
+          r=Dens_histo_bin*Dble(n-1)
+          y=(Dens_histo_svol(n,1)+Dens_histo_svol(n,2))/Dble(Counter)
+          z=(Dens_histo_gofr_ac(n,1)+Dens_histo_gofr_ac(n,2))/Dble(Counter)
           If(y /= 0.0D0) Then
              Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
           Else

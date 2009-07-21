@@ -1,7 +1,7 @@
 MODULE FIELD_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-03-13 16:32:29 marchi>                           *
+!!$   Time-stamp: <2009-06-04 16:52:04 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -260,11 +260,11 @@ CONTAINS
 !!$-------- Initialize 
 !!$
   SUBROUTINE Init(xpa,ypa,zpa,xpga,ypga,zpga,xpcma,ypcma,zpcma,co,oc&
-       &,nodea,nprocsa,prsymb,beta,res1,res2,mass,natom0,natom1)
+       &,nodea,nprocsa,prsymb,beta,betb,res1,res2,mass,natom0,natom1)
 
     IMPLICIT NONE
     CHARACTER(8) :: prsymb(*)
-    CHARACTER(7) :: beta(*)
+    CHARACTER(7) :: beta(*),betb(*)
     INTEGER :: res1(*),res2(*),natom0,natom1
     REAL(8) :: mass(*)
 
@@ -300,7 +300,7 @@ CONTAINS
        CALL DEN_Initialize_Par(a,b,c,nccx,nccy,nccz,n_write&
             &,file_format,atoms,nats,natoms_Tot,filename_ele&
             &,filename_ele2,filename_pdb,Target_Res)
-       CALL DEN_Initialize(noeds,prsymb,beta,res1,res2,mass,natom0,natom1,co,oc,volume)
+       CALL DEN_Initialize(noeds,prsymb,beta,betb,res1,res2,mass,natom0,natom1,co,oc,volume)
        CALL DEN_Initialize_Ar
     END IF
    CONTAINS

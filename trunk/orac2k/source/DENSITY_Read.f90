@@ -79,6 +79,22 @@
              Target_Res=strngs(2)
           END IF
 !!$
+!!$==== subcommand target =============================================
+!!$
+       CASE('peratom')
+          PerResidue=.False.
+!!$
+!!$==== subcommand target =============================================
+!!$
+       CASE('nohydrogen')
+          NoHydrogen=.True.
+!!$
+!!$==== subcommand target =============================================
+!!$
+       CASE('fixmolecule')
+          fixmolecule=.True.
+
+!!$
 !!$==== subcommand write ==============================================
 !!$
        CASE('write')
