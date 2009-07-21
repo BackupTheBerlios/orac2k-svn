@@ -1,7 +1,7 @@
       SUBROUTINE read_solvent(err_open,err_fnf,err_args,err_unr,err_end)
 
 ************************************************************************
-*   Time-stamp: <97/06/27 18:06:48 marchi>                             *
+*   Time-stamp: <2009-06-04 16:50:31 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -179,7 +179,6 @@ c==== Command  REDEFINE ===============================================
          ELSE IF(nword .EQ. 3) THEN
             IF(strngs(2) .EQ. 'TYPEWISE') THEN
                slv_redef_type=strngs(3)(1:8)
-c           ELSE IF(strgns(2) .EQ. 'MOLECULEWISE') THEN
             ELSE
                errmsg= err_unr(3) // strngs(2)(1:12)
                nsevere = nsevere + 1

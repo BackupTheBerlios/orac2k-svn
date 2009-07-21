@@ -1,7 +1,7 @@
       SUBROUTINE read_potential(fupdte,fabmd,err_args,err_unr,err_end)
 
 ************************************************************************
-*   Time-stamp: <2005-03-08 16:13:53 marchi>                             *
+*   Time-stamp: <2009-07-16 14:02:19 marchi>                             *
 *                                                                      *
 *                                                                      *
 *                                                                      *
@@ -373,6 +373,11 @@ c---- Subcommand define  ------------------------------------------------
          IF(strngs(1) .EQ. 'define' ) THEN
             CALL parse_numbers(err_unr,strngs,nword,prot_fix
      &           ,n_fix_molecules,nsevere)
+
+c---- Subcommand zero_charges  ------------------------------------------
+
+         Else If(strngs(1) .EQ. 'zero_charges' ) THEN
+            zero_charges=.True.
 
 c---- Subcommand mass  --------------------------------------------------
 

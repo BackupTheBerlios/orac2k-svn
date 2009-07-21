@@ -596,7 +596,12 @@
 *=======================================================================
 
       IF(pfix) CALL Init_Fixed_Molecule(mass,ntap,vpx,vpy,vpz)
-      
+      Write(*,'(''Atom No. '',i6,4x,f10.4)') (i,chrge(i)*SQRT(unitc),i=1
+     &     ,nato_slt)
+      If(zero_charges) Then
+         chrge(1:nato_slt)=0.0D0
+      End If
+
 *=======================================================================
 *---  set fake neighbor lists
 *=======================================================================

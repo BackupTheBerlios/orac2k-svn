@@ -148,6 +148,7 @@ c-----
       lfield=.FALSE.
       scharge=.FALSE.
       pfix=.FALSE.
+      zero_charges=.False.
       nonbnd=.TRUE.
       hoover=.FALSE.
       thermos=.FALSE.
