@@ -101,7 +101,7 @@
      &     ,readjust_cnstr,tpgprm_read,cavities
      &     ,occupy_space,fragm_dist,hbonds_res,hbonds_tot,hbonds_vor
      &     ,ascii_nocell,ascii_wsc,restart_read,restart_write
-     &     ,SecStructure,AddTime
+     &     ,SecStructure,AddTime,zero_charges
       CHARACTER*80 titld0,gerald,cgroup,restart_in,restart_out
      &     ,cavities_file,dmpfil_i,dmpfil_o,What_to_Do_Pol
       CHARACTER*7 beta,betb,alnbd,types_virt(100)
@@ -148,21 +148,22 @@
 
       COMMON /rrntim/ time,time_q(10),t,dtemp,radius,aaxis,baxis,caxis
      &     ,alf,bet,dtemph,dtemppr,gam,volume,volumepr,rmol(3,8),co(3,3)
-     &     ,oc(3,3),whoov,mhoov(hoov),mass_pfix,qmass(3),annealing_fact
-     &     ,TimeLimit,TimeStartRun,SigmaIon,ChargeIon,SmoothFactor
-     &     ,r_min_virt,mesos_rho,P_nei_fact,nutime,nhoov,titld0,gerald
-     &     ,dmpfil_i,dmpfil_o,What_to_Do_Pol,restart_in,restart_out
-     &     ,cavities_file,linser,AddTime,replicate,protei,solven,hydbnd
-     &     ,cutoff,mixrww,mixrwp,clewld,pme,remove_momentum,erfc_spline
-     &     ,erfc_spline_corr,erf_corr,tpgfil,hhisto,rescm,tpgwbn,prttpg
-     &     ,grpcut,iobdmp,dmprnd_i,dmprnd_o,slvpdb,hoover,thermos,adihed
-     &     ,stretch,stretch_heavy,recstrc,mdsim,minimize,frequencies
-     &     ,conj_grad,steepest,write_grad,l_bfgs_b,md_respa,stoprun
-     &     ,ltest_times,clean,start_conf,annealing,heating,Old_Dipoles
-     &     ,mesos,old_tpg,change_cell,resize_cell,energy_then_die,title0
-     &     ,linked_cell,restart_old,restart_read,restart_write,read_co
-     &     ,landersen,adjust_cnstr,readjust_cnstr,tpgprm_read,equi
-     &     ,P_dyn_update,native,check_native,SecStructure
+     &     ,oc(3,3),whoov,mhoov(hoov),mass_pfix,qmass(3)
+     &     ,annealing_fact,TimeLimit,TimeStartRun,SigmaIon,ChargeIon
+     &     ,SmoothFactor,r_min_virt,mesos_rho,P_nei_fact,nutime,nhoov
+     &     ,titld0,gerald,dmpfil_i,dmpfil_o,What_to_Do_Pol,restart_in
+     &     ,restart_out,cavities_file,linser,AddTime,replicate,protei
+     &     ,solven,hydbnd,cutoff,mixrww,mixrwp,clewld,pme
+     &     ,remove_momentum,erfc_spline,erfc_spline_corr,erf_corr,tpgfil
+     &     ,hhisto,rescm,tpgwbn,prttpg,grpcut,iobdmp,dmprnd_i,dmprnd_o
+     &     ,slvpdb,hoover,thermos,adihed,stretch,stretch_heavy,recstrc
+     &     ,mdsim,minimize,frequencies,conj_grad,steepest,write_grad
+     &     ,l_bfgs_b,md_respa,stoprun,ltest_times,clean,start_conf
+     &     ,annealing,heating,Old_Dipoles,mesos,old_tpg,change_cell
+     &     ,resize_cell,energy_then_die,title0,linked_cell,restart_old
+     &     ,restart_read,restart_write,read_co,landersen,adjust_cnstr
+     &     ,readjust_cnstr,tpgprm_read,equi,P_dyn_update,native
+     &     ,check_native,SecStructure
       COMMON /rmolpr/ alphal,rkcut,delrg,rpass,rcuth,rcutl
      &     ,rcutm,rtolh,rtoll,rtolm,rneil,rneim,rneih,kl,klt
      &     ,km,kmt,distmax,widom,shell_pme,P_dyn_update_shell
@@ -204,9 +205,9 @@
      &     ,abmd_nat_theta,native_dist,native_theta,abmd_kvect,omega
      &     ,rspset,spring,atoms_diss,mol_diss,diss_list(2,m1)
      &     ,abmd_tors_num,nabmd,abmd_natp,abmd_nat(2,nores),kgyr,ngyr
-     &     ,nnative,scharge,UnCharge,pfix,nonbnd,fold,abmd,abmd_tors
-     &     ,abmd_cryst,dissociate,associate,diss_mol,diss_atoms
-     &     ,abmd_unbias,wrtgyr,abmd_native
+     &     ,nnative,scharge,UnCharge,pfix,zero_charges,nonbnd,fold,abmd
+     &     ,abmd_tors,abmd_cryst,dissociate,associate,diss_mol
+     &     ,diss_atoms,abmd_unbias,wrtgyr,abmd_native
       COMMON /neq/    nesad(2),neead(2),maxsim,noneq
       COMMON /umeng/  uealfa,uemin,uemax,menerg,kenerg,lenerg,uenerg
       COMMON /jorgn/  fudge,lj_fudge,lj_fudgeb,sjorg(m7),ejorg(m7)
