@@ -1,7 +1,7 @@
 MODULE DENSITY_Mod
 
 !!$***********************************************************************
-!!$   Time-stamp: <2009-07-21 10:01:48 marchi>                           *
+!!$   Time-stamp: <2009-11-19 17:42:09 marchi>                           *
 !!$                                                                      *
 !!$                                                                      *
 !!$                                                                      *
@@ -56,11 +56,12 @@ MODULE DENSITY_Mod
        &,Dens_Histo_gofr(:)
   Integer, Allocatable :: Dens_Histo_numb(:),idx(:)
   Character(120), Save :: Filename_histo=' ',Filename_histo_cos=' '
+
   Integer, Save :: kdenhisto=0,kdenhisto_cos=0,dens_histo_size=400,mx,my,mz&
        &,Dens_histo_Size_cos=50
   Real(8), Save :: dens_histo_rmax=10.0_8,dens_histo_bin,Dens_histo_Bin_cos
   Real(8), Allocatable :: Dens_Histo_gofr_ac(:,:)&
-       &,Dens_Histo_gofr_cos(:,:,:)
+       &,Dens_Histo_gofr_cos(:,:,:),Dens_Histo_gofr_ac2(:,:),Dens_Histo_gofr_ac1(:,:)
   Integer, Allocatable :: iac(:)
   Type :: Amino
      Character(len=3), Allocatable :: res(:)
@@ -115,19 +116,15 @@ CONTAINS
     coa=0.0D0
     oca=0.0D0
 
-    If(a == 0.0D0 .Or. b == 0.0D0 .Or. c == 0.0D0) Then
-       coa=co; oca=oc
-       volume=volumea
-    Else
-       coa(1,1)=a/2.0D0
-       coa(2,2)=b/2.0D0
-       coa(3,3)=c/2.0D0
+    coa(1,1)=a/2.0D0
+    coa(2,2)=b/2.0D0
+    coa(3,3)=c/2.0D0
        
-       oca(1,1)=1.0D0/coa(1,1)
-       oca(2,2)=1.0D0/coa(2,2)
-       oca(3,3)=1.0D0/coa(3,3)
-       volume=a*b*c
-    End If
+    oca(1,1)=1.0D0/coa(1,1)
+    oca(2,2)=1.0D0/coa(2,2)
+    oca(3,3)=1.0D0/coa(3,3)
+    volume=a*b*c
+
     natom=ntap
     natom_slt=nato_slt
 
@@ -143,6 +140,8 @@ CONTAINS
        Allocate(Dens_Histo_svol(Dens_histo_size+1,0:2))
        Allocate(Dens_Histo_numb(Dens_histo_size+1))
        allocate(iac(natom),Dens_Histo_gofr_ac(Dens_histo_size+1,0:2))
+       allocate(Dens_Histo_gofr_ac2(Dens_histo_size+1,0:2))
+       allocate(Dens_Histo_gofr_ac1(Dens_histo_size+1,0:2))
 
        allocate(Dens_Histo_gofr_cos(Dens_histo_size_cos+1,Dens_histo_size+1,0:2))
        
@@ -191,6 +190,8 @@ CONTAINS
        idx(natom_slt+1:)=2
        idx(1:natom_slt)=1
        Dens_Histo_gofr_ac=0.0_8
+       Dens_Histo_gofr_ac2=0.0_8
+       Dens_Histo_gofr_ac1=0.0_8
        Dens_Histo_gofr=0.0_8
        Dens_Histo_svol=0.0_8
        Dens_Histo_numb=0
@@ -352,9 +353,10 @@ CONTAINS
     INTEGER :: n,nc2x,nc2y,nc2z
     REAL(8) :: xpb,ypb,zpb,aux1,aux2,fract
     Real(8), Save :: dvol
-    Integer :: o
+    Integer :: o,mk
     Integer, Allocatable :: loc_nhist(:)
     Real(8), Allocatable :: loc_hist(:)
+    Real(8), Allocatable :: gofr_ac(:,:),rho_vol(:,:)
 
 !!$----------------------- EXECUTABLE STATEMENTS ------------------------*
 
@@ -383,8 +385,10 @@ CONTAINS
     yp0(1:natom)=yp0(1:natom)-ycm
     zp0(1:natom)=zp0(1:natom)-zcm
 
+    mk=0
     DO n=1,natom
        IF(Mask(n)) THEN
+          mk=mk+1
           IF(.NOT. Other_Density) THEN
              aux1=atmass(n)
           ELSE
@@ -396,19 +400,26 @@ CONTAINS
           x1=xpb*0.5D0
           y1=ypb*0.5D0
           z1=zpb*0.5D0
-          nx=INT(DBLE(ncx-1)*(x1-ANINT(x1)+0.5D0)+0.5D0)
-          ny=INT(DBLE(ncy-1)*(y1-ANINT(y1)+0.5D0)+0.5D0)
-          nz=INT(DBLE(ncz-1)*(z1-ANINT(z1)+0.5D0)+0.5D0)
+          nx=ANINT(DBLE(ncx-1)*(x1-ANINT(x1)+0.5D0)+0.5D0)
+          ny=ANINT(DBLE(ncy-1)*(y1-ANINT(y1)+0.5D0)+0.5D0)
+          nz=ANINT(DBLE(ncz-1)*(z1-ANINT(z1)+0.5D0)+0.5D0)
           ndens(nx+1,ny+1,nz+1)=ndens(nx+1,ny+1,nz+1)+1.0D0
           loc_dens(nx+1,ny+1,nz+1)=loc_dens(nx+1,ny+1,nz+1)+aux1
        END IF
     END DO
 
     IF(.NOT. Other_Density) THEN       
-       Density=Density+loc_Dens
-       Dens2=Dens2+loc_Dens**2
+       DO k=1,ncz
+          DO j=1,ncy
+             DO i=1,ncx
+                aux1=loc_dens(i,j,k)/Dvolume
+                Density(i,j,k)=Density(i,j,k)+aux1
+                Dens2(i,j,k)=Dens2(i,j,k)+aux1**2
+             END DO
+          END DO
+       END DO
     ELSE
-       DO k=1,nz
+       DO k=1,ncz
           DO j=1,ncy
              DO i=1,ncx
                 IF(ndens(i,j,k) /= 0.0D0) THEN
@@ -434,8 +445,14 @@ CONTAINS
 !!$-- Calls in this and only order
 !!$
 
+       allocate(rho_vol(Dens_histo_size+1,0:2))
+       allocate(gofr_ac(Dens_histo_size+1,0:2))      
+       rho_vol=0.0_8
+       gofr_ac=0.0_8
        Call ShellDensity
        Call ShellVolume
+       Where(rho_vol /= 0.0_8) Dens_Histo_gofr_ac2=Dens_Histo_gofr_ac2+gofr_ac*gofr_ac/(rho_vol*rho_vol)
+       Where(rho_vol /= 0.0_8) Dens_Histo_gofr_ac1=Dens_Histo_gofr_ac1+gofr_ac/rho_vol
     End IF
     
     rho=rho+Total_Mass/Real_Volume
@@ -464,8 +481,6 @@ CONTAINS
       Integer :: nang,ll
       Real(8) :: Norm,cos1,cos2,cos3,cos4
 
-
-      
       mycount=0
       loc_hist=0.0D0
       rsq_max=Dens_Histo_rmax**2
@@ -546,9 +561,10 @@ CONTAINS
             Dens_Histo_gofr_cos(nang,nhisto,u)=Dens_Histo_gofr_cos(nang,nhisto,u)+1.0D0
 
             Dens_histo_gofr(nhisto)=Dens_histo_gofr(nhisto)+1.0_8
-            Dens_Histo_gofr_ac(nhisto,u)=Dens_Histo_gofr_ac(nhisto,u)+1
+            gofr_ac(nhisto,u)=gofr_ac(nhisto,u)+1.0_8
          End If
       End Do
+      Dens_Histo_gofr_ac=Dens_Histo_gofr_ac+gofr_ac
     End Subroutine ShellDensity
     Subroutine ShellVolume
       Integer :: p,q,r,iv,jv,kv,l,numcell,numcell1
@@ -629,6 +645,7 @@ CONTAINS
                nhisto=Int(Rsp/Dens_Histo_bin)+1
                If(nhisto <= Dens_histo_Size) Then
                   Dens_Histo_svol(nhisto,u)=Dens_Histo_svol(nhisto,u)+dvol 
+                  rho_vol(nhisto,u)=rho_vol(nhisto,u)+dvol
                End If
             End Do
          End Do
@@ -649,7 +666,7 @@ CONTAINS
 
     REAL(8) :: Dvolume,avogad=6.0225d23,unitcm=1.0D-8,fact,cob(3,3)&
          &,dummy=0.0D0,a0=0.529177249D0,a,b,c,alf,bet,gamm,avg,sigma&
-         &,fact2,Mass_Avg,r,y,z,z0
+         &,fact2,Mass_Avg,r,y,z,z0,z2,zz1,zz2
 
     INTEGER :: one=1,i,j,k,count,ncx2,ncx_s,ncx_e,ncy2,ncy_s,ncy_e&
          &,ncz2,ncz_s,ncz_e,na,n,m,ii,ntap
@@ -686,18 +703,20 @@ CONTAINS
        DO j=1,ncy
           DO k=1,ncz
              IF(Density(i,j,k) /= 0.0D0) THEN
+                fluct(i,j,k)=0.0D0
                 IF(Other_Density) THEN
                    Mass_avg=Density(i,j,k)/DBLE(counter)
-                   fluct(i,j,k)=(Dens2(i,j,k)/DBLE(counter)-Mass_Avg**2)
+                   fluct(i,j,k)=(Dens2(i,j,k)/DBLE(counter)-Mass_Avg**2)/Mass_Avg**2
                 ELSE
                    Mass_avg=Density(i,j,k)/DBLE(counter)
-                   fluct(i,j,k)=(Dens2(i,j,k)/DBLE(counter)-Mass_Avg**2)/Mass_avg
+                   fluct(i,j,k)=(Dens2(i,j,k)/DBLE(counter)-Mass_Avg**2)/Mass_Avg**2
                 END IF
              END IF
           END DO
        END DO
     END DO
-    fact2=unitfluc*DBLE(counter)/rho
+    fact2=(1.0D0/avogad/unitcm**3)**2
+
     IF(Other_Density) fact2=1.0D0
 
     WRITE(*,*) '--------------- Averaged Density of system ='&
@@ -782,7 +801,7 @@ CONTAINS
        WRITE(kdensity,'(i8)') -9999
        WRITE(kdensity,'(2(e12.4,1x))') avg,sigma
 
-
+       fact2=1.0D0
        CALL Statistics(fact2,Fluct,avg,sigma)
        WRITE(kdens2,*) 
        WRITE(kdens2,'(i8,1x,''!NTITLE'')') 2
@@ -850,10 +869,13 @@ CONTAINS
           r=Dens_histo_bin*Dble(n-1)
           y=Dens_histo_svol(n,0)/Dble(Counter)
           z=Dens_histo_gofr_ac(n,0)/Dble(Counter)
+          zz1=Dens_histo_gofr_ac1(n,0)/Dble(Counter)
+          zz2=Dens_histo_gofr_ac2(n,0)/Dble(Counter)
+          z2=zz2-zz1**2
           If(y /= 0.0D0) Then
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,z/y,z2
           Else
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,0.0D0
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,0.0D0,0.0D0
           End If
        End Do
        Write(kdenhisto,'(''&'')')
@@ -862,10 +884,13 @@ CONTAINS
           r=Dens_histo_bin*Dble(n-1)
           y=Dens_histo_svol(n,1)/Dble(Counter)
           z=Dens_histo_gofr_ac(n,1)/Dble(Counter)
+          zz1=Dens_histo_gofr_ac1(n,1)/Dble(Counter)
+          zz2=Dens_histo_gofr_ac2(n,1)/Dble(Counter)
+          z2=zz2-zz1**2
           If(y /= 0.0D0) Then
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,z/y,z2
           Else
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,0.0D0
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,0.0D0,0,0D0
           End If
        End Do
        Write(kdenhisto,'(''&'')')
@@ -874,10 +899,13 @@ CONTAINS
           r=Dens_histo_bin*Dble(n-1)
           y=Dens_histo_svol(n,2)/Dble(Counter)
           z=Dens_histo_gofr_ac(n,2)/Dble(Counter)
+          zz1=Dens_histo_gofr_ac1(n,2)/Dble(Counter)
+          zz2=Dens_histo_gofr_ac2(n,2)/Dble(Counter)
+          z2=zz2-zz1**2
           If(y /= 0.0D0) Then
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,z/y,z2
           Else
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,0.0D0
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,0.0D0,0.0D0
           End If
        End Do
        Write(kdenhisto,'(''&'')')
@@ -886,10 +914,13 @@ CONTAINS
           r=Dens_histo_bin*Dble(n-1)
           y=(Dens_histo_svol(n,1)+Dens_histo_svol(n,2))/Dble(Counter)
           z=(Dens_histo_gofr_ac(n,1)+Dens_histo_gofr_ac(n,2))/Dble(Counter)
+          zz1=Dens_histo_gofr_ac1(n,1)/Dble(Counter)+Dens_histo_gofr_ac1(n,2)/Dble(Counter)
+          zz2=Dens_histo_gofr_ac2(n,1)/Dble(Counter)+Dens_histo_gofr_ac2(n,2)/Dble(Counter)
+          z2=zz2-zz1**2
           If(y /= 0.0D0) Then
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,z/y
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,z/y,z2
           Else
-             Write(kdenhisto,'(f12.4,3e16.8)') r,y,z,0.0D0
+             Write(kdenhisto,'(f12.4,4e16.8)') r,y,z,0.0D0,0.0D0
           End If
        End Do
     End If
